@@ -1,0 +1,81 @@
+2026-02-28 21:25:39,735 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 21:25:39,736 [INFO] ==================================================
+2026-02-28 21:25:39,737 [INFO] Scraping make: Cessna
+2026-02-28 21:25:39,737 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 21:25:40,394 [WARNING] Blocked (403). Waiting 11.0s...
+2026-02-28 21:25:52,781 [INFO] Total pages for Cessna: 1
+2026-02-28 21:25:52,834 [WARNING] Could not find listing cards with known selectors — trying heuristic
+2026-02-28 21:25:52,847 [INFO]   Page 1: found 37 listing cards
+2026-02-28 21:25:52,850 [INFO] Completed Cessna: 0 total listings scraped
+2026-02-28 21:25:52,850 [INFO] 
+==================================================
+2026-02-28 21:25:52,851 [INFO] SCRAPE COMPLETE: 0 total listings processed
+2026-02-28 21:37:16,242 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 21:37:16,243 [INFO] ==================================================
+2026-02-28 21:37:16,243 [INFO] Scraping make: Cessna
+2026-02-28 21:37:16,243 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 21:37:16,966 [WARNING] Blocked (403). Waiting 11.0s...
+2026-02-28 21:37:28,453 [WARNING] Blocked (403). Waiting 21.0s...
+2026-02-28 21:37:49,575 [WARNING] Blocked (403). Waiting 31.8s...
+2026-02-28 21:38:22,681 [ERROR] All retries exhausted for https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 21:38:22,681 [ERROR] Failed to fetch first page for Cessna
+2026-02-28 21:38:22,681 [INFO] 
+==================================================
+2026-02-28 21:38:22,681 [INFO] SCRAPE COMPLETE: 0 total listings processed
+2026-02-28 23:35:13,014 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 23:35:13,015 [INFO] ==================================================
+2026-02-28 23:35:13,015 [INFO] Scraping make: Cessna
+2026-02-28 23:35:13,015 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:35:13,539 [WARNING] Blocked (403). Waiting 19.5s...
+2026-02-28 23:35:33,523 [WARNING] Blocked (403). Waiting 23.5s...
+2026-02-28 23:35:57,060 [WARNING] Blocked (403). Waiting 34.2s...
+2026-02-28 23:36:31,278 [ERROR] All retries exhausted for https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:36:31,278 [ERROR] Failed to fetch first page for Cessna
+2026-02-28 23:36:31,278 [INFO] 
+==================================================
+2026-02-28 23:36:31,278 [INFO] SCRAPE COMPLETE: 0 total listings processed
+2026-02-28 23:38:52,465 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 23:38:52,465 [INFO] ==================================================
+2026-02-28 23:38:52,466 [INFO] Scraping make: Cessna
+2026-02-28 23:38:52,466 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:38:53,194 [WARNING] Blocked (403). Waiting 15.6s...
+2026-02-28 23:39:10,228 [INFO] Total pages for Cessna: 1
+2026-02-28 23:39:10,231 [INFO]   Page 1: found 38 listing cards
+2026-02-28 23:39:10,293 [INFO] Completed Cessna: 38 total listings scraped
+2026-02-28 23:39:10,293 [INFO] 
+==================================================
+2026-02-28 23:39:10,293 [INFO] SCRAPE COMPLETE: 38 total listings processed
+2026-02-28 23:51:25,815 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 23:51:25,815 [INFO] Rate limit: 12 req/min, retries: 5
+2026-02-28 23:51:37,948 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 23:51:37,948 [INFO] Rate limit: 12 req/min, retries: 5
+2026-02-28 23:51:38,506 [INFO] Launching Playwright browser...
+2026-02-28 23:51:38,995 [INFO] ==================================================
+2026-02-28 23:51:38,995 [INFO] Scraping make: Cessna
+2026-02-28 23:51:38,995 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:51:41,795 [WARNING] Blocked (403). Waiting 10.2s [make=Cessna]
+2026-02-28 23:51:52,044 [WARNING] Blocked (403). Waiting 17.8s [make=Cessna]
+2026-02-28 23:52:09,918 [WARNING] Blocked (403). Waiting 35.2s [make=Cessna]
+2026-02-28 23:52:45,305 [WARNING] Blocked (403). Waiting 74.2s [make=Cessna]
+2026-02-28 23:53:59,773 [WARNING] Blocked (403). Waiting 120.0s [make=Cessna]
+2026-02-28 23:54:48,926 [INFO] Will scrape 1 makes: ['Cessna']
+2026-02-28 23:54:48,926 [INFO] Rate limit: 12 req/min, retries: 5
+2026-02-28 23:54:49,472 [INFO] Launching Playwright browser...
+2026-02-28 23:54:49,566 [INFO] ==================================================
+2026-02-28 23:54:49,566 [INFO] Scraping make: Cessna
+2026-02-28 23:54:49,566 [INFO] Fetching: https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:54:49,870 [WARNING] Blocked (403). Waiting 9.7s [make=Cessna]
+2026-02-28 23:54:59,592 [WARNING] Blocked (403). Waiting 17.8s [make=Cessna]
+2026-02-28 23:55:17,482 [WARNING] Blocked (403). Waiting 41.1s [make=Cessna]
+2026-02-28 23:55:58,842 [WARNING] Blocked (403). Waiting 70.6s [make=Cessna]
+2026-02-28 23:55:59,773 [ERROR] All retries exhausted for https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:55:59,774 [ERROR] Failed to fetch first page for Cessna
+2026-02-28 23:55:59,808 [INFO] 
+==================================================
+2026-02-28 23:55:59,809 [INFO] SCRAPE COMPLETE: 0 total listings processed
+2026-02-28 23:57:09,675 [WARNING] Blocked (403). Waiting 120.0s [make=Cessna]
+2026-02-28 23:59:09,675 [ERROR] All retries exhausted for https://www.aerotrader.com/Cessna-Aircraft/aircraft-for-sale?condition=U&make=Cessna
+2026-02-28 23:59:09,675 [ERROR] Failed to fetch first page for Cessna
+2026-02-28 23:59:09,703 [INFO] 
+==================================================
+2026-02-28 23:59:09,703 [INFO] SCRAPE COMPLETE: 0 total listings processed

@@ -1,0 +1,137 @@
+
+============================================================
+CARD #1 — Tag: <article> Classes: ['search-card', 'tide-display-block', 'tide-position-relative', 'tide-cursor-pointer', 'tide-underline-none', 'tide-xy-hidden', 'bg-white']
+============================================================
+<article class="search-card tide-display-block tide-position-relative tide-cursor-pointer tide-underline-none tide-xy-hidden bg-white">
+ <a class="tide-underline-none skeleton-medium-flex" href="/listing/1964-Cessna-172-5038176592">
+  <div class="image-wrapper tide-object-cover tide-display-flex tide-axis1-center tide-axis2-center tide-xy-hidden">
+   <img alt="1964 Cessna 172 in Ca, CA" height="300" lazy="loaded" src="https://cdn-media.tilabs.io/v1/media/68fa713983d25d7eec0d1d22.webp?width=400&amp;height=300&amp;quality=60&amp;bestfit=true&amp;upsize=true&amp;blurBackground=true&amp;blurValue=100" width="400"/>
+  </div>
+  <div class="content tide-padding-y-0 tide-padding-x-1">
+   <div>
+    <div class="price-wrapper tide-axis1-between tide-axis2-center tide-gap-1 tide-margin-bottom-1">
+     <div class="price main tide-font-24 font-family-default font-black tide-font-400">
+      $125,000
+     </div>
+    </div>
+   </div>
+   <div class="content-wrapper skeleton-medium-flex">
+    <div class="title-wrapper font-family-default font-black tide-font-16 tide-font-600 tide-margin-bottom-1/2 skeleton-padding-y">
+     <h3 class="sub-title tide-font-12 tide-font-400">
+      Used 1964 Cessna
+     </h3>
+     <div class="title tide-display-inline-block tide-margin-right-1/2">
+      172
+     </div>
+     <div class="stock-number tide-font-12 tide-font-400 tide-display-inline-block">
+     </div>
+    </div>
+    <div class="description-wrapper tide-display-none tide-width-full tide-position-relative tide-xy-hidden font-family-default tide-font-14 font-black tide-font-400 skeleton-padding-y">
+     &lt;p&gt;1964 Cessna 172 - Engine Overhauled! TSOH 0 Hours&lt;br /&gt;Iconic 4-seat trainer (since 1956) with Lycoming power, high-wing stability, and spacious ca
+    </div>
+   </div>
+   <div class="cta-wrapper">
+   </div>
+   <div class="dealer-content-wrapper skeleton-medium-flex">
+    <div class="dealer-wrapper font-family-default font-black tide-font-12 tide-font-400">
+     <span>
+      Private Seller
+     </span>
+    </div>
+    <div class="location-wrapper font-family-default font-black tide-font-12 tide-font-400">
+     Ca, CA
+    </div>
+   </div>
+  </div>
+ </a>
+</article>
+
+
+============================================================
+CARD #2 — Tag: <div> Classes: ['content', 'tide-padding-y-0', 'tide-padding-x-1']
+============================================================
+<div class="content tide-padding-y-0 tide-padding-x-1">
+ <div>
+  <div class="price-wrapper tide-axis1-between tide-axis2-center tide-gap-1 tide-margin-bottom-1">
+   <div class="price main tide-font-24 font-family-default font-black tide-font-400">
+    $125,000
+   </div>
+  </div>
+ </div>
+ <div class="content-wrapper skeleton-medium-flex">
+  <div class="title-wrapper font-family-default font-black tide-font-16 tide-font-600 tide-margin-bottom-1/2 skeleton-padding-y">
+   <h3 class="sub-title tide-font-12 tide-font-400">
+    Used 1964 Cessna
+   </h3>
+   <div class="title tide-display-inline-block tide-margin-right-1/2">
+    172
+   </div>
+   <div class="stock-number tide-font-12 tide-font-400 tide-display-inline-block">
+   </div>
+  </div>
+  <div class="description-wrapper tide-display-none tide-width-full tide-position-relative tide-xy-hidden font-family-default tide-font-14 font-black tide-font-400 skeleton-padding-y">
+   &lt;p&gt;1964 Cessna 172 - Engine Overhauled! TSOH 0 Hours&lt;br /&gt;Iconic 4-seat trainer (since 1956) with Lycoming power, high-wing stability, and spacious ca
+  </div>
+ </div>
+ <div class="cta-wrapper">
+ </div>
+ <div class="dealer-content-wrapper skeleton-medium-flex">
+  <div class="dealer-wrapper font-family-default font-black tide-font-12 tide-font-400">
+   <span>
+    Private Seller
+   </span>
+  </div>
+  <div class="location-wrapper font-family-default font-black tide-font-12 tide-font-400">
+   Ca, CA
+  </div>
+ </div>
+</div>
+
+
+============================================================
+CARD #3 — Tag: <article> Classes: ['search-card', 'tide-display-block', 'tide-position-relative', 'tide-cursor-pointer', 'tide-underline-none', 'tide-xy-hidden', 'bg-white']
+============================================================
+<article class="search-card tide-display-block tide-position-relative tide-cursor-pointer tide-underline-none tide-xy-hidden bg-white">
+ <a class="tide-underline-none skeleton-medium-flex" href="/listing/1940-Cessna-165+AIRMASTER-5037088027">
+  <div class="image-wrapper tide-object-cover tide-display-flex tide-axis1-center tide-axis2-center tide-xy-hidden">
+   <img alt="1940 Cessna 165 AIRMASTER" height="300" lazy="loaded" src="https://cdn-media.tilabs.io/v1/media/69a3cacff04e5756284e0e1a.webp?width=400&amp;height=300&amp;quality=60&amp;bestfit=true&amp;upsize=true&amp;blurBackground=true&amp;blurValue=100" width="400"/>
+  </div>
+  <div class="content tide-padding-y-0 tide-padding-x-1">
+   <div>
+    <div class="price-wrapper tide-axis1-between tide-axis2-center tide-gap-1 tide-margin-bottom-1">
+     <div class="price main tide-font-24 font-family-default font-black tide-font-400">
+      $150,000
+     </div>
+    </div>
+   </div>
+   <div class="content-wrapper skeleton-medium-flex">
+    <div class="title-wrapper font-family-default font-black tide-font-16 tide-font-600 tide-margin-bottom-1/2 skeleton-padding-y">
+     <h3 class="sub-title tide-font-12 tide-font-400">
+      Used 1940 Cessna
+     </h3>
+     <div class="title tide-display-inline-block tide-margin-right-1/2">
+      165 AIRMASTER
+     </div>
+     <div class="stock-number tide-font-12 tide-font-400 tide-display-inline-block">
+      Stock # N25465
+     </div>
+    </div>
+    <div class="description-wrapper tide-display-none tide-width-full tide-position-relative tide-xy-hidden font-family-default tide-font-14 font-black tide-font-400 skeleton-padding-y">
+     1940 CESSNA 165 AIRMASTER, Single Engine Piston, 1940 Cessna C-165 Airmaster. 7 hours since restoration. 0 SMOH on Warner Scarab 165hp. This is a magn
+    </div>
+   </div>
+   <div class="cta-wrapper">
+   </div>
+   <div class="dealer-content-wrapper skeleton-medium-flex">
+    <div class="dealer-wrapper font-family-default font-black tide-font-12 tide-font-400">
+     <span>
+      Platinum Fighter Sales
+     </span>
+    </div>
+    <div class="location-wrapper font-family-default font-black tide-font-12 tide-font-400">
+    </div>
+   </div>
+  </div>
+ </a>
+</article>
+
