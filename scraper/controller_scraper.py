@@ -17,8 +17,10 @@ import logging
 import os
 import random
 import re
+import hashlib
+from datetime import date
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Callable, Optional, TYPE_CHECKING
 from urllib.parse import urlencode, urljoin, urlparse
 
 from bs4 import BeautifulSoup
@@ -71,15 +73,37 @@ log = logging.getLogger(__name__)
 
 BASE_URL = "https://www.controller.com"
 SEARCH_PATH = "/listings/search"
-DEFAULT_MAKES = [
-    "Cessna",
-    "Piper",
-    "Beechcraft",
-    "Mooney",
-    "Cirrus",
-    "Diamond",
-    "Grumman",
-    "Maule",
+CAPTCHA_RESUME_FILE = Path("scraper/.captcha_resume")
+DEFAULT_CHECKPOINT_FILE = Path("scraper/state/controller_checkpoint.json")
+MAKES = [
+    # Piston Singles
+    "Cessna", "Piper", "Beechcraft", "Mooney", "Cirrus", "Diamond",
+    "Grumman", "Maule", "American Champion", "Bellanca", "Luscombe",
+    "Taylorcraft", "Aeronca", "Stinson", "Globe", "Ercoupe",
+    "Socata", "Robin", "Zenith", "Vans",
+    # Piston Twins
+    "Piper Twin", "Cessna Twin", "Beechcraft Twin", "Aerostar",
+    "Rockwell", "Seneca", "Aztec",
+    # Turboprops
+    "Pilatus", "TBM", "Daher", "Piper Meridian", "Beechcraft King Air",
+    "Cessna Caravan", "Quest Kodiak", "PC-12",
+    # Light Sport
+    "Flight Design", "Tecnam", "Jabiru", "Pipistrel",
+    # Helicopters
+    "Robinson", "Bell", "Sikorsky", "Eurocopter", "Airbus Helicopter",
+    "MD Helicopters", "Schweizer",
+    # Jets
+    "Cessna Citation", "Beechcraft Premier", "Eclipse", "Cirrus Vision",
+    "Embraer Phenom", "Honda Jet"
+]
+
+CONTROLLER_SEARCH_MAKES = [
+    "Cessna", "Piper", "Beechcraft", "Mooney", "Cirrus", "Diamond",
+    "Grumman", "Maule", "Bellanca", "Socata", "Pilatus", "TBM",
+    "Quest", "Robinson", "Bell", "Eclipse", "Embraer", "Honda",
+    "Tecnam", "Pipistrel", "Aerostar", "Rockwell", "American Champion",
+    "Luscombe", "Taylorcraft", "Aeronca", "Stinson", "Zenith", "Vans",
+    "Flight Design", "Jabiru", "Schweizer", "MD Helicopters"
 ]
 
 
@@ -219,6 +243,75 @@ def _split_city_state(location_text: str) -> tuple[Optional[str], Optional[str]]
     return clean, None
 
 
+def _extract_logbook_urls(soup: BeautifulSoup) -> list[str]:
+    links: list[str] = []
+    seen: set[str] = set()
+    keywords = (
+        "logbook",
+        "logs",
+        "maintenance records",
+        "airframe records",
+        "engine records",
+        "records",
+    )
+    for anchor in soup.select("a[href]"):
+        href = (anchor.get("href") or "").strip()
+        if not href:
+            continue
+        absolute = urljoin(BASE_URL, href)
+        text = anchor.get_text(" ", strip=True).lower()
+        low_href = absolute.lower()
+        is_doc = any(low_href.endswith(ext) for ext in (".pdf", ".doc", ".docx", ".xls", ".xlsx"))
+        is_logbook = any(key in text for key in keywords) or any(key in low_href for key in ("logbook", "record", "logs"))
+        if not (is_doc or is_logbook):
+            continue
+        if absolute in seen:
+            continue
+        seen.add(absolute)
+        links.append(absolute)
+    return links
+
+
+def _compute_listing_fingerprint(listing: dict) -> str:
+    fields = [
+        str(listing.get("source_site") or ""),
+        str(listing.get("source_id") or ""),
+        str(listing.get("url") or ""),
+        str(listing.get("price_asking") or ""),
+        str(listing.get("year") or ""),
+        str(listing.get("make") or ""),
+        str(listing.get("model") or ""),
+        str(listing.get("n_number") or ""),
+        str(listing.get("location_city") or ""),
+        str(listing.get("location_state") or ""),
+        str(listing.get("description") or ""),
+    ]
+    material = "|".join(fields)
+    return hashlib.sha1(material.encode("utf-8")).hexdigest()
+
+
+def _fetch_existing_fingerprints(supabase: "Client", source_ids: list[str]) -> dict[str, str]:
+    if not source_ids:
+        return {}
+    existing: dict[str, str] = {}
+    unique_source_ids = list(dict.fromkeys(source_ids))
+    for idx in range(0, len(unique_source_ids), 200):
+        chunk = unique_source_ids[idx : idx + 200]
+        rows = (
+            supabase.table("aircraft_listings")
+            .select("source_id,listing_fingerprint")
+            .eq("source_site", "controller")
+            .in_("source_id", chunk)
+            .execute()
+        )
+        for row in rows.data or []:
+            sid = row.get("source_id")
+            fp = row.get("listing_fingerprint")
+            if sid is not None and fp:
+                existing[str(sid)] = str(fp)
+    return existing
+
+
 
 
 async def fetch_listing_detail(page, listing_url: str) -> dict:
@@ -253,11 +346,11 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
             if state:
                 extra["location_state"] = state
 
-        # --- Photos/Gallery: collect up to 6 image URLs ---
+        # --- Photos/Gallery: collect all available image URLs ---
         gallery_urls: list[str] = []
         seen_gallery_urls: set[str] = set()
-        for img in soup.select("section.photos img, .photos img, .gallery img"):
-            src = (img.get("src") or "").strip()
+        for img in soup.select("section.photos img, .photos img, .gallery img, img[src], img[data-src]"):
+            src = (img.get("data-src") or img.get("src") or "").strip()
             if not src:
                 continue
             absolute_src = urljoin(BASE_URL, src)
@@ -265,10 +358,13 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
                 continue
             seen_gallery_urls.add(absolute_src)
             gallery_urls.append(absolute_src)
-            if len(gallery_urls) >= 6:
-                break
         if gallery_urls:
             extra["image_urls"] = gallery_urls
+            extra["primary_image_url"] = gallery_urls[0]
+
+        logbook_urls = _extract_logbook_urls(soup)
+        if logbook_urls:
+            extra["logbook_urls"] = logbook_urls
 
         # --- Specs: confirmed structure uses double underscore classes ---
         # div.detail__specs-label + div.detail__specs-value (siblings in a wrapper)
@@ -492,11 +588,85 @@ async def fetch_page_soup(page, url: str) -> Optional[BeautifulSoup]:
         return None
 
 
-async def scrape_make(page, make: str, limit: Optional[int] = None) -> list[dict]:
+async def wait_for_manual_captcha_resume(make: str) -> None:
+    """
+    True pause mode: halt all requests until operator explicitly resumes.
+    Resume by creating scraper/.captcha_resume.
+    """
+    log.warning(
+        "[%s] CAPTCHA/challenge detected. Scraper is paused. "
+        "After solving CAPTCHA, create %s to resume.",
+        make,
+        CAPTCHA_RESUME_FILE,
+    )
+    while not CAPTCHA_RESUME_FILE.exists():
+        await asyncio.sleep(2)
+    try:
+        CAPTCHA_RESUME_FILE.unlink()
+    except OSError:
+        pass
+    log.info("[%s] CAPTCHA resume signal received. Continuing scrape.", make)
+
+
+async def wait_for_search_ready(page, make: str) -> None:
+    """
+    Wait until the initial search page returns listing cards.
+
+    If Controller serves a challenge/CAPTCHA page, scraper enters true pause mode
+    and waits for an explicit resume signal.
+    """
+    initial_url = build_make_url(make, page=1)
+
+    while True:
+        soup = await fetch_page_soup(page, initial_url)
+        cards = []
+        if soup:
+            cards = soup.select("div.list-listing-card-wrapper")
+            if not cards:
+                cards = soup.select("article.search-card")
+
+        if cards:
+            log.info("[%s] Initial page ready (%d cards). Continuing scrape.", make, len(cards))
+            return
+
+        await wait_for_manual_captcha_resume(make)
+
+
+def load_checkpoint(checkpoint_file: Path) -> Optional[dict[str, Any]]:
+    if not checkpoint_file.exists():
+        return None
+    try:
+        payload = json.loads(checkpoint_file.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            return None
+        return payload
+    except Exception as exc:
+        log.warning("Failed to read checkpoint %s: %s", checkpoint_file, exc)
+        return None
+
+
+def save_checkpoint(checkpoint_file: Path, payload: dict[str, Any]) -> None:
+    checkpoint_file.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint_file.write_text(json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8")
+
+
+def clear_checkpoint(checkpoint_file: Path) -> None:
+    if checkpoint_file.exists():
+        checkpoint_file.unlink(missing_ok=True)
+
+
+async def scrape_make(
+    page,
+    make: str,
+    limit: Optional[int] = None,
+    start_page: int = 1,
+    on_page_complete: Optional[Callable[[int, list[dict]], None]] = None,
+    supabase: Optional["Client"] = None,
+) -> list[dict]:
     """Scrape one make by incrementing page=1..N until no new cards appear."""
     listings: list[dict] = []
     seen_source_ids: set[str] = set()
-    page_num = 1
+    page_num = max(1, start_page)
 
     while True:
         page_url = build_make_url(make, page=page_num)
@@ -504,11 +674,12 @@ async def scrape_make(page, make: str, limit: Optional[int] = None) -> list[dict
 
         soup = await fetch_page_soup(page, page_url)
         if not soup:
-            log.warning(f"[{make}] Skipping page {page_num} due to fetch/block check.")
-            page_num += 1
-            delay = random.uniform(8.0, 12.0)
-            log.info(f"[{make}] Waiting {delay:.1f}s before next page...")
-            await asyncio.sleep(delay)
+            log.warning(
+                "[%s] Fetch/block failure on page %s; entering CAPTCHA pause mode.",
+                make,
+                page_num,
+            )
+            await wait_for_manual_captcha_resume(make)
             continue
 
         # Controller.com search results use div.list-listing-card-wrapper
@@ -521,29 +692,46 @@ async def scrape_make(page, make: str, limit: Optional[int] = None) -> list[dict
             log.warning(f"[{make}] No cards found on page {page_num}")
             break
 
-        new_cards_on_page = 0
+        parsed_cards: list[dict] = []
         for card in cards:
             listing = parse_listing_card(card)
-            if not listing:
-                continue
+            if listing:
+                parsed_cards.append(listing)
 
+        existing_fingerprints: dict[str, str] = {}
+        if supabase and parsed_cards:
+            source_ids = [str(item.get("source_id")) for item in parsed_cards if item.get("source_id")]
+            existing_fingerprints = _fetch_existing_fingerprints(supabase, source_ids)
+
+        new_cards_on_page = 0
+        page_new_listings: list[dict] = []
+        for listing in parsed_cards:
             source_id = listing["source_id"]
             if source_id in seen_source_ids:
                 continue
 
             seen_source_ids.add(source_id)
+            listing["listing_fingerprint"] = _compute_listing_fingerprint(listing)
+            previous_fingerprint = existing_fingerprints.get(str(source_id))
+            should_fetch_detail = previous_fingerprint != listing["listing_fingerprint"]
 
             # Fetch detail page for richer data + human-like navigation
             detail_url = listing.get("url")
-            if detail_url:
+            if detail_url and should_fetch_detail:
                 log.info(f"[{make}] Fetching detail: {detail_url}")
                 extra = await fetch_listing_detail(page, detail_url)
+                if not extra:
+                    await asyncio.sleep(random.uniform(1.0, 2.0))
+                    extra = await fetch_listing_detail(page, detail_url)
                 listing.update(extra)
                 # Go back to search results
                 await page.go_back(wait_until="domcontentloaded", timeout=15000)
                 await page.wait_for_timeout(random.uniform(2000, 4000))
+            elif detail_url:
+                log.info("[%s] Skipping unchanged detail fetch for source_id=%s", make, source_id)
 
             listings.append(listing)
+            page_new_listings.append(listing)
             new_cards_on_page += 1
 
             log.info(
@@ -558,8 +746,13 @@ async def scrape_make(page, make: str, limit: Optional[int] = None) -> list[dict
             )
 
             if limit is not None and len(listings) >= limit:
+                if on_page_complete and page_new_listings:
+                    on_page_complete(page_num, page_new_listings)
                 log.info(f"[{make}] Limit reached ({limit}).")
                 return listings
+
+        if on_page_complete and page_new_listings:
+            on_page_complete(page_num, page_new_listings)
 
         log.info(f"[{make}] Page {page_num} new cards: {new_cards_on_page}")
         if new_cards_on_page == 0:
@@ -579,17 +772,93 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
     if not listings:
         return 0
 
+    today_iso = date.today().isoformat()
+    source_ids = [
+        str(listing.get("source_id"))
+        for listing in listings
+        if listing.get("source_id") is not None
+    ]
+    unique_source_ids = list(dict.fromkeys(source_ids))
+    existing_by_source_id: dict[str, dict] = {}
+
+    for idx in range(0, len(unique_source_ids), 200):
+        chunk = unique_source_ids[idx : idx + 200]
+        if not chunk:
+            continue
+        existing = (
+            supabase.table("aircraft_listings")
+            .select("source_id,first_seen_date,price_asking,asking_price")
+            .eq("source_site", "controller")
+            .in_("source_id", chunk)
+            .execute()
+        )
+        for row in existing.data or []:
+            sid = row.get("source_id")
+            if sid is not None:
+                existing_by_source_id[str(sid)] = row
+
+    def _as_int(value) -> Optional[int]:
+        try:
+            if value is None:
+                return None
+            if isinstance(value, bool):
+                return None
+            return int(float(value))
+        except (TypeError, ValueError):
+            return None
+
     rows = []
+    observation_rows = []
     for listing in listings:
         row = {k: v for k, v in listing.items() if v is not None}
+        source_id = row.get("source_id")
+        existing = existing_by_source_id.get(str(source_id)) if source_id is not None else None
+
+        row["last_seen_date"] = today_iso
+        row["is_active"] = True
+        row["inactive_date"] = None
+        if existing is None:
+            row["first_seen_date"] = today_iso
+        else:
+            previous_price = _as_int(existing.get("price_asking"))
+            if previous_price is None:
+                previous_price = _as_int(existing.get("asking_price"))
+            current_price = _as_int(row.get("price_asking"))
+            if current_price is None:
+                current_price = _as_int(row.get("asking_price"))
+            if previous_price is not None and current_price is not None and current_price < previous_price:
+                row["price_reduced"] = True
+                row["price_reduced_date"] = today_iso
+                row["price_reduction_amount"] = previous_price - current_price
+
         # Keep explicit types for new image columns.
         if "primary_image_url" in row:
             row["primary_image_url"] = str(row["primary_image_url"])
         if "image_urls" in row:
             row["image_urls"] = row["image_urls"] if isinstance(row["image_urls"], list) else [str(row["image_urls"])]
+        if "logbook_urls" in row:
+            row["logbook_urls"] = row["logbook_urls"] if isinstance(row["logbook_urls"], list) else [str(row["logbook_urls"])]
         rows.append(row)
+
+        observation_rows.append(
+            {
+                "source_site": "controller",
+                "source_id": str(source_id),
+                "observed_on": today_iso,
+                "observed_at": f"{today_iso}T00:00:00Z",
+                "asking_price": row.get("price_asking") if row.get("price_asking") is not None else row.get("asking_price"),
+                "url": row.get("url"),
+                "title": row.get("title"),
+                "listing_fingerprint": row.get("listing_fingerprint"),
+                "is_active": True,
+            }
+        )
     try:
         supabase.table("aircraft_listings").upsert(rows, on_conflict="source_site,source_id").execute()
+        if observation_rows:
+            supabase.table("listing_observations").upsert(
+                observation_rows, on_conflict="source_site,source_id,observed_on"
+            ).execute()
         return len(rows)
     except Exception as exc:
         log.error(f"Batch upsert failed: {exc}")
@@ -600,7 +869,35 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
                 saved += 1
             except Exception as row_exc:
                 log.error(f"Failed upsert for source_id={row.get('source_id')}: {row_exc}")
+        if observation_rows:
+            try:
+                supabase.table("listing_observations").upsert(
+                    observation_rows, on_conflict="source_site,source_id,observed_on"
+                ).execute()
+            except Exception as obs_exc:
+                log.error(f"Observation upsert failed: {obs_exc}")
         return saved
+
+
+def mark_inactive_listings(supabase: "Client", source_site: str) -> int:
+    """Mark listings inactive when they were not seen in today's run."""
+    today_iso = date.today().isoformat()
+    try:
+        response = (
+            supabase.table("aircraft_listings")
+            .update({"is_active": False, "inactive_date": today_iso})
+            .eq("source_site", source_site)
+            .lt("last_seen_date", today_iso)
+            .eq("is_active", True)
+            .execute()
+        )
+        count = len(response.data or [])
+        if count:
+            log.info("[%s] Marked %s stale listings as inactive.", source_site, count)
+        return count
+    except Exception as exc:
+        log.warning("[%s] Failed to mark stale listings inactive: %s", source_site, exc)
+        return 0
 
 
 def _print_listings(listings: list[dict]) -> None:
@@ -614,14 +911,39 @@ async def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Print listings and do not save to DB")
     parser.add_argument("--limit", type=int, default=None, help="Max listings per make (default: no limit)")
     parser.add_argument("--output", metavar="FILE", help="Write all scraped listings to JSON file")
+    parser.add_argument("--resume", action="store_true", help="Resume from checkpoint file")
+    parser.add_argument(
+        "--checkpoint-file",
+        default=str(DEFAULT_CHECKPOINT_FILE),
+        help=f"Checkpoint file path (default: {DEFAULT_CHECKPOINT_FILE})",
+    )
     parser.add_argument("--verbose", action="store_true", help="Enable DEBUG logging")
     args = parser.parse_args()
 
     global log
     log = setup_logging(args.verbose)
 
-    makes = args.make if args.make else DEFAULT_MAKES
+    if CAPTCHA_RESUME_FILE.exists():
+        CAPTCHA_RESUME_FILE.unlink(missing_ok=True)
+
+    makes = args.make if args.make else CONTROLLER_SEARCH_MAKES
     log.info(f"Makes to scrape: {makes}")
+    checkpoint_file = Path(args.checkpoint_file)
+    checkpoint_data = load_checkpoint(checkpoint_file) if args.resume else None
+    if checkpoint_data and checkpoint_data.get("make") not in makes:
+        log.warning(
+            "Checkpoint make '%s' not in requested make list; ignoring checkpoint.",
+            checkpoint_data.get("make"),
+        )
+        checkpoint_data = None
+    if checkpoint_data:
+        log.info(
+            "Resume mode active from make=%s page=%s",
+            checkpoint_data.get("make"),
+            checkpoint_data.get("next_page", 1),
+        )
+    else:
+        clear_checkpoint(checkpoint_file)
 
     supabase = None if args.dry_run else get_supabase()
 
@@ -637,23 +959,67 @@ async def main() -> None:
 
         try:
             initial_url = build_make_url(makes[0], page=1)
-            log.info(f"Opening initial page for manual challenge handling: {initial_url}")
-            await fetch_page_soup(page, initial_url)
-            print("Browser opened. If you see a CAPTCHA, solve it then press ENTER to continue...")
-            await asyncio.to_thread(input)
+            log.info(f"Opening initial page for challenge detection: {initial_url}")
+            await wait_for_search_ready(page=page, make=makes[0])
+
+            resume_idx = 0
+            resume_page = 1
+            if checkpoint_data:
+                resume_idx = makes.index(checkpoint_data["make"])
+                resume_page = max(1, int(checkpoint_data.get("next_page", 1)))
 
             for idx, make in enumerate(makes):
-                make_listings = await scrape_make(page=page, make=make, limit=args.limit)
+                if idx < resume_idx:
+                    log.info("[%s] Skipping make due to resume checkpoint.", make)
+                    continue
+                start_page = resume_page if idx == resume_idx else 1
+
+                def on_page_complete(page_num: int, page_listings: list[dict]) -> None:
+                    if args.dry_run:
+                        _print_listings(page_listings)
+                    else:
+                        saved = upsert_listings(supabase, page_listings)
+                        log.info(
+                            "[%s] Upserted %s/%s listings from page %s.",
+                            make,
+                            saved,
+                            len(page_listings),
+                            page_num,
+                        )
+                    save_checkpoint(
+                        checkpoint_file,
+                        {
+                            "source_site": "controller",
+                            "make": make,
+                            "make_index": idx,
+                            "next_page": page_num + 1,
+                        },
+                    )
+
+                make_listings = await scrape_make(
+                    page=page,
+                    make=make,
+                    limit=args.limit,
+                    start_page=start_page,
+                    on_page_complete=on_page_complete,
+                    supabase=supabase,
+                )
                 count = len(make_listings)
                 total_count += count
                 per_make_counts[make] = count
                 collected.extend(make_listings)
 
-                if args.dry_run:
-                    _print_listings(make_listings)
-                else:
-                    saved = upsert_listings(supabase, make_listings)
-                    log.info(f"[{make}] Upserted {saved}/{count} listings.")
+                # Make complete; checkpoint will continue from next make.
+                if idx < len(makes) - 1:
+                    save_checkpoint(
+                        checkpoint_file,
+                        {
+                            "source_site": "controller",
+                            "make": makes[idx + 1],
+                            "make_index": idx + 1,
+                            "next_page": 1,
+                        },
+                    )
 
                 if idx < len(makes) - 1:
                     between_delay = random.uniform(15.0, 20.0)
@@ -670,6 +1036,9 @@ async def main() -> None:
     for make, count in per_make_counts.items():
         log.info(f"Final count [{make}]: {count}")
     log.info(f"Final total listings: {total_count}")
+    if supabase and not args.make:
+        mark_inactive_listings(supabase, "controller")
+    clear_checkpoint(checkpoint_file)
 
 
 if __name__ == "__main__":

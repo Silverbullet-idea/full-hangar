@@ -14,7 +14,14 @@ export type AircraftListing = {
   engine_score: number | null
   prop_score: number | null
   llp_score: number | null
+  avionics_score: number | null
+  avionics_installed_value: number | null
   risk_level: string | null
+  deal_rating: number | null
+  deal_tier: string | null
+  vs_median_price: number | null
+  comps_sample_size: number | null
+  deal_comparison_source: string | null
   deferred_total: number | null
   true_cost: number | null
   intelligence_version: string | null
@@ -22,9 +29,23 @@ export type AircraftListing = {
   location_state: string | null
   location_label: string | null
   n_number: string | null
+  is_active: boolean | null
+  days_on_market: number | null
+  first_seen_date: string | null
+  last_seen_date: string | null
+  price_reduced: boolean | null
+  price_reduced_date: string | null
+  price_reduction_amount: number | null
   serial_number: string | null
   primary_image_url: string | null
+  image_urls: string[] | null
+  logbook_urls: string[] | null
+  listing_fingerprint: string | null
   faa_registration_alert: string | null
+  accident_count: number | null
+  most_recent_accident_date: string | null
+  most_severe_damage: string | null
+  has_accident_history: boolean | null
   description: string | null
   description_full: string | null
   total_time_airframe: number | null
