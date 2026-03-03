@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { formatMoney, formatScore, getRiskClass } from "../../../lib/listings/format"
-import { getListingById, getListingRawById } from "../../../lib/listings/queries"
+import { getListingById, getListingPriceHistory, getListingRawById } from "../../../lib/listings/queries"
 import type { AircraftListing } from "../../../lib/types"
 
 type ListingPageProps = {
@@ -43,6 +43,16 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
   const scoreExplanation = collectTextList(raw, "score_explanation")
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
+  const priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
+  const priceHistory = normalizePriceHistory(priceHistoryRaw)
+  const priceHistoryStats = buildPriceHistoryStats(priceHistory)
+  const priceHistoryChart = buildPriceHistoryChart(priceHistory)
+  const avionicsMatchedItems = collectKeyValueList(raw, "avionics_matched_items")
+  const detectedStcs = collectKeyValueList(raw, "stc_modifications")
+  const hasGlassCockpit = toBool(raw, "has_glass_cockpit")
+  const isSteamGauge = toBool(raw, "is_steam_gauge")
+  const installedAvionicsValue = pickNumber(raw, ["avionics_installed_value"]) ?? listingRow.avionics_installed_value
+  const stcPremiumTotal = pickNumber(raw, ["stc_market_value_premium_total"])
 
   const accidentHistoryValue = hasAccidentHistory ? (
     <div>
@@ -210,6 +220,149 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
             ]}
           />
 
+          {(avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number") ? (
+            <section className="table-card">
+              <h3 className="section-title">Avionics & Modifications</h3>
+              <div className="price-history-metrics">
+                <div>
+                  <strong>{safeDisplay(formatMoney(installedAvionicsValue))}</strong>
+                  <div className="metric-label">Installed avionics value</div>
+                </div>
+                <div>
+                  <strong>{safeDisplay(formatScore(listingRow.avionics_score))}</strong>
+                  <div className="metric-label">Avionics score</div>
+                </div>
+                <div>
+                  <strong>{safeDisplay(formatMoney(stcPremiumTotal))}</strong>
+                  <div className="metric-label">STC premium value</div>
+                </div>
+                <div>
+                  <strong>{hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}</strong>
+                  <div className="metric-label">Panel type</div>
+                </div>
+              </div>
+
+              {avionicsMatchedItems.length > 0 ? (
+                <div style={{ marginTop: "0.8rem" }}>
+                  <h4 style={{ margin: "0 0 0.4rem", color: "#FF9900" }}>Detected Avionics Equipment</h4>
+                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+                    {avionicsMatchedItems.map((item, index) => (
+                      <li key={`${item.label}-${index}`} style={{ marginBottom: "0.25rem" }}>
+                        {item.value !== null
+                          ? `${toTitleCase(item.label)} - ${formatMoney(item.value)}`
+                          : toTitleCase(item.label)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {detectedStcs.length > 0 ? (
+                <div style={{ marginTop: "0.8rem" }}>
+                  <h4 style={{ margin: "0 0 0.4rem", color: "#FF9900" }}>Detected STCs</h4>
+                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+                    {detectedStcs.map((stc, index) => (
+                      <li key={`${stc.label}-${index}`} style={{ marginBottom: "0.25rem" }}>
+                        {stc.value !== null
+                          ? `${toTitleCase(stc.label)} - ${formatMoney(stc.value)} premium`
+                          : toTitleCase(stc.label)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {isSteamGauge ? (
+                <p style={{ marginTop: "0.8rem", color: "#FF9900" }}>
+                  Upgrade potential: G5 + GTX 345 package can add roughly $8k in installed value.
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+
+          {priceHistory.length > 0 ? (
+            <section className="table-card">
+              <h3 className="section-title">Price History</h3>
+              <div className="price-history-metrics">
+                <div>
+                  <strong>{safeDisplay(formatMoney(priceHistoryStats.latestPrice))}</strong>
+                  <div className="metric-label">Latest ask</div>
+                </div>
+                <div>
+                  <strong>{safeDisplay(formatMoney(priceHistoryStats.highestPrice))}</strong>
+                  <div className="metric-label">Highest observed</div>
+                </div>
+                <div>
+                  <strong>{safeDisplay(formatMoney(priceHistoryStats.lowestPrice))}</strong>
+                  <div className="metric-label">Lowest observed</div>
+                </div>
+                <div>
+                  <strong>{priceHistoryStats.priceDropCount}</strong>
+                  <div className="metric-label">Price drops</div>
+                </div>
+              </div>
+              {typeof priceHistoryStats.netChange === "number" ? (
+                <p style={{ marginTop: "0.6rem", color: priceHistoryStats.netChange <= 0 ? "#16a34a" : "#d97706" }}>
+                  {priceHistoryStats.netChange <= 0
+                    ? `${Math.abs(priceHistoryStats.netChange).toLocaleString("en-US")} decrease since first seen`
+                    : `${priceHistoryStats.netChange.toLocaleString("en-US")} increase since first seen`}
+                </p>
+              ) : null}
+              {priceHistoryChart ? (
+                <div className="price-chart-wrap">
+                  <svg viewBox="0 0 100 34" preserveAspectRatio="none" className="price-chart" aria-hidden="true">
+                    <polyline
+                      fill="none"
+                      stroke="#FF9900"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      points={priceHistoryChart.linePoints}
+                    />
+                    {priceHistoryChart.dropPoints.map((point, index) => (
+                      <circle key={`${point.x}-${point.y}-${index}`} cx={point.x} cy={point.y} r="1.2" fill="#dc2626" />
+                    ))}
+                  </svg>
+                  <div className="metric-label" style={{ marginTop: "0.3rem" }}>
+                    Orange trend line, red dots mark price drops
+                  </div>
+                </div>
+              ) : null}
+              <table className="detail-table" style={{ marginTop: "0.6rem" }}>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Ask</th>
+                    <th scope="col">Change</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {priceHistory
+                    .slice()
+                    .reverse()
+                    .slice(0, 18)
+                    .map((point, index, arr) => {
+                      const nextOlder = arr[index + 1]
+                      const delta = typeof point.askingPrice === "number" && typeof nextOlder?.askingPrice === "number"
+                        ? point.askingPrice - nextOlder.askingPrice
+                        : null
+                      return (
+                        <tr key={`${point.observedOn}-${index}`}>
+                          <td>{formatIsoDate(point.observedOn)}</td>
+                          <td>{safeDisplay(formatMoney(point.askingPrice))}</td>
+                          <td>
+                            {delta === null ? "—" : delta === 0 ? "No change" : delta < 0 ? `↓ ${Math.abs(delta).toLocaleString("en-US")}` : `↑ ${delta.toLocaleString("en-US")}`}
+                          </td>
+                          <td>{point.isActive ? "Active" : "Inactive"}</td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            </section>
+          ) : null}
+
           {faaMatched ? (
             <DetailTableCard
               title="FAA Registry"
@@ -362,6 +515,34 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           padding: 0.75rem;
           background: #af4d2717;
         }
+        .price-history-metrics {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 0.5rem;
+        }
+        .price-history-metrics > div {
+          border: 1px solid #2f2f2f;
+          border-radius: 8px;
+          padding: 0.5rem;
+          background: #111;
+        }
+        .metric-label {
+          font-size: 0.75rem;
+          color: #b2b2b2;
+          margin-top: 0.2rem;
+        }
+        .price-chart-wrap {
+          margin-top: 0.7rem;
+          border: 1px solid #2f2f2f;
+          border-radius: 8px;
+          padding: 0.45rem;
+          background: #111;
+        }
+        .price-chart {
+          width: 100%;
+          height: 74px;
+          display: block;
+        }
         @media (max-width: 980px) {
           .listing-title {
             white-space: normal;
@@ -369,10 +550,80 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           .detail-grid {
             grid-template-columns: 1fr;
           }
+          .price-history-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
         }
       `}</style>
     </main>
   )
+}
+
+type PriceHistoryPoint = {
+  observedOn: string
+  askingPrice: number | null
+  isActive: boolean
+}
+
+function normalizePriceHistory(rawRows: unknown): PriceHistoryPoint[] {
+  if (!Array.isArray(rawRows)) return []
+  return rawRows
+    .map((row) => {
+      if (!row || typeof row !== "object") return null
+      const item = row as Record<string, unknown>
+      const observedOn = typeof item.observed_on === "string" ? item.observed_on : ""
+      if (!observedOn) return null
+      const askingPrice = toNumber(item.asking_price)
+      const isActive = item.is_active === true || item.is_active === "true"
+      return { observedOn, askingPrice, isActive }
+    })
+    .filter((row): row is PriceHistoryPoint => Boolean(row))
+}
+
+function buildPriceHistoryStats(points: PriceHistoryPoint[]) {
+  const prices = points.map((p) => p.askingPrice).filter((v): v is number => typeof v === "number")
+  const latestPrice = prices.length ? prices[prices.length - 1] : null
+  const highestPrice = prices.length ? Math.max(...prices) : null
+  const lowestPrice = prices.length ? Math.min(...prices) : null
+  const firstPrice = prices.length ? prices[0] : null
+  const netChange = typeof latestPrice === "number" && typeof firstPrice === "number" ? latestPrice - firstPrice : null
+  let priceDropCount = 0
+  for (let i = 1; i < prices.length; i += 1) {
+    if (prices[i] < prices[i - 1]) priceDropCount += 1
+  }
+  return { latestPrice, highestPrice, lowestPrice, netChange, priceDropCount }
+}
+
+function buildPriceHistoryChart(points: PriceHistoryPoint[]): {
+  linePoints: string
+  dropPoints: Array<{ x: number; y: number }>
+} | null {
+  const pricedPoints = points.filter((point): point is PriceHistoryPoint & { askingPrice: number } => typeof point.askingPrice === "number")
+  if (pricedPoints.length < 2) return null
+
+  const values = pricedPoints.map((point) => point.askingPrice)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const span = Math.max(1, max - min)
+  const chartWidth = 100
+  const chartHeight = 34
+
+  const mapped = pricedPoints.map((point, index) => {
+    const x = pricedPoints.length === 1 ? chartWidth / 2 : (index / (pricedPoints.length - 1)) * chartWidth
+    const normalized = (point.askingPrice - min) / span
+    const y = chartHeight - normalized * (chartHeight - 2) - 1
+    return { x, y, value: point.askingPrice }
+  })
+
+  const linePoints = mapped.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ")
+  const dropPoints: Array<{ x: number; y: number }> = []
+  for (let i = 1; i < mapped.length; i += 1) {
+    if (mapped[i].value < mapped[i - 1].value) {
+      dropPoints.push({ x: Number(mapped[i].x.toFixed(2)), y: Number(mapped[i].y.toFixed(2)) })
+    }
+  }
+
+  return { linePoints, dropPoints }
 }
 
 function collectImageUrls(primaryImageUrl: unknown, raw: UnknownRow): string[] {
@@ -454,6 +705,50 @@ function collectTextList(raw: UnknownRow, key: string): string[] {
     }
   }
   return Array.from(new Set(values))
+}
+
+function collectKeyValueList(raw: UnknownRow, key: string): Array<{ label: string; value: number | null }> {
+  const values: Array<{ label: string; value: number | null }> = []
+  const fromRaw = raw?.[key]
+
+  const handleArray = (arr: unknown[]) => {
+    for (const entry of arr) {
+      if (!entry || typeof entry !== "object") continue
+      const item = entry as Record<string, unknown>
+      const labelRaw = item.item ?? item.stc_name ?? item.name
+      const label = typeof labelRaw === "string" ? labelRaw.trim() : ""
+      if (!label) continue
+      const valueRaw = item.value ?? item.premium_value ?? item.market_premium
+      values.push({ label, value: toNumber(valueRaw) })
+    }
+  }
+
+  if (Array.isArray(fromRaw)) {
+    handleArray(fromRaw)
+  } else if (typeof fromRaw === "string" && fromRaw.trim()) {
+    try {
+      const parsed = JSON.parse(fromRaw)
+      if (Array.isArray(parsed)) handleArray(parsed)
+    } catch {
+      // no-op
+    }
+  }
+
+  const seen = new Set<string>()
+  return values.filter((entry) => {
+    const keyToken = `${entry.label.toLowerCase()}|${entry.value ?? ""}`
+    if (seen.has(keyToken)) return false
+    seen.add(keyToken)
+    return true
+  })
+}
+
+function toTitleCase(input: string): string {
+  return input
+    .split(" ")
+    .filter(Boolean)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .join(" ")
 }
 
 function renderScoreExplanationItem(item: string): string {

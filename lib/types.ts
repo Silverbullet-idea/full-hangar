@@ -16,6 +16,12 @@ export type AircraftListing = {
   llp_score: number | null
   avionics_score: number | null
   avionics_installed_value: number | null
+  total_modification_value: number | null
+  stc_market_value_premium_total: number | null
+  has_glass_cockpit: boolean | null
+  is_steam_gauge: boolean | null
+  avionics_matched_items: Array<{ item?: string; value?: number }> | null
+  stc_modifications: Array<{ stc_name?: string; premium_value?: number }> | null
   risk_level: string | null
   deal_rating: number | null
   deal_tier: string | null
