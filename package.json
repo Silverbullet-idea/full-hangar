@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "dev:scrape": "powershell -ExecutionPolicy Bypass -File .\\start-dev-and-scrape.ps1",
     "dev:scrape:dry": "powershell -ExecutionPolicy Bypass -File .\\start-dev-and-scrape.ps1 -DryRun",
     "dev:scrape:controller": "powershell -ExecutionPolicy Bypass -File .\\start-dev-and-scrape.ps1 -Scraper controller",
@@ -17,6 +17,7 @@
     "pipeline:daily": "powershell -ExecutionPolicy Bypass -File .\\run-daily-pipeline.ps1",
     "pipeline:daily:dry": "powershell -ExecutionPolicy Bypass -File .\\run-daily-pipeline.ps1 -DryRun",
     "pipeline:daily:preview": "powershell -ExecutionPolicy Bypass -File .\\run-daily-pipeline.ps1 -Preview",
+    "pipeline:summary": "powershell -ExecutionPolicy Bypass -File .\\summarize-pipeline-log.ps1",
     "build": "next build",
     "start": "next start"
   },
