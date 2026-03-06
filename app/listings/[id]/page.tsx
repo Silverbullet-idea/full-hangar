@@ -1,24 +1,72 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { formatMoney, formatScore, getRiskClass } from "../../../lib/listings/format"
-import { getListingById, getListingPriceHistory, getListingRawById } from "../../../lib/listings/queries"
+import LeftDetailColumn from "./components/LeftDetailColumn"
+import RightDetailColumn from "./components/RightDetailColumn"
+import {
+  buildPriceHistoryChart,
+  buildPriceHistoryStats,
+  collectImageUrls,
+  collectKeyValueList,
+  collectLinkUrls,
+  collectTextList,
+  formatTitle,
+  getScoreColor,
+  getSourceLinkLabel,
+  normalizePriceHistory,
+  pickNumber,
+  pickText,
+  renderScoreExplanationItem,
+  safeDisplay,
+  toBool,
+  toProxyImageUrl,
+  toTitleCase,
+  type UnknownRow,
+} from "./components/detailUtils"
+import {
+  cleanParsedText,
+  cleanEngineModelText,
+  inferEngineManufacturerFromModel,
+  mergeAvionicsItems,
+  parseDescriptionIntelligence,
+  parseSellerDescription,
+  renderAvionicsValue,
+  type ParsedSellerDescription,
+} from "./components/detailParsingUtils"
+import {
+  formatCompTier,
+  formatHours,
+  formatIsoDate,
+  formatMoney,
+  formatScore,
+  formatSeatsEngines,
+  getRiskClass,
+} from "../../../lib/listings/format"
+import { getListingById, getListingPriceHistory, getListingRawById, getSimilarMarketPricing } from "../../../lib/listings/queries"
 import type { AircraftListing } from "../../../lib/types"
 
 type ListingPageProps = {
   params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-type UnknownRow = Record<string, unknown> | null
+type ScoreMetricRow = [string, ReactNode]
 
-export default async function ListingDetailPage({ params }: ListingPageProps) {
+export default async function ListingDetailPage({ params, searchParams }: ListingPageProps) {
   const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const returnToRaw = resolvedSearchParams?.returnTo
+  const returnToValue = Array.isArray(returnToRaw) ? returnToRaw[0] : returnToRaw
+  const backToListingsHref =
+    typeof returnToValue === "string" && returnToValue.startsWith("/listings")
+      ? returnToValue
+      : "/listings"
   const [listing, raw] = await Promise.all([getListingById(id), getListingRawById(id)])
 
   if (!listing) {
     return (
       <main className="container">
         <p>Listing not found.</p>
-        <Link href="/listings">Back to listings</Link>
+        <Link href={backToListingsHref}>Back to listings</Link>
       </main>
     )
   }
@@ -33,8 +81,78 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
   const mostSevereDamage = pickText(raw, ["most_severe_damage"])
   const hasAccidentHistory = toBool(raw, "has_accident_history") || accidentCount > 0
   const sourceUrl = listingRow.url || pickText(raw, ["source_url", "listing_url", "url"])
+  const sourceLinkLabel = getSourceLinkLabel(listingRow.source, listingRow.source_id, sourceUrl)
   const titleText = formatTitle(listingRow.year, listingRow.make, listingRow.model, listingRow.title)
-  const scoreColor = getScoreColor(listingRow.value_score)
+  const descriptionText = listingRow.description_full || listingRow.description || ""
+  const descriptionIntelligence = parseDescriptionIntelligence(raw)
+  const parsedDescription = parseSellerDescription(descriptionText)
+  const avionicsMatchedItems = collectKeyValueList(raw, "avionics_matched_items")
+  const parsedTotalTime = descriptionIntelligence.times.totalTime
+  const parsedEngineSmoh = descriptionIntelligence.times.engineSmoh
+  const parsedEngineTbo = descriptionIntelligence.times.engineTbo
+  const parsedLastAnnual = descriptionIntelligence.maintenance.lastAnnualInspection || parsedDescription.lastAnnualInspection
+  const parsedCylinderHours = descriptionIntelligence.maintenance.cylindersSinceNewHours || parsedDescription.cylindersSinceNewHours
+  const parsedHoursSinceIran = descriptionIntelligence.maintenance.hoursSinceIran || parsedDescription.hoursSinceIran
+  const totalTimeHours = typeof listingRow.total_time_airframe === "number"
+    ? listingRow.total_time_airframe
+    : parsedTotalTime ?? parsedDescription.totalTimeAirframe
+  const engineSmohHours = typeof listingRow.engine_time_since_overhaul === "number"
+    ? listingRow.engine_time_since_overhaul
+    : parsedEngineSmoh ?? parsedDescription.engineSmoh
+  const engineTboHours =
+    listingRow.engine_tbo_hours ??
+    pickNumber(raw, ["engine_tbo_hours", "engine_tbo"]) ??
+    parsedEngineTbo ??
+    parsedDescription.engineTbo
+  const engineModelText =
+    cleanEngineModelText(
+      pickText(raw, ["engine_model", "faa_engine_model_detail"]) ||
+        descriptionIntelligence.engineModel ||
+        parsedDescription.engineModel
+    )
+  const serialNumberText =
+    pickText(raw, ["serial_number", "faa_serial_number_detail", "serial_no", "serial"]) ||
+    cleanParsedText(listingRow.serial_number)
+  const faaEngineManufacturer = pickText(raw, ["faa_engine_manufacturer_detail"])
+  const engineManufacturerText =
+    faaEngineManufacturer ||
+    pickText(raw, ["engine_manufacturer", "engine_make"]) ||
+    inferEngineManufacturerFromModel(engineModelText)
+  const faaTypeEngine = pickText(raw, ["faa_type_engine_detail"])
+  const faaAirworthinessCategory = pickText(raw, ["faa_airworthiness_category_detail"])
+  const faaAirworthinessClassification = pickText(raw, ["faa_airworthiness_classification_detail"])
+  const faaAirworthinessDate = pickText(raw, ["faa_aw_date_detail"])
+  const avionicsList = parsedDescription.avionicsDisplayLines.length
+    ? parsedDescription.avionicsDisplayLines
+    : mergeAvionicsItems(
+        parsedDescription.avionicsList,
+        descriptionIntelligence.avionics,
+        avionicsMatchedItems.map((item) => toTitleCase(item.label))
+      )
+  const avionicsText = pickText(raw, ["avionics_description", "avionics_notes"]) || parsedDescription.avionics
+  const conditionText = pickText(raw, ["condition", "listing_condition", "aircraft_condition"]) || parsedDescription.condition
+  const marketOpportunityScore = pickNumber(raw, ["market_opportunity_score"]) ?? listingRow.market_opportunity_score
+  const conditionScore = pickNumber(raw, ["condition_score"]) ?? listingRow.condition_score
+  const executionScore = pickNumber(raw, ["execution_score"]) ?? listingRow.execution_score
+  const investmentScore = pickNumber(raw, ["investment_score"]) ?? listingRow.investment_score
+  const pricingConfidence = pickText(raw, ["pricing_confidence"]) ?? listingRow.pricing_confidence
+  const compSelectionTier = pickText(raw, ["comp_selection_tier"]) ?? listingRow.comp_selection_tier
+  const compUniverseSize = pickNumber(raw, ["comp_universe_size"]) ?? listingRow.comp_universe_size
+  const compExactCount = pickNumber(raw, ["comp_exact_count"]) ?? listingRow.comp_exact_count
+  const compFamilyCount = pickNumber(raw, ["comp_family_count"]) ?? listingRow.comp_family_count
+  const compMakeCount = pickNumber(raw, ["comp_make_count"]) ?? listingRow.comp_make_count
+  const compMedianPrice = pickNumber(raw, ["comp_median_price"]) ?? listingRow.comp_median_price
+  const compP25Price = pickNumber(raw, ["comp_p25_price"]) ?? listingRow.comp_p25_price
+  const compP75Price = pickNumber(raw, ["comp_p75_price"]) ?? listingRow.comp_p75_price
+  const mispricingZscore = pickNumber(raw, ["mispricing_zscore"]) ?? listingRow.mispricing_zscore
+  const scoreBreakdown = deriveScoreBreakdown({
+    listing: listingRow,
+    marketOpportunityScore,
+    conditionScore,
+    executionScore,
+    investmentScore,
+  })
+  const scoreColor = getScoreColor(scoreBreakdown.primaryScore)
   const primaryImageUrl = typeof listingRow.primary_image_url === "string" ? listingRow.primary_image_url.trim() : ""
   const galleryUrls = primaryImageUrl
     ? imageUrls.filter((url) => url !== primaryImageUrl)
@@ -43,347 +161,270 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
   const scoreExplanation = collectTextList(raw, "score_explanation")
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
+  const resolvedAskingPrice = resolveAskingPrice(listingRow, raw)
+  const marketPricing = await getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year)
+  const effectiveCompSource = resolveCompSource(dealComparisonSource, marketPricing?.sampleSize ?? null)
+  const effectiveDataConfidence = resolveDataConfidence(dataConfidence, listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null)
+  const scoreMethodSummary = buildScoreMethodSummary(
+    scoreBreakdown,
+    effectiveDataConfidence,
+    pricingConfidence,
+    effectiveCompSource,
+    scoreExplanation.length
+  )
+  const confidenceSignals = buildConfidenceSignals(listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null, dataConfidence)
   const priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
   const priceHistory = normalizePriceHistory(priceHistoryRaw)
   const priceHistoryStats = buildPriceHistoryStats(priceHistory)
   const priceHistoryChart = buildPriceHistoryChart(priceHistory)
-  const avionicsMatchedItems = collectKeyValueList(raw, "avionics_matched_items")
   const detectedStcs = collectKeyValueList(raw, "stc_modifications")
   const hasGlassCockpit = toBool(raw, "has_glass_cockpit")
   const isSteamGauge = toBool(raw, "is_steam_gauge")
   const installedAvionicsValue = pickNumber(raw, ["avionics_installed_value"]) ?? listingRow.avionics_installed_value
   const stcPremiumTotal = pickNumber(raw, ["stc_market_value_premium_total"])
+  const faaOwner = pickText(raw, ["faa_owner"])
+  const faaRegisteredOwnerName = pickText(raw, ["faa_registered_owner_name", "faa_owner"])
+  const faaRegisteredOwnerStreet = pickText(raw, ["faa_registered_owner_street"])
+  const faaRegisteredOwnerCounty = pickText(raw, ["faa_registered_owner_county"])
+  const faaRegisteredOwnerZip = pickText(raw, ["faa_registered_owner_zip"])
+  const faaRegisteredOwnerCountry = pickText(raw, ["faa_registered_owner_country"])
+  const faaTypeRegistration = pickText(raw, ["faa_type_registration_detail"])
+  const faaDealer = pickText(raw, ["faa_dealer_detail"])
+  const faaStatusCodeDetail = pickText(raw, ["faa_status_code_detail", "faa_status"])
+  const faaCertIssueDateDetail = pickText(raw, ["faa_cert_issue_date_detail", "faa_cert_date"])
+  const faaExpirationDateDetail = pickText(raw, ["faa_expiration_date_detail"])
+  const faaModeSBase8 = pickText(raw, ["faa_mode_s_code_base8"])
+  const faaModeSBase16 = pickText(raw, ["faa_mode_s_code_base16"])
+  const faaStatus = pickText(raw, ["faa_status"])
+  const faaCertDate = pickText(raw, ["faa_cert_date"])
+  const faaCity = pickText(raw, ["faa_city"])
+  const faaState = pickText(raw, ["faa_state"])
+  const faaSeats = pickNumber(raw, ["faa_num_seats"])
+  const faaEngines = pickNumber(raw, ["faa_num_engines"])
+  const faaHorsepower = pickNumber(raw, ["faa_engine_horsepower"])
+  const faaCruise = pickNumber(raw, ["faa_cruising_speed"])
+  const faaWeight = pickNumber(raw, ["faa_aircraft_weight"])
+  const hasFaaSnapshot = Boolean(
+    faaMatched ||
+      faaOwner ||
+      faaStatus ||
+      faaCertDate ||
+      faaCity ||
+      faaState ||
+      faaRegisteredOwnerName ||
+      faaRegisteredOwnerStreet ||
+      faaRegisteredOwnerCounty ||
+      faaRegisteredOwnerZip ||
+      faaRegisteredOwnerCountry ||
+      faaStatusCodeDetail ||
+      faaCertIssueDateDetail ||
+      faaExpirationDateDetail ||
+      faaTypeRegistration ||
+      faaDealer ||
+      faaModeSBase8 ||
+      faaModeSBase16 ||
+      faaEngineManufacturer ||
+      faaTypeEngine ||
+      faaAirworthinessCategory ||
+      faaAirworthinessClassification ||
+      faaAirworthinessDate ||
+      typeof faaSeats === "number" ||
+      typeof faaEngines === "number" ||
+      typeof faaHorsepower === "number" ||
+      typeof faaCruise === "number" ||
+      typeof faaWeight === "number"
+  )
+  const faaLookupUrl = nNumber !== "—"
+    ? `https://registry.faa.gov/aircraftinquiry/Search/NNumberResult?nNumberTxt=${encodeURIComponent(nNumber.replace(/^N/i, ""))}`
+    : null
+  const trueCostEstimate = calculateTrueCost(resolvedAskingPrice, listingRow.deferred_total, listingRow.true_cost)
+  const scoreInputRows = buildScoreInputRows({
+    listing: listingRow,
+    scoreBreakdown,
+    pricingConfidence,
+    compInsights: {
+      compSelectionTier,
+      compUniverseSize,
+      compExactCount,
+      compFamilyCount,
+      compMakeCount,
+      compMedianPrice,
+      compP25Price,
+      compP75Price,
+      mispricingZscore,
+    },
+    askingPrice: resolvedAskingPrice,
+    trueCostEstimate,
+    installedAvionicsValue,
+    stcPremiumTotal,
+    dataConfidence: effectiveDataConfidence,
+    compSource: effectiveCompSource,
+    marketPricing,
+  })
 
-  const accidentHistoryValue = hasAccidentHistory ? (
+  const accidentHistoryValue = nNumber === "—" ? (
+    <div style={{ color: "#9ca3af", fontWeight: 700 }}>Accident history unavailable (no N-number matched)</div>
+  ) : hasAccidentHistory ? (
     <div>
       <div style={{ color: "#dc2626", fontWeight: 700 }}>
-        {`⚠ ${accidentCount} accident(s) on record — most recent: ${formatIsoDate(mostRecentAccidentDate)}, damage: ${safeDisplay(mostSevereDamage)}`}
+        {`⚠ ${accidentCount} Accident(s) Found — Most Recent: ${formatIsoDate(mostRecentAccidentDate)}, Damage: ${safeDisplay(mostSevereDamage)}`}
       </div>
-      {nNumber !== "—" ? (
-        <a
-          href={`https://www.ntsb.gov/Pages/AviationQueryV2.aspx?NNumber=${encodeURIComponent(nNumber)}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Search NTSB records
-        </a>
-      ) : null}
+      <a
+        href={`https://www.ntsb.gov/Pages/AviationQueryV2.aspx?NNumber=${encodeURIComponent(nNumber)}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Search NTSB records
+      </a>
     </div>
   ) : (
-    <div style={{ color: "#16a34a", fontWeight: 700 }}>✓ No NTSB accidents on record</div>
+    <div style={{ color: "#16a34a", fontWeight: 700 }}>✓ No NTSB Accidents on Record</div>
   )
+  const verificationFlags = buildVerificationFlags({
+    nNumber,
+    registrationAlert,
+    hasFaaSnapshot,
+    listingState: listingRow.location_state,
+    faaState,
+  })
+  const aircraftRows: Array<[string, ReactNode]> = [
+    ["Year", safeDisplay(listingRow.year)],
+    ["Make", safeDisplay(listingRow.make)],
+    ["Model", safeDisplay(listingRow.model)],
+    ["Serial Number", safeDisplay(serialNumberText)],
+    ["N-Number", safeDisplay(listingRow.n_number)],
+    ["Location", safeDisplay(listingRow.location_label)],
+    ["Condition", safeDisplay(conditionText)],
+  ]
+  const engineRows: Array<[string, ReactNode]> = [
+    ["Total Time", safeDisplay(formatHours(totalTimeHours))],
+    ["Engine Time SMOH", safeDisplay(formatHours(engineSmohHours))],
+    ["Cylinders Since New", safeDisplay(formatHours(parsedCylinderHours))],
+    ["Hours Since IRAN", safeDisplay(formatHours(parsedHoursSinceIran))],
+    ["Engine TBO", safeDisplay(formatHours(engineTboHours))],
+    ["Engine Manufacturer", safeDisplay(engineManufacturerText)],
+    ["Engine Model", safeDisplay(engineModelText)],
+    ["Last Annual", safeDisplay(parsedLastAnnual)],
+    ["Type Engine", safeDisplay(faaTypeEngine)],
+    ["Airworthiness Category", safeDisplay(faaAirworthinessCategory)],
+    ["Airworthiness Classification", safeDisplay(faaAirworthinessClassification)],
+    ["A/W Date", safeDisplay(formatIsoDate(faaAirworthinessDate))],
+    ["Avionics", renderAvionicsValue(avionicsList, avionicsText)],
+    ["Airworthy", safeDisplay(formatAirworthy(raw, parsedDescription), { unknownAsDash: true })],
+  ]
+  const faaRows: Array<[string, ReactNode]> = [
+    ["N-Number", safeDisplay(nNumber)],
+    ["FAA Match", faaMatched ? "Matched" : hasFaaSnapshot ? "Partial" : "Pending enrich"],
+    ["FAA Status", safeDisplay(faaStatusCodeDetail || faaStatus)],
+    ["Registration Alert", safeDisplay(registrationAlert)],
+    ["Registered Owner", safeDisplay(faaRegisteredOwnerName || faaOwner)],
+    ["Owner Street", safeDisplay(faaRegisteredOwnerStreet)],
+    ["Owner City / State", safeDisplay([faaCity, faaState].filter(Boolean).join(", "))],
+    ["Owner County / ZIP", safeDisplay([faaRegisteredOwnerCounty, faaRegisteredOwnerZip].filter(Boolean).join(" / "))],
+    ["Owner Country", safeDisplay(faaRegisteredOwnerCountry)],
+    ["Type Registration", safeDisplay(faaTypeRegistration)],
+    ["Dealer", safeDisplay(faaDealer)],
+    ["FAA Cert Date", safeDisplay(formatIsoDate(faaCertIssueDateDetail || faaCertDate))],
+    ["Expiration Date", safeDisplay(formatIsoDate(faaExpirationDateDetail))],
+    ["Seats / Engines", safeDisplay(formatSeatsEngines(faaSeats, faaEngines))],
+    ["Engine HP", safeDisplay(typeof faaHorsepower === "number" ? `${faaHorsepower} hp` : null)],
+    ["Cruise Speed", safeDisplay(typeof faaCruise === "number" ? `${faaCruise} kt` : null)],
+    ["Aircraft Weight", safeDisplay(typeof faaWeight === "number" ? `${faaWeight.toLocaleString("en-US")} lb` : null)],
+    ["Mode S (Oct / Hex)", safeDisplay([faaModeSBase8, faaModeSBase16].filter(Boolean).join(" / "))],
+    ["Accident History", accidentHistoryValue],
+  ]
 
   return (
     <main className="container">
       <p>
-        <Link href="/listings">← Back to listings</Link>
+        <Link href={backToListingsHref}>← Back to listings</Link>
       </p>
 
-      <h1 className="listing-title">{titleText}</h1>
+      <h1 className="listing-title">
+        {titleText}
+        {typeof resolvedAskingPrice === "number" && resolvedAskingPrice > 0 ? (
+          <span className="asking-price-inline">
+            {" - Asking Price: "}
+            <span className="asking-price-value">{formatMoney(resolvedAskingPrice)}</span>
+          </span>
+        ) : null}
+      </h1>
 
       <div className="detail-grid">
-        <section className="panel">
-          {primaryImageUrl ? (
-            <>
-              <img className="hero-image" src={toProxyImageUrl(primaryImageUrl)} alt={listingRow.title || "Aircraft listing"} />
-              {galleryUrls.length > 0 ? (
-                <div className="image-gallery-grid">
-                  {galleryUrls.map((url) => (
-                    <img
-                      key={url}
-                      className="gallery-thumb"
-                      src={toProxyImageUrl(url)}
-                      alt={`${listingRow.title || "Aircraft"} gallery image`}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <div className="hero-image hero-placeholder">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M22 16.5v-2l-8-5V4a2 2 0 0 0-4 0v5.5l-8 5v2l8-2.5V20l-2 1.5V23l4-1 4 1v-1.5L14 20v-6z"
-                />
-              </svg>
-            </div>
-          )}
-
-          <h3>Seller Description</h3>
-          <p>{listingRow.description_full || listingRow.description || "No description available."}</p>
-
-          {sourceUrl ? (
-            <p>
-              <a className="button-link" href={sourceUrl} target="_blank" rel="noreferrer">
-                View on Controller.com
-              </a>
-            </p>
-          ) : null}
-
-          {logbookUrls.length > 0 ? (
-            <div style={{ marginTop: "1rem" }}>
-              <h3>Logbooks & Records</h3>
-              <ul>
-                {logbookUrls.map((url, index) => (
-                  <li key={url}>
-                    <a href={url} target="_blank" rel="noreferrer">
-                      {`Record ${index + 1}`}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </section>
-
-        <div className="panel-stack">
-          <section className="panel">
-            <h3>Score Summary</h3>
-            <div
-              className="score-badge"
-              style={{
-                borderColor: scoreColor,
-                boxShadow: `0 0 0 6px ${scoreColor}20 inset`,
-              }}
-            >
-              <span className="score-value">{safeDisplay(formatScore(listingRow.value_score))}</span>
-              <span className="score-max">/ 100</span>
-            </div>
-            <p style={{ marginTop: "0.85rem" }}>
-              <span className={`badge ${getRiskClass(listingRow.risk_level)}`}>{listingRow.risk_level || "UNKNOWN"}</span>
-            </p>
-            {registrationAlert ? (
-              <div className="warning-banner">
-                <strong>{registrationAlert}</strong>
-                <p>Verify registration status before purchase</p>
-              </div>
-            ) : null}
-
-            <div style={{ marginTop: "0.8rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              {dataConfidence ? (
-                <span className="badge score-none">{`Data Confidence: ${dataConfidence}`}</span>
-              ) : null}
-              {dealComparisonSource ? (
-                <span className="badge risk-moderate">{`Comp Source: ${dealComparisonSource}`}</span>
-              ) : null}
-            </div>
-
-            {scoreExplanation.length > 0 ? (
-              <div style={{ marginTop: "1rem" }}>
-                <h3>How We Scored This</h3>
-                <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-                  {scoreExplanation.map((item) => (
-                    <li key={item} style={{ marginBottom: "0.35rem" }}>
-                      {renderScoreExplanationItem(item)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </section>
-
-          <DetailTableCard
-            title="Aircraft Details"
-            rows={[
-              ["Year", safeDisplay(listingRow.year)],
-              ["Make", safeDisplay(listingRow.make)],
-              ["Model", safeDisplay(listingRow.model)],
-              ["Serial Number", safeDisplay(listingRow.serial_number)],
-              ["N-Number", safeDisplay(listingRow.n_number)],
-              ["Location", safeDisplay(listingRow.location_label)],
-              ["Condition", safeDisplay(pickText(raw, ["condition", "listing_condition", "aircraft_condition"]))],
-            ]}
-          />
-
-          <DetailTableCard
-            title="Airframe & Engine"
-            rows={[
-              ["Total Time", safeDisplay(formatHours(listingRow.total_time_airframe))],
-              ["Engine Time SMOH", safeDisplay(formatHours(listingRow.engine_time_since_overhaul))],
-              ["Engine TBO", safeDisplay(formatHours(listingRow.engine_tbo_hours ?? pickNumber(raw, ["engine_tbo_hours", "engine_tbo"])))],
-              ["Engine Model", safeDisplay(pickText(raw, ["engine_model"]))],
-              ["Avionics", safeDisplay(pickText(raw, ["avionics_description", "avionics_notes"]))],
-              ["Airworthy", safeDisplay(formatAirworthy(raw), { unknownAsDash: true })],
-            ]}
-          />
-
-          <DetailTableCard
-            title="Cost Analysis"
-            rows={[
-              ["Asking Price", safeDisplay(formatMoney(listingRow.price_asking))],
-              ["Deferred Maintenance", safeDisplay(formatMoney(listingRow.deferred_total))],
-              [
-                "True Cost Estimate",
-                safeDisplay(formatMoney(calculateTrueCost(listingRow.price_asking, listingRow.deferred_total, listingRow.true_cost))),
-              ],
-            ]}
-          />
-
-          {(avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number") ? (
-            <section className="table-card">
-              <h3 className="section-title">Avionics & Modifications</h3>
-              <div className="price-history-metrics">
-                <div>
-                  <strong>{safeDisplay(formatMoney(installedAvionicsValue))}</strong>
-                  <div className="metric-label">Installed avionics value</div>
-                </div>
-                <div>
-                  <strong>{safeDisplay(formatScore(listingRow.avionics_score))}</strong>
-                  <div className="metric-label">Avionics score</div>
-                </div>
-                <div>
-                  <strong>{safeDisplay(formatMoney(stcPremiumTotal))}</strong>
-                  <div className="metric-label">STC premium value</div>
-                </div>
-                <div>
-                  <strong>{hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}</strong>
-                  <div className="metric-label">Panel type</div>
-                </div>
-              </div>
-
-              {avionicsMatchedItems.length > 0 ? (
-                <div style={{ marginTop: "0.8rem" }}>
-                  <h4 style={{ margin: "0 0 0.4rem", color: "#FF9900" }}>Detected Avionics Equipment</h4>
-                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-                    {avionicsMatchedItems.map((item, index) => (
-                      <li key={`${item.label}-${index}`} style={{ marginBottom: "0.25rem" }}>
-                        {item.value !== null
-                          ? `${toTitleCase(item.label)} - ${formatMoney(item.value)}`
-                          : toTitleCase(item.label)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              {detectedStcs.length > 0 ? (
-                <div style={{ marginTop: "0.8rem" }}>
-                  <h4 style={{ margin: "0 0 0.4rem", color: "#FF9900" }}>Detected STCs</h4>
-                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-                    {detectedStcs.map((stc, index) => (
-                      <li key={`${stc.label}-${index}`} style={{ marginBottom: "0.25rem" }}>
-                        {stc.value !== null
-                          ? `${toTitleCase(stc.label)} - ${formatMoney(stc.value)} premium`
-                          : toTitleCase(stc.label)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              {isSteamGauge ? (
-                <p style={{ marginTop: "0.8rem", color: "#FF9900" }}>
-                  Upgrade potential: G5 + GTX 345 package can add roughly $8k in installed value.
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-
-          {priceHistory.length > 0 ? (
-            <section className="table-card">
-              <h3 className="section-title">Price History</h3>
-              <div className="price-history-metrics">
-                <div>
-                  <strong>{safeDisplay(formatMoney(priceHistoryStats.latestPrice))}</strong>
-                  <div className="metric-label">Latest ask</div>
-                </div>
-                <div>
-                  <strong>{safeDisplay(formatMoney(priceHistoryStats.highestPrice))}</strong>
-                  <div className="metric-label">Highest observed</div>
-                </div>
-                <div>
-                  <strong>{safeDisplay(formatMoney(priceHistoryStats.lowestPrice))}</strong>
-                  <div className="metric-label">Lowest observed</div>
-                </div>
-                <div>
-                  <strong>{priceHistoryStats.priceDropCount}</strong>
-                  <div className="metric-label">Price drops</div>
-                </div>
-              </div>
-              {typeof priceHistoryStats.netChange === "number" ? (
-                <p style={{ marginTop: "0.6rem", color: priceHistoryStats.netChange <= 0 ? "#16a34a" : "#d97706" }}>
-                  {priceHistoryStats.netChange <= 0
-                    ? `${Math.abs(priceHistoryStats.netChange).toLocaleString("en-US")} decrease since first seen`
-                    : `${priceHistoryStats.netChange.toLocaleString("en-US")} increase since first seen`}
-                </p>
-              ) : null}
-              {priceHistoryChart ? (
-                <div className="price-chart-wrap">
-                  <svg viewBox="0 0 100 34" preserveAspectRatio="none" className="price-chart" aria-hidden="true">
-                    <polyline
-                      fill="none"
-                      stroke="#FF9900"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                      points={priceHistoryChart.linePoints}
-                    />
-                    {priceHistoryChart.dropPoints.map((point, index) => (
-                      <circle key={`${point.x}-${point.y}-${index}`} cx={point.x} cy={point.y} r="1.2" fill="#dc2626" />
-                    ))}
-                  </svg>
-                  <div className="metric-label" style={{ marginTop: "0.3rem" }}>
-                    Orange trend line, red dots mark price drops
-                  </div>
-                </div>
-              ) : null}
-              <table className="detail-table" style={{ marginTop: "0.6rem" }}>
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Ask</th>
-                    <th scope="col">Change</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {priceHistory
-                    .slice()
-                    .reverse()
-                    .slice(0, 18)
-                    .map((point, index, arr) => {
-                      const nextOlder = arr[index + 1]
-                      const delta = typeof point.askingPrice === "number" && typeof nextOlder?.askingPrice === "number"
-                        ? point.askingPrice - nextOlder.askingPrice
-                        : null
-                      return (
-                        <tr key={`${point.observedOn}-${index}`}>
-                          <td>{formatIsoDate(point.observedOn)}</td>
-                          <td>{safeDisplay(formatMoney(point.askingPrice))}</td>
-                          <td>
-                            {delta === null ? "—" : delta === 0 ? "No change" : delta < 0 ? `↓ ${Math.abs(delta).toLocaleString("en-US")}` : `↑ ${delta.toLocaleString("en-US")}`}
-                          </td>
-                          <td>{point.isActive ? "Active" : "Inactive"}</td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              </table>
-            </section>
-          ) : null}
-
-          {faaMatched ? (
-            <DetailTableCard
-              title="FAA Registry"
-              rows={[
-                ["Owner", safeDisplay(pickText(raw, ["faa_owner"]))],
-                ["FAA Status", safeDisplay(pickText(raw, ["faa_status"]))],
-                ["Registration Alert", safeDisplay(registrationAlert)],
-                ["Cert Date", safeDisplay(pickText(raw, ["faa_cert_date"]))],
-                ["Accident History", accidentHistoryValue],
-              ]}
-            />
-          ) : null}
-        </div>
+        <LeftDetailColumn
+          primaryImageUrl={primaryImageUrl}
+          galleryUrls={galleryUrls}
+          title={listingRow.title || "Aircraft listing"}
+          toProxyImageUrl={toProxyImageUrl}
+          aircraftRows={aircraftRows}
+          engineRows={engineRows}
+          descriptionText={descriptionText}
+          sourceUrl={sourceUrl}
+          sourceLinkLabel={sourceLinkLabel}
+          logbookUrls={logbookUrls}
+        />
+        <RightDetailColumn
+          listingId={id}
+          marketPricing={marketPricing}
+          formatMoney={formatMoney}
+          scoreColor={scoreColor}
+          primaryScore={scoreBreakdown.primaryScore}
+          primaryLabel={scoreBreakdown.primaryLabel}
+          formatScore={formatScore}
+          scoreMethodSummary={scoreMethodSummary}
+          confidenceSignals={confidenceSignals}
+          effectiveDataConfidence={effectiveDataConfidence}
+          marketScore={scoreBreakdown.marketScore}
+          conditionScore={scoreBreakdown.conditionScore}
+          executionScore={scoreBreakdown.executionScore}
+          compExactCount={compExactCount}
+          compFamilyCount={compFamilyCount}
+          compMakeCount={compMakeCount}
+          riskBadgeClass={getRiskClass(listingRow.risk_level)}
+          riskLabel={listingRow.risk_level || "UNKNOWN"}
+          scoreInputRows={scoreInputRows}
+          pricingConfidence={pricingConfidence}
+          compSelectionTier={compSelectionTier}
+          formatCompTier={formatCompTier}
+          scoreExplanation={scoreExplanation}
+          renderScoreExplanationItem={renderScoreExplanationItem}
+          showAvionicsPanel={avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number"}
+          installedAvionicsValue={installedAvionicsValue}
+          avionicsScore={listingRow.avionics_score}
+          stcPremiumTotal={stcPremiumTotal}
+          panelTypeLabel={hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}
+          avionicsMatchedItems={avionicsMatchedItems}
+          detectedStcs={detectedStcs}
+          toTitleCase={toTitleCase}
+          isSteamGauge={isSteamGauge}
+          priceHistory={priceHistory}
+          priceHistoryStats={priceHistoryStats}
+          priceHistoryChart={priceHistoryChart}
+          formatIsoDate={formatIsoDate}
+          safeDisplay={safeDisplay}
+          showFaaSnapshot={nNumber !== "—" || hasFaaSnapshot || Boolean(registrationAlert)}
+          verificationFlags={verificationFlags}
+          faaRows={faaRows}
+          faaLookupUrl={faaLookupUrl}
+        />
       </div>
 
-      <style jsx>{`
+      <style>{`
         .listing-title {
           margin: 0 0 1.25rem;
           font-size: clamp(2rem, 4vw, 3rem);
           line-height: 1.1;
           white-space: nowrap;
+        }
+        .asking-price-inline {
+          font-size: clamp(1rem, 2vw, 1.45rem);
+          font-weight: 700;
+          color: #e5e7eb;
+          margin-left: 0.25rem;
+        }
+        .asking-price-value {
+          color: #22c55e;
+          font-weight: 800;
         }
         .detail-grid {
           display: grid;
@@ -393,8 +434,8 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
         }
         .panel,
         .table-card {
-          background: #121212;
-          border: 1px solid #2a2a2a;
+          background: #161d28;
+          border: 1px solid #3a4454;
           border-radius: 12px;
           padding: 1rem;
         }
@@ -407,12 +448,12 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           border-radius: 10px;
           display: block;
           object-fit: cover;
-          border: 1px solid #2f2f2f;
+          border: 1px solid #3a4454;
           min-height: 260px;
           max-height: 420px;
         }
         .hero-placeholder {
-          background: #0f0f0f;
+          background: #141922;
           display: grid;
           place-items: center;
           color: #5e5e5e;
@@ -432,7 +473,7 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           height: 88px;
           border-radius: 8px;
           object-fit: cover;
-          border: 1px solid #2f2f2f;
+          border: 1px solid #3a4454;
         }
         .button-link {
           display: inline-flex;
@@ -451,28 +492,115 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           color: #ffffff;
         }
         .score-badge {
-          width: 210px;
+          width: 176px;
           max-width: 100%;
-          min-height: 106px;
+          min-height: 82px;
           border-radius: 999px;
           border: 3px solid;
           display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          margin-top: 0.2rem;
+          padding: 0.6rem 0.8rem;
+          background: #141922;
+        }
+        .score-readout {
+          display: flex;
           align-items: baseline;
           justify-content: center;
-          gap: 0.35rem;
-          margin-top: 0.2rem;
-          padding: 0.9rem 1rem;
-          background: #151515;
+          gap: 0.3rem;
+          text-align: center;
         }
         .score-value {
-          font-size: 2.4rem;
+          font-size: 2rem;
           font-weight: 800;
           line-height: 1;
         }
         .score-max {
-          font-size: 1rem;
+          font-size: 0.9rem;
           color: #b2b2b2;
           font-weight: 600;
+        }
+        .score-guidance {
+          margin: 0.2rem 0 0.45rem;
+          color: #b2b2b2;
+          font-size: 0.82rem;
+          line-height: 1.35;
+        }
+        .score-band-list {
+          margin: 0.2rem 0 0.45rem;
+          padding-left: 1.1rem;
+          color: #b2b2b2;
+          font-size: 0.8rem;
+          line-height: 1.35;
+        }
+        .score-band-list li {
+          margin-bottom: 0.18rem;
+        }
+        .score-method {
+          margin: 0 0 0.6rem;
+          color: #b2b2b2;
+          font-size: 0.8rem;
+          line-height: 1.35;
+        }
+        .score-notes {
+          margin: 0 0 0.6rem;
+          border: 1px solid #3a4454;
+          border-radius: 8px;
+          padding: 0.42rem 0.55rem;
+          background: #141922;
+          font-size: 0.78rem;
+          color: #b2b2b2;
+        }
+        .score-notes summary {
+          cursor: pointer;
+          color: #d4d4d4;
+          font-weight: 600;
+        }
+        .score-notes ul {
+          margin: 0.4rem 0 0;
+          padding-left: 1rem;
+        }
+        .score-notes li {
+          margin-bottom: 0.2rem;
+        }
+        .score-inputs-wrap {
+          margin-top: 0.7rem;
+        }
+        .score-inputs-title {
+          margin: 0 0 0.35rem;
+          color: #ff9900;
+          font-size: 0.9rem;
+        }
+        .score-inputs-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.82rem;
+          background: #141922;
+          border: 1px solid #3a4454;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .score-inputs-table th,
+        .score-inputs-table td {
+          text-align: left;
+          padding: 0.42rem 0.5rem;
+          border-bottom: 1px solid #313d4f;
+          vertical-align: top;
+        }
+        .score-inputs-table tr:last-child th,
+        .score-inputs-table tr:last-child td {
+          border-bottom: none;
+        }
+        .score-inputs-table th {
+          width: 45%;
+          color: #b2b2b2;
+          font-weight: 600;
+        }
+        .score-inputs-table td {
+          color: #fff;
+          font-weight: 700;
         }
         .badge {
           display: inline-flex;
@@ -508,23 +636,16 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
           border: 1px solid #4a4a4a;
           color: #b2b2b2;
         }
-        .warning-banner {
-          margin-top: 0.8rem;
-          border: 1px solid #af4d27;
-          border-radius: 10px;
-          padding: 0.75rem;
-          background: #af4d2717;
-        }
         .price-history-metrics {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 0.5rem;
         }
         .price-history-metrics > div {
-          border: 1px solid #2f2f2f;
+          border: 1px solid #3a4454;
           border-radius: 8px;
           padding: 0.5rem;
-          background: #111;
+          background: #141922;
         }
         .metric-label {
           font-size: 0.75rem;
@@ -533,15 +654,45 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
         }
         .price-chart-wrap {
           margin-top: 0.7rem;
-          border: 1px solid #2f2f2f;
+          border: 1px solid #3a4454;
           border-radius: 8px;
           padding: 0.45rem;
-          background: #111;
+          background: #141922;
         }
         .price-chart {
           width: 100%;
           height: 74px;
           display: block;
+        }
+        .avionics-inline-list {
+          margin: 0;
+          padding: 0.1rem 0;
+          display: grid;
+          gap: 0.2rem;
+          white-space: normal;
+        }
+        .avionics-inline-line {
+          margin: 0;
+          font-weight: 700;
+          color: #ffffff;
+          line-height: 1.35;
+          word-break: break-word;
+        }
+        .avionics-inline-line.heading {
+          color: #e5e7eb;
+          font-weight: 800;
+        }
+        .avionics-inline-line.subheading {
+          margin-top: 0.2rem;
+          color: #d1d5db;
+          font-weight: 800;
+        }
+        .avionics-inline-line.item {
+          padding-left: 0.55rem;
+        }
+        .avionics-inline-list.legacy {
+          display: grid;
+          gap: 0.2rem;
         }
         @media (max-width: 980px) {
           .listing-title {
@@ -559,261 +710,12 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
   )
 }
 
-type PriceHistoryPoint = {
-  observedOn: string
-  askingPrice: number | null
-  isActive: boolean
-}
-
-function normalizePriceHistory(rawRows: unknown): PriceHistoryPoint[] {
-  if (!Array.isArray(rawRows)) return []
-  return rawRows
-    .map((row) => {
-      if (!row || typeof row !== "object") return null
-      const item = row as Record<string, unknown>
-      const observedOn = typeof item.observed_on === "string" ? item.observed_on : ""
-      if (!observedOn) return null
-      const askingPrice = toNumber(item.asking_price)
-      const isActive = item.is_active === true || item.is_active === "true"
-      return { observedOn, askingPrice, isActive }
-    })
-    .filter((row): row is PriceHistoryPoint => Boolean(row))
-}
-
-function buildPriceHistoryStats(points: PriceHistoryPoint[]) {
-  const prices = points.map((p) => p.askingPrice).filter((v): v is number => typeof v === "number")
-  const latestPrice = prices.length ? prices[prices.length - 1] : null
-  const highestPrice = prices.length ? Math.max(...prices) : null
-  const lowestPrice = prices.length ? Math.min(...prices) : null
-  const firstPrice = prices.length ? prices[0] : null
-  const netChange = typeof latestPrice === "number" && typeof firstPrice === "number" ? latestPrice - firstPrice : null
-  let priceDropCount = 0
-  for (let i = 1; i < prices.length; i += 1) {
-    if (prices[i] < prices[i - 1]) priceDropCount += 1
-  }
-  return { latestPrice, highestPrice, lowestPrice, netChange, priceDropCount }
-}
-
-function buildPriceHistoryChart(points: PriceHistoryPoint[]): {
-  linePoints: string
-  dropPoints: Array<{ x: number; y: number }>
-} | null {
-  const pricedPoints = points.filter((point): point is PriceHistoryPoint & { askingPrice: number } => typeof point.askingPrice === "number")
-  if (pricedPoints.length < 2) return null
-
-  const values = pricedPoints.map((point) => point.askingPrice)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const span = Math.max(1, max - min)
-  const chartWidth = 100
-  const chartHeight = 34
-
-  const mapped = pricedPoints.map((point, index) => {
-    const x = pricedPoints.length === 1 ? chartWidth / 2 : (index / (pricedPoints.length - 1)) * chartWidth
-    const normalized = (point.askingPrice - min) / span
-    const y = chartHeight - normalized * (chartHeight - 2) - 1
-    return { x, y, value: point.askingPrice }
-  })
-
-  const linePoints = mapped.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ")
-  const dropPoints: Array<{ x: number; y: number }> = []
-  for (let i = 1; i < mapped.length; i += 1) {
-    if (mapped[i].value < mapped[i - 1].value) {
-      dropPoints.push({ x: Number(mapped[i].x.toFixed(2)), y: Number(mapped[i].y.toFixed(2)) })
-    }
-  }
-
-  return { linePoints, dropPoints }
-}
-
-function collectImageUrls(primaryImageUrl: unknown, raw: UnknownRow): string[] {
-  const values: string[] = []
-  if (typeof primaryImageUrl === "string" && primaryImageUrl.trim()) {
-    values.push(primaryImageUrl.trim())
-  }
-  const fromRaw = raw?.image_urls
-  if (Array.isArray(fromRaw)) {
-    for (const value of fromRaw) {
-      if (typeof value === "string" && value.trim()) {
-        values.push(value.trim())
-      }
-    }
-  } else if (typeof fromRaw === "string" && fromRaw.trim()) {
-    try {
-      const parsed = JSON.parse(fromRaw)
-      if (Array.isArray(parsed)) {
-        for (const value of parsed) {
-          if (typeof value === "string" && value.trim()) {
-            values.push(value.trim())
-          }
-        }
-      }
-    } catch {
-      values.push(fromRaw.trim())
-    }
-  }
-  return Array.from(new Set(values))
-}
-
-function collectLinkUrls(raw: UnknownRow, key: string): string[] {
-  const values: string[] = []
-  const fromRaw = raw?.[key]
-  if (Array.isArray(fromRaw)) {
-    for (const value of fromRaw) {
-      if (typeof value === "string" && value.trim()) {
-        values.push(value.trim())
-      }
-    }
-  } else if (typeof fromRaw === "string" && fromRaw.trim()) {
-    try {
-      const parsed = JSON.parse(fromRaw)
-      if (Array.isArray(parsed)) {
-        for (const value of parsed) {
-          if (typeof value === "string" && value.trim()) {
-            values.push(value.trim())
-          }
-        }
-      } else {
-        values.push(fromRaw.trim())
-      }
-    } catch {
-      values.push(fromRaw.trim())
-    }
-  }
-  return Array.from(new Set(values))
-}
-
-function collectTextList(raw: UnknownRow, key: string): string[] {
-  const values: string[] = []
-  const fromRaw = raw?.[key]
-  if (Array.isArray(fromRaw)) {
-    for (const value of fromRaw) {
-      if (typeof value === "string" && value.trim()) values.push(value.trim())
-    }
-  } else if (typeof fromRaw === "string" && fromRaw.trim()) {
-    try {
-      const parsed = JSON.parse(fromRaw)
-      if (Array.isArray(parsed)) {
-        for (const value of parsed) {
-          if (typeof value === "string" && value.trim()) values.push(value.trim())
-        }
-      } else {
-        values.push(fromRaw.trim())
-      }
-    } catch {
-      values.push(fromRaw.trim())
-    }
-  }
-  return Array.from(new Set(values))
-}
-
-function collectKeyValueList(raw: UnknownRow, key: string): Array<{ label: string; value: number | null }> {
-  const values: Array<{ label: string; value: number | null }> = []
-  const fromRaw = raw?.[key]
-
-  const handleArray = (arr: unknown[]) => {
-    for (const entry of arr) {
-      if (!entry || typeof entry !== "object") continue
-      const item = entry as Record<string, unknown>
-      const labelRaw = item.item ?? item.stc_name ?? item.name
-      const label = typeof labelRaw === "string" ? labelRaw.trim() : ""
-      if (!label) continue
-      const valueRaw = item.value ?? item.premium_value ?? item.market_premium
-      values.push({ label, value: toNumber(valueRaw) })
-    }
-  }
-
-  if (Array.isArray(fromRaw)) {
-    handleArray(fromRaw)
-  } else if (typeof fromRaw === "string" && fromRaw.trim()) {
-    try {
-      const parsed = JSON.parse(fromRaw)
-      if (Array.isArray(parsed)) handleArray(parsed)
-    } catch {
-      // no-op
-    }
-  }
-
-  const seen = new Set<string>()
-  return values.filter((entry) => {
-    const keyToken = `${entry.label.toLowerCase()}|${entry.value ?? ""}`
-    if (seen.has(keyToken)) return false
-    seen.add(keyToken)
-    return true
-  })
-}
-
-function toTitleCase(input: string): string {
-  return input
-    .split(" ")
-    .filter(Boolean)
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ")
-}
-
-function renderScoreExplanationItem(item: string): string {
-  const lower = item.toLowerCase()
-  if (
-    lower.includes("below market") ||
-    lower.includes("fresh") ||
-    lower.includes("upgrade") ||
-    lower.includes("good") ||
-    lower.includes("strong")
-  ) {
-    return `✓ ${item}`
-  }
-  if (lower.includes("risk") || lower.includes("accident") || lower.includes("deferred") || lower.includes("high")) {
-    return `✗ ${item}`
-  }
-  return `⚠ ${item}`
-}
-
-function toBool(row: UnknownRow, key: string): boolean {
-  const value = row?.[key]
-  if (typeof value === "boolean") return value
-  if (typeof value === "string") return value.toLowerCase() === "true"
-  return false
-}
-
-function pickText(row: UnknownRow, keys: string[]): string | null {
-  for (const key of keys) {
-    const value = row?.[key]
-    if (typeof value === "string" && value.trim()) return value.trim()
-  }
-  return null
-}
-
-function pickNumber(row: UnknownRow, keys: string[]): number | null {
-  for (const key of keys) {
-    const value = toNumber(row?.[key])
-    if (typeof value === "number") return value
-  }
-  return null
-}
-
-function toNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric : null
-}
-
-function formatHours(value: number | null): string {
-  if (typeof value !== "number") return "N/A"
-  return `${Math.round(value).toLocaleString("en-US")} hrs`
-}
-
-function formatAirworthy(raw: UnknownRow): string {
+function formatAirworthy(raw: UnknownRow, parsedDescription?: ParsedSellerDescription): string {
   const boolValue = raw?.is_airworthy
   if (typeof boolValue === "boolean") return boolValue ? "Yes" : "No"
   const text = pickText(raw, ["airworthy"])
+  if (!text && parsedDescription?.airworthy) return parsedDescription.airworthy
   return text || "Unknown"
-}
-
-function formatIsoDate(value: string | null): string {
-  if (!value) return "—"
-  const timestamp = Date.parse(value)
-  if (!Number.isFinite(timestamp)) return value
-  return new Date(timestamp).toLocaleDateString("en-US")
 }
 
 function calculateTrueCost(askingPrice: number | null, deferredTotal: number | null, trueCost: number | null): number | null {
@@ -822,83 +724,307 @@ function calculateTrueCost(askingPrice: number | null, deferredTotal: number | n
   return askingPrice + deferredTotal
 }
 
-function formatTitle(year: number | null, make: string | null, model: string | null, fallbackTitle: string | null): string {
-  const composed = [year, make, model].filter((part) => part !== null && part !== undefined && part !== "").join(" ")
-  return composed || fallbackTitle || "Aircraft Listing"
+function resolveAskingPrice(listing: AircraftListing, raw: UnknownRow): number | null {
+  const direct =
+    typeof listing.price_asking === "number"
+      ? listing.price_asking
+      : typeof listing.asking_price === "number"
+      ? listing.asking_price
+      : null
+  if (typeof direct === "number" && direct > 0) return direct
+  return pickNumber(raw, ["asking_price", "price_asking", "price"]) ?? null
 }
 
-function toProxyImageUrl(url: string): string {
-  return `/api/image-proxy?url=${encodeURIComponent(url)}`
-}
-
-function safeDisplay(
-  value: string | number | null | undefined,
-  options?: {
-    unknownAsDash?: boolean
+function resolveCompSource(compSource: string | null, marketSampleSize: number | null): string | null {
+  if (compSource) return compSource
+  if (typeof marketSampleSize === "number" && marketSampleSize >= 5) {
+    return "estimated active listings (same make/model)"
   }
+  return null
+}
+
+function resolveDataConfidence(
+  value: string | null,
+  listing: AircraftListing,
+  askingPrice: number | null,
+  marketSampleSize: number | null
+): string | null {
+  if (value) return value
+  let points = 0
+  if (typeof askingPrice === "number" && askingPrice > 0) points += 1
+  if (typeof listing.total_time_airframe === "number" && listing.total_time_airframe > 0) points += 1
+  if (typeof listing.engine_time_since_overhaul === "number" && listing.engine_time_since_overhaul > 0) points += 1
+  if (typeof listing.avionics_score === "number") points += 1
+  if (typeof marketSampleSize === "number" && marketSampleSize >= 5) points += 1
+  if (points >= 4) return "MEDIUM (derived)"
+  if (points >= 2) return "LOW (derived)"
+  return null
+}
+
+function deriveScoreBreakdown(args: {
+  listing: AircraftListing
+  marketOpportunityScore: number | null
+  conditionScore: number | null
+  executionScore: number | null
+  investmentScore: number | null
+}): {
+  primaryScore: number | null
+  primaryLabel: string
+  marketScore: number | null
+  conditionScore: number | null
+  executionScore: number | null
+} {
+  const { listing } = args
+  const fallbackMarket = typeof listing.deal_rating === "number" ? listing.deal_rating : listing.value_score
+  const fallbackCondition = typeof listing.value_score === "number" ? listing.value_score : null
+  const fallbackExecution = deriveExecutionFallback(listing)
+  const marketScore = args.marketOpportunityScore ?? fallbackMarket ?? null
+  const conditionScore = args.conditionScore ?? fallbackCondition ?? null
+  const executionScore = args.executionScore ?? fallbackExecution
+  const weightedFallback =
+    typeof marketScore === "number" && typeof conditionScore === "number" && typeof executionScore === "number"
+      ? marketScore * 0.45 + conditionScore * 0.35 + executionScore * 0.2
+      : null
+  const primaryScore = args.investmentScore ?? weightedFallback ?? listing.value_score
+  return {
+    primaryScore: primaryScore !== null ? Number(primaryScore.toFixed(1)) : null,
+    primaryLabel: args.investmentScore !== null ? "Investment score" : "Investment score (derived)",
+    marketScore: marketScore !== null ? Number(marketScore.toFixed(1)) : null,
+    conditionScore: conditionScore !== null ? Number(conditionScore.toFixed(1)) : null,
+    executionScore: executionScore !== null ? Number(executionScore.toFixed(1)) : null,
+  }
+}
+
+function deriveExecutionFallback(listing: AircraftListing): number | null {
+  let score = 50
+  const dom = typeof listing.days_on_market === "number" ? listing.days_on_market : null
+  if (typeof dom === "number") {
+    if (dom >= 180) score += 18
+    else if (dom >= 90) score += 12
+    else if (dom >= 45) score += 6
+    else if (dom < 10) score -= 5
+  }
+  if (listing.price_reduced === true) score += 12
+  return Math.max(0, Math.min(100, score))
+}
+
+function buildScoreInputRows(args: {
+  listing: AircraftListing
+  scoreBreakdown: {
+    primaryScore: number | null
+    primaryLabel: string
+    marketScore: number | null
+    conditionScore: number | null
+    executionScore: number | null
+  }
+  pricingConfidence: string | null
+  compInsights: {
+    compSelectionTier: string | null
+    compUniverseSize: number | null
+    compExactCount: number | null
+    compFamilyCount: number | null
+    compMakeCount: number | null
+    compMedianPrice: number | null
+    compP25Price: number | null
+    compP75Price: number | null
+    mispricingZscore: number | null
+  }
+  askingPrice: number | null
+  trueCostEstimate: number | null
+  installedAvionicsValue: number | null
+  stcPremiumTotal: number | null
+  dataConfidence: string | null
+  compSource: string | null
+  marketPricing: {
+    sampleSize: number
+    low: number | null
+    median: number | null
+    high: number | null
+    usedYearWindow: boolean
+  } | null
+}): ScoreMetricRow[] {
+  const rows: ScoreMetricRow[] = []
+  const { listing, scoreBreakdown, pricingConfidence, compInsights, askingPrice, trueCostEstimate, installedAvionicsValue, stcPremiumTotal, dataConfidence, compSource, marketPricing } = args
+
+  rows.push([scoreBreakdown.primaryLabel, `${safeDisplay(formatScore(scoreBreakdown.primaryScore))} / 100`])
+  rows.push(["Market opportunity", `${safeDisplay(formatScore(scoreBreakdown.marketScore))} / 100`])
+  rows.push(["Condition score", `${safeDisplay(formatScore(scoreBreakdown.conditionScore))} / 100`])
+  rows.push(["Execution score", `${safeDisplay(formatScore(scoreBreakdown.executionScore))} / 100`])
+  rows.push(["Legacy value score", `${safeDisplay(formatScore(listing.value_score))} / 100`])
+  rows.push(["Deal rating", `${safeDisplay(formatScore(listing.deal_rating))} / 100`])
+  if (compInsights.compSelectionTier) {
+    rows.push(["Comp selection tier", formatCompTier(compInsights.compSelectionTier)])
+  }
+  if (typeof compInsights.compUniverseSize === "number" && compInsights.compUniverseSize > 0) {
+    rows.push(["Comp universe used", `${Math.round(compInsights.compUniverseSize).toLocaleString("en-US")} listings`])
+  }
+  if (
+    typeof compInsights.compP25Price === "number" &&
+    typeof compInsights.compMedianPrice === "number" &&
+    typeof compInsights.compP75Price === "number"
+  ) {
+    rows.push([
+      "Comp effective price band",
+      `${formatMoney(compInsights.compP25Price)} - ${formatMoney(compInsights.compP75Price)} (median ${formatMoney(compInsights.compMedianPrice)})`,
+    ])
+  }
+  if (typeof compInsights.mispricingZscore === "number") {
+    rows.push(["Mispricing z-score", compInsights.mispricingZscore.toFixed(2)])
+  }
+
+  if (typeof askingPrice === "number" && askingPrice > 0) {
+    rows.push(["Asking price", safeDisplay(formatMoney(askingPrice))])
+  } else if (
+    marketPricing &&
+    typeof marketPricing.low === "number" &&
+    typeof marketPricing.median === "number" &&
+    typeof marketPricing.high === "number"
+  ) {
+    const scopeLabel = marketPricing.usedYearWindow ? "same model (+/-10 years)" : "same make/model"
+    rows.push([
+      "Estimated market ask range",
+      `${formatMoney(marketPricing.low)} - ${formatMoney(marketPricing.high)} (median ${formatMoney(marketPricing.median)}, n=${marketPricing.sampleSize}, ${scopeLabel})`,
+    ])
+  }
+
+  if (typeof listing.deferred_total === "number" && listing.deferred_total > 0) {
+    rows.push(["Deferred maintenance", safeDisplay(formatMoney(listing.deferred_total))])
+  }
+  if (typeof trueCostEstimate === "number" && trueCostEstimate > 0) {
+    rows.push(["True cost estimate", safeDisplay(formatMoney(trueCostEstimate))])
+  }
+  rows.push(["Avionics score", `${safeDisplay(formatScore(listing.avionics_score))} / 100`])
+
+  if (typeof installedAvionicsValue === "number" && installedAvionicsValue > 0) {
+    rows.push(["Installed avionics value", safeDisplay(formatMoney(installedAvionicsValue))])
+  }
+  if (typeof stcPremiumTotal === "number" && stcPremiumTotal > 0) {
+    rows.push(["STC premium value", safeDisplay(formatMoney(stcPremiumTotal))])
+  }
+  if (dataConfidence) {
+    rows.push(["Data confidence", safeDisplay(dataConfidence)])
+  }
+  if (pricingConfidence) {
+    rows.push(["Pricing confidence", safeDisplay(pricingConfidence)])
+  }
+  if (compSource) {
+    rows.push(["Comp source", safeDisplay(compSource)])
+  }
+
+  return rows
+}
+
+function buildConfidenceSignals(
+  listing: AircraftListing,
+  askingPrice: number | null,
+  marketSampleSize: number | null,
+  originalConfidence: string | null
+): string[] {
+  const signals: string[] = []
+  if (originalConfidence) {
+    signals.push(`Model-provided confidence: ${originalConfidence}.`)
+  }
+  if (typeof askingPrice === "number" && askingPrice > 0) {
+    signals.push(`Asking price available (${formatMoney(askingPrice)}).`)
+  } else {
+    signals.push("Asking price missing; using market estimate fallback.")
+  }
+  if (typeof listing.total_time_airframe === "number" && listing.total_time_airframe > 0) {
+    signals.push(`Airframe time available (${Math.round(listing.total_time_airframe).toLocaleString("en-US")} hrs).`)
+  } else {
+    signals.push("Airframe time missing.")
+  }
+  if (typeof listing.engine_time_since_overhaul === "number" && listing.engine_time_since_overhaul > 0) {
+    signals.push(`Engine SMOH available (${Math.round(listing.engine_time_since_overhaul).toLocaleString("en-US")} hrs).`)
+  } else {
+    signals.push("Engine SMOH missing.")
+  }
+  if (typeof listing.avionics_score === "number") {
+    signals.push(`Avionics score available (${formatScore(listing.avionics_score)}/100).`)
+  } else {
+    signals.push("Avionics score missing.")
+  }
+  if (typeof marketSampleSize === "number" && marketSampleSize > 0) {
+    signals.push(`Comparable active listings found: ${marketSampleSize}.`)
+  } else {
+    signals.push("No comparable active listings found for market estimate.")
+  }
+  return signals
+}
+
+function buildVerificationFlags(input: {
+  nNumber: string
+  registrationAlert: string | null
+  hasFaaSnapshot: boolean
+  listingState: string | null
+  faaState: string | null
+}): Array<{ level: "info" | "warning" | "danger"; text: string }> {
+  const flags: Array<{ level: "info" | "warning" | "danger"; text: string }> = []
+  if (input.nNumber === "—") {
+    flags.push({ level: "warning", text: "No N-number captured yet: FAA cross-reference cannot run until listing text is enriched." })
+    return flags
+  }
+  if (!input.hasFaaSnapshot) {
+    flags.push({ level: "info", text: "FAA enrichment pending for this N-number. Run FAA enrichment to populate owner, status, and specs." })
+  }
+  if (input.registrationAlert) {
+    flags.push({ level: "danger", text: `Registration alert: ${input.registrationAlert}. Verify before deposit or pre-buy.` })
+  }
+  const listingState = (input.listingState || "").trim().toUpperCase()
+  const faaState = (input.faaState || "").trim().toUpperCase()
+  if (listingState && faaState && listingState !== faaState) {
+    flags.push({ level: "warning", text: `Location mismatch: listing state ${listingState} vs FAA state ${faaState}. Confirm aircraft identity and current location.` })
+  }
+  return flags
+}
+
+function buildScoreMethodSummary(
+  scoreBreakdown: {
+    primaryScore: number | null
+    primaryLabel: string
+    marketScore: number | null
+    conditionScore: number | null
+    executionScore: number | null
+  },
+  dataConfidence: string | null,
+  pricingConfidence: string | null,
+  dealComparisonSource: string | null,
+  scoreExplanationCount: number
 ): string {
-  if (value === null || value === undefined) return "—"
-  if (typeof value === "number") return String(value)
-  const normalized = value.trim()
-  if (!normalized || normalized.toUpperCase() === "N/A") return "—"
-  if (options?.unknownAsDash && normalized.toUpperCase() === "UNKNOWN") return "—"
-  return normalized
-}
-
-function getScoreColor(score: number | null): string {
-  if (typeof score !== "number") return "#6b7280"
-  if (score >= 80) return "#16a34a"
-  if (score >= 60) return "#65a30d"
-  if (score >= 40) return "#d97706"
-  return "#dc2626"
-}
-
-function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, ReactNode]> }) {
-  return (
-    <section className="table-card">
-      <h3 className="section-title">{title}</h3>
-      <table className="detail-table">
-        <tbody>
-          {rows.map(([label, value]) => (
-            <tr key={label}>
-              <th scope="row">{label}</th>
-              <td>{value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <style jsx>{`
-        .section-title {
-          color: #ff9900;
-          font-weight: 800;
-          margin: 0 0 0.75rem;
-        }
-        .detail-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .detail-table tr {
-          border-bottom: 1px solid #2e2e2e;
-        }
-        .detail-table tr:last-child {
-          border-bottom: none;
-        }
-        .detail-table th,
-        .detail-table td {
-          text-align: left;
-          padding: 0.62rem 0.2rem;
-          vertical-align: top;
-        }
-        .detail-table th {
-          width: 46%;
-          color: #b2b2b2;
-          font-weight: 500;
-        }
-        .detail-table td {
-          color: #ffffff;
-          font-weight: 700;
-        }
-      `}</style>
-    </section>
+  const parts: string[] = []
+  parts.push(
+    `${scoreBreakdown.primaryLabel} is a 0-100 investment signal built from three components: Market Opportunity (45%), Condition (35%), and Execution Readiness (20%).`
   )
+
+  const hasAllSubscores =
+    typeof scoreBreakdown.marketScore === "number" &&
+    typeof scoreBreakdown.conditionScore === "number" &&
+    typeof scoreBreakdown.executionScore === "number"
+
+  if (hasAllSubscores) {
+    const marketScore = scoreBreakdown.marketScore as number
+    const conditionScore = scoreBreakdown.conditionScore as number
+    const executionScore = scoreBreakdown.executionScore as number
+    const marketContribution = marketScore * 0.45
+    const conditionContribution = conditionScore * 0.35
+    const executionContribution = executionScore * 0.2
+    const blended = marketContribution + conditionContribution + executionContribution
+    parts.push(
+      `Current component scores are Market ${formatScore(marketScore)}, Condition ${formatScore(conditionScore)}, and Execution ${formatScore(executionScore)}. Weighted contributions are ${marketContribution.toFixed(1)} + ${conditionContribution.toFixed(1)} + ${executionContribution.toFixed(1)} = ${blended.toFixed(1)}.`
+    )
+  }
+  if (dealComparisonSource) {
+    parts.push(`Market pricing inputs are sourced from ${dealComparisonSource} using the comps waterfall (exact match first, then broader fallback tiers when needed).`)
+  }
+  if (dataConfidence) {
+    parts.push(`Data confidence is ${dataConfidence}, which indicates how reliable the underlying listing and comparison data is.`)
+  }
+  if (pricingConfidence) {
+    parts.push(`Pricing confidence is ${pricingConfidence}, reflecting asking-price and comparables completeness.`)
+  }
+  if (scoreExplanationCount > 0) {
+    parts.push("The factor list below highlights the strongest positive and negative drivers behind this aircraft's score.")
+  }
+  return parts.join(" ")
 }
+
