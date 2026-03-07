@@ -37,6 +37,16 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
           ? "border-[#d97706] bg-[#d977061f] text-[#d97706]"
           : "border-[#dc2626] bg-[#dc26261f] text-[#dc2626]"
     : "";
+  const controlButtonStyle = {
+    border: "1px solid var(--brand-dark)",
+    background: "var(--card-bg)",
+    color: "var(--brand-white)",
+  } as const;
+  const counterPillStyle = {
+    border: "1px solid var(--brand-dark)",
+    background: "color-mix(in srgb, var(--card-bg) 88%, transparent)",
+    color: "var(--brand-white)",
+  } as const;
 
   const jumpToIndex = (nextIndex: number) => {
     if (!safeImageUrls.length) return;
@@ -116,7 +126,7 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
             </span>
           ) : null}
           {hasMultipleImages ? (
-            <span className="absolute bottom-2 right-2 rounded border border-[#3A4454] bg-[#141922dd] px-2 py-1 text-[11px] font-semibold text-[#D1D5DB]">
+            <span className="absolute bottom-2 right-2 rounded px-2 py-1 text-[11px] font-semibold" style={counterPillStyle}>
               {`1 / ${safeImageUrls.length}`}
             </span>
           ) : null}
@@ -164,12 +174,17 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="absolute right-2 top-2 z-10 rounded border border-[#3A4454] bg-[#141922] px-2 py-1 text-sm font-semibold text-[#D1D5DB]"
+              className="absolute right-2 top-2 z-10 rounded px-2 py-1 text-sm font-semibold"
+              style={controlButtonStyle}
             >
               Close
             </button>
             <div
-              className="relative h-[70vh] w-full overflow-hidden rounded-lg border border-[#3A4454] bg-[#0f141d]"
+              className="relative h-[70vh] w-full overflow-hidden rounded-lg"
+              style={{
+                border: "1px solid var(--brand-dark)",
+                background: "var(--surface-muted)",
+              }}
               onTouchStart={(event) => {
                 const firstTouch = event.touches[0];
                 touchStartXRef.current = firstTouch.clientX;
@@ -204,17 +219,19 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
               <button
                 type="button"
                 onClick={() => jumpToIndex(activeIndex - 1)}
-                className="rounded border border-[#3A4454] bg-[#141922] px-3 py-1.5 text-sm font-semibold text-[#D1D5DB]"
+                className="rounded px-3 py-1.5 text-sm font-semibold"
+                style={controlButtonStyle}
               >
                 Prev
               </button>
-              <div className="text-sm font-semibold text-white">
+              <div className="text-sm font-semibold" style={{ color: "var(--brand-white)" }}>
                 {`${activeIndex + 1} / ${safeImageUrls.length}`}
               </div>
               <button
                 type="button"
                 onClick={() => jumpToIndex(activeIndex + 1)}
-                className="rounded border border-[#3A4454] bg-[#141922] px-3 py-1.5 text-sm font-semibold text-[#D1D5DB]"
+                className="rounded px-3 py-1.5 text-sm font-semibold"
+                style={controlButtonStyle}
               >
                 Next
               </button>
