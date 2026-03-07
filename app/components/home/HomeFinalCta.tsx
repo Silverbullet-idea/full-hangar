@@ -6,7 +6,7 @@ export default function HomeFinalCta() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-3xl font-extrabold leading-tight text-white md:text-4xl">Ready to find your next aircraft deal?</h2>
-          <p className="mt-3 text-sm text-[#c6d0dd]">Start with live listings and move faster with clear score context.</p>
+          <p className="mt-3 text-sm text-brand-muted">Start with live listings and move faster with clear score context.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -23,7 +23,7 @@ export default function HomeFinalCta() {
           </Link>
         </div>
       </div>
-      <footer className="mt-6 border-t border-[#2B3444] pt-4 text-xs text-[#9bb0c9]">
+      <footer className="mt-6 border-t border-[#2B3444] pt-4 text-xs text-brand-muted">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>© {new Date().getFullYear()} Full Hangar</span>
           <div className="flex items-center gap-4">

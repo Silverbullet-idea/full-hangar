@@ -29,10 +29,10 @@ export default function HomeHero({ listingsCount, heroImages }: HomeHeroProps) {
           <h1 className="text-3xl font-extrabold leading-tight text-white md:text-5xl">
             Find smarter aircraft deals before everyone else does.
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#c4cedb] md:text-base">
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-muted md:text-base">
             Spot undervalued aircraft fast with market comps, risk context, and transparent scoring.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#c8d3e3]">
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-brand-muted">
             <span className="rounded-full border border-[#3A4454] bg-[#162131] px-2.5 py-1">Real-time listing signals</span>
             <span className="rounded-full border border-[#3A4454] bg-[#162131] px-2.5 py-1">Transparent scoring</span>
           </div>
@@ -52,15 +52,15 @@ export default function HomeHero({ listingsCount, heroImages }: HomeHeroProps) {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-[#3A4454] bg-[#141c27] p-3">
-              <div className="text-xs text-[#9fb0c5]">Tracked listings</div>
+              <div className="text-xs text-brand-muted">Tracked listings</div>
               <div className="mt-1 text-xl font-bold text-white">{listingsCount.toLocaleString()}</div>
             </div>
             <div className="rounded-lg border border-[#3A4454] bg-[#141c27] p-3">
-              <div className="text-xs text-[#9fb0c5]">Focus</div>
+              <div className="text-xs text-brand-muted">Focus</div>
               <div className="mt-1 text-sm font-semibold text-white">Undervalued deals under $50k</div>
             </div>
             <div className="rounded-lg border border-[#3A4454] bg-[#141c27] p-3">
-              <div className="text-xs text-[#9fb0c5]">Decision support</div>
+              <div className="text-xs text-brand-muted">Decision support</div>
               <div className="mt-1 text-sm font-semibold text-white">Risk + pricing confidence included</div>
             </div>
           </div>
