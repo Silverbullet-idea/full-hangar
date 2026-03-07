@@ -6,6 +6,7 @@ By default this script runs in dry-run mode.
 Usage:
     .venv312\\Scripts\\python.exe scraper\\hide_listings_by_id.py --input scraper\\non_aircraft_hide_approved_ids.json
     .venv312\\Scripts\\python.exe scraper\\hide_listings_by_id.py --input scraper\\non_aircraft_hide_approved_ids.json --apply
+    .venv312\\Scripts\\python.exe scraper\\hide_listings_by_id.py --input scraper\\non_aircraft_strict_candidates_latest.json --input-mode strict-report
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 
-def _load_approved_ids(path: Path) -> list[str]:
+def _load_approved_ids(path: Path, input_mode: str) -> list[str]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -29,15 +30,20 @@ def _load_approved_ids(path: Path) -> list[str]:
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Input file is not valid JSON: {path} ({exc})")
 
-    # Accept either:
-    # - ["uuid1", "uuid2"]
-    # - {"approved_ids": ["uuid1", "uuid2"]}
-    if isinstance(payload, list):
-        ids = payload
-    elif isinstance(payload, dict) and isinstance(payload.get("approved_ids"), list):
-        ids = payload["approved_ids"]
+    if input_mode == "strict-report":
+        if not isinstance(payload, dict) or not isinstance(payload.get("candidates"), list):
+            raise SystemExit("Strict report input must be an object with `candidates` list.")
+        ids = [candidate.get("id") for candidate in payload["candidates"] if isinstance(candidate, dict)]
     else:
-        raise SystemExit("Input must be either a JSON list of IDs or an object with `approved_ids` list.")
+        # approved mode accepts either:
+        # - ["uuid1", "uuid2"]
+        # - {"approved_ids": ["uuid1", "uuid2"]}
+        if isinstance(payload, list):
+            ids = payload
+        elif isinstance(payload, dict) and isinstance(payload.get("approved_ids"), list):
+            ids = payload["approved_ids"]
+        else:
+            raise SystemExit("Approved input must be a JSON list of IDs or an object with `approved_ids` list.")
 
     cleaned = [str(item).strip() for item in ids if str(item).strip()]
     deduped = sorted(set(cleaned))
@@ -89,7 +95,13 @@ def main() -> None:
     parser.add_argument(
         "--input",
         default="scraper/non_aircraft_hide_approved_ids.json",
-        help="Path to approval file containing listing IDs",
+        help="Path to approval file or strict-report JSON",
+    )
+    parser.add_argument(
+        "--input-mode",
+        choices=["approved", "strict-report"],
+        default="approved",
+        help="Input parsing mode: explicit approved list or strict-report candidates",
     )
     parser.add_argument(
         "--apply",
@@ -106,7 +118,7 @@ def main() -> None:
 
     sb = create_client(supabase_url, supabase_service_key)
     input_path = Path(args.input)
-    approved_ids = _load_approved_ids(input_path)
+    approved_ids = _load_approved_ids(input_path, args.input_mode)
     rows = _fetch_rows(sb, approved_ids)
 
     found_ids = {str(row.get("id")) for row in rows}
@@ -116,6 +128,7 @@ def main() -> None:
     print("Hide Listings By ID")
     print("===================")
     print(f"Input file          : {input_path}")
+    print(f"Input mode          : {args.input_mode}")
     print(f"Approved IDs        : {len(approved_ids)}")
     print(f"Rows found in DB    : {len(rows)}")
     print(f"Missing IDs         : {len(missing_ids)}")
@@ -123,9 +136,9 @@ def main() -> None:
         for missing_id in missing_ids:
             print(f"- missing: {missing_id}")
 
-    active_count = sum(1 for row in rows if bool(row.get("is_active")))
-    already_hidden_count = len(rows) - active_count
-    print(f"Currently active    : {active_count}")
+    would_hide_count = sum(1 for row in rows if bool(row.get("is_active")))
+    already_hidden_count = len(rows) - would_hide_count
+    print(f"Would hide          : {would_hide_count}")
     print(f"Already hidden      : {already_hidden_count}")
 
     if not args.apply:
