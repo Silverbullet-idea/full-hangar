@@ -19,7 +19,6 @@ import {
   renderScoreExplanationItem,
   safeDisplay,
   toBool,
-  toProxyImageUrl,
   toTitleCase,
   type UnknownRow,
 } from "./components/detailUtils"
@@ -232,6 +231,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const scoreExplanation = collectTextList(raw, "score_explanation")
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
+  const detailDealTier = pickText(raw, ["deal_tier"]) || listingRow.deal_tier
   const resolvedAskingPrice = resolveAskingPrice(listingRow, raw)
   const fractionalPricingContext = descriptionIntelligence.pricingContext
   const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
@@ -478,13 +478,13 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           primaryImageUrl={primaryImageUrl}
           galleryUrls={galleryUrls}
           title={listingRow.title || "Aircraft listing"}
-          toProxyImageUrl={toProxyImageUrl}
           aircraftRows={aircraftRows}
           engineRows={engineRows}
           descriptionText={descriptionText}
           sourceUrl={sourceUrl}
           sourceLinkLabel={sourceLinkLabel}
           logbookUrls={logbookUrls}
+          dealTier={detailDealTier}
         />
         <RightDetailColumn
           listingId={id}

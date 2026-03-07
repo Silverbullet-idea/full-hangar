@@ -1,17 +1,17 @@
-import Image from 'next/image'
 import type { ReactNode } from 'react'
+import ListingImageGallery from './ListingImageGallery'
 
 type LeftDetailColumnProps = {
   primaryImageUrl: string
   galleryUrls: string[]
   title: string
-  toProxyImageUrl: (url: string) => string
   aircraftRows: Array<[string, ReactNode]>
   engineRows: Array<[string, ReactNode]>
   descriptionText: string
   sourceUrl: string | null
   sourceLinkLabel: string
   logbookUrls: string[]
+  dealTier?: string | null
 }
 
 function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, ReactNode]> }) {
@@ -68,56 +68,24 @@ export default function LeftDetailColumn({
   primaryImageUrl,
   galleryUrls,
   title,
-  toProxyImageUrl,
   aircraftRows,
   engineRows,
   descriptionText,
   sourceUrl,
   sourceLinkLabel,
   logbookUrls,
+  dealTier = null,
 }: LeftDetailColumnProps) {
+  const imageUrls = [
+    ...new Set([
+      String(primaryImageUrl || '').trim(),
+      ...galleryUrls.map((value) => String(value || '').trim()),
+    ].filter(Boolean)),
+  ]
+
   return (
     <section className="panel">
-      {primaryImageUrl ? (
-        <>
-          <Image
-            className="hero-image"
-            src={toProxyImageUrl(primaryImageUrl)}
-            alt={title || 'Aircraft listing'}
-            width={1200}
-            height={720}
-            sizes="(max-width: 980px) 100vw, 50vw"
-            unoptimized
-            priority
-          />
-          {galleryUrls.length > 0 ? (
-            <div className="image-gallery-grid">
-              {galleryUrls.map((url) => (
-                <Image
-                  key={url}
-                  className="gallery-thumb"
-                  src={toProxyImageUrl(url)}
-                  alt={`${title || 'Aircraft'} gallery image`}
-                  width={320}
-                  height={176}
-                  sizes="(max-width: 980px) 33vw, 16vw"
-                  unoptimized
-                  loading="lazy"
-                />
-              ))}
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <div className="hero-image hero-placeholder">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M22 16.5v-2l-8-5V4a2 2 0 0 0-4 0v5.5l-8 5v2l8-2.5V20l-2 1.5V23l4-1 4 1v-1.5L14 20v-6z"
-            />
-          </svg>
-        </div>
-      )}
+      <ListingImageGallery title={title || 'Aircraft listing'} imageUrls={imageUrls} dealTier={dealTier} />
 
       <div style={{ marginTop: '0.9rem', display: 'grid', gap: '0.9rem' }}>
         <DetailTableCard title="Aircraft Details" rows={aircraftRows} />

@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { getDealTierMeta } from '../../../lib/listings/dealTier'
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 
@@ -10,6 +11,7 @@ type ListingCardProps = {
   titleText: string
   locationText: string
   ownershipBadgeText?: string
+  dealTier?: string | null
   specRows: Array<[string, string]>
   onImageError: () => void
 }
@@ -108,10 +110,21 @@ export default function ListingCard({
   titleText,
   locationText,
   ownershipBadgeText,
+  dealTier,
   specRows,
   onImageError,
 }: ListingCardProps) {
   const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError })
+  const dealTierMeta = getDealTierMeta(dealTier)
+  const dealTierBadgeClass = dealTierMeta
+    ? dealTierMeta.tone === 'green'
+      ? 'border-[#16a34a] bg-[#16a34a1f] text-[#16a34a]'
+      : dealTierMeta.tone === 'blue'
+        ? 'border-[#2563eb] bg-[#2563eb1f] text-[#2563eb]'
+        : dealTierMeta.tone === 'amber'
+          ? 'border-[#d97706] bg-[#d977061f] text-[#d97706]'
+          : 'border-[#dc2626] bg-[#dc26261f] text-[#dc2626]'
+    : ''
 
   if (mode === 'rows') {
     return (
@@ -127,6 +140,11 @@ export default function ListingCard({
               {ownershipBadgeText ? (
                 <span className="shrink-0 rounded border border-[#FF9900] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold text-[#FF9900]">
                   {ownershipBadgeText}
+                </span>
+              ) : null}
+              {dealTierMeta ? (
+                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
+                  {dealTierMeta.label}
                 </span>
               ) : null}
             </div>
@@ -155,6 +173,11 @@ export default function ListingCard({
                     {ownershipBadgeText}
                   </span>
                 ) : null}
+                {dealTierMeta ? (
+                  <span className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
+                    {dealTierMeta.label}
+                  </span>
+                ) : null}
               </div>
               <div className="truncate text-[11px] text-brand-muted">{locationText}</div>
             </div>
@@ -178,6 +201,11 @@ export default function ListingCard({
         {ownershipBadgeText ? (
           <span className="shrink-0 rounded border border-[#FF9900] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold text-[#FF9900]">
             {ownershipBadgeText}
+          </span>
+        ) : null}
+        {dealTierMeta ? (
+          <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
+            {dealTierMeta.label}
           </span>
         ) : null}
       </div>

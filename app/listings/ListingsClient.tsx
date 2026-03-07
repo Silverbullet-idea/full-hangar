@@ -589,13 +589,13 @@ export default function ListingsClient({
       typeof l.fractional_share_price === 'number' && l.fractional_share_price > 0
         ? formatPriceOrCall(l.fractional_share_price)
         : 'N/A'
-    const ownershipText = isFractional
-      ? (shareDenominator ? `Fractional ${shareNumerator}/${shareDenominator}` : 'Fractional')
-      : 'Full'
     const ownershipBadgeText = isFractional ? 'Fractional' : undefined
     const locationText = l.location_label ?? 'Location unavailable'
     const dealRatingText = formatScore(typeof l.deal_rating === 'number' ? l.deal_rating : null)
     const valueScoreText = formatScore(typeof l.value_score === 'number' ? l.value_score : null)
+    const ownershipText = isFractional
+      ? (shareDenominator ? `Fractional ${shareNumerator}/${shareDenominator}` : 'Fractional')
+      : 'Full'
 
     const specRows: Array<[string, string]> = [
       ['N-Number', tailText],
@@ -616,6 +616,7 @@ export default function ListingsClient({
         titleText={titleText}
         locationText={locationText}
         ownershipBadgeText={ownershipBadgeText}
+        dealTier={typeof l.deal_tier === 'string' ? l.deal_tier : null}
         specRows={specRows}
         onImageError={() => {
           setImageCursor((prev) => ({ ...prev, [listingKey]: currentImageIndex + 1 }))
