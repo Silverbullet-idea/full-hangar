@@ -116,6 +116,50 @@ html[data-theme="light"] .asking-price-inline {
   color: var(--brand-muted) !important;
 }
 
+.nav-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 11, 18, 0.52);
+  backdrop-filter: blur(1.5px);
+  pointer-events: all;
+}
+
+html[data-theme="light"] .nav-loading-overlay {
+  background: rgba(246, 248, 252, 0.62);
+}
+
+.nav-loading-spinner-shell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  border: 1px solid var(--brand-dark);
+  background: var(--card-bg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.nav-loading-spinner-image {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  animation: navLoadingSpin 3.2s linear infinite;
+}
+
+@keyframes navLoadingSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 html,
 body {
   background-color: var(--brand-bg);
