@@ -44,6 +44,67 @@ export type ListingFilterOption = {
   valueScore: number | null;
 };
 
+function parseImageUrlCandidates(value: unknown): string[] {
+  const normalize = (input: unknown) =>
+    Array.from(
+      new Set(
+        (Array.isArray(input) ? input : [])
+          .map((item) => String(item ?? "").trim())
+          .filter((item) => item.length > 0)
+      )
+    );
+
+  if (Array.isArray(value)) return normalize(value);
+  if (typeof value !== "string") return [];
+
+  const raw = value.trim();
+  if (!raw) return [];
+  if (raw.startsWith("[")) {
+    try {
+      return normalize(JSON.parse(raw));
+    } catch {
+      // Fall through to other parsing strategies.
+    }
+  }
+  if (raw.includes(",")) {
+    return normalize(raw.split(","));
+  }
+  return [raw];
+}
+
+function countDefaultListingDetails(row: Record<string, unknown>): number {
+  const hasText = (value: unknown) => String(value ?? "").trim().length > 0;
+  const hasNumber = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value > 0;
+
+  return [
+    hasText(row.make),
+    hasText(row.model),
+    hasNumber(row.year),
+    hasText(row.n_number),
+    hasNumber(row.asking_price),
+    hasText(row.location_label) || hasText(row.location_state),
+    hasNumber(row.total_time_airframe),
+    hasNumber(row.time_since_overhaul),
+  ].filter(Boolean).length;
+}
+
+function hasMultipleListingPhotos(row: Record<string, unknown>): boolean {
+  const candidates = new Set<string>();
+  const primary = String(row.primary_image_url ?? "").trim();
+  if (primary) candidates.add(primary);
+  for (const url of parseImageUrlCandidates(row.image_urls)) {
+    candidates.add(url);
+  }
+  return candidates.size > 1;
+}
+
+function shouldIncludeInDefaultListings(row: Record<string, unknown>): boolean {
+  const tier = String(row.deal_tier ?? "").trim().toUpperCase();
+  if (tier !== "EXCEPTIONAL_DEAL") return false;
+  if (!hasMultipleListingPhotos(row)) return false;
+  return countDefaultListingDetails(row) >= 5;
+}
+
 export async function getListings(filters: ListingFilters = {}) {
   const supabase = createServerClient();
   const {
@@ -214,6 +275,27 @@ type ParsedListingsSearch = {
   orClause?: string;
 };
 
+function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
+  const hasText = (value: unknown) => String(value ?? "").trim().length > 0;
+  const sortBy = String(query.sortBy ?? "").trim();
+  return (
+    !hasText(query.q) &&
+    !hasText(query.make) &&
+    !hasText(query.model) &&
+    !hasText(query.modelFamily) &&
+    !hasText(query.subModel) &&
+    !hasText(query.source) &&
+    !hasText(query.state) &&
+    !hasText(query.risk) &&
+    !hasText(query.dealTier) &&
+    !hasText(query.category) &&
+    !hasText(query.ownershipType) &&
+    Number(query.minValueScore ?? 0) <= 0 &&
+    Number(query.maxPrice ?? 0) <= 0 &&
+    (!sortBy || sortBy === "value_desc")
+  );
+}
+
 function normalizeDealTier(value: unknown): string {
   return String(value ?? "").trim().toUpperCase();
 }
@@ -358,6 +440,48 @@ async function runSimpleSearchListingsPage(
   };
 }
 
+async function runDefaultCuratedListingsPage(
+  supabase: ReturnType<typeof createServerClient>,
+  opts: {
+    listBaseTable: string;
+    from: number;
+    to: number;
+    page: number;
+    pageSize: number;
+    ownershipType: string;
+  }
+) {
+  const { listBaseTable, from, to, page, pageSize, ownershipType } = opts;
+  const candidateQuery = supabase
+    .from(listBaseTable)
+    .select(LISTINGS_PAGE_COLUMNS)
+    .eq("is_active", true)
+    .eq("deal_tier", "EXCEPTIONAL_DEAL")
+    .not("primary_image_url", "is", null)
+    .not("image_urls", "is", null)
+    .order("deal_rating", { ascending: false, nullsFirst: false })
+    .order("value_score", { ascending: false, nullsFirst: false })
+    .limit(1500);
+
+  const result = await candidateQuery;
+  if (result.error) throw new Error(result.error.message);
+
+  const enrichedRows = await attachFractionalFields(
+    supabase,
+    (result.data ?? []) as Record<string, unknown>[]
+  );
+  const ownershipFilteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
+  const curatedRows = ownershipFilteredRows.filter(shouldIncludeInDefaultListings);
+  const pagedRows = curatedRows.slice(from, to + 1);
+
+  return {
+    rows: pagedRows,
+    total: curatedRows.length,
+    page,
+    pageSize,
+  };
+}
+
 export async function getListingsPage(query: ListingsPageQuery = {}) {
   const supabase = createServerClient();
   const page = Math.max(1, Number(query.page ?? 1));
@@ -384,6 +508,17 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     ownershipType === "fractional" || ownershipType === "full"
       ? "aircraft_listings"
       : "public_listings";
+
+  if (isDefaultListingsLandingQuery(query)) {
+    return runDefaultCuratedListingsPage(supabase, {
+      listBaseTable,
+      from,
+      to,
+      page,
+      pageSize,
+      ownershipType,
+    });
+  }
 
   let dbQuery = supabase
     .from(listBaseTable)
