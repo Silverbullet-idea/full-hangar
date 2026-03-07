@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-orange: #FF9900;
+  --color-brand-burn: #AF4D27;
+  --color-brand-black: #000000;
+  --color-brand-dark: #333333;
+  --color-brand-muted: #B2B2B2;
+  --color-brand-white: #FFFFFF;
+  --color-card-bg: #1a1a1a;
+}
+
 :root {
   --brand-orange: #FF9900;
   --brand-burn: #AF4D27;
