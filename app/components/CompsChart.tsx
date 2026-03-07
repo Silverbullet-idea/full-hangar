@@ -180,6 +180,21 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   }, [payload, viewMode]);
 
   const yLabel = yMetric === "engine_smoh" ? "Engine SMOH" : yMetric === "year" ? "Year" : "Total Time";
+  const yearAxisDomain = useMemo<[number, number] | undefined>(() => {
+    if (yMetric !== "year") return undefined;
+    const yearValues = [
+      ...(payload?.comps.map((row) => row.year).filter((value): value is number => typeof value === "number" && value >= 1900) ?? []),
+      ...(typeof payload?.target.year === "number" && payload.target.year >= 1900 ? [payload.target.year] : []),
+    ];
+    if (yearValues.length === 0) {
+      return [1940, 2025];
+    }
+    const minYear = Math.min(...yearValues);
+    const maxYear = Math.max(...yearValues);
+    const lowerBound = Math.max(1940, minYear - 5);
+    const upperBound = Math.max(lowerBound + 10, maxYear + 5);
+    return [lowerBound, upperBound];
+  }, [payload, yMetric]);
 
   const points = useMemo<ScatterPoint[]>(() => {
     if (!payload) return [];
@@ -303,6 +318,9 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   const targetHasPrice = typeof payload.target.price === "number";
   const targetYValue = typeof payload.target[yMetric] === "number" ? (payload.target[yMetric] as number) : null;
   const priceRange = payload.metadata.price_range;
+  const axisTextColor = "var(--brand-muted)";
+  const gridColor = "var(--brand-dark)";
+  const readableBodyTextColor = "var(--brand-white)";
   const tooltipStyle = (() => {
     const containerWidth = chartContainerRef.current?.clientWidth ?? 680;
     const tooltipWidth = 300;
@@ -419,21 +437,23 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 }
               }}
             >
-              <CartesianGrid stroke="#F0F0F0" strokeOpacity={0.2} />
+              <CartesianGrid stroke={gridColor} strokeOpacity={0.38} />
               <XAxis
                 type="number"
                 dataKey="price"
                 name="Price"
                 tickFormatter={formatPriceTick}
-                stroke="#b2b2b2"
-                tick={{ fill: "#b2b2b2", fontSize: 12 }}
+                stroke={axisTextColor}
+                tick={{ fill: axisTextColor, fontSize: 12 }}
               />
               <YAxis
                 type="number"
                 dataKey="yValue"
                 name={yLabel}
-                stroke="#b2b2b2"
-                tick={{ fill: "#b2b2b2", fontSize: 12 }}
+                domain={yearAxisDomain}
+                allowDecimals={false}
+                stroke={axisTextColor}
+                tick={{ fill: axisTextColor, fontSize: 12 }}
               />
               <Scatter data={points} shape={(props: any) => {
                 const point = props.payload as ScatterPoint;
@@ -578,14 +598,14 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
         <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer>
             <BarChart data={mobileBars} layout="vertical" margin={{ top: 8, right: 20, bottom: 8, left: 20 }}>
-              <CartesianGrid stroke="#F0F0F0" strokeOpacity={0.2} horizontal={false} />
-              <XAxis type="number" stroke="#b2b2b2" tick={{ fill: "#b2b2b2", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" width={130} stroke="#b2b2b2" tick={{ fill: "#b2b2b2", fontSize: 11 }} />
+              <CartesianGrid stroke={gridColor} strokeOpacity={0.38} horizontal={false} />
+              <XAxis type="number" stroke={axisTextColor} tick={{ fill: axisTextColor, fontSize: 12 }} />
+              <YAxis type="category" dataKey="name" width={130} stroke={axisTextColor} tick={{ fill: axisTextColor, fontSize: 11 }} />
               <Bar dataKey="valueScore" radius={[0, 6, 6, 0]}>
                 {mobileBars.map((entry) => (
                   <Cell key={entry.id} fill={entry.valueScore >= 80 ? "#16a34a" : entry.valueScore >= 60 ? "#84cc16" : entry.valueScore >= 40 ? "#d97706" : "#dc2626"} />
                 ))}
-                <LabelList dataKey="valueScore" position="right" fill="#d1d5db" />
+                <LabelList dataKey="valueScore" position="right" fill={readableBodyTextColor} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -610,11 +630,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               return (
                 <li key={`${row.id ?? label}-${row.price}`}>
                   {href ? (
-                    <a href={href} style={{ color: "#d1d5db" }}>
+                    <a href={href} style={{ color: readableBodyTextColor, textDecorationColor: "var(--brand-muted)", fontWeight: 600 }}>
                       {`${label} · ${formatMoney(row.price)} · ${row.location_label ?? "Location unavailable"}`}
                     </a>
                   ) : (
-                    <span style={{ color: "#d1d5db" }}>
+                    <span style={{ color: readableBodyTextColor }}>
                       {`${label} · ${formatMoney(row.price)} · ${row.location_label ?? "Location unavailable"}`}
                     </span>
                   )}
