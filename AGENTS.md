@@ -96,6 +96,7 @@ detailed agent prompts for all upcoming tasks.
 - [x] Added `HYBRID_CUTOVER_REPORT.md` documenting hybrid scoring reset execution details, before/after validation metrics, operational notes, and rollback command set for v`1.8.0`
 
 ### Frontend
+- [x] Light-mode surface parity pass: added global light-theme overrides in `app/globals.css` for legacy hardcoded dark utility classes (`bg-[#1A1A1A]`, `bg-[#141922]`, `bg-[#161d28]`, dark borders, and white/muted text variants) so listings cards, filters, and toolbars render as true light surfaces when light mode is active.
 - [x] Sitewide theme system pass: added persistent dark/light mode infrastructure (`ThemeProvider`, bootstrap script, header toggle), dual-logo switching by theme (`/branding/FullHangar.png` dark + `/branding/FullHangarLight.png` light), and CSS token overrides in `app/globals.css` so existing brand utility classes adapt to light mode while preserving dark as default on first load.
 - [x] Branding asset restoration: added `public/branding/FullHangar.png` from the provided official logo so the new multi-source header loader can render the real brand mark in production without requiring external hosting.
 - [x] Header-brand resilience upgrade: added `app/components/HeaderBrand.tsx` multi-source logo loader (`NEXT_PUBLIC_BRAND_LOGO_URL` -> `/branding/FullHangar.png` -> `/branding/FullHangar.svg`) with automatic text fallback so production branding survives missing-asset deploys while allowing instant logo restoration via env/file drop.

@@ -43,6 +43,40 @@ html[data-theme="light"] {
   --color-card-bg: var(--card-bg);
 }
 
+/* Light-theme bridge for legacy hardcoded dark utility classes. */
+html[data-theme="light"] [class*="bg-[#1A1A1A]"],
+html[data-theme="light"] [class*="bg-[#1a1a1a]"],
+html[data-theme="light"] [class*="bg-[#161d28]"],
+html[data-theme="light"] [class*="bg-[#141922]"],
+html[data-theme="light"] [class*="bg-[#0f141d]"],
+html[data-theme="light"] [class*="bg-[#0f172a]"],
+html[data-theme="light"] [class*="bg-black/50"] {
+  background-color: var(--card-bg) !important;
+}
+
+html[data-theme="light"] [class*="hover:bg-[#1d2636]"]:hover {
+  background-color: var(--surface-muted) !important;
+}
+
+html[data-theme="light"] [class*="border-[#3A4454]"],
+html[data-theme="light"] [class*="border-[#3a4454]"],
+html[data-theme="light"] [class*="border-[#2d394a]"] {
+  border-color: var(--brand-dark) !important;
+}
+
+html[data-theme="light"] [class~="text-white"],
+html[data-theme="light"] [class*="text-[#D1D5DB]"],
+html[data-theme="light"] [class*="text-[#d1d5db]"] {
+  color: var(--brand-white) !important;
+}
+
+html[data-theme="light"] [class*="text-[#B2B2B2]"],
+html[data-theme="light"] [class*="text-[#b2b2b2]"],
+html[data-theme="light"] [class*="text-[#9CA3AF]"],
+html[data-theme="light"] [class*="text-[#9ca3af]"] {
+  color: var(--brand-muted) !important;
+}
+
 html,
 body {
   background-color: var(--brand-bg);
