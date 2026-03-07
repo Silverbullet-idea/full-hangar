@@ -11,6 +11,7 @@
 }
 
 :root {
+  --brand-bg: #000000;
   --brand-orange: #FF9900;
   --brand-burn: #AF4D27;
   --brand-black: #000000;
@@ -18,11 +19,33 @@
   --brand-muted: #B2B2B2;
   --brand-white: #FFFFFF;
   --card-bg: #1a1a1a;
+  --surface-muted: #141922;
+}
+
+html[data-theme="light"] {
+  --brand-bg: #f6f8fc;
+  --brand-orange: #c7641b;
+  --brand-burn: #a74722;
+  --brand-black: #f6f8fc;
+  --brand-dark: #d8dee8;
+  --brand-muted: #4b5563;
+  --brand-white: #0f172a;
+  --card-bg: #ffffff;
+  --surface-muted: #eef2f7;
+
+  /* Override Tailwind v4 theme tokens so existing utility classes flip with the theme. */
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-burn: var(--brand-burn);
+  --color-brand-black: var(--brand-black);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-white: var(--brand-white);
+  --color-card-bg: var(--card-bg);
 }
 
 html,
 body {
-  background-color: var(--brand-black);
+  background-color: var(--brand-bg);
   color: var(--brand-white);
   font-family: "Century Gothic", "Trebuchet MS", "Futura", sans-serif;
 }

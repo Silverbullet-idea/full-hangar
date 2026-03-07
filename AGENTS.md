@@ -96,6 +96,7 @@ detailed agent prompts for all upcoming tasks.
 - [x] Added `HYBRID_CUTOVER_REPORT.md` documenting hybrid scoring reset execution details, before/after validation metrics, operational notes, and rollback command set for v`1.8.0`
 
 ### Frontend
+- [x] Sitewide theme system pass: added persistent dark/light mode infrastructure (`ThemeProvider`, bootstrap script, header toggle), dual-logo switching by theme (`/branding/FullHangar.png` dark + `/branding/FullHangarLight.png` light), and CSS token overrides in `app/globals.css` so existing brand utility classes adapt to light mode while preserving dark as default on first load.
 - [x] Branding asset restoration: added `public/branding/FullHangar.png` from the provided official logo so the new multi-source header loader can render the real brand mark in production without requiring external hosting.
 - [x] Header-brand resilience upgrade: added `app/components/HeaderBrand.tsx` multi-source logo loader (`NEXT_PUBLIC_BRAND_LOGO_URL` -> `/branding/FullHangar.png` -> `/branding/FullHangar.svg`) with automatic text fallback so production branding survives missing-asset deploys while allowing instant logo restoration via env/file drop.
 - [x] Production stability hotfix: restored listing detail comparable-chart data path by adding app-router endpoint `app/api/listings/[id]/comps/route.ts` (returns `{ target, comps, metadata }` with model-family/exact/category fallback logic), and replaced missing header image dependency with branded text-logo fallback in `app/layout.tsx` to avoid 404 logo regressions during deploys.
