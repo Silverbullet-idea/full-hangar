@@ -39,7 +39,7 @@ function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, 
           border-collapse: collapse;
         }
         .detail-table tr {
-          border-bottom: 1px solid #313d4f;
+          border-bottom: 1px solid var(--brand-dark);
         }
         .detail-table tr:last-child {
           border-bottom: none;
@@ -52,11 +52,11 @@ function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, 
         }
         .detail-table th {
           width: 46%;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-weight: 500;
         }
         .detail-table td {
-          color: #ffffff;
+          color: var(--brand-white);
           font-weight: 700;
         }
       `}</style>
