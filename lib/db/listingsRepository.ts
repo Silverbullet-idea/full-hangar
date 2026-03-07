@@ -214,6 +214,35 @@ type ParsedListingsSearch = {
   orClause?: string;
 };
 
+function normalizeDealTier(value: unknown): string {
+  return String(value ?? "").trim().toUpperCase();
+}
+
+function getDealTierPriority(value: unknown): number {
+  const tier = normalizeDealTier(value);
+  if (tier === "EXCEPTIONAL_DEAL") return 0;
+  if (tier === "GOOD_DEAL") return 1;
+  if (tier === "FAIR_MARKET") return 2;
+  if (tier === "ABOVE_MARKET") return 3;
+  if (tier === "OVERPRICED") return 4;
+  return 5;
+}
+
+function applyDealTierPreference(
+  rows: Record<string, unknown>[],
+  enabled: boolean
+): Record<string, unknown>[] {
+  if (!enabled || rows.length < 2) return rows;
+  return rows
+    .map((row, index) => ({ row, index, priority: getDealTierPriority(row.deal_tier) }))
+    .sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      // Keep existing DB sort behavior inside each deal-tier bucket.
+      return a.index - b.index;
+    })
+    .map((entry) => entry.row);
+}
+
 function parseListingsSearch(rawQuery: string): ParsedListingsSearch {
   const q = rawQuery.replaceAll(",", " ").trim();
   if (!q) return {};
@@ -290,9 +319,10 @@ async function runSimpleSearchListingsPage(
     page: number;
     pageSize: number;
     ownershipType: string;
+    preferDealTier: boolean;
   }
 ) {
-  const { parsedSearch, sortBy, from, to, page, pageSize, ownershipType } = opts;
+  const { parsedSearch, sortBy, from, to, page, pageSize, ownershipType, preferDealTier } = opts;
   let query = supabase
     .from("aircraft_listings")
     .select(LISTINGS_PAGE_COLUMNS)
@@ -318,10 +348,11 @@ async function runSimpleSearchListingsPage(
     (result.data ?? []) as Record<string, unknown>[]
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
+  const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
 
   return {
-    rows: filteredRows,
-    total: filteredRows.length,
+    rows: orderedRows,
+    total: orderedRows.length,
     page,
     pageSize,
   };
@@ -335,6 +366,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const to = from + pageSize - 1;
 
   const q = String(query.q ?? "").trim();
+  const preferDealTier = q.length > 0;
   const make = String(query.make ?? "").trim();
   const model = String(query.model ?? "").trim();
   const modelFamily = String(query.modelFamily ?? "").trim();
@@ -370,6 +402,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
         page,
         pageSize,
         ownershipType,
+        preferDealTier,
       });
     } catch {
       // Fall through to standard public_listings query pipeline.
@@ -504,9 +537,10 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
             (tableResult.data ?? []) as Record<string, unknown>[]
           );
           const filteredTableRows = applyOwnershipFilterToRows(enrichedTableRows, ownershipType);
+          const orderedTableRows = applyDealTierPreference(filteredTableRows, preferDealTier);
           return {
-            rows: filteredTableRows,
-            total: filteredTableRows.length,
+            rows: orderedTableRows,
+            total: orderedTableRows.length,
             page,
             pageSize,
           };
@@ -570,11 +604,12 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     (result.data ?? []) as Record<string, unknown>[]
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
+  const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
   if (ownershipType === "fractional" || ownershipType === "full") {
-    total = filteredRows.length;
+    total = orderedRows.length;
   }
   return {
-    rows: filteredRows,
+    rows: orderedRows,
     total,
     page,
     pageSize,
