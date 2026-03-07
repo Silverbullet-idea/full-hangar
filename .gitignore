@@ -1,4 +1,6 @@
 node_modules/
+.venv/
+.venv312/
 
 # Next.js local build/dev artifacts
 .next/

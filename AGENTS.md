@@ -1,7 +1,7 @@
 # Full Hangar — Agent Status Board & Task Playbook
 
 > **Every agent reads this first. Every agent updates this when done.**
-> Last updated: March 5, 2026
+> Last updated: March 7, 2026
 
 This is the living project state. The `.cursor/rules/fullhangar.mdc` file has
 the permanent project context. This file has what's happening RIGHT NOW — plus
@@ -178,6 +178,7 @@ detailed agent prompts for all upcoming tasks.
 - [x] v1.8.0 — Hybrid scoring reset: calibrated blend of condition/market/execution with sparse-data fallback bands and calibration-path diagnostics to reduce score clustering while preserving safety overrides
 
 ### Data Pipeline
+- [x] Added strict non-aircraft audit + hide workflow: new `scraper/audit_non_aircraft_listings.py` emits `scraper/non_aircraft_review_latest.json` for manual verification, `scraper/hide_listings_by_id.py` supports dry-run/apply `is_active` hides from explicit approved IDs, and npm aliases were added (`pipeline:audit:non-aircraft`, `pipeline:hide:non-aircraft:dry`, `pipeline:hide:non-aircraft:apply`); initial strict audit currently flags 20 candidates including target `source_id=5016588051` (wanted ads, appraisal ads, tow-bar equipment, and placeholder liner rows)
 - [x] Controller.com scraper (Playwright, all makes)
 - [x] Trade-a-Plane scraper — dry run verified (5 Cessna listings, correct source IDs)
 - [x] AeroTrader scraper integration: added `scraper/aerotrader_scraper.py` as primary implementation, aligned to canonical schema/upsert conventions, and converted `scraper/scraper.py` into a compatibility wrapper
