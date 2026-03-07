@@ -48,8 +48,8 @@ export default function ListingsTopBanner({
             const dropdownMakes = category.value === null
               ? makeOptions
                   .map((make) => ({ make, count: makeCountMap[make] ?? 0 }))
-                  .filter((entry) => entry.count > 0)
-                  .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make))
+                  .filter((entry) => entry.count > 1)
+                  .sort((a, b) => a.make.localeCompare(b.make))
               : categoryMenuData.makesByCategory[category.value]
             const hasDropdownMakes = dropdownMakes.length > 0
             return (
