@@ -1,4 +1,3 @@
-import Link from "next/link"
 import type { Metadata } from "next"
 import ListingsClient from './ListingsClient'
 import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
@@ -279,16 +278,6 @@ export default async function ListingsPage({
       />
       <section className="mb-5 space-y-2">
         <h1 className="text-2xl font-bold text-brand-white">Aircraft Listings for Sale</h1>
-        <p className="text-sm text-brand-muted">
-          Browse active inventory with deal scores, risk signals, and comparable market context.
-        </p>
-        <nav aria-label="Popular listing categories" className="flex flex-wrap gap-2 text-sm">
-          <Link href="/listings?category=single" className="text-brand-orange hover:underline">Single Engine</Link>
-          <Link href="/listings?category=multi" className="text-brand-orange hover:underline">Multi Engine</Link>
-          <Link href="/listings?category=jet" className="text-brand-orange hover:underline">Jets</Link>
-          <Link href="/listings?category=helicopter" className="text-brand-orange hover:underline">Helicopters</Link>
-          <Link href="/listings?dealTier=TOP_DEALS" className="text-brand-orange hover:underline">Top Deals</Link>
-        </nav>
       </section>
       <ListingsClient
         initialListings={initialPageData.rows}
