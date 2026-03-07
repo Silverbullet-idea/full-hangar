@@ -374,6 +374,9 @@ export default function ListingsClient({
     const controller = new AbortController()
     const loadListings = async () => {
       try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('fullhangar:navigation-loading-start'))
+        }
         setLoading(true)
         setFetchError(null)
         const params = new URLSearchParams()
@@ -409,6 +412,9 @@ export default function ListingsClient({
         setTotalFiltered(0)
       } finally {
         setLoading(false)
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('fullhangar:navigation-loading-end'))
+        }
       }
     }
 
@@ -466,6 +472,24 @@ export default function ListingsClient({
     safePage,
     pageSize,
   ])
+  const buildPageHref = (page: number) => {
+    const params = new URLSearchParams()
+    if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
+    if (categoryFilter) params.set('category', categoryFilter)
+    if (dealFilter !== 'all') params.set('dealTier', dealFilter)
+    if (sortBy !== 'value_desc') params.set('sortBy', sortBy)
+    if (appliedMakeFilter !== 'all') params.set('make', appliedMakeFilter)
+    if (appliedModelFilter.trim()) params.set('modelFamily', appliedModelFilter.trim())
+    if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
+    if (appliedSourceFilter !== 'all') params.set('source', appliedSourceFilter)
+    if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
+    if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
+    if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
+    if (appliedOwnershipType !== 'all') params.set('ownershipType', appliedOwnershipType)
+    if (page > 1) params.set('page', String(page))
+    if (pageSize !== 24) params.set('pageSize', String(pageSize))
+    return `/listings${params.toString() ? `?${params.toString()}` : ''}`
+  }
   const paginatedListings = listings
   const prioritizedListings = useMemo(() => {
     const rows = [...paginatedListings]
@@ -691,7 +715,7 @@ export default function ListingsClient({
             safePage={safePage}
             totalPages={totalPages}
             renderListingCard={renderListingCard}
-            setCurrentPage={setCurrentPage}
+            buildPageHref={buildPageHref}
           />
         </section>
       </div>
