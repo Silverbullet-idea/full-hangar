@@ -1,6 +1,7 @@
 import './globals.css'
 import { Suspense } from "react"
 import HeaderBrand from "./components/HeaderBrand"
+import HeaderSearchBar from "./components/HeaderSearchBar"
 import { NavigationLoadingProvider } from "./components/NavigationLoadingProvider"
 import ThemeToggle from "./components/ThemeToggle"
 import { ThemeProvider } from "./components/ThemeProvider"
@@ -24,7 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <a href="/" className="flex items-center" aria-label="Full Hangar home">
                     <HeaderBrand />
                   </a>
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+                    <HeaderSearchBar />
                     <nav>
                       <a href="/listings" className="text-sm text-brand-muted hover:text-brand-orange">
                         Browse Aircraft
