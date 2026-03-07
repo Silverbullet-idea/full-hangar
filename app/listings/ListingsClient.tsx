@@ -21,8 +21,6 @@ import {
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 type SortOption =
-  | 'value_desc'
-  | 'value_asc'
   | 'price_low'
   | 'price_high'
   | 'deal_desc'
@@ -64,7 +62,6 @@ type ListingsClientProps = {
   initialSourceFilter?: 'all' | ListingSourceKey | string
   initialStateFilter?: string
   initialRiskFilter?: string
-  initialOwnershipType?: 'all' | 'full' | 'fractional'
   initialMinimumScore?: number
   initialMaxPrice?: number
   initialPage?: number
@@ -97,20 +94,19 @@ export default function ListingsClient({
   initialSearchTerm = '',
   initialCategoryFilter = null,
   initialDealFilter = 'all',
-  initialSortBy = 'value_desc',
+  initialSortBy = 'deal_desc',
   initialMakeFilter = 'all',
   initialModelFilter = '',
   initialSubModelFilter = '',
   initialSourceFilter = 'all',
   initialStateFilter = '',
   initialRiskFilter = 'all',
-  initialOwnershipType = 'all',
   initialMinimumScore = 0,
   initialMaxPrice = 0,
   initialPage = 1,
   initialPageSize = 24,
 }: ListingsClientProps) {
-  const canApplySavedSort = initialSortBy === 'value_desc' && initialDealFilter === 'all'
+  const canApplySavedSort = initialSortBy === 'deal_desc' && initialDealFilter === 'all'
   const [listings, setListings] = useState<any[]>(Array.isArray(initialListings) ? initialListings : [])
   const [totalFiltered, setTotalFiltered] = useState(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
@@ -133,8 +129,6 @@ export default function ListingsClient({
   const [appliedSourceFilter, setAppliedSourceFilter] = useState<'all' | ListingSourceKey>(normalizedInitialSourceFilter)
   const [riskFilter, setRiskFilter] = useState(initialRiskFilter || 'all')
   const [appliedRiskFilter, setAppliedRiskFilter] = useState(initialRiskFilter || 'all')
-  const [ownershipType, setOwnershipType] = useState<'all' | 'full' | 'fractional'>(initialOwnershipType)
-  const [appliedOwnershipType, setAppliedOwnershipType] = useState<'all' | 'full' | 'fractional'>(initialOwnershipType)
   const [dealFilter, setDealFilter] = useState<'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'>(initialDealFilter)
   const [minimumScore, setMinimumScore] = useState(Math.max(0, initialMinimumScore))
   const [maxPrice, setMaxPrice] = useState(Math.max(0, initialMaxPrice))
@@ -163,8 +157,6 @@ export default function ListingsClient({
     setAppliedSourceFilter(normalizedInitialSourceFilter)
     setRiskFilter(initialRiskFilter || 'all')
     setAppliedRiskFilter(initialRiskFilter || 'all')
-    setOwnershipType(initialOwnershipType)
-    setAppliedOwnershipType(initialOwnershipType)
     setDealFilter(initialDealFilter)
     setMinimumScore(Math.max(0, initialMinimumScore))
     setMaxPrice(Math.max(0, initialMaxPrice))
@@ -183,7 +175,6 @@ export default function ListingsClient({
     initialSubModelFilter,
     normalizedInitialSourceFilter,
     initialRiskFilter,
-    initialOwnershipType,
     initialDealFilter,
     initialMinimumScore,
     initialMaxPrice,
@@ -239,7 +230,7 @@ export default function ListingsClient({
       setLayoutMode(savedLayout)
     }
     const validSorts: SortOption[] = [
-      'value_desc', 'value_asc', 'price_low', 'price_high', 'deal_desc',
+      'price_low', 'price_high', 'deal_desc',
       'market_best', 'market_worst', 'risk_low', 'risk_high',
       'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest'
     ]
@@ -368,7 +359,7 @@ export default function ListingsClient({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMaxPrice, categoryFilter, appliedRiskFilter, appliedOwnershipType, dealFilter, pageSize])
+  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMaxPrice, categoryFilter, appliedRiskFilter, dealFilter, pageSize])
 
   useEffect(() => {
     if (!hasSkippedInitialFetch.current) {
@@ -397,7 +388,6 @@ export default function ListingsClient({
         if (dealFilter !== 'all') params.set('dealTier', dealFilter)
         if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
         if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
-        if (appliedOwnershipType !== 'all') params.set('ownershipType', appliedOwnershipType)
         if (categoryFilter) params.set('category', categoryFilter)
 
         const response = await fetch(`/api/listings?${params.toString()}`, {
@@ -437,7 +427,6 @@ export default function ListingsClient({
     dealFilter,
     minimumScore,
     appliedMaxPrice,
-    appliedOwnershipType,
     categoryFilter,
     sortBy,
   ])
@@ -449,7 +438,7 @@ export default function ListingsClient({
     if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
     if (categoryFilter) params.set('category', categoryFilter)
     if (dealFilter !== 'all') params.set('dealTier', dealFilter)
-    if (sortBy !== 'value_desc') params.set('sortBy', sortBy)
+    if (sortBy !== 'deal_desc') params.set('sortBy', sortBy)
     if (appliedMakeFilter !== 'all') params.set('make', appliedMakeFilter)
     if (appliedModelFilter.trim()) params.set('modelFamily', appliedModelFilter.trim())
     if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
@@ -457,7 +446,6 @@ export default function ListingsClient({
     if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
     if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
     if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
-    if (appliedOwnershipType !== 'all') params.set('ownershipType', appliedOwnershipType)
     if (safePage > 1) params.set('page', String(safePage))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
@@ -473,7 +461,6 @@ export default function ListingsClient({
     appliedRiskFilter,
     minimumScore,
     appliedMaxPrice,
-    appliedOwnershipType,
     safePage,
     pageSize,
   ])
@@ -482,7 +469,7 @@ export default function ListingsClient({
     if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
     if (categoryFilter) params.set('category', categoryFilter)
     if (dealFilter !== 'all') params.set('dealTier', dealFilter)
-    if (sortBy !== 'value_desc') params.set('sortBy', sortBy)
+    if (sortBy !== 'deal_desc') params.set('sortBy', sortBy)
     if (appliedMakeFilter !== 'all') params.set('make', appliedMakeFilter)
     if (appliedModelFilter.trim()) params.set('modelFamily', appliedModelFilter.trim())
     if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
@@ -490,7 +477,6 @@ export default function ListingsClient({
     if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
     if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
     if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
-    if (appliedOwnershipType !== 'all') params.set('ownershipType', appliedOwnershipType)
     if (page > 1) params.set('page', String(page))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
@@ -580,11 +566,17 @@ export default function ListingsClient({
     const imageUrl = imageCandidates[currentImageIndex] ?? ''
     const rawTail = String(l.n_number ?? '').trim().toUpperCase()
     const tailText = rawTail ? (rawTail.startsWith('N') ? rawTail : `N${rawTail}`) : 'N/A'
-    const titleText = `${l.year ?? 'Year N/A'} ${l.make ?? ''} ${l.model ?? ''}`.trim()
+    const rawYear = typeof l.year === 'number' ? String(l.year) : String(l.year ?? '').trim()
+    const rawMake = String(l.make ?? '').trim()
+    const rawModel = String(l.model ?? '').trim()
+    const primaryTitle = [rawYear, rawMake, rawModel].filter(Boolean).join(' ').trim()
+    const fallbackTitle = [rawMake, rawModel].filter(Boolean).join(' ').trim()
+    const titleText =
+      primaryTitle && !/^\d+\.?$/.test(primaryTitle)
+        ? primaryTitle
+        : (fallbackTitle || 'Aircraft Listing')
     const priceText = formatPriceOrCall(typeof l.asking_price === 'number' ? l.asking_price : null)
     const isFractional = l.is_fractional_ownership === true
-    const shareNumerator = typeof l.fractional_share_numerator === 'number' && l.fractional_share_numerator > 0 ? l.fractional_share_numerator : 1
-    const shareDenominator = typeof l.fractional_share_denominator === 'number' && l.fractional_share_denominator > 1 ? l.fractional_share_denominator : null
     const sharePriceText =
       typeof l.fractional_share_price === 'number' && l.fractional_share_price > 0
         ? formatPriceOrCall(l.fractional_share_price)
@@ -592,18 +584,12 @@ export default function ListingsClient({
     const ownershipBadgeText = isFractional ? 'Fractional' : undefined
     const locationText = l.location_label ?? 'Location unavailable'
     const dealRatingText = formatScore(typeof l.deal_rating === 'number' ? l.deal_rating : null)
-    const valueScoreText = formatScore(typeof l.value_score === 'number' ? l.value_score : null)
-    const ownershipText = isFractional
-      ? (shareDenominator ? `Fractional ${shareNumerator}/${shareDenominator}` : 'Fractional')
-      : 'Full'
 
     const specRows: Array<[string, string]> = [
       ['N-Number', tailText],
       ['Price', priceText],
       ...(isFractional ? [['Share Price', sharePriceText] as [string, string]] : []),
-      ['Ownership', ownershipText],
       ['Deal Rating', dealRatingText],
-      ['Value Score', valueScoreText],
     ]
 
     return (
@@ -666,8 +652,6 @@ export default function ListingsClient({
           setMaxPrice={setMaxPrice}
           riskFilter={riskFilter}
           setRiskFilter={setRiskFilter}
-          ownershipType={ownershipType}
-          setOwnershipType={setOwnershipType}
           makeOptions={makeOptions}
           modelOptions={modelOptions}
           subModelOptions={subModelOptions}
@@ -678,7 +662,6 @@ export default function ListingsClient({
             setSourceFilter('all')
             setMaxPrice(0)
             setRiskFilter('all')
-            setOwnershipType('all')
           }}
           onApplyFilters={() => {
             setAppliedMakeFilter(makeFilter)
@@ -687,7 +670,6 @@ export default function ListingsClient({
             setAppliedSourceFilter(sourceFilter)
             setAppliedRiskFilter(riskFilter)
             setAppliedMaxPrice(maxPrice)
-            setAppliedOwnershipType(ownershipType)
             setCurrentPage(1)
           }}
           riskTooltip={(

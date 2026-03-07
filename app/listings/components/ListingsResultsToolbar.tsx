@@ -1,7 +1,5 @@
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 type SortOption =
-  | 'value_desc'
-  | 'value_asc'
   | 'price_low'
   | 'price_high'
   | 'deal_desc'
@@ -55,8 +53,6 @@ export default function ListingsResultsToolbar({
           >
             <option value="market_best">Best Market Delta (most below)</option>
             <option value="deal_desc">Deal Tier (best first)</option>
-            <option value="value_desc">Value Score (high to low)</option>
-            <option value="value_asc">Value Score (low to high)</option>
             <option value="price_low">Price (low to high)</option>
             <option value="price_high">Price (high to low)</option>
             <option value="risk_low">Risk (low to critical)</option>

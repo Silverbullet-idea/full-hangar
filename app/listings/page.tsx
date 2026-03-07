@@ -12,10 +12,7 @@ import {
 type SearchParams = Record<string, string | string[] | undefined>
 type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
 type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
-type OwnershipTypeValue = 'all' | 'full' | 'fractional'
 type SortOption =
-  | 'value_desc'
-  | 'value_asc'
   | 'price_low'
   | 'price_high'
   | 'deal_desc'
@@ -94,12 +91,12 @@ function parseDealTier(searchParams?: SearchParams): DealTierValue {
 function parseSortBy(searchParams?: SearchParams): SortOption {
   const value = parseParam(searchParams, 'sortBy').toLowerCase()
   const validSorts: SortOption[] = [
-    'value_desc', 'value_asc', 'price_low', 'price_high', 'deal_desc',
+    'price_low', 'price_high', 'deal_desc',
     'market_best', 'market_worst', 'risk_low', 'risk_high',
     'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest',
   ]
   if (value && validSorts.includes(value as SortOption)) return value as SortOption
-  return 'value_desc'
+  return 'deal_desc'
 }
 
 function parsePositiveInt(searchParams: SearchParams | undefined, key: string, fallback = 0): number {
@@ -107,12 +104,6 @@ function parsePositiveInt(searchParams: SearchParams | undefined, key: string, f
   if (!Number.isFinite(value)) return fallback
   const normalized = Math.floor(value)
   return normalized > 0 ? normalized : fallback
-}
-
-function parseOwnershipType(searchParams?: SearchParams): OwnershipTypeValue {
-  const value = parseParam(searchParams, 'ownershipType').toLowerCase()
-  if (value === 'full' || value === 'fractional') return value
-  return 'all'
 }
 
 function buildFilterOptions(rows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }>) {
@@ -206,7 +197,6 @@ export default async function ListingsPage({
   const initialSourceFilter = parseParam(resolvedSearchParams, 'source')
   const initialStateFilter = parseParam(resolvedSearchParams, 'state')
   const initialRiskFilter = parseParam(resolvedSearchParams, 'risk')
-  const initialOwnershipType = parseOwnershipType(resolvedSearchParams)
   const initialMinimumScore = parsePositiveInt(resolvedSearchParams, 'minValueScore', 0)
   const initialMaxPrice = parsePositiveInt(resolvedSearchParams, 'maxPrice', 0)
   const initialPage = parsePositiveInt(resolvedSearchParams, 'page', 1)
@@ -231,7 +221,6 @@ export default async function ListingsPage({
       maxPrice: initialMaxPrice,
       category: initialCategoryFilter ?? '',
       dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-      ownershipType: initialOwnershipType,
     }),
     getListingFilterOptions(),
   ])
@@ -293,7 +282,6 @@ export default async function ListingsPage({
         initialSourceFilter={initialSourceFilter}
         initialStateFilter={initialStateFilter}
         initialRiskFilter={initialRiskFilter}
-        initialOwnershipType={initialOwnershipType}
         initialMinimumScore={initialMinimumScore}
         initialMaxPrice={initialMaxPrice}
         initialPage={initialPage}

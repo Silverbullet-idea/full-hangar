@@ -24,8 +24,6 @@ type ListingsFiltersSidebarProps = {
   setMaxPrice: (value: number) => void
   riskFilter: string
   setRiskFilter: (value: string) => void
-  ownershipType: 'all' | 'full' | 'fractional'
-  setOwnershipType: (value: 'all' | 'full' | 'fractional') => void
   makeOptions: string[]
   modelOptions: string[]
   subModelOptions: string[]
@@ -47,8 +45,6 @@ export default function ListingsFiltersSidebar({
   setMaxPrice,
   riskFilter,
   setRiskFilter,
-  ownershipType,
-  setOwnershipType,
   makeOptions,
   modelOptions,
   subModelOptions,
@@ -159,18 +155,6 @@ export default function ListingsFiltersSidebar({
             <option value="moderate">Moderate</option>
             <option value="high">High</option>
             <option value="critical">Critical</option>
-          </select>
-        </label>
-        <label className="text-xs text-brand-muted">
-          Ownership Type
-          <select
-            value={ownershipType}
-            onChange={(e) => setOwnershipType(e.target.value as 'all' | 'full' | 'fractional')}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All ownership types</option>
-            <option value="full">Full ownership only</option>
-            <option value="fractional">Fractional ownership only</option>
           </select>
         </label>
         <button
