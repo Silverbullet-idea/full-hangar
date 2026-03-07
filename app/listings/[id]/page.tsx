@@ -556,19 +556,19 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         }
         .score-max {
           font-size: 0.9rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-weight: 600;
         }
         .score-guidance {
           margin: 0.2rem 0 0.45rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-size: 0.82rem;
           line-height: 1.35;
         }
         .score-band-list {
           margin: 0.2rem 0 0.45rem;
           padding-left: 1.1rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-size: 0.8rem;
           line-height: 1.35;
         }
@@ -577,22 +577,22 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         }
         .score-method {
           margin: 0 0 0.6rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-size: 0.8rem;
           line-height: 1.35;
         }
         .score-notes {
           margin: 0 0 0.6rem;
-          border: 1px solid #3a4454;
+          border: 1px solid var(--brand-dark);
           border-radius: 8px;
           padding: 0.42rem 0.55rem;
-          background: #141922;
+          background: var(--surface-muted);
           font-size: 0.78rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
         }
         .score-notes summary {
           cursor: pointer;
-          color: #d4d4d4;
+          color: var(--brand-white);
           font-weight: 600;
         }
         .score-notes ul {
@@ -632,11 +632,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         }
         .score-inputs-table th {
           width: 45%;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           font-weight: 600;
         }
         .score-inputs-table td {
-          color: #fff;
+          color: var(--brand-white);
           font-weight: 700;
         }
         .badge {
@@ -669,9 +669,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           color: #dc2626;
         }
         .score-none {
-          background: #2a2a2a;
-          border: 1px solid #4a4a4a;
-          color: #b2b2b2;
+          background: var(--surface-muted);
+          border: 1px solid var(--brand-dark);
+          color: var(--brand-muted);
         }
         .price-history-metrics {
           display: grid;
@@ -686,7 +686,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         }
         .metric-label {
           font-size: 0.75rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
           margin-top: 0.2rem;
         }
         .price-chart-wrap {

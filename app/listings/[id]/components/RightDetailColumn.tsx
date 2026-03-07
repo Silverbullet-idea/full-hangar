@@ -100,26 +100,34 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             <span className="score-max">/ 100</span>
           </div>
         </div>
-        <div style={{ marginTop: '0.6rem', fontSize: '0.84rem', color: 'var(--brand-muted)' }}>{props.primaryLabel}</div>
-        <ul className="score-band-list">
-          <li><strong>85-100</strong>: Strong buy candidate</li>
-          <li><strong>70-84</strong>: Good opportunity</li>
-          <li><strong>50-69</strong>: Mixed, inspect closely</li>
-          <li><strong>0-49</strong>: Weak edge / high risk</li>
-        </ul>
-        <p className="score-method">{props.scoreMethodSummary}</p>
-        {props.confidenceSignals.length > 0 ? (
-          <details className="score-notes">
-            <summary>
-              Confidence breakdown{props.effectiveDataConfidence ? `: ${props.effectiveDataConfidence}` : ''}
-            </summary>
+        <details className="score-notes" style={{ marginTop: '0.6rem' }}>
+          <summary>
+            {props.primaryLabel}
+          </summary>
+          <ul className="score-band-list" style={{ marginTop: '0.45rem' }}>
+            <li><strong>85-100</strong>: Strong buy candidate</li>
+            <li><strong>70-84</strong>: Good opportunity</li>
+            <li><strong>50-69</strong>: Mixed, inspect closely</li>
+            <li><strong>0-49</strong>: Weak edge / high risk</li>
+          </ul>
+          <p className="score-method" style={{ marginTop: '0.45rem' }}>{props.scoreMethodSummary}</p>
+        </details>
+        <div className="score-notes">
+          <div style={{ fontWeight: 600, color: 'var(--brand-white)' }}>
+            Confidence breakdown{props.effectiveDataConfidence ? `: ${props.effectiveDataConfidence}` : ''}
+          </div>
+          {props.confidenceSignals.length > 0 ? (
             <ul>
               {props.confidenceSignals.map((signal) => (
                 <li key={signal}>{signal}</li>
               ))}
             </ul>
-          </details>
-        ) : null}
+          ) : (
+            <ul>
+              <li>No confidence signals available.</li>
+            </ul>
+          )}
+        </div>
         <div style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}>
           <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
             {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
