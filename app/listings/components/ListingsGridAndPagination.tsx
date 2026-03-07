@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Link from "next/link"
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 
@@ -10,7 +11,7 @@ type ListingsGridAndPaginationProps = {
   safePage: number
   totalPages: number
   renderListingCard: (listing: any, mode: LayoutMode) => ReactNode
-  setCurrentPage: (updater: (value: number) => number) => void
+  buildPageHref: (page: number) => string
 }
 
 export default function ListingsGridAndPagination({
@@ -21,7 +22,7 @@ export default function ListingsGridAndPagination({
   safePage,
   totalPages,
   renderListingCard,
-  setCurrentPage,
+  buildPageHref,
 }: ListingsGridAndPaginationProps) {
   return (
     <>
@@ -47,22 +48,26 @@ export default function ListingsGridAndPagination({
             Page {safePage} of {totalPages}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={safePage <= 1}
-              className="rounded border border-[#3A4454] px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40 hover:border-[#FF9900] hover:text-[#FF9900]"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safePage >= totalPages}
-              className="rounded border border-[#3A4454] px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40 hover:border-[#FF9900] hover:text-[#FF9900]"
-            >
-              Next
-            </button>
+            {safePage <= 1 ? (
+              <span className="rounded border border-[#3A4454] px-3 py-1.5 text-xs opacity-40">Previous</span>
+            ) : (
+              <Link
+                href={buildPageHref(Math.max(1, safePage - 1))}
+                className="rounded border border-[#3A4454] px-3 py-1.5 text-xs hover:border-[#FF9900] hover:text-[#FF9900]"
+              >
+                Previous
+              </Link>
+            )}
+            {safePage >= totalPages ? (
+              <span className="rounded border border-[#3A4454] px-3 py-1.5 text-xs opacity-40">Next</span>
+            ) : (
+              <Link
+                href={buildPageHref(Math.min(totalPages, safePage + 1))}
+                className="rounded border border-[#3A4454] px-3 py-1.5 text-xs hover:border-[#FF9900] hover:text-[#FF9900]"
+              >
+                Next
+              </Link>
+            )}
           </div>
         </div>
       )}

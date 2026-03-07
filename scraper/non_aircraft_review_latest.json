@@ -1,0 +1,12 @@
+{
+  "scan_type": "hybrid_non_aircraft",
+  "active_rows_scanned": 4311,
+  "strict_candidate_count": 0,
+  "borderline_candidate_count": 0,
+  "strict_reason_counts": {},
+  "borderline_reason_counts": {},
+  "strict_source_counts": {},
+  "borderline_source_counts": {},
+  "strict_candidates": [],
+  "borderline_candidates": []
+}

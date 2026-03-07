@@ -1,5 +1,14 @@
+import Link from "next/link"
+import type { Metadata } from "next"
 import ListingsClient from './ListingsClient'
 import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
+import {
+  buildListingsCanonicalPath,
+  buildListingsPageDescription,
+  buildListingsPageTitle,
+  isListingsCuratedIndexable,
+  toAbsoluteUrl,
+} from "../../lib/seo/site"
 
 type SearchParams = Record<string, string | string[] | undefined>
 type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
@@ -26,6 +35,14 @@ function parseParam(searchParams: SearchParams | undefined, key: string): string
   const raw = searchParams?.[key]
   const value = Array.isArray(raw) ? raw[0] : raw
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function toFlatSearchParams(searchParams?: SearchParams): Record<string, string> {
+  if (!searchParams) return {}
+  return Object.keys(searchParams).reduce<Record<string, string>>((acc, key) => {
+    acc[key] = parseParam(searchParams, key)
+    return acc
+  }, {})
 }
 
 function parseSearchTerm(searchParams?: SearchParams): string {
@@ -220,26 +237,118 @@ export default async function ListingsPage({
     getListingFilterOptions(),
   ])
 
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListOrder: "https://schema.org/ItemListOrderAscending",
+    numberOfItems: initialPageData.total,
+    itemListElement: initialPageData.rows.slice(0, 24).map((row: any, index: number) => {
+      const listingKey = String(row?.source_id ?? row?.id ?? "").trim()
+      const absoluteUrl = listingKey ? toAbsoluteUrl(`/listings/${listingKey}`) : toAbsoluteUrl("/listings")
+      const imageUrl = typeof row?.primary_image_url === "string" ? row.primary_image_url.trim() : ""
+      const price = typeof row?.asking_price === "number" && row.asking_price > 0 ? row.asking_price : null
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl,
+        item: {
+          "@type": "Product",
+          name: [row?.year, row?.make, row?.model].filter(Boolean).join(" ").trim() || "Aircraft listing",
+          ...(imageUrl ? { image: imageUrl } : {}),
+          ...(price !== null
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  priceCurrency: "USD",
+                  price,
+                  availability: "https://schema.org/InStock",
+                  url: absoluteUrl,
+                },
+              }
+            : {}),
+        },
+      }
+    }),
+  }
+
   return (
-    <ListingsClient
-      initialListings={initialPageData.rows}
-      initialTotalFiltered={initialPageData.total}
-      initialFilterOptions={buildFilterOptions(optionRows)}
-      initialSearchTerm={initialSearchTerm}
-      initialCategoryFilter={initialCategoryFilter}
-      initialDealFilter={initialDealFilter}
-      initialSortBy={initialSortBy}
-      initialMakeFilter={initialMakeFilter}
-      initialModelFilter={initialModelFamilyFilter}
-      initialSubModelFilter={initialSubModelFilter}
-      initialSourceFilter={initialSourceFilter}
-      initialStateFilter={initialStateFilter}
-      initialRiskFilter={initialRiskFilter}
-      initialOwnershipType={initialOwnershipType}
-      initialMinimumScore={initialMinimumScore}
-      initialMaxPrice={initialMaxPrice}
-      initialPage={initialPage}
-      initialPageSize={initialPageSize}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+      <section className="mb-5 space-y-2">
+        <h1 className="text-2xl font-bold text-brand-white">Aircraft Listings for Sale</h1>
+        <p className="text-sm text-brand-muted">
+          Browse active inventory with deal scores, risk signals, and comparable market context.
+        </p>
+        <nav aria-label="Popular listing categories" className="flex flex-wrap gap-2 text-sm">
+          <Link href="/listings?category=single" className="text-brand-orange hover:underline">Single Engine</Link>
+          <Link href="/listings?category=multi" className="text-brand-orange hover:underline">Multi Engine</Link>
+          <Link href="/listings?category=jet" className="text-brand-orange hover:underline">Jets</Link>
+          <Link href="/listings?category=helicopter" className="text-brand-orange hover:underline">Helicopters</Link>
+          <Link href="/listings?dealTier=TOP_DEALS" className="text-brand-orange hover:underline">Top Deals</Link>
+        </nav>
+      </section>
+      <ListingsClient
+        initialListings={initialPageData.rows}
+        initialTotalFiltered={initialPageData.total}
+        initialFilterOptions={buildFilterOptions(optionRows)}
+        initialSearchTerm={initialSearchTerm}
+        initialCategoryFilter={initialCategoryFilter}
+        initialDealFilter={initialDealFilter}
+        initialSortBy={initialSortBy}
+        initialMakeFilter={initialMakeFilter}
+        initialModelFilter={initialModelFamilyFilter}
+        initialSubModelFilter={initialSubModelFilter}
+        initialSourceFilter={initialSourceFilter}
+        initialStateFilter={initialStateFilter}
+        initialRiskFilter={initialRiskFilter}
+        initialOwnershipType={initialOwnershipType}
+        initialMinimumScore={initialMinimumScore}
+        initialMaxPrice={initialMaxPrice}
+        initialPage={initialPage}
+        initialPageSize={initialPageSize}
+      />
+    </>
   )
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<SearchParams>
+}): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams
+  const seoParams = toFlatSearchParams(resolvedSearchParams)
+  const isIndexable = isListingsCuratedIndexable(seoParams)
+  const canonicalPath = buildListingsCanonicalPath(seoParams)
+
+  return {
+    title: buildListingsPageTitle(seoParams),
+    description: buildListingsPageDescription(seoParams),
+    alternates: {
+      canonical: canonicalPath,
+    },
+    robots: {
+      index: isIndexable,
+      follow: true,
+      googleBot: {
+        index: isIndexable,
+        follow: true,
+        "max-image-preview": "large",
+      },
+    },
+    openGraph: {
+      title: buildListingsPageTitle(seoParams),
+      description: buildListingsPageDescription(seoParams),
+      url: toAbsoluteUrl(canonicalPath),
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: buildListingsPageTitle(seoParams),
+      description: buildListingsPageDescription(seoParams),
+    },
+  }
 }

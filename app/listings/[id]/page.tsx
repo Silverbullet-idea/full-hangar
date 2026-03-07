@@ -1,5 +1,6 @@
 import Link from "next/link"
-import type { ReactNode } from "react"
+import type { Metadata } from "next"
+import { cache, type ReactNode } from "react"
 import LeftDetailColumn from "./components/LeftDetailColumn"
 import RightDetailColumn from "./components/RightDetailColumn"
 import {
@@ -43,6 +44,7 @@ import {
 } from "../../../lib/listings/format"
 import { getListingById, getListingPriceHistory, getListingRawById, getSimilarMarketPricing } from "../../../lib/listings/queries"
 import type { AircraftListing } from "../../../lib/types"
+import { DEFAULT_OG_IMAGE_PATH, toAbsoluteUrl, titleFromParts } from "../../../lib/seo/site"
 
 type ListingPageProps = {
   params: Promise<{ id: string }>
@@ -50,6 +52,75 @@ type ListingPageProps = {
 }
 
 type ScoreMetricRow = [string, ReactNode]
+
+const getListingForSeo = cache(async (id: string) => {
+  const listing = await getListingById(id)
+  return listing ? (listing as AircraftListing) : null
+})
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const listing = await getListingForSeo(id)
+  const canonicalPath = `/listings/${id}`
+
+  if (!listing) {
+    return {
+      title: "Listing Not Found",
+      alternates: { canonical: canonicalPath },
+      robots: { index: false, follow: true },
+    }
+  }
+
+  const title =
+    titleFromParts([listing.year ? String(listing.year) : "", listing.make, listing.model]) ||
+    listing.title ||
+    "Aircraft Listing"
+  const askingPrice =
+    typeof listing.price_asking === "number"
+      ? listing.price_asking
+      : typeof listing.asking_price === "number"
+      ? listing.asking_price
+      : null
+  const descriptionParts = [
+    askingPrice && askingPrice > 0 ? `Asking ${formatMoney(askingPrice)}.` : "Price available on request.",
+    listing.location_label ? `Located in ${listing.location_label}.` : "",
+    typeof listing.total_time_airframe === "number" ? `Total time ${Math.round(listing.total_time_airframe).toLocaleString("en-US")} hours.` : "",
+    listing.risk_level ? `Risk level ${listing.risk_level}.` : "",
+  ].filter(Boolean)
+  const description = descriptionParts.join(" ")
+  const imageUrl =
+    typeof listing.primary_image_url === "string" && listing.primary_image_url.trim().length > 0
+      ? listing.primary_image_url.trim()
+      : toAbsoluteUrl(DEFAULT_OG_IMAGE_PATH)
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      title,
+      description,
+      url: toAbsoluteUrl(canonicalPath),
+      type: "article",
+      images: [{ url: imageUrl }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      },
+    },
+  }
+}
 
 export default async function ListingDetailPage({ params, searchParams }: ListingPageProps) {
   const { id } = await params
@@ -336,9 +407,51 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     ["Mode S (Oct / Hex)", safeDisplay([faaModeSBase8, faaModeSBase16].filter(Boolean).join(" / "))],
     ["Accident History", accidentHistoryValue],
   ]
+  const canonicalUrl = toAbsoluteUrl(`/listings/${id}`)
+  const listingDisplayName = titleText || "Aircraft Listing"
+  const detailJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: toAbsoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Listings", item: toAbsoluteUrl("/listings") },
+          { "@type": "ListItem", position: 3, name: listingDisplayName, item: canonicalUrl },
+        ],
+      },
+      {
+        "@type": "Product",
+        name: listingDisplayName,
+        url: canonicalUrl,
+        sku: listingRow.source_id || listingRow.id,
+        ...(listingRow.make ? { brand: { "@type": "Brand", name: listingRow.make } } : {}),
+        ...(descriptionText ? { description: descriptionText.slice(0, 5000) } : {}),
+        ...(imageUrls.length ? { image: imageUrls.slice(0, 8) } : {}),
+        ...(typeof resolvedAskingPrice === "number" && resolvedAskingPrice > 0
+          ? {
+              offers: {
+                "@type": "Offer",
+                priceCurrency: "USD",
+                price: resolvedAskingPrice,
+                url: canonicalUrl,
+                availability:
+                  listingRow.is_active === false
+                    ? "https://schema.org/OutOfStock"
+                    : "https://schema.org/InStock",
+              },
+            }
+          : {}),
+      },
+    ],
+  }
 
   return (
     <main className="container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(detailJsonLd) }}
+      />
       <p>
         <Link href={backToListingsHref}>← Back to listings</Link>
       </p>

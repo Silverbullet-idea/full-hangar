@@ -42,20 +42,27 @@ async function isValidSession(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const noIndexHeader = "noindex, nofollow";
 
   // Allow the login page itself.
   if (pathname === "/internal/login" || pathname.startsWith("/internal/login/")) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set("X-Robots-Tag", noIndexHeader);
+    return response;
   }
 
   const internalPassword = process.env.INTERNAL_PASSWORD;
   const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 
   if (!internalPassword || !(await isValidSession(sessionValue, internalPassword))) {
-    return NextResponse.redirect(new URL("/internal/login", request.url));
+    const response = NextResponse.redirect(new URL("/internal/login", request.url));
+    response.headers.set("X-Robots-Tag", noIndexHeader);
+    return response;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set("X-Robots-Tag", noIndexHeader);
+  return response;
 }
 
 export const config = {
