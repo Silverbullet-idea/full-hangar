@@ -277,7 +277,8 @@ type ParsedListingsSearch = {
 
 function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
   const hasText = (value: unknown) => String(value ?? "").trim().length > 0;
-  const sortBy = String(query.sortBy ?? "").trim();
+  const ownershipType = String(query.ownershipType ?? "").trim().toLowerCase();
+  const isDefaultOwnership = !ownershipType || ownershipType === "all";
   return (
     !hasText(query.q) &&
     !hasText(query.make) &&
@@ -289,10 +290,9 @@ function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
     !hasText(query.risk) &&
     !hasText(query.dealTier) &&
     !hasText(query.category) &&
-    !hasText(query.ownershipType) &&
+    isDefaultOwnership &&
     Number(query.minValueScore ?? 0) <= 0 &&
-    Number(query.maxPrice ?? 0) <= 0 &&
-    (!sortBy || sortBy === "value_desc")
+    Number(query.maxPrice ?? 0) <= 0
   );
 }
 
@@ -415,6 +415,8 @@ async function runSimpleSearchListingsPage(
   if (typeof parsedSearch.yearToken === "number") query = query.eq("year", parsedSearch.yearToken);
   if (parsedSearch.orClause) query = query.or(parsedSearch.orClause);
 
+  // Always prioritize stronger deal tiers first, then apply requested sort within buckets.
+  query = query.order("deal_rating", { ascending: false, nullsFirst: false });
   if (sortBy === "price_low") query = query.order("asking_price", { ascending: true, nullsFirst: false });
   else if (sortBy === "price_high") query = query.order("asking_price", { ascending: false, nullsFirst: false });
   else if (sortBy === "year_newest") query = query.order("year", { ascending: false, nullsFirst: false });
@@ -490,7 +492,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const to = from + pageSize - 1;
 
   const q = String(query.q ?? "").trim();
-  const preferDealTier = q.length > 0;
+  const preferDealTier = true;
   const make = String(query.make ?? "").trim();
   const model = String(query.model ?? "").trim();
   const modelFamily = String(query.modelFamily ?? "").trim();
@@ -577,6 +579,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (category === "jet") dbQuery = dbQuery.or(JET_OR);
   if (category === "sea") dbQuery = dbQuery.or(SEA_OR);
 
+  dbQuery = dbQuery.order("deal_rating", { ascending: false, nullsFirst: false });
   if (sortBy === "value_desc") dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
   else if (sortBy === "value_asc") dbQuery = dbQuery.order("value_score", { ascending: true, nullsFirst: false });
   else if (sortBy === "price_low") dbQuery = dbQuery.order("asking_price", { ascending: true, nullsFirst: false });
@@ -591,7 +594,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   else if (sortBy === "tt_high") dbQuery = dbQuery.order("total_time_airframe", { ascending: false, nullsFirst: false });
   else if (sortBy === "year_newest") dbQuery = dbQuery.order("year", { ascending: false, nullsFirst: false });
   else if (sortBy === "year_oldest") dbQuery = dbQuery.order("year", { ascending: true, nullsFirst: false });
-  else if (sortBy === "deal_desc") dbQuery = dbQuery.order("deal_rating", { ascending: false, nullsFirst: false });
+  else if (sortBy === "deal_desc") dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
   else dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
 
   dbQuery = dbQuery.range(from, to);
@@ -632,6 +635,9 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (category === "me_turboprop") fallbackQuery = fallbackQuery.or(ME_TURBOPROP_OR);
     if (category === "jet") fallbackQuery = fallbackQuery.or(JET_OR);
     if (category === "sea") fallbackQuery = fallbackQuery.or(SEA_OR);
+    fallbackQuery = fallbackQuery
+      .order("deal_rating", { ascending: false, nullsFirst: false })
+      .order("value_score", { ascending: false, nullsFirst: false });
     result = await fallbackQuery.range(from, to);
   }
   if (result.error && String(result.error.message).toLowerCase().includes("statement timeout") && q) {
@@ -641,6 +647,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       .select(LISTINGS_PAGE_COLUMNS)
       .eq("is_active", true)
       .or(`make.ilike.%${q}%,model.ilike.%${q}%`)
+      .order("deal_rating", { ascending: false, nullsFirst: false })
       .range(from, to)
       .order("value_score", { ascending: false, nullsFirst: false });
     const emergencyResult = await emergencyQuery;
@@ -663,6 +670,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
         if (parsedSearch.orClause) tableFallback = tableFallback.or(parsedSearch.orClause);
 
         const tableResult = await tableFallback
+          .order("deal_rating", { ascending: false, nullsFirst: false })
           .order("value_score", { ascending: false, nullsFirst: false })
           .range(from, to);
 
