@@ -3,11 +3,12 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PARSER_VERSION = "2.0.0"
+PARSER_VERSION = "2.0.3"
 
 
 AVIONICS_MAP: dict[str, str] = {
     r"\bGarmin\s*650\s*/\s*750\b": "Garmin GTN 750",
+    r"\bGTN750\b": "Garmin GTN 750",
     r"\bGTN[\s\-]?750(?:\s*XI|XI)?\b": "Garmin GTN 750",
     r"\bGarmin[\s\-]?(GTN[\s\-]?750|750)\b": "Garmin GTN 750",
     r"\bGTN[\s\-]?650(?:\s*XI|XI)?\b": "Garmin GTN 650",
@@ -18,21 +19,25 @@ AVIONICS_MAP: dict[str, str] = {
     r"\bG1000\b": "Garmin G1000",
     r"\bG2000\b": "Garmin G2000",
     r"\bAspen(?:\s+EFD)?\b": "Aspen EFD1000",
-    r"\bADS[\s\-]?B(?:\s+Out)?\b": "ADS-B Out",
+    r"\bADS[\s\-]?B(?:\s*(?:OUT|IN\/OUT|IN\s*OUT))?\b": "ADS-B Out",
+    r"\bADS[\s\-]?B\s*IN\b": "ADS-B In",
     r"\bSTEC[\s\-]?55X\b|\bS[\s\-]?TEC[\s\-]?55X\b|\bSTEC[\s\-]?55\b": "S-TEC 55X Autopilot",
     r"\bKAP[\s\-]?140\b": "Bendix/King KAP 140",
     r"\bG[\s\-]?5s?\b": "Garmin G5 EFIS",
     r"\bS[\s\-]?TEC[\s\-]?3100\b": "S-TEC 3100 DFCS",
     r"\bIFD[\s\-]?550\b": "Avidyne IFD 550",
     r"\bGMA[\s\-]?3[56]\b": "Garmin GMA 36/35 Audio Panel",
+    r"\bGMA[\s\-]?350\b": "Garmin GMA 350 Audio Panel",
     r"\bGMA[\s\-]?340\b": "Garmin GMA 340 Audio Panel",
     r"\bGTC[\s\-]?570\b": "Garmin GTC 570 Controller",
+    r"\bGTX[\s\-]?345R\b": "Garmin GTX 345",
     r"\bGTX[\s\-]?345\b": "Garmin GTX 345",
     r"\bGTX[\s\-]?335\b": "Garmin GTX 335",
     r"\bGTX[\s\-]?330\b": "Garmin GTX 330",
     r"\bGTX[\s\-]?327\b": "Garmin GTX 327",
     r"\bGTX[\s\-]?3000\b": "Garmin GTX 3000",
     r"\bGTX[\s\-]?33ES\b": "Garmin GTX 33ES Transponder",
+    r"\bGTX[\s\-]?330ES\b": "Garmin GTX 330ES Transponder",
     r"\bGTS[\s\-]?800\b": "Garmin GTS 800 Traffic",
     r"\bGIA[\s\-]?63W\b": "Garmin GIA 63W NAV/COM/GPS",
     r"\bGSR[\s\-]?56\b": "Garmin GSR 56 Iridium",
@@ -68,6 +73,13 @@ def _normalize_text(text: str) -> str:
 def _int_from_number_text(number_text: str) -> int | None:
     try:
         return int(number_text.replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def _float_from_number_text(number_text: str) -> float | None:
+    try:
+        return float(number_text.replace(",", ""))
     except (TypeError, ValueError):
         return None
 
@@ -330,6 +342,8 @@ def extract_avionics_unresolved(text: str, matched: list[dict[str, Any]] | None 
         "SVT",
         "ESP",
         "TAWSB",
+        "GTN750",
+        "GTX345R",
     }
     unresolved: set[str] = set()
     for raw in candidates:
@@ -403,7 +417,119 @@ def extract_special_equipment(text: str) -> dict[str, bool]:
     return equipment
 
 
-def parse_description(text: str) -> dict[str, Any]:
+def extract_fractional_pricing(text: str, observed_price: int | float | None = None) -> dict[str, Any]:
+    src = _normalize_text(text)
+    payload: dict[str, Any] = {
+        "is_fractional": False,
+        "share_numerator": None,
+        "share_denominator": None,
+        "share_percent": None,
+        "share_price": None,
+        "normalized_full_price": None,
+        "review_needed": False,
+        "evidence": [],
+    }
+    if not src:
+        return payload
+
+    evidence: list[str] = []
+    numerator: int | None = None
+    denominator: int | None = None
+    share_percent: float | None = None
+
+    ratio_match = re.search(r"\b(\d{1,2})\s*/\s*(\d{1,3})(?:st|nd|rd|th)?\b", src, flags=re.IGNORECASE)
+    if ratio_match:
+        ratio_text = ratio_match.group(0)
+        window_start = max(0, ratio_match.start() - 50)
+        window_end = min(len(src), ratio_match.end() + 50)
+        context_window = src[window_start:window_end]
+        if re.search(
+            r"\b(?:partnership|fractional|ownership|co[\-\s]?ownership|share|member(?:ship)?\s+interest|interest)\b",
+            context_window,
+            flags=re.IGNORECASE,
+        ):
+            numerator = int(ratio_match.group(1))
+            denominator = int(ratio_match.group(2))
+            evidence.append(ratio_text)
+
+    if numerator is None or denominator is None:
+        ordinal_match = re.search(
+            r"\b(\d{1,3})(?:st|nd|rd|th)\s+(?:partnership|ownership|share|interest)\b",
+            src,
+            flags=re.IGNORECASE,
+        )
+        if ordinal_match:
+            numerator = 1
+            denominator = int(ordinal_match.group(1))
+            evidence.append(ordinal_match.group(0))
+
+    if numerator is None or denominator is None:
+        percent_match = re.search(
+            r"\b(\d{1,2}(?:\.\d+)?)\s*%\s*(?:ownership|share|interest)\b",
+            src,
+            flags=re.IGNORECASE,
+        )
+        if percent_match:
+            percent_val = _float_from_number_text(percent_match.group(1))
+            if percent_val is not None and 0 < percent_val < 100:
+                share_percent = round(percent_val, 3)
+                fraction = percent_val / 100.0
+                reciprocal = 1.0 / fraction
+                rounded_reciprocal = round(reciprocal)
+                if abs(reciprocal - rounded_reciprocal) <= 0.01 and rounded_reciprocal >= 2:
+                    numerator = 1
+                    denominator = int(rounded_reciprocal)
+                evidence.append(percent_match.group(0))
+
+    money_matches = list(re.finditer(r"\$\s*([\d,]{2,9})\b", src))
+    inferred_share_price: int | None = None
+    if money_matches:
+        target_idx = None
+        if ratio_match:
+            target_idx = ratio_match.start()
+        elif evidence:
+            token = evidence[0]
+            token_idx = src.lower().find(token.lower())
+            target_idx = token_idx if token_idx >= 0 else None
+        if target_idx is not None:
+            closest = min(money_matches, key=lambda m: abs(m.start() - target_idx))
+            inferred_share_price = _int_from_number_text(closest.group(1))
+        else:
+            inferred_share_price = _int_from_number_text(money_matches[0].group(1))
+
+    if inferred_share_price is None and isinstance(observed_price, (int, float)) and observed_price > 0:
+        inferred_share_price = int(round(float(observed_price)))
+
+    normalized_full_price: int | None = None
+    if (
+        inferred_share_price is not None
+        and numerator is not None
+        and denominator is not None
+        and denominator > 0
+        and numerator > 0
+        and denominator > numerator
+    ):
+        normalized_full_price = int(round((float(inferred_share_price) * float(denominator)) / float(numerator)))
+
+    strong_fractional_term = re.search(
+        r"\b(?:fractional\s+ownership|fractional|partnership|co[\-\s]?ownership|ownership\s+interest|share\s+available|member(?:ship)?\s+interest)\b",
+        src,
+        flags=re.IGNORECASE,
+    )
+    has_explicit_fraction = numerator is not None and denominator is not None and denominator > 1
+
+    payload["is_fractional"] = has_explicit_fraction
+    payload["share_numerator"] = numerator
+    payload["share_denominator"] = denominator
+    payload["share_percent"] = share_percent
+    payload["share_price"] = inferred_share_price
+    payload["normalized_full_price"] = normalized_full_price
+    payload["review_needed"] = bool(strong_fractional_term and not has_explicit_fraction)
+    payload["evidence"] = evidence[:3]
+    return payload
+
+
+def parse_description(text: str, observed_price: int | float | None = None) -> dict[str, Any]:
     src = _normalize_text(text)
     times = extract_times(src)
     avionics_detailed = extract_avionics_detailed(src)
@@ -413,6 +539,7 @@ def parse_description(text: str) -> dict[str, Any]:
     useful_load = extract_useful_load(src)
     fuel_capacity = extract_fuel_capacity(src)
     special_equipment = extract_special_equipment(src)
+    pricing_context = extract_fractional_pricing(src, observed_price=observed_price)
     engine_model = extract_engine_model(src)
     cylinders_since_new = extract_cylinder_time_since_new(src)
     hours_since_iran = extract_hours_since_iran(src)
@@ -445,6 +572,7 @@ def parse_description(text: str) -> dict[str, Any]:
     evidence_count += 1 if fuel_capacity is not None else 0
     evidence_count += len(special_equipment)
     evidence_count += len(maintenance_payload)
+    evidence_count += 1 if pricing_context.get("is_fractional") else 0
     confidence = round(min(1.0, 0.2 + evidence_count * 0.08), 2) if src else 0.0
 
     payload: dict[str, Any] = {
@@ -456,6 +584,7 @@ def parse_description(text: str) -> dict[str, Any]:
         "useful_load_lbs": useful_load,
         "fuel_capacity_gal": fuel_capacity,
         "special_equipment": special_equipment,
+        "pricing_context": pricing_context,
         "maintenance": maintenance_payload,
         "confidence": confidence,
         "avionics_parser_version": PARSER_VERSION,

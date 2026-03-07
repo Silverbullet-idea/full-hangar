@@ -10,16 +10,23 @@ from __future__ import annotations
 
 import argparse
 import os
+import statistics
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-INTELLIGENCE_VERSION = "1.0.0"
 PAGE_SIZE = 1000
+
+# Ensure imports from project root work even when launched from scraper/.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def get_supabase():
@@ -31,6 +38,15 @@ def get_supabase():
     if not url or not key:
         raise EnvironmentError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in .env")
     return create_client(url, key)
+
+
+def resolve_default_intelligence_version() -> str:
+    """
+    Resolve the current intelligence version from scoring engine source-of-truth.
+    """
+    from core.intelligence.aircraft_intelligence import INTELLIGENCE_VERSION
+
+    return str(INTELLIGENCE_VERSION)
 
 
 def safe_float(value: Any) -> float | None:
@@ -152,7 +168,11 @@ def print_ranked_list(
         print(f"... {len(sortable) - max_rows} more rows not shown")
 
 
-def build_report(rows: list[dict[str, Any]], make_filter: str | None) -> None:
+def build_report(
+    rows: list[dict[str, Any]],
+    make_filter: str | None,
+    intelligence_version: str,
+) -> None:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     risk_counts = Counter()
@@ -190,7 +210,7 @@ def build_report(rows: list[dict[str, Any]], make_filter: str | None) -> None:
     print("Aircraft Scoring Validation Report")
     print("----------------------------------")
     print(f"Generated: {now}")
-    print(f"Intelligence version: {INTELLIGENCE_VERSION}")
+    print(f"Intelligence version: {intelligence_version}")
     print(f"Make filter: {make_filter or 'ALL'}")
 
     print_section("1) Total listings scored")
@@ -210,6 +230,22 @@ def build_report(rows: list[dict[str, Any]], make_filter: str | None) -> None:
         for make in sorted(value_scores_by_make):
             make_avg = avg(value_scores_by_make[make])
             print(f"- {make}: {fmt_num(make_avg)} (n={len(value_scores_by_make[make])})")
+
+    print_section("3b) Score spread & tie-rate")
+    if not value_scores_all:
+        print("No non-null value scores.")
+    else:
+        score_counts = Counter(round(v, 1) for v in value_scores_all)
+        unique_count = len(score_counts)
+        top_score, top_count = score_counts.most_common(1)[0]
+        tie_rate = (top_count / len(value_scores_all)) * 100
+        min_score = min(value_scores_all)
+        max_score = max(value_scores_all)
+        std_dev = statistics.pstdev(value_scores_all) if len(value_scores_all) > 1 else 0.0
+        print(f"Unique score values: {unique_count}")
+        print(f"Min / Max value_score: {fmt_num(min_score)} / {fmt_num(max_score)}")
+        print(f"Population stddev: {fmt_num(std_dev)}")
+        print(f"Most common score: {fmt_num(top_score)} (n={top_count}, {tie_rate:.1f}% of listings)")
 
     print_section("4) Listings where deferred_total > 50000")
     print(f"Count: {len(high_deferred_rows)}")
@@ -238,6 +274,8 @@ def build_report(rows: list[dict[str, Any]], make_filter: str | None) -> None:
 
 
 def main() -> None:
+    default_intelligence_version = resolve_default_intelligence_version()
+
     parser = argparse.ArgumentParser(
         description="Validate aircraft_listings scoring outputs in Supabase"
     )
@@ -247,15 +285,24 @@ def main() -> None:
         default=None,
         help="Filter report to a specific manufacturer (case-insensitive exact match)",
     )
+    parser.add_argument(
+        "--intelligence-version",
+        type=str,
+        default=default_intelligence_version,
+        help=(
+            "Intelligence version to validate. Defaults to current "
+            "core.intelligence.aircraft_intelligence version."
+        ),
+    )
     args = parser.parse_args()
 
     supabase = get_supabase()
     rows = fetch_listings(
         supabase,
-        intelligence_version=INTELLIGENCE_VERSION,
+        intelligence_version=args.intelligence_version,
         make_filter=args.make,
     )
-    build_report(rows, args.make)
+    build_report(rows, args.make, args.intelligence_version)
 
 
 if __name__ == "__main__":

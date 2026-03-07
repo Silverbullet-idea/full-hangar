@@ -1063,10 +1063,66 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
     rows = []
     observation_rows = []
     for listing in listings:
+        observed_share_price = _as_int(listing.get("price_asking"))
+        if observed_share_price is None:
+            observed_share_price = _as_int(listing.get("asking_price"))
         parser_text = f"{listing.get('description') or ''} {listing.get('description_full') or ''}".strip()
         if parser_text:
-            parsed_intel = parse_description(parser_text)
+            parsed_intel = parse_description(parser_text, observed_price=observed_share_price)
             listing["description_intelligence"] = parsed_intel
+            pricing_context = parsed_intel.get("pricing_context") if isinstance(parsed_intel, dict) else None
+            if isinstance(pricing_context, dict):
+                normalized_full_price = _as_int(pricing_context.get("normalized_full_price"))
+                is_fractional = bool(pricing_context.get("is_fractional"))
+                share_numerator = _as_int(pricing_context.get("share_numerator"))
+                share_denominator = _as_int(pricing_context.get("share_denominator"))
+                share_price = _as_int(pricing_context.get("share_price"))
+                share_percent = pricing_context.get("share_percent")
+                try:
+                    share_percent = float(share_percent) if share_percent is not None else None
+                except (TypeError, ValueError):
+                    share_percent = None
+                review_needed = bool(pricing_context.get("review_needed"))
+                evidence = pricing_context.get("evidence") if isinstance(pricing_context.get("evidence"), list) else []
+                if is_fractional and normalized_full_price is not None and normalized_full_price > 0:
+                    if observed_share_price is not None and _as_int(pricing_context.get("share_price")) is None:
+                        pricing_context["share_price"] = observed_share_price
+                        share_price = observed_share_price
+                    listing["price_asking"] = normalized_full_price
+                    listing["asking_price"] = normalized_full_price
+                    listing["is_fractional_ownership"] = True
+                    listing["fractional_share_numerator"] = share_numerator
+                    listing["fractional_share_denominator"] = share_denominator
+                    listing["fractional_share_percent"] = share_percent
+                    listing["fractional_share_price"] = share_price
+                    listing["fractional_full_price_estimate"] = normalized_full_price
+                    listing["fractional_review_needed"] = review_needed
+                    listing["fractional_pricing_evidence"] = evidence[:5]
+                    log.info(
+                        "Fractional listing normalized source_id=%s share=%s full=%s evidence=%s",
+                        listing.get("source_id"),
+                        pricing_context.get("share_price"),
+                        normalized_full_price,
+                        ",".join(str(item) for item in (pricing_context.get("evidence") or [])[:2]),
+                    )
+                elif bool(pricing_context.get("review_needed")):
+                    listing["is_fractional_ownership"] = False
+                    listing["fractional_share_numerator"] = share_numerator
+                    listing["fractional_share_denominator"] = share_denominator
+                    listing["fractional_share_percent"] = share_percent
+                    listing["fractional_share_price"] = share_price
+                    listing["fractional_full_price_estimate"] = normalized_full_price
+                    listing["fractional_review_needed"] = True
+                    listing["fractional_pricing_evidence"] = evidence[:5]
+                    log.info(
+                        "Fractional-review flag source_id=%s evidence=%s",
+                        listing.get("source_id"),
+                        ",".join(str(item) for item in (pricing_context.get("evidence") or [])[:2]),
+                    )
+                else:
+                    # Keep explicit false/default state for downstream filters.
+                    listing["is_fractional_ownership"] = False
+                    listing["fractional_review_needed"] = False
             parsed_engine_model = parsed_intel.get("engine", {}).get("model")
             existing_engine_model = listing.get("engine_model")
             existing_engine_model_text = str(existing_engine_model).strip() if existing_engine_model else ""

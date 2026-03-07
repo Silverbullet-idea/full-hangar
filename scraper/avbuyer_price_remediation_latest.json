@@ -1,0 +1,24 @@
+{
+  "candidate_count": 2,
+  "updated_count": 2,
+  "failed_count": 0,
+  "updated": [
+    {
+      "id": "fb7ef1a4-1f5c-4c56-ba3f-aa28894eb5ce",
+      "source_id": "ab_373592",
+      "title": "Cessna R182 Skylane RG",
+      "old_price": 3300000,
+      "new_price": 198816,
+      "url": "https://www.avbuyer.com/aircraft/single-piston/cessna/r182-skylane-rg/373592"
+    },
+    {
+      "id": "012d8c8e-4dad-45d7-bbc0-9f4a653ad1e0",
+      "source_id": "ab_372638",
+      "title": "Beechcraft V35B Bonanza",
+      "old_price": 2100000,
+      "new_price": 126519,
+      "url": "https://www.avbuyer.com/aircraft/single-piston/beechcraft/v35b-bonanza/372638"
+    }
+  ],
+  "failed": []
+}

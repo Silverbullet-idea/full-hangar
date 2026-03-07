@@ -24,6 +24,12 @@ try:
     from config import get_manufacturer_tier, normalize_manufacturer
     from description_parser import parse_description
     from env_check import env_check
+    from media_refresh_utils import (
+        apply_media_update,
+        fetch_refresh_rows,
+        gallery_count,
+        load_source_ids_file,
+    )
     from schema import validate_listing
     from scraper_base import (
         compute_listing_fingerprint,
@@ -39,6 +45,12 @@ except ImportError:  # pragma: no cover
     from .config import get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description
     from .env_check import env_check
+    from .media_refresh_utils import (
+        apply_media_update,
+        fetch_refresh_rows,
+        gallery_count,
+        load_source_ids_file,
+    )
     from .schema import validate_listing
     from .scraper_base import (
         compute_listing_fingerprint,
@@ -1335,6 +1347,116 @@ def run(args):
         log.info(f"\n✓ Done. Grand total: {grand_total}")
 
 
+def run_media_refresh_mode(args) -> None:
+    log.info("=== AvBuyer media refresh mode ===")
+    env_check(required=[] if args.dry_run else None)
+    rl = RateLimiter()
+
+    supabase = get_supabase()
+    source_ids = load_source_ids_file(args.source_ids_file)
+    rows = fetch_refresh_rows(
+        supabase,
+        source_site=SOURCE_SITE,
+        source_ids=source_ids,
+        limit=args.refresh_limit if args.refresh_limit > 0 else None,
+    )
+    if not rows:
+        log.info("No AvBuyer listings matched the media refresh criteria.")
+        return
+
+    pw_browser = pw_context = pw_page_obj = None
+    playwright_manager = None
+
+    updated = 0
+    improved = 0
+    unchanged = 0
+    failed = 0
+    skipped_no_url = 0
+
+    try:
+        if args.playwright:
+            from playwright.sync_api import sync_playwright
+
+            playwright_manager = sync_playwright()
+            playwright_ctx = playwright_manager.__enter__()
+            headless = args.headless.lower() not in ("false", "0", "no")
+            pw_browser, pw_context = _create_playwright_browser(playwright_ctx, headless=headless)
+            pw_page_obj = pw_context.new_page()
+            global _playwright_fallback_active
+            _playwright_fallback_active = True
+
+        for idx, row in enumerate(rows, start=1):
+            source_id = str(row.get("source_id") or "").strip()
+            detail_url = str(row.get("url") or "").strip()
+            if not source_id or not detail_url:
+                skipped_no_url += 1
+                continue
+
+            existing_count = gallery_count(row)
+            detail_soup = fetch_html(detail_url, rl, pw_page_obj, label=f"refresh-{source_id}")
+            if not detail_soup:
+                failed += 1
+                continue
+
+            detail = parse_detail(
+                detail_soup,
+                detail_url=detail_url,
+                pw_page=pw_page_obj,
+                rl=rl,
+                listing_id=source_id,
+            )
+            incoming_urls = detail.get("image_urls") if isinstance(detail.get("image_urls"), list) else []
+            incoming_urls = [str(u).strip() for u in incoming_urls if str(u).strip()]
+            if not incoming_urls and detail.get("primary_image_url"):
+                incoming_urls = [str(detail.get("primary_image_url")).strip()]
+
+            incoming_count = len(incoming_urls)
+            if incoming_count <= existing_count:
+                unchanged += 1
+                continue
+
+            improved += 1
+            if not args.dry_run:
+                apply_media_update(
+                    supabase,
+                    source_site=SOURCE_SITE,
+                    source_id=source_id,
+                    image_urls=incoming_urls,
+                    primary_image_url=incoming_urls[0] if incoming_urls else None,
+                )
+                updated += 1
+
+            if idx % 25 == 0:
+                log.info(
+                    "Media refresh progress: %s/%s processed | improved=%s updated=%s unchanged=%s failed=%s",
+                    idx,
+                    len(rows),
+                    improved,
+                    updated,
+                    unchanged,
+                    failed,
+                )
+    finally:
+        if pw_page_obj:
+            pw_page_obj.close()
+        if pw_context:
+            pw_context.close()
+        if pw_browser:
+            pw_browser.close()
+        if playwright_manager:
+            playwright_manager.__exit__(None, None, None)
+
+    log.info(
+        "AvBuyer media refresh done: scanned=%s improved=%s updated=%s unchanged=%s failed=%s skipped_no_url=%s",
+        len(rows),
+        improved,
+        updated,
+        unchanged,
+        failed,
+        skipped_no_url,
+    )
+
+
 # ─── CLI ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -1350,6 +1472,9 @@ def main():
     parser.add_argument("--headless",   default="true")
     parser.add_argument("--verbose",    action="store_true")
     parser.add_argument("--output",     default="", help="Output JSON file for dry-run mode")
+    parser.add_argument("--media-refresh-only", action="store_true", help="Refresh images only for existing AvBuyer listings.")
+    parser.add_argument("--source-ids-file", default="", help="Optional file of source_id values (one per line) for targeted media refresh.")
+    parser.add_argument("--refresh-limit", type=int, default=0, help="Limit number of AvBuyer rows in media refresh mode.")
     parser.add_argument("--limit-makes", type=int, default=0, help="Max makes per category for smoke tests")
     parser.add_argument("--max-pages", type=int, default=0, help="Max pages per make for smoke tests")
     parser.add_argument(
@@ -1372,6 +1497,9 @@ def main():
 
     global log
     log = setup_logging(args.verbose)
+    if args.media_refresh_only:
+        run_media_refresh_mode(args)
+        return
     run(args)
 
 

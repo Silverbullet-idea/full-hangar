@@ -9,6 +9,7 @@ from scraper.description_parser import (
     extract_cylinder_time_since_new,
     extract_avionics,
     extract_fuel_capacity,
+    extract_fractional_pricing,
     extract_mods_and_stcs,
     extract_special_equipment,
     extract_times,
@@ -78,6 +79,24 @@ def test_extract_avionics_new_alias_expansion() -> None:
     assert "Avidyne IFD 550" in result
 
 
+def test_extract_avionics_dense_multi_aliases() -> None:
+    text = "Avionics: GTN750, GTX345R remote transponder, and dual G5."
+    result = extract_avionics(text)
+    assert "Garmin GTN 750" in result
+    assert "Garmin GTX 345" in result
+    assert "Garmin G5 EFIS" in result
+
+
+def test_extract_avionics_compact_variants_and_adsb() -> None:
+    text = "Panel: GTN650XI, GNS530W, GMA350, GTX330ES, ADSBOUT."
+    result = extract_avionics(text)
+    assert "Garmin GTN 650" in result
+    assert "Garmin GNS 530W" in result
+    assert "Garmin GMA 350 Audio Panel" in result
+    assert "Garmin GTX 330ES Transponder" in result
+    assert "ADS-B Out" in result
+
+
 def test_extract_mods_and_stcs() -> None:
     text = "Features Robertson STOL, speed brakes, and Osborne tip tanks."
     result = extract_mods_and_stcs(text)
@@ -125,7 +144,7 @@ def test_parse_description_example_payload() -> None:
     assert "Turbo Normalizing" in parsed["mods"]
     assert "Tip Tanks" in parsed["mods"]
     assert "Garmin GTN 750" in parsed["avionics"]
-    assert parsed["avionics_parser_version"] == "2.0.0"
+    assert parsed["avionics_parser_version"] == "2.0.3"
     assert any(item["canonical_name"] == "Garmin GTN 750" for item in parsed["avionics_detailed"])
     assert parsed["useful_load_lbs"] == 1546
     assert parsed["confidence"] >= 0.7
@@ -157,4 +176,49 @@ def test_parse_description_maintenance_payload() -> None:
     assert parsed["maintenance"]["cylinders_since_new_hours"] == 727
     assert parsed["maintenance"]["hours_since_iran"] == 25
     assert parsed["maintenance"]["last_annual_inspection"] == "December 2024"
+
+
+def test_extract_fractional_pricing_explicit_ratio() -> None:
+    text = "Rare opportunity: 1/10th partnership available. Price $14,500."
+    parsed = extract_fractional_pricing(text)
+    assert parsed["is_fractional"] is True
+    assert parsed["share_numerator"] == 1
+    assert parsed["share_denominator"] == 10
+    assert parsed["share_price"] == 14500
+    assert parsed["normalized_full_price"] == 145000
+    assert parsed["review_needed"] is False
+
+
+def test_extract_fractional_pricing_percent_share() -> None:
+    text = "Offering 10% ownership share at $22,000."
+    parsed = extract_fractional_pricing(text)
+    assert parsed["is_fractional"] is True
+    assert parsed["share_numerator"] == 1
+    assert parsed["share_denominator"] == 10
+    assert parsed["share_percent"] == 10.0
+    assert parsed["normalized_full_price"] == 220000
+
+
+def test_extract_fractional_pricing_ambiguous_flag_only() -> None:
+    text = "Well-managed partnership aircraft. Contact for details."
+    parsed = extract_fractional_pricing(text)
+    assert parsed["is_fractional"] is False
+    assert parsed["normalized_full_price"] is None
+    assert parsed["review_needed"] is True
+
+
+def test_extract_fractional_pricing_negative_control() -> None:
+    text = "Engine has 1/10 compression wear noted in old report."
+    parsed = extract_fractional_pricing(text)
+    assert parsed["is_fractional"] is False
+    assert parsed["review_needed"] is False
+
+
+def test_parse_description_includes_pricing_context() -> None:
+    text = "1/10th ownership available in this Cessna. Partnership sale."
+    parsed = parse_description(text, observed_price=14500)
+    pricing = parsed["pricing_context"]
+    assert pricing["is_fractional"] is True
+    assert pricing["share_price"] == 14500
+    assert pricing["normalized_full_price"] == 145000
 

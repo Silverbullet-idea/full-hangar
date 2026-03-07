@@ -1,0 +1,10 @@
+{
+  "lookback_days": 90,
+  "observation_rows_total": 55,
+  "listings_with_observations": 37,
+  "matched_rows": 55,
+  "unresolved_rows": 0,
+  "matched_rate_pct": 100.0,
+  "avg_match_confidence": 0.95,
+  "top_unresolved_tokens": []
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import core.intelligence.avionics_intelligence as avionics_module
 from core.intelligence.avionics_intelligence import avionics_score
 
 
@@ -87,6 +88,33 @@ def test_market_value_source_breakdown_present() -> None:
     assert isinstance(result["market_sample_total"], int)
 
 
+def test_capability_aliases_prefer_oem_seeded_sources(monkeypatch) -> None:
+    avionics_module._alias_to_market_value_cache.clear()
+
+    def _fake_alias_market_values(_segment: str) -> dict[str, dict[str, object]]:
+        return {
+            "waas": {"oem_msrp_value": 1101, "sample_count": 3},
+            "ads b out": {"oem_msrp_value": 2601, "sample_count": 3},
+            "jpi edm": {"oem_msrp_value": 2401, "sample_count": 3},
+        }
+
+    monkeypatch.setattr(
+        avionics_module,
+        "_get_alias_to_market_value",
+        _fake_alias_market_values,
+    )
+
+    listing = {
+        "avionics_description": "WAAS, ADS-B Out transponder, and JPI EDM installed.",
+        "aircraft_type": "single_engine_piston",
+    }
+    result = avionics_score(listing)
+    assert result["installed_value"] == 6103
+    assert result["market_value_source_primary"] == "oem_msrp"
+    assert result["market_value_source_breakdown"].get("oem_msrp", 0) >= 3
+    assert result["market_sample_total"] >= 9
+
+
 def _run_all_tests() -> int:
     tests = [
         test_glass_with_adsb_and_waas,
@@ -96,6 +124,7 @@ def _run_all_tests() -> int:
         test_unknown_panel_defaults_mid,
         test_stc_detection_adds_modification_value,
         test_market_value_source_breakdown_present,
+        test_capability_aliases_prefer_oem_seeded_sources,
     ]
     failures = 0
     for test_fn in tests:

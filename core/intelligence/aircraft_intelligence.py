@@ -16,7 +16,7 @@ from .avionics_intelligence import avionics_score
 from .model_normalizer import extract_engine_canonical_from_listing, extract_prop_canonical_from_listing
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
 
-INTELLIGENCE_VERSION = "1.7.0"
+INTELLIGENCE_VERSION = "1.8.0"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -360,6 +360,45 @@ INTELLIGENCE_WEIGHTS = {
     "avionics": 0.15,
 }
 
+# Hybrid score profile: deterministic subsystem scoring + data-calibrated modifiers.
+HYBRID_SCORING_PROFILE = {
+    "condition_weight": 0.45,
+    "market_weight": 0.35,
+    "execution_weight": 0.20,
+    "comp_sample_bonus": [
+        (25, 6.0),
+        (15, 4.0),
+        (8, 2.0),
+        (5, 1.0),
+        (0, 0.0),
+    ],
+    "deal_tier_adjustments": {
+        "EXCEPTIONAL_DEAL": 7.0,
+        "GOOD_DEAL": 3.5,
+        "FAIR_MARKET": 0.0,
+        "ABOVE_MARKET": -3.5,
+        "OVERPRICED": -7.0,
+        "INSUFFICIENT_DATA": 0.0,
+    },
+    "avionics_source_adjustments": {
+        "oem_msrp": 3.0,
+        "market_p25": 1.5,
+        "fallback_static": 0.0,
+        "none": 0.0,
+        "null": 0.0,
+    },
+    "confidence_multiplier": {
+        "HIGH": 1.00,
+        "MEDIUM": 0.96,
+        "LOW": 0.90,
+    },
+    "low_data_band": {
+        "HIGH": (48.0, 84.0),
+        "MEDIUM": (40.0, 78.0),
+        "LOW": (30.0, 72.0),
+    },
+}
+
 _market_comps_client = None
 _market_comps_cache: dict[tuple[str, str], dict | None] = {}
 _baseline_values_cache: dict[tuple[str, str, int | None], dict | None] = {}
@@ -367,6 +406,40 @@ _component_sales_cache: dict[tuple[str, str], dict | None] = {}
 _exact_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
 _family_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
 _make_comp_pool_cache: dict[str, list[dict]] = {}
+
+
+def _live_comp_pool_disabled() -> bool:
+    value = str(os.environ.get("FULL_HANGAR_DISABLE_LIVE_COMP_POOL", "")).strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
+def _get_market_comps_client():
+    global _market_comps_client
+    if _market_comps_client is not None:
+        return _market_comps_client
+
+    url = os.environ.get("SUPABASE_URL")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY")
+    if not url or not service_key:
+        return None
+    try:
+        from supabase import create_client
+        from supabase.lib.client_options import ClientOptions
+
+        timeout_seconds = int(
+            os.environ.get(
+                "MARKET_COMPS_TIMEOUT_SECONDS",
+                os.environ.get("SUPABASE_POSTGREST_TIMEOUT_SECONDS", "60"),
+            )
+        )
+        options = ClientOptions(
+            postgrest_client_timeout=timeout_seconds,
+            storage_client_timeout=timeout_seconds,
+        )
+        _market_comps_client = create_client(url, service_key, options=options)
+    except Exception:
+        _market_comps_client = None
+    return _market_comps_client
 
 
 def _safe_float(value):
@@ -474,24 +547,14 @@ def _query_comp_pool_exact(make_name: str, model_name: str) -> list[dict]:
     if key in _exact_comp_pool_cache:
         return _exact_comp_pool_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _exact_comp_pool_cache[key] = []
-            return []
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _exact_comp_pool_cache[key] = []
-            return []
+    client = _get_market_comps_client()
+    if client is None:
+        _exact_comp_pool_cache[key] = []
+        return []
 
     try:
         response = (
-            _market_comps_client.table("aircraft_listings")
+            client.table("aircraft_listings")
             .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
             .eq("make", make_name)
             .eq("model", model_name)
@@ -512,20 +575,10 @@ def _query_comp_pool_family(make_name: str, model_family: str) -> list[dict]:
     if key in _family_comp_pool_cache:
         return _family_comp_pool_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _family_comp_pool_cache[key] = []
-            return []
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _family_comp_pool_cache[key] = []
-            return []
+    client = _get_market_comps_client()
+    if client is None:
+        _family_comp_pool_cache[key] = []
+        return []
 
     if not model_family:
         _family_comp_pool_cache[key] = []
@@ -533,7 +586,7 @@ def _query_comp_pool_family(make_name: str, model_family: str) -> list[dict]:
 
     try:
         response = (
-            _market_comps_client.table("aircraft_listings")
+            client.table("aircraft_listings")
             .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
             .eq("make", make_name)
             .ilike("model", f"{model_family}%")
@@ -554,24 +607,14 @@ def _query_comp_pool_make(make_name: str) -> list[dict]:
     if key in _make_comp_pool_cache:
         return _make_comp_pool_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _make_comp_pool_cache[key] = []
-            return []
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _make_comp_pool_cache[key] = []
-            return []
+    client = _get_market_comps_client()
+    if client is None:
+        _make_comp_pool_cache[key] = []
+        return []
 
     try:
         response = (
-            _market_comps_client.table("aircraft_listings")
+            client.table("aircraft_listings")
             .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
             .eq("make", make_name)
             .eq("is_active", True)
@@ -642,10 +685,15 @@ def _get_pricing_snapshot(listing: dict) -> dict:
             "make_count": 0,
         }
 
-    exact_pool = _query_comp_pool_exact(make_name, model_name)
-    model_family = _derive_model_family(model_name)
-    family_pool = _query_comp_pool_family(make_name, model_family) if model_family else []
-    make_pool = _query_comp_pool_make(make_name)
+    if _live_comp_pool_disabled():
+        exact_pool = []
+        family_pool = []
+        make_pool = []
+    else:
+        exact_pool = _query_comp_pool_exact(make_name, model_name)
+        model_family = _derive_model_family(model_name)
+        family_pool = _query_comp_pool_family(make_name, model_family) if model_family else []
+        make_pool = _query_comp_pool_make(make_name)
 
     exact_stats = _robust_comp_stats(exact_pool, target_year=target_year)
     if exact_stats and int(exact_stats.get("sample_size") or 0) >= 5:
@@ -753,24 +801,14 @@ def _get_component_sales_median(component_type: str, model: str | None) -> dict 
     if key in _component_sales_cache:
         return _component_sales_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _component_sales_cache[key] = None
-            return None
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _component_sales_cache[key] = None
-            return None
+    client = _get_market_comps_client()
+    if client is None:
+        _component_sales_cache[key] = None
+        return None
 
     try:
         response = (
-            _market_comps_client.table("aircraft_component_sales")
+            client.table("aircraft_component_sales")
             .select("model,price_sold,sold_date,confidence")
             .eq("component_type", component_type)
             .not_.is_("price_sold", "null")
@@ -860,24 +898,14 @@ def _get_market_comps(make: str | None, model: str | None) -> dict | None:
     if key in _market_comps_cache:
         return _market_comps_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _market_comps_cache[key] = None
-            return None
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _market_comps_cache[key] = None
-            return None
+    client = _get_market_comps_client()
+    if client is None:
+        _market_comps_cache[key] = None
+        return None
 
     try:
         response = (
-            _market_comps_client.table("market_comps")
+            client.table("market_comps")
             .select("sample_size,median_price,median_smoh,pct_with_glass")
             .eq("make", make_name)
             .eq("model", model_name)
@@ -887,7 +915,7 @@ def _get_market_comps(make: str | None, model: str | None) -> dict | None:
         comps_row = (response.data or [None])[0]
         if comps_row is None:
             fallback = (
-                _market_comps_client.table("market_comps")
+                client.table("market_comps")
                 .select("sample_size,median_price,median_smoh,pct_with_glass")
                 .ilike("make", make_name)
                 .ilike("model", model_name)
@@ -927,25 +955,15 @@ def _get_baseline_values(make: str | None, model: str | None, year: int | None) 
     if key in _baseline_values_cache:
         return _baseline_values_cache[key]
 
-    global _market_comps_client
-    if _market_comps_client is None:
-        url = os.environ.get("SUPABASE_URL")
-        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not url or not service_key:
-            _baseline_values_cache[key] = None
-            return None
-        try:
-            from supabase import create_client
-
-            _market_comps_client = create_client(url, service_key)
-        except Exception:
-            _baseline_values_cache[key] = None
-            return None
+    client = _get_market_comps_client()
+    if client is None:
+        _baseline_values_cache[key] = None
+        return None
 
     select_cols = "make,model,year_from,year_to,baseline_retail,baseline_low,baseline_high,source,last_updated"
     try:
         response = (
-            _market_comps_client.table("baseline_aircraft_values")
+            client.table("baseline_aircraft_values")
             .select(select_cols)
             .eq("make", make_name)
             .eq("model", model_name)
@@ -954,7 +972,7 @@ def _get_baseline_values(make: str | None, model: str | None, year: int | None) 
         rows = response.data or []
         if not rows:
             fallback = (
-                _market_comps_client.table("baseline_aircraft_values")
+                client.table("baseline_aircraft_values")
                 .select(select_cols)
                 .ilike("make", make_name)
                 .ilike("model", model_name)
@@ -1268,6 +1286,101 @@ def _build_execution_score(
     return round(max(0.0, min(100.0, score)), 1)
 
 
+def _comp_sample_adjustment(sample_size: int) -> float:
+    for threshold, bonus in HYBRID_SCORING_PROFILE["comp_sample_bonus"]:
+        if sample_size >= threshold:
+            return float(bonus)
+    return -1.5
+
+
+def _hybrid_value_score(
+    *,
+    condition_score: float,
+    market_opportunity_score: float,
+    execution_score: float,
+    engine_score: float,
+    prop_score: float,
+    llp_score: float,
+    avionics_score_value: float,
+    deal: dict,
+    avionics: dict,
+    component_gap_value: float | None,
+    signals: dict,
+    data_confidence: str,
+) -> float:
+    profile = HYBRID_SCORING_PROFILE
+    base_score = (
+        condition_score * profile["condition_weight"]
+        + market_opportunity_score * profile["market_weight"]
+        + execution_score * profile["execution_weight"]
+    )
+
+    comps_sample_size = int(deal.get("comps_sample_size") or 0)
+    comps_adjustment = _comp_sample_adjustment(comps_sample_size)
+    deal_tier = str(deal.get("deal_tier") or "INSUFFICIENT_DATA")
+    deal_tier_adjustment = float(profile["deal_tier_adjustments"].get(deal_tier, 0.0))
+
+    mispricing_zscore = _safe_float(deal.get("mispricing_zscore"))
+    mispricing_adjustment = 0.0
+    if mispricing_zscore is not None:
+        mispricing_adjustment = max(-5.0, min(5.0, -mispricing_zscore * 3.5))
+
+    avionics_source_primary = str(avionics.get("market_value_source_primary") or "none").lower()
+    avionics_source_adjustment = float(
+        profile["avionics_source_adjustments"].get(avionics_source_primary, -1.0)
+    )
+
+    gap_adjustment = 0.0
+    if component_gap_value is not None:
+        gap_adjustment = max(-3.0, min(4.0, component_gap_value / 4000.0))
+
+    missing_count = len(signals.get("missing_fields", []))
+    sparse_penalty = min(6.0, missing_count * 0.5)
+
+    distress_penalty = max(0.0, (50.0 - condition_score) * 0.12)
+    quality_uplift = 0.0
+    if (
+        condition_score >= 80.0
+        and llp_score >= 95.0
+        and engine_score >= 75.0
+        and prop_score >= 70.0
+        and missing_count <= 2
+    ):
+        quality_uplift = 11.0
+
+    confidence_multiplier = float(
+        profile["confidence_multiplier"].get(data_confidence, profile["confidence_multiplier"]["LOW"])
+    )
+
+    calibrated_score = (
+        base_score
+        + comps_adjustment
+        + deal_tier_adjustment
+        + mispricing_adjustment
+        + avionics_source_adjustment
+        + gap_adjustment
+        + quality_uplift
+        - sparse_penalty
+        - distress_penalty
+    )
+    calibrated_score *= confidence_multiplier
+
+    # Tiered low-data anchor reduces score pile-ups on sparse records.
+    if missing_count >= 4:
+        subsystem_anchor = (
+            engine_score * 0.32
+            + prop_score * 0.18
+            + llp_score * 0.24
+            + condition_score * 0.16
+            + avionics_score_value * 0.10
+        )
+        calibrated_score = calibrated_score * 0.70 + subsystem_anchor * 0.30
+        low, high = profile["low_data_band"].get(data_confidence, profile["low_data_band"]["LOW"])
+        calibrated_score = max(low, min(high, calibrated_score))
+
+    return max(0.0, min(100.0, calibrated_score))
+
+
 def _build_score_explanation(
     engine: dict,
     prop: dict,
@@ -1458,46 +1571,12 @@ def aircraft_intelligence_score(listing: dict) -> dict:
 
     signals = _collect_data_quality_signals(listing, engine, prop)
     confidence_score, data_confidence, confidence_multiplier = _confidence_from_signals(signals)
-    value_score = max(0.0, min(100.0, condition_score * confidence_multiplier))
     accident_adjustment = _accident_history_adjustment(listing)
     accident_penalty = float(accident_adjustment.get("penalty") or 0.0)
     accident_explanation = accident_adjustment.get("explanation")
     accident_score_cap = accident_adjustment.get("score_cap")
     accident_risk_override = accident_adjustment.get("risk_override")
     no_history_note = bool(accident_adjustment.get("no_history_note"))
-    if accident_penalty:
-        value_score = max(0.0, value_score - accident_penalty)
-    if isinstance(accident_score_cap, (int, float)):
-        value_score = min(value_score, float(accident_score_cap))
-    data_gaps = len(signals["missing_fields"]) > 0
-    score_band_low, score_band_high = _score_band(value_score, data_confidence, len(signals["missing_fields"]))
-    rank_score = max(0.0, min(100.0, condition_score * (0.7 + 0.3 * (confidence_score / 100))))
-
-    score_explanation = _build_score_explanation(
-        engine,
-        prop,
-        llp,
-        deferred,
-        avionics,
-        data_confidence,
-        condition_score,
-        value_score,
-    )
-    if accident_explanation:
-        score_explanation = [accident_explanation, *score_explanation]
-    if no_history_note:
-        score_explanation = [*score_explanation, "✓ No NTSB accident history on record"]
-    risk_reasons = _build_risk_reasons(engine, prop, llp, deferred, data_confidence)
-    improvement_actions = _build_improvement_actions(signals)
-
-    faa_registration_alert = listing.get("faa_registration_alert")
-    risk = risk_level_from_score(
-        value_score,
-        llp.get("any_unairworthy", False),
-        faa_alert=faa_registration_alert,
-    )
-    if isinstance(accident_risk_override, str) and accident_risk_override:
-        risk = accident_risk_override
     market_comps = _get_market_comps(listing.get("make"), listing.get("model"))
     deal = compute_deal_rating(listing, market_comps, deferred_total=float(total_deferred))
     deal_rating = deal.get("deal_rating")
@@ -1538,6 +1617,53 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         ),
         1,
     )
+    value_score = _hybrid_value_score(
+        condition_score=float(condition_score),
+        market_opportunity_score=float(market_opportunity_score),
+        execution_score=float(execution_score),
+        engine_score=float(engine.get("score") or 50.0),
+        prop_score=float(prop.get("score") or 50.0),
+        llp_score=float(llp.get("score") or 50.0),
+        avionics_score_value=float(avionics.get("score") or 50.0),
+        deal=deal,
+        avionics=avionics,
+        component_gap_value=component_gap_value,
+        signals=signals,
+        data_confidence=data_confidence,
+    )
+    if accident_penalty:
+        value_score = max(0.0, value_score - accident_penalty)
+    if isinstance(accident_score_cap, (int, float)):
+        value_score = min(value_score, float(accident_score_cap))
+    data_gaps = len(signals["missing_fields"]) > 0
+    score_band_low, score_band_high = _score_band(value_score, data_confidence, len(signals["missing_fields"]))
+    rank_score = max(0.0, min(100.0, condition_score * (0.7 + 0.3 * (confidence_score / 100))))
+
+    score_explanation = _build_score_explanation(
+        engine,
+        prop,
+        llp,
+        deferred,
+        avionics,
+        data_confidence,
+        condition_score,
+        value_score,
+    )
+    if accident_explanation:
+        score_explanation = [accident_explanation, *score_explanation]
+    if no_history_note:
+        score_explanation = [*score_explanation, "✓ No NTSB accident history on record"]
+    risk_reasons = _build_risk_reasons(engine, prop, llp, deferred, data_confidence)
+    improvement_actions = _build_improvement_actions(signals)
+
+    faa_registration_alert = listing.get("faa_registration_alert")
+    risk = risk_level_from_score(
+        value_score,
+        llp.get("any_unairworthy", False),
+        faa_alert=faa_registration_alert,
+    )
+    if isinstance(accident_risk_override, str) and accident_risk_override:
+        risk = accident_risk_override
     days_on_market = _days_on_market(listing)
 
     if days_on_market is not None:
