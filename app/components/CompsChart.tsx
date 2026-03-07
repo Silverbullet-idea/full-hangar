@@ -321,6 +321,10 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   const axisTextColor = "var(--brand-muted)";
   const gridColor = "var(--brand-dark)";
   const readableBodyTextColor = "var(--brand-white)";
+  const tooltipBackgroundColor = "var(--card-bg)";
+  const tooltipBorderColor = "var(--brand-dark)";
+  const tooltipMutedTextColor = "var(--brand-muted)";
+  const tooltipImageFallbackBg = "var(--surface-muted)";
   const tooltipStyle = (() => {
     const containerWidth = chartContainerRef.current?.clientWidth ?? 680;
     const tooltipWidth = 300;
@@ -336,8 +340,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       top: clampedY,
       transform: "translate(-50%, -100%)",
       zIndex: 6,
-      background: "#111827",
-      border: "1px solid #3a4454",
+      background: tooltipBackgroundColor,
+      border: `1px solid ${tooltipBorderColor}`,
       borderRadius: 8,
       padding: "0.6rem",
       minWidth: tooltipWidth,
@@ -506,25 +510,25 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                       alt={activePoint.label}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: 84, height: 64, borderRadius: 6, objectFit: "cover", border: "1px solid #3a4454", background: "#0f172a" }}
+                      style={{ width: 84, height: 64, borderRadius: 6, objectFit: "cover", border: `1px solid ${tooltipBorderColor}`, background: tooltipImageFallbackBg }}
                     />
                   ) : (
-                    <div style={{ width: 84, height: 64, borderRadius: 6, border: "1px solid #3a4454", background: "#0f172a", color: "#94a3b8", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 84, height: 64, borderRadius: 6, border: `1px solid ${tooltipBorderColor}`, background: tooltipImageFallbackBg, color: tooltipMutedTextColor, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       No image
                     </div>
                   )}
                   <div>
-                    <div style={{ fontWeight: 700, color: "#ffffff", marginBottom: 2 }}>{activePoint.label}</div>
-                    <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>{activePoint.locationLabel}</div>
-                    <div style={{ color: "#d1d5db", fontSize: 13 }}>{`Price: ${formatMoney(activePoint.price)}`}</div>
-                    <div style={{ color: "#d1d5db", fontSize: 13 }}>{`${yLabel}: ${formatYValue(activePoint.yValue, yLabel)}`}</div>
+                    <div style={{ fontWeight: 700, color: readableBodyTextColor, marginBottom: 2 }}>{activePoint.label}</div>
+                    <div style={{ color: tooltipMutedTextColor, fontSize: 12, marginBottom: 4 }}>{activePoint.locationLabel}</div>
+                    <div style={{ color: readableBodyTextColor, fontSize: 13 }}>{`Price: ${formatMoney(activePoint.price)}`}</div>
+                    <div style={{ color: readableBodyTextColor, fontSize: 13 }}>{`${yLabel}: ${formatYValue(activePoint.yValue, yLabel)}`}</div>
                     {activePoint.isTarget && (activePoint.hasEstimatedPrice || activePoint.hasEstimatedY) ? (
                       <div style={{ color: "#fbbf24", fontSize: 12 }}>
                         {`Target marker anchored with ${activePoint.hasEstimatedPrice ? "estimated price" : ""}${activePoint.hasEstimatedPrice && activePoint.hasEstimatedY ? " + " : ""}${activePoint.hasEstimatedY ? `estimated ${yLabel.toLowerCase()}` : ""}`}
                       </div>
                     ) : null}
                     {typeof activePoint.daysOnMarket === "number" ? (
-                      <div style={{ color: "#d1d5db", fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
+                      <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
                     ) : null}
                   </div>
                 </div>
@@ -533,7 +537,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     {activePoint.riskLevel}
                   </div>
                   {activePoint.dealTier && !/insufficient\s*data/i.test(activePoint.dealTier) ? (
-                    <div style={{ display: "inline-flex", border: "1px solid #4b5563", color: "#e5e7eb", borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
                       {activePoint.dealTier.replace(/_/g, " ")}
                     </div>
                   ) : null}
@@ -558,25 +562,25 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                       alt={activePoint.label}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: 84, height: 64, borderRadius: 6, objectFit: "cover", border: "1px solid #3a4454", background: "#0f172a" }}
+                      style={{ width: 84, height: 64, borderRadius: 6, objectFit: "cover", border: `1px solid ${tooltipBorderColor}`, background: tooltipImageFallbackBg }}
                     />
                   ) : (
-                    <div style={{ width: 84, height: 64, borderRadius: 6, border: "1px solid #3a4454", background: "#0f172a", color: "#94a3b8", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 84, height: 64, borderRadius: 6, border: `1px solid ${tooltipBorderColor}`, background: tooltipImageFallbackBg, color: tooltipMutedTextColor, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       No image
                     </div>
                   )}
                   <div>
-                    <div style={{ fontWeight: 700, color: "#ffffff", marginBottom: 2 }}>{activePoint.label}</div>
-                    <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>{activePoint.locationLabel}</div>
-                    <div style={{ color: "#d1d5db", fontSize: 13 }}>{`Price: ${formatMoney(activePoint.price)}`}</div>
-                    <div style={{ color: "#d1d5db", fontSize: 13 }}>{`${yLabel}: ${formatYValue(activePoint.yValue, yLabel)}`}</div>
+                    <div style={{ fontWeight: 700, color: readableBodyTextColor, marginBottom: 2 }}>{activePoint.label}</div>
+                    <div style={{ color: tooltipMutedTextColor, fontSize: 12, marginBottom: 4 }}>{activePoint.locationLabel}</div>
+                    <div style={{ color: readableBodyTextColor, fontSize: 13 }}>{`Price: ${formatMoney(activePoint.price)}`}</div>
+                    <div style={{ color: readableBodyTextColor, fontSize: 13 }}>{`${yLabel}: ${formatYValue(activePoint.yValue, yLabel)}`}</div>
                     {activePoint.isTarget && (activePoint.hasEstimatedPrice || activePoint.hasEstimatedY) ? (
                       <div style={{ color: "#fbbf24", fontSize: 12 }}>
                         {`Target marker anchored with ${activePoint.hasEstimatedPrice ? "estimated price" : ""}${activePoint.hasEstimatedPrice && activePoint.hasEstimatedY ? " + " : ""}${activePoint.hasEstimatedY ? `estimated ${yLabel.toLowerCase()}` : ""}`}
                       </div>
                     ) : null}
                     {typeof activePoint.daysOnMarket === "number" ? (
-                      <div style={{ color: "#d1d5db", fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
+                      <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
                     ) : null}
                   </div>
                 </div>
@@ -585,7 +589,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     {activePoint.riskLevel}
                   </div>
                   {activePoint.dealTier && !/insufficient\s*data/i.test(activePoint.dealTier) ? (
-                    <div style={{ display: "inline-flex", border: "1px solid #4b5563", color: "#e5e7eb", borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
                       {activePoint.dealTier.replace(/_/g, " ")}
                     </div>
                   ) : null}
