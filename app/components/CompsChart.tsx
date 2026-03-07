@@ -467,7 +467,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     cy={props.cy}
                     r={point.pointSize / 2}
                     fill={point.isTarget ? TARGET_COLOR : COMP_COLOR}
-                    stroke={point.isTarget ? "#111827" : "#666666"}
+                    stroke={point.isTarget ? "var(--brand-white)" : "var(--brand-muted)"}
                     strokeWidth={point.isTarget ? 2 : 1}
                     style={{ cursor: "pointer" }}
                     onMouseEnter={() => {
