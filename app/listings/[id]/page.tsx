@@ -162,6 +162,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
   const resolvedAskingPrice = resolveAskingPrice(listingRow, raw)
+  const fractionalPricingContext = descriptionIntelligence.pricingContext
+  const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
+  const fractionalPricingNote = buildFractionalPricingNote(fractionalBreakdown)
   const marketPricing = await getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year)
   const effectiveCompSource = resolveCompSource(dealComparisonSource, marketPricing?.sampleSize ?? null)
   const effectiveDataConfidence = resolveDataConfidence(dataConfidence, listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null)
@@ -349,6 +352,13 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           </span>
         ) : null}
       </h1>
+      {fractionalBreakdown.isFractional ? (
+        <div className="fractional-chip-row">
+          <span className="fractional-chip">Fractional Ownership</span>
+          {fractionalBreakdown.shareLabel ? <span className="fractional-chip-detail">{fractionalBreakdown.shareLabel}</span> : null}
+        </div>
+      ) : null}
+      {fractionalPricingNote ? <p className="fractional-pricing-note">{fractionalPricingNote}</p> : null}
 
       <div className="detail-grid">
         <LeftDetailColumn
@@ -425,6 +435,33 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         .asking-price-value {
           color: #22c55e;
           font-weight: 800;
+        }
+        .fractional-pricing-note {
+          margin: -8px 0 14px;
+          color: #f5d284;
+          font-size: 0.95rem;
+        }
+        .fractional-chip-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: -4px 0 10px;
+        }
+        .fractional-chip {
+          display: inline-flex;
+          align-items: center;
+          border: 1px solid #ff9900;
+          background: #141922;
+          color: #ff9900;
+          border-radius: 999px;
+          padding: 4px 10px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+        }
+        .fractional-chip-detail {
+          color: #d1d5db;
+          font-size: 12px;
         }
         .detail-grid {
           display: grid;
@@ -733,6 +770,87 @@ function resolveAskingPrice(listing: AircraftListing, raw: UnknownRow): number |
       : null
   if (typeof direct === "number" && direct > 0) return direct
   return pickNumber(raw, ["asking_price", "price_asking", "price"]) ?? null
+}
+
+function resolveFractionalBreakdown(
+  raw: UnknownRow,
+  pricingContext: {
+    isFractional: boolean
+    shareNumerator: number | null
+    shareDenominator: number | null
+    sharePrice: number | null
+    normalizedFullPrice: number | null
+    reviewNeeded: boolean
+    evidence: string[]
+  },
+  normalizedAskingPrice: number | null
+) {
+  const isFractionalFromColumns = toBool(raw, "is_fractional_ownership")
+  const shareNumerator =
+    pickNumber(raw, ["fractional_share_numerator"]) ??
+    pricingContext.shareNumerator ??
+    null
+  const shareDenominator =
+    pickNumber(raw, ["fractional_share_denominator"]) ??
+    pricingContext.shareDenominator ??
+    null
+  const sharePrice =
+    pickNumber(raw, ["fractional_share_price"]) ??
+    pricingContext.sharePrice ??
+    null
+  const normalizedFullPrice =
+    pickNumber(raw, ["fractional_full_price_estimate"]) ??
+    pricingContext.normalizedFullPrice ??
+    normalizedAskingPrice
+  const reviewNeeded = toBool(raw, "fractional_review_needed") || pricingContext.reviewNeeded
+  const isFractional = isFractionalFromColumns || pricingContext.isFractional
+  const shareLabel =
+    typeof shareNumerator === "number" &&
+    shareNumerator > 0 &&
+    typeof shareDenominator === "number" &&
+    shareDenominator > 1
+      ? `Share ${shareNumerator}/${shareDenominator}`
+      : null
+
+  return {
+    isFractional,
+    reviewNeeded,
+    shareNumerator,
+    shareDenominator,
+    sharePrice,
+    normalizedFullPrice,
+    evidence: pricingContext.evidence,
+    shareLabel,
+  }
+}
+
+function buildFractionalPricingNote(fractional: {
+  isFractional: boolean
+  reviewNeeded: boolean
+  shareNumerator: number | null
+  shareDenominator: number | null
+  sharePrice: number | null
+  normalizedFullPrice: number | null
+  evidence: string[]
+}): string | null {
+  if (fractional.isFractional) {
+    const numerator = fractional.shareNumerator && fractional.shareNumerator > 0 ? fractional.shareNumerator : 1
+    const denominator = fractional.shareDenominator && fractional.shareDenominator > 1 ? fractional.shareDenominator : null
+    const sharePrice = fractional.sharePrice
+    const fullPrice = fractional.normalizedFullPrice
+    if (denominator && typeof sharePrice === "number" && typeof fullPrice === "number") {
+      return `Fractional listing detected: ${numerator}/${denominator} share listed at ${formatMoney(sharePrice)}; normalized full-aircraft value ${formatMoney(fullPrice)}.`
+    }
+    if (denominator && typeof fullPrice === "number") {
+      return `Fractional listing detected: ${numerator}/${denominator} share listing normalized to ${formatMoney(fullPrice)} full-aircraft value.`
+    }
+  }
+
+  if (fractional.reviewNeeded) {
+    const evidence = fractional.evidence.length ? ` Evidence: ${fractional.evidence.join(", ")}.` : ""
+    return `Partnership/fractional wording detected; listing flagged for manual price review.${evidence}`
+  }
+  return null
 }
 
 function resolveCompSource(compSource: string | null, marketSampleSize: number | null): string | null {

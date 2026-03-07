@@ -42,6 +42,14 @@ export type AircraftListing = {
   price_reduced: boolean | null
   price_reduced_date: string | null
   price_reduction_amount: number | null
+  is_fractional_ownership: boolean | null
+  fractional_share_numerator: number | null
+  fractional_share_denominator: number | null
+  fractional_share_percent: number | null
+  fractional_share_price: number | null
+  fractional_full_price_estimate: number | null
+  fractional_review_needed: boolean | null
+  fractional_pricing_evidence: string[] | null
   serial_number: string | null
   primary_image_url: string | null
   image_urls: string[] | null

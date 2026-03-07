@@ -17,6 +17,16 @@ export type ParsedSellerDescription = {
 }
 
 type ParsedDescriptionIntelligence = {
+  pricingContext: {
+    isFractional: boolean
+    shareNumerator: number | null
+    shareDenominator: number | null
+    sharePercent: number | null
+    sharePrice: number | null
+    normalizedFullPrice: number | null
+    reviewNeeded: boolean
+    evidence: string[]
+  }
   engineModel: string | null
   times: {
     totalTime: number | null
@@ -177,6 +187,16 @@ export function inferEngineManufacturerFromModel(engineModel: string | null): st
 
 export function parseDescriptionIntelligence(row: UnknownRow): ParsedDescriptionIntelligence {
   const emptyValue: ParsedDescriptionIntelligence = {
+    pricingContext: {
+      isFractional: false,
+      shareNumerator: null,
+      shareDenominator: null,
+      sharePercent: null,
+      sharePrice: null,
+      normalizedFullPrice: null,
+      reviewNeeded: false,
+      evidence: [],
+    },
     engineModel: null,
     times: { totalTime: null, engineSmoh: null, engineTbo: null },
     maintenance: { cylindersSinceNewHours: null, hoursSinceIran: null, lastAnnualInspection: null },
@@ -208,12 +228,28 @@ export function parseDescriptionIntelligence(row: UnknownRow): ParsedDescription
   const engine = parsedRecord.engine as Record<string, unknown> | undefined
   const times = parsedRecord.times as Record<string, unknown> | undefined
   const maintenance = parsedRecord.maintenance as Record<string, unknown> | undefined
+  const pricingContext = parsedRecord.pricing_context as Record<string, unknown> | undefined
 
   const engineModel = cleanEngineModelText(
     typeof engine?.model === "string" ? engine.model : null
   )
 
   return {
+    pricingContext: {
+      isFractional: pricingContext?.is_fractional === true,
+      shareNumerator: toFiniteNumber(pricingContext?.share_numerator),
+      shareDenominator: toFiniteNumber(pricingContext?.share_denominator),
+      sharePercent: toFiniteNumber(pricingContext?.share_percent),
+      sharePrice: toFiniteNumber(pricingContext?.share_price),
+      normalizedFullPrice: toFiniteNumber(pricingContext?.normalized_full_price),
+      reviewNeeded: pricingContext?.review_needed === true,
+      evidence: Array.isArray(pricingContext?.evidence)
+        ? pricingContext.evidence
+            .filter((value): value is string => typeof value === "string")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        : [],
+    },
     engineModel,
     times: {
       totalTime: toFiniteNumber(times?.total_time),

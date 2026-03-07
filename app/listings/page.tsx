@@ -1,274 +1,236 @@
-'use client'
+import ListingsClient from './ListingsClient'
+import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+type SearchParams = Record<string, string | string[] | undefined>
+type CategoryValue = 'single' | 'multi' | 'turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
+type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+type OwnershipTypeValue = 'all' | 'full' | 'fractional'
+type SortOption =
+  | 'value_desc'
+  | 'value_asc'
+  | 'price_low'
+  | 'price_high'
+  | 'deal_desc'
+  | 'market_best'
+  | 'market_worst'
+  | 'risk_low'
+  | 'risk_high'
+  | 'deferred_low'
+  | 'deferred_high'
+  | 'tt_low'
+  | 'tt_high'
+  | 'year_newest'
+  | 'year_oldest'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-const CATEGORIES = [
-  { label: 'All Aircraft', value: null },
-  { label: 'Single Engine', value: 'single' },
-  { label: 'Multi-Engine', value: 'multi' },
-  { label: 'Turboprop', value: 'turboprop' },
-  { label: 'Jet', value: 'jet' },
-  { label: 'Helicopter', value: 'helicopter' },
-  { label: 'Light Sport', value: 'lsp' },
-  { label: 'Amphibian / Sea', value: 'sea' },
-] as const
-
-type CategoryValue = (typeof CATEGORIES)[number]['value']
-
-const containsAny = (text: string, terms: string[]) => {
-  const normalizedText = text.toLowerCase()
-  return terms.some((term) => normalizedText.includes(term.toLowerCase()))
+function parseParam(searchParams: SearchParams | undefined, key: string): string {
+  const raw = searchParams?.[key]
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' ? value.trim() : ''
 }
 
-const makeIsAny = (make: string, makes: string[]) => {
-  const normalizedMake = make.trim().toLowerCase()
-  return makes.some((m) => normalizedMake === m.toLowerCase())
+function parseSearchTerm(searchParams?: SearchParams): string {
+  return parseParam(searchParams, 'q')
 }
 
-const matchesAircraftCategory = (listing: any, category: Exclude<CategoryValue, null>) => {
-  const make = String(listing.make ?? '')
-  const model = String(listing.model ?? '')
-  const faaType = String(listing.faa_type_aircraft ?? '').trim()
-
-  // Prefer FAA classification when available for the categories we can map directly.
-  if (faaType) {
-    if (category === 'single') return faaType === '4'
-    if (category === 'multi') return faaType === '5'
-    if (category === 'helicopter') return faaType === '6'
-    if (category === 'lsp') return faaType === '9'
-  }
-
-  if (category === 'single') {
-    return !containsAny(make, [
-      'Citation',
-      'King Air',
-      'TBM',
-      'Pilatus',
-      'Caravan',
-      'Phenom',
-      'HondaJet',
-      'Robinson',
-      'Bell',
-      'Sikorsky',
-      'Eurocopter',
-    ])
-  }
-
-  if (category === 'multi') {
-    return containsAny(model, ['Twin', 'Seneca', 'Aztec', 'Baron', 'Bonanza A36TC', '310', '340', '402', '414', '421'])
-  }
-
-  if (category === 'turboprop') {
-    return (
-      containsAny(make, ['Pilatus', 'TBM', 'Daher']) ||
-      containsAny(model, ['King Air', 'Caravan', 'Meridian', 'Kodiak'])
-    )
-  }
-
-  if (category === 'jet') {
-    return containsAny(make, ['Citation']) || containsAny(model, ['Citation', 'Phenom', 'HondaJet', 'Eclipse', 'Premier'])
-  }
-
-  if (category === 'helicopter') {
-    return makeIsAny(make, ['Robinson', 'Bell', 'Sikorsky', 'Eurocopter', 'Airbus Helicopter', 'MD Helicopters', 'Schweizer'])
-  }
-
-  if (category === 'lsp') {
-    return containsAny(model, ['LSA', 'Light Sport']) || makeIsAny(make, ['Flight Design', 'Tecnam', 'Jabiru', 'Pipistrel'])
-  }
-
-  return containsAny(model, ['Sea', 'Float', 'Amphibian', 'Seaplane'])
+function normalizeSourceKey(sourceRaw: string): string {
+  const value = sourceRaw.trim().toLowerCase()
+  if (!value) return 'unknown'
+  if (value === 'tap' || value === 'trade-a-plane' || value === 'tradaplane') return 'trade-a-plane'
+  if (value === 'controller_cdp') return 'controller_cdp'
+  if (value === 'controller' || value === 'ctrl' || value.startsWith('controller_')) return 'controller'
+  if (value === 'aerotrader' || value === 'aero_trader') return 'aerotrader'
+  if (value === 'aircraftforsale' || value === 'aircraft_for_sale' || value === 'afs') return 'aircraftforsale'
+  if (value === 'aso') return 'aso'
+  if (value === 'globalair' || value === 'global_air') return 'globalair'
+  if (value === 'barnstormers') return 'barnstormers'
+  return value
 }
 
-export default function ListingsPage() {
-  const [listings, setListings] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [riskFilter, setRiskFilter] = useState('all')
-  const [dealFilter, setDealFilter] = useState('all')
-  const [minimumScore, setMinimumScore] = useState(0)
-  const [categoryFilter, setCategoryFilter] = useState<CategoryValue>(null)
+function parseCategory(searchParams?: SearchParams): CategoryValue {
+  const raw = searchParams?.category
+  const value = (Array.isArray(raw) ? raw[0] : raw)?.trim().toLowerCase()
+  if (!value) return null
+  if (value === 'single' || value === 'multi' || value === 'turboprop' || value === 'jet' || value === 'helicopter' || value === 'lsp' || value === 'sea') {
+    return value
+  }
+  return null
+}
 
-  useEffect(() => {
-    supabase
-      .from('public_listings')
-      .select(
-        'id, source_id, make, model, year, asking_price, value_score, avionics_score, avionics_installed_value, risk_level, total_time_airframe, location_label, deferred_total, primary_image_url, time_since_overhaul, faa_type_aircraft, deal_rating, deal_tier, vs_median_price, is_active'
-      )
-      .not('value_score', 'is', null)
-      .eq('is_active', true)
-      .order('value_score', { ascending: false })
-      .limit(50)
-      .then(({ data, error }) => {
-        if (data) setListings(data)
-        if (error) console.error('Failed to fetch listings:', JSON.stringify(error))
-        setLoading(false)
+function parseDealTier(searchParams?: SearchParams): DealTierValue {
+  const raw = searchParams?.dealTier
+  const value = (Array.isArray(raw) ? raw[0] : raw)?.trim().toUpperCase()
+  if (!value) return 'all'
+  if (value === 'TOP_DEALS' || value === 'EXCEPTIONAL_DEAL' || value === 'GOOD_DEAL' || value === 'FAIR_MARKET' || value === 'ABOVE_MARKET' || value === 'OVERPRICED') {
+    return value
+  }
+  return 'all'
+}
+
+function parseSortBy(searchParams?: SearchParams): SortOption {
+  const value = parseParam(searchParams, 'sortBy').toLowerCase()
+  const validSorts: SortOption[] = [
+    'value_desc', 'value_asc', 'price_low', 'price_high', 'deal_desc',
+    'market_best', 'market_worst', 'risk_low', 'risk_high',
+    'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest',
+  ]
+  if (value && validSorts.includes(value as SortOption)) return value as SortOption
+  return 'value_desc'
+}
+
+function parsePositiveInt(searchParams: SearchParams | undefined, key: string, fallback = 0): number {
+  const value = Number(parseParam(searchParams, key))
+  if (!Number.isFinite(value)) return fallback
+  const normalized = Math.floor(value)
+  return normalized > 0 ? normalized : fallback
+}
+
+function parseOwnershipType(searchParams?: SearchParams): OwnershipTypeValue {
+  const value = parseParam(searchParams, 'ownershipType').toLowerCase()
+  if (value === 'full' || value === 'fractional') return value
+  return 'all'
+}
+
+function buildFilterOptions(rows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }>) {
+  const makes = new Set<string>()
+  const models = new Set<string>()
+  const states = new Set<string>()
+  const modelPairs = new Set<string>()
+  const makeCounts = new Map<string, number>()
+  const modelCounts = new Map<string, number>()
+  const modelPairCounts = new Map<string, number>()
+  const sourceCounts = new Map<string, number>()
+  const dealTierCounts = new Map<string, number>()
+  let score60Count = 0
+  let score80Count = 0
+
+  for (const row of rows) {
+    const make = String(row.make ?? '').trim()
+    const model = String(row.model ?? '').trim()
+    const state = String(row.state ?? '').trim().toUpperCase()
+    const source = normalizeSourceKey(String(row.source ?? ''))
+    const dealTier = String(row.dealTier ?? '').trim().toUpperCase()
+    const valueScore = typeof row.valueScore === 'number' ? row.valueScore : null
+    const normalizedMake = make.toUpperCase()
+    const isValidMake = make.length > 0 && normalizedMake !== '-' && normalizedMake !== 'N/A' && normalizedMake !== 'UNKNOWN'
+    if (isValidMake) makes.add(make)
+    if (model) models.add(model)
+    if (state) states.add(state)
+    if (isValidMake && model) modelPairs.add(`${make}|||${model}`)
+    if (isValidMake) makeCounts.set(make, (makeCounts.get(make) ?? 0) + 1)
+    if (model) modelCounts.set(model, (modelCounts.get(model) ?? 0) + 1)
+    if (isValidMake && model) {
+      const pairKey = `${make}|||${model}`
+      modelPairCounts.set(pairKey, (modelPairCounts.get(pairKey) ?? 0) + 1)
+    }
+    sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1)
+    if (dealTier) dealTierCounts.set(dealTier, (dealTierCounts.get(dealTier) ?? 0) + 1)
+    if (typeof valueScore === 'number') {
+      if (valueScore >= 60) score60Count += 1
+      if (valueScore >= 80) score80Count += 1
+    }
+  }
+
+  const exceptionalDeals = dealTierCounts.get('EXCEPTIONAL_DEAL') ?? 0
+  const goodDeals = dealTierCounts.get('GOOD_DEAL') ?? 0
+  const allCount = rows.length
+
+  return {
+    makes: Array.from(makes).sort((a, b) => a.localeCompare(b)),
+    models: Array.from(models).sort((a, b) => a.localeCompare(b)),
+    states: Array.from(states).sort((a, b) => a.localeCompare(b)),
+    modelPairs: Array.from(modelPairs)
+      .map((entry) => {
+        const [make, model] = entry.split('|||')
+        return { make, model }
       })
-  }, [])
-
-  const filteredListings = listings.filter((listing) => {
-    const score = listing.value_score ?? 0
-    if (score < minimumScore) return false
-
-    if (categoryFilter && !matchesAircraftCategory(listing, categoryFilter)) return false
-
-    if (riskFilter !== 'all' && (listing.risk_level ?? '').toLowerCase() !== riskFilter) return false
-    if (dealFilter !== 'all' && (listing.deal_tier ?? '').toUpperCase() !== dealFilter) return false
-    return true
-  })
-
-  const getValueScoreClasses = (valueScore: number) => {
-    if (valueScore >= 80) return 'bg-brand-orange text-brand-black'
-    if (valueScore >= 60) return 'bg-brand-burn text-white'
-    if (valueScore >= 40) return 'bg-brand-dark text-brand-muted'
-    return 'bg-red-900 text-red-300'
+      .sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model)),
+    makeCounts: Object.fromEntries(makeCounts),
+    modelCounts: Object.fromEntries(modelCounts),
+    modelPairCounts: Object.fromEntries(modelPairCounts),
+    sourceCounts: Object.fromEntries(sourceCounts),
+    dealTierCounts: {
+      all: allCount,
+      TOP_DEALS: exceptionalDeals + goodDeals,
+      EXCEPTIONAL_DEAL: exceptionalDeals,
+      GOOD_DEAL: goodDeals,
+      FAIR_MARKET: dealTierCounts.get('FAIR_MARKET') ?? 0,
+      ABOVE_MARKET: dealTierCounts.get('ABOVE_MARKET') ?? 0,
+      OVERPRICED: dealTierCounts.get('OVERPRICED') ?? 0,
+    },
+    minimumValueScoreCounts: {
+      any: allCount,
+      '60': score60Count,
+      '80': score80Count,
+    },
   }
+}
 
-  if (loading) return <div className="text-brand-muted">Loading listings...</div>
+export default async function ListingsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<SearchParams>
+}) {
+  const resolvedSearchParams = await searchParams
+  const initialSearchTerm = parseSearchTerm(resolvedSearchParams)
+  const initialCategoryFilter = parseCategory(resolvedSearchParams)
+  const initialDealFilter = parseDealTier(resolvedSearchParams)
+  const requestedSortBy = parseSortBy(resolvedSearchParams)
+  const initialMakeFilter = parseParam(resolvedSearchParams, 'make')
+  const initialModelFamilyFilter = parseParam(resolvedSearchParams, 'modelFamily')
+  const initialSubModelFilter = parseParam(resolvedSearchParams, 'subModel')
+  const initialSourceFilter = parseParam(resolvedSearchParams, 'source')
+  const initialStateFilter = parseParam(resolvedSearchParams, 'state')
+  const initialRiskFilter = parseParam(resolvedSearchParams, 'risk')
+  const initialOwnershipType = parseOwnershipType(resolvedSearchParams)
+  const initialMinimumScore = parsePositiveInt(resolvedSearchParams, 'minValueScore', 0)
+  const initialMaxPrice = parsePositiveInt(resolvedSearchParams, 'maxPrice', 0)
+  const initialPage = parsePositiveInt(resolvedSearchParams, 'page', 1)
+  const requestedPageSize = parsePositiveInt(resolvedSearchParams, 'pageSize', 24)
+  const initialPageSize = Math.min(48, Math.max(12, requestedPageSize))
+  const initialSortBy: SortOption =
+    initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
+
+  const [initialPageData, optionRows] = await Promise.all([
+    getListingsPage({
+      page: initialPage,
+      pageSize: initialPageSize,
+      sortBy: initialSortBy,
+      q: initialSearchTerm,
+      make: initialMakeFilter,
+      modelFamily: initialModelFamilyFilter,
+      subModel: initialSubModelFilter,
+      source: initialSourceFilter,
+      state: initialStateFilter,
+      risk: initialRiskFilter,
+      minValueScore: initialMinimumScore,
+      maxPrice: initialMaxPrice,
+      category: initialCategoryFilter ?? '',
+      dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
+      ownershipType: initialOwnershipType,
+    }),
+    getListingFilterOptions(),
+  ])
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Aircraft For Sale</h1>
-          <p className="text-sm text-brand-muted">
-            Premium market intelligence across {filteredListings.length} of {listings.length} listings
-          </p>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
-          {CATEGORIES.map((category) => {
-            const isActive = categoryFilter === category.value
-            return (
-              <button
-                key={category.label}
-                type="button"
-                onClick={() => setCategoryFilter(category.value)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
-                  isActive
-                    ? 'bg-[#FF9900] font-bold text-black'
-                    : 'border border-[#333333] bg-transparent text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]'
-                }`}
-              >
-                {category.label}
-              </button>
-            )
-          })}
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <label className="text-xs text-brand-muted">
-            Risk Level
-            <select
-              value={riskFilter}
-              onChange={(e) => setRiskFilter(e.target.value)}
-              className="mt-1 block w-full rounded border border-brand-dark bg-[#1a1a1a] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-            >
-              <option value="all">All</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-          </label>
-          <label className="text-xs text-brand-muted">
-            Deal Rating
-            <select
-              value={dealFilter}
-              onChange={(e) => setDealFilter(e.target.value)}
-              className="mt-1 block w-full rounded border border-brand-dark bg-[#1a1a1a] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-            >
-              <option value="all">All</option>
-              <option value="EXCEPTIONAL_DEAL">Exceptional Deals</option>
-              <option value="GOOD_DEAL">Good Deals</option>
-              <option value="FAIR_MARKET">Fair Market</option>
-              <option value="ABOVE_MARKET">Above Market</option>
-            </select>
-          </label>
-          <label className="text-xs text-brand-muted">
-            Minimum Value Score
-            <select
-              value={minimumScore}
-              onChange={(e) => setMinimumScore(Number(e.target.value))}
-              className="mt-1 block w-full rounded border border-brand-dark bg-[#1a1a1a] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-            >
-              <option value={0}>Any score</option>
-              <option value={60}>60+</option>
-              <option value={80}>80+</option>
-            </select>
-          </label>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredListings.map((l) => (
-          <a
-            key={l.source_id ?? l.id}
-            href={`/listings/${l.source_id ?? l.id}`}
-            className={`relative block rounded-lg border border-brand-dark bg-[#1a1a1a] p-4 transition-colors hover:border-brand-burn ${
-              String(l.deal_tier ?? '').toUpperCase() === 'EXCEPTIONAL_DEAL' ? 'pt-10' : ''
-            }`}
-          >
-            {String(l.deal_tier ?? '').toUpperCase() === 'EXCEPTIONAL_DEAL' && (
-              <div className="absolute left-0 right-0 top-0 rounded-t-lg bg-emerald-700 px-3 py-1 text-center text-xs font-bold tracking-wide text-white">
-                🔥 EXCEPTIONAL DEAL
-              </div>
-            )}
-            {l.primary_image_url && (
-              <img
-                src={`/api/image-proxy?url=${encodeURIComponent(String(l.primary_image_url))}`}
-                alt=""
-                className={`h-48 w-full rounded object-cover ${String(l.deal_tier ?? '').toUpperCase() === 'EXCEPTIONAL_DEAL' ? 'mb-3 mt-6' : 'mb-3'}`}
-              />
-            )}
-            <div className="font-semibold text-white">
-              {l.year} {l.make} {l.model}
-            </div>
-            <div className="text-sm text-brand-muted">{l.location_label ?? 'Location unavailable'}</div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="font-bold text-brand-orange">
-                {l.asking_price ? '$' + Number(l.asking_price).toLocaleString() : 'Call for Price'}
-              </span>
-              <span
-                className={`rounded px-2 py-1 text-xs font-semibold ${getValueScoreClasses(l.value_score ?? 0)}`}
-              >
-                {l.value_score?.toFixed(1)}
-              </span>
-            </div>
-            <div className="mt-1 text-xs text-brand-muted">
-              {l.total_time_airframe ?? '-'} TT · SMOH {l.time_since_overhaul ?? '-'}
-            </div>
-            {l.risk_level && (
-              <div className={`mt-1 text-xs font-medium ${String(l.risk_level).toLowerCase() === 'critical' ? 'text-red-500' : 'text-brand-burn'}`}>
-                {String(l.risk_level).toUpperCase()} RISK
-              </div>
-            )}
-            {l.deferred_total > 0 && (
-              <div className="mt-1 text-xs text-brand-orange">${l.deferred_total.toLocaleString()} deferred</div>
-            )}
-            {l.avionics_score != null && (
-              <div className="mt-1 text-xs text-brand-muted">
-                Avionics {Number(l.avionics_score).toFixed(1)}
-                {l.avionics_installed_value ? ` · $${Number(l.avionics_installed_value).toLocaleString()} installed` : ""}
-              </div>
-            )}
-            {l.vs_median_price != null && (
-              <div className="mt-1 text-xs text-brand-muted">
-                {Number(l.vs_median_price) < 0
-                  ? `${Math.round(Math.abs(Number(l.vs_median_price)))}% below market median`
-                  : `${Math.round(Number(l.vs_median_price))}% above market median`}
-              </div>
-            )}
-          </a>
-        ))}
-      </div>
-      {!filteredListings.length && (
-        <div className="mt-8 rounded-lg border border-brand-dark bg-[#1a1a1a] p-6 text-center text-brand-muted">
-          No listings match the current filters.
-        </div>
-      )}
-    </div>
+    <ListingsClient
+      initialListings={initialPageData.rows}
+      initialTotalFiltered={initialPageData.total}
+      initialFilterOptions={buildFilterOptions(optionRows)}
+      initialSearchTerm={initialSearchTerm}
+      initialCategoryFilter={initialCategoryFilter}
+      initialDealFilter={initialDealFilter}
+      initialSortBy={initialSortBy}
+      initialMakeFilter={initialMakeFilter}
+      initialModelFilter={initialModelFamilyFilter}
+      initialSubModelFilter={initialSubModelFilter}
+      initialSourceFilter={initialSourceFilter}
+      initialStateFilter={initialStateFilter}
+      initialRiskFilter={initialRiskFilter}
+      initialOwnershipType={initialOwnershipType}
+      initialMinimumScore={initialMinimumScore}
+      initialMaxPrice={initialMaxPrice}
+      initialPage={initialPage}
+      initialPageSize={initialPageSize}
+    />
   )
 }
