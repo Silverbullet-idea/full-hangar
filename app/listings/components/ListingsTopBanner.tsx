@@ -1,27 +1,11 @@
 import Link from 'next/link'
 
-type CategoryValue = 'single' | 'multi' | 'turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
+type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
 type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
-type SortOption =
-  | 'value_desc'
-  | 'value_asc'
-  | 'price_low'
-  | 'price_high'
-  | 'deal_desc'
-  | 'market_best'
-  | 'market_worst'
-  | 'risk_low'
-  | 'risk_high'
-  | 'deferred_low'
-  | 'deferred_high'
-  | 'tt_low'
-  | 'tt_high'
-  | 'year_newest'
-  | 'year_oldest'
 
 type ListingsTopBannerProps = {
   topMenuButtonCount: number
-  visibleCategories: Array<{ label: string; value: CategoryValue }>
+  visibleCategories: ReadonlyArray<{ label: string; value: CategoryValue }>
   categoryFilter: CategoryValue
   makeOptions: string[]
   makeCountMap: Record<string, number>
@@ -30,15 +14,11 @@ type ListingsTopBannerProps = {
   }
   dealFilter: DealTierValue
   dealTierCountMap: Record<string, number>
-  minimumScore: number
   buildCategoryHref: (category: CategoryValue) => string
   buildCategoryMakeHref: (category: CategoryValue, make: string) => string
   buildDealHref: (dealTier: DealTierValue) => string
   onSelectCategory: (category: CategoryValue) => void
   onSelectDealPreset: (preset: 'all' | 'top' | 'exceptional' | 'good' | 'fair' | 'above' | 'overpriced') => void
-  onSetDealFilter: (dealFilter: DealTierValue) => void
-  onSetMinimumScore: (score: number) => void
-  onSetSortBy: (sort: SortOption) => void
 }
 
 export default function ListingsTopBanner({
@@ -50,15 +30,11 @@ export default function ListingsTopBanner({
   categoryMenuData,
   dealFilter,
   dealTierCountMap,
-  minimumScore,
   buildCategoryHref,
   buildCategoryMakeHref,
   buildDealHref,
   onSelectCategory,
   onSelectDealPreset,
-  onSetDealFilter,
-  onSetMinimumScore,
-  onSetSortBy,
 }: ListingsTopBannerProps) {
   return (
     <div className="mb-6 flex flex-col gap-3">
@@ -72,12 +48,12 @@ export default function ListingsTopBanner({
             const dropdownMakes = category.value === null
               ? makeOptions
                   .map((make) => ({ make, count: makeCountMap[make] ?? 0 }))
-                  .filter((entry) => entry.count >= 10)
+                  .filter((entry) => entry.count > 0)
                   .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make))
               : categoryMenuData.makesByCategory[category.value]
             const hasDropdownMakes = dropdownMakes.length > 0
             return (
-              <div key={category.label} className="group relative">
+              <div key={category.label} className="group relative -mb-2 pb-2">
                 <Link
                   href={buildCategoryHref(category.value)}
                   onClick={() => onSelectCategory(category.value)}
@@ -90,22 +66,25 @@ export default function ListingsTopBanner({
                   {category.label}
                 </Link>
                 {hasDropdownMakes ? (
-                  <div className="absolute left-0 top-full z-30 mt-1 hidden min-w-[240px] rounded-md border border-[#3A4454] bg-[#141922] p-2 shadow-xl group-hover:block">
+                  <div className="pointer-events-none invisible absolute left-0 top-full z-30 mt-0 min-w-[250px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-all duration-150 delay-75 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-hover:delay-0 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100 group-focus-within:delay-0">
+                    <div className="max-h-72 overflow-y-auto pr-1">
                     {dropdownMakes.map((entry) => (
                       <Link
                         key={`${category.label}-${entry.make}`}
                         href={buildCategoryMakeHref(category.value, entry.make)}
-                        className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]"
+                        className="flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]"
                       >
-                        {entry.make}
+                        <span>{entry.make}</span>
+                        <span className="shrink-0 text-[10px] text-[#7d8aa0]">{entry.count.toLocaleString('en-US')}</span>
                       </Link>
                     ))}
+                    </div>
                   </div>
                 ) : null}
               </div>
             )
           })}
-          <div className="group relative order-last">
+          <div className="group relative order-last -mb-2 pb-2">
             {(() => {
               const isDealsActive = dealFilter === 'TOP_DEALS'
               const menuItemClass = () =>
@@ -140,7 +119,7 @@ export default function ListingsTopBanner({
                   >
                     Deals
                   </Link>
-                  <div className="pointer-events-none invisible absolute right-0 top-full z-30 mt-0 min-w-[220px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-opacity group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+                  <div className="pointer-events-none invisible absolute right-0 top-full z-30 mt-0 min-w-[220px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-all duration-150 delay-75 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-hover:delay-0 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100 group-focus-within:delay-0">
                     {visibleDealItems.map((item) => (
                       <Link
                         key={item.key}
@@ -155,36 +134,6 @@ export default function ListingsTopBanner({
                 </>
               )
             })()}
-          </div>
-          <div className="group relative">
-            <button
-              type="button"
-              className="block h-8 w-full rounded-md border border-[#3A4454] bg-[#121822] px-2 text-center text-xs font-semibold text-white hover:border-[#FF9900] hover:text-[#FF9900]"
-            >
-              Deal Rating
-            </button>
-            <div className="pointer-events-none invisible absolute left-0 top-full z-30 mt-0 min-w-[220px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-opacity group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-              <button type="button" onClick={() => onSetDealFilter('all')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">All</button>
-              <button type="button" onClick={() => { onSetDealFilter('TOP_DEALS'); onSetSortBy('deal_desc') }} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Exceptional + Good Deals</button>
-              <button type="button" onClick={() => onSetDealFilter('EXCEPTIONAL_DEAL')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Exceptional Deals</button>
-              <button type="button" onClick={() => onSetDealFilter('GOOD_DEAL')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Good Deals</button>
-              <button type="button" onClick={() => onSetDealFilter('FAIR_MARKET')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Fair Market</button>
-              <button type="button" onClick={() => onSetDealFilter('ABOVE_MARKET')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Above Market</button>
-              <button type="button" onClick={() => onSetDealFilter('OVERPRICED')} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Overpriced</button>
-            </div>
-          </div>
-          <div className="group relative">
-            <button
-              type="button"
-              className="block h-8 w-full rounded-md border border-[#3A4454] bg-[#121822] px-2 text-center text-xs font-semibold text-white hover:border-[#FF9900] hover:text-[#FF9900]"
-            >
-              Value Score
-            </button>
-            <div className="pointer-events-none invisible absolute left-0 top-full z-30 mt-0 min-w-[200px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-opacity group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-              <button type="button" onClick={() => onSetMinimumScore(0)} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">Any score</button>
-              <button type="button" onClick={() => onSetMinimumScore(60)} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">60+</button>
-              <button type="button" onClick={() => onSetMinimumScore(80)} className="block w-full rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]">80+</button>
-            </div>
           </div>
         </div>
       </div>

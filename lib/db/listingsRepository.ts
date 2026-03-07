@@ -73,12 +73,14 @@ export async function getListings(filters: ListingFilters = {}) {
 const LISTINGS_PAGE_COLUMNS =
   "id,source,source_id,listing_url,url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
 
-const TURBOPROP_OR =
-  "make.ilike.%Pilatus%,make.ilike.%TBM%,make.ilike.%Daher%,model.ilike.%King Air%,model.ilike.%Caravan%,model.ilike.%Meridian%,model.ilike.%Kodiak%";
+const SE_TURBOPROP_OR =
+  "make.ilike.%Pilatus%,make.ilike.%TBM%,make.ilike.%Daher%,make.ilike.%Socata%,make.ilike.%Quest%,model.ilike.%PC-12%,model.ilike.%PC12%,model.ilike.%TBM%,model.ilike.%Caravan%,model.ilike.%Grand Caravan%,model.ilike.%208%,model.ilike.%Meridian%,model.ilike.%M500%,model.ilike.%M600%,model.ilike.%Kodiak%,model.ilike.%Jetprop%";
+const ME_TURBOPROP_OR =
+  "model.ilike.%King Air%,model.ilike.%Conquest%,model.ilike.%Cheyenne%,model.ilike.%MU-2%,model.ilike.%MU2%,model.ilike.%Twin Otter%,model.ilike.%Commander 690%,model.ilike.%Metroliner%,model.ilike.%Metro%,model.ilike.%441%,make.ilike.%Swearingen%,make.ilike.%Mitsubishi%";
 const JET_OR =
   "make.ilike.%Citation%,model.ilike.%Citation%,model.ilike.%Phenom%,model.ilike.%HondaJet%,model.ilike.%Eclipse%,model.ilike.%Premier%";
 const SEA_OR =
-  "model.ilike.%Sea%,model.ilike.%Float%,model.ilike.%Amphibian%,model.ilike.%Seaplane%";
+  "model.ilike.%Seaplane%,model.ilike.%Amphib%,model.ilike.%Float%,model.ilike.%Flying Boat%,model.ilike.%SeaRey%,model.ilike.%Sea Rey%,make.ilike.%Icon%,make.ilike.%Lake%,make.ilike.%Seawind%,make.ilike.%Progressive Aerodyne%";
 const MULTI_OR =
   "model.ilike.%Twin%,model.ilike.%Seneca%,model.ilike.%Aztec%,model.ilike.%Baron%,model.ilike.%310%,model.ilike.%340%,model.ilike.%402%,model.ilike.%414%,model.ilike.%421%";
 const HELICOPTER_OR =
@@ -402,7 +404,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (category === "multi") dbQuery = dbQuery.or(MULTI_OR);
   if (category === "helicopter") dbQuery = dbQuery.or(HELICOPTER_OR);
   if (category === "lsp") dbQuery = dbQuery.or(LSP_OR);
-  if (category === "turboprop") dbQuery = dbQuery.or(TURBOPROP_OR);
+  if (category === "se_turboprop") dbQuery = dbQuery.or(SE_TURBOPROP_OR);
+  if (category === "me_turboprop") dbQuery = dbQuery.or(ME_TURBOPROP_OR);
   if (category === "jet") dbQuery = dbQuery.or(JET_OR);
   if (category === "sea") dbQuery = dbQuery.or(SEA_OR);
 
@@ -457,7 +460,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (category === "multi") fallbackQuery = fallbackQuery.or(MULTI_OR);
     if (category === "helicopter") fallbackQuery = fallbackQuery.or(HELICOPTER_OR);
     if (category === "lsp") fallbackQuery = fallbackQuery.or(LSP_OR);
-    if (category === "turboprop") fallbackQuery = fallbackQuery.or(TURBOPROP_OR);
+    if (category === "se_turboprop") fallbackQuery = fallbackQuery.or(SE_TURBOPROP_OR);
+    if (category === "me_turboprop") fallbackQuery = fallbackQuery.or(ME_TURBOPROP_OR);
     if (category === "jet") fallbackQuery = fallbackQuery.or(JET_OR);
     if (category === "sea") fallbackQuery = fallbackQuery.or(SEA_OR);
     result = await fallbackQuery.range(from, to);
@@ -549,7 +553,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (category === "multi") countQuery = countQuery.or(MULTI_OR);
     if (category === "helicopter") countQuery = countQuery.or(HELICOPTER_OR);
     if (category === "lsp") countQuery = countQuery.or(LSP_OR);
-    if (category === "turboprop") countQuery = countQuery.or(TURBOPROP_OR);
+    if (category === "se_turboprop") countQuery = countQuery.or(SE_TURBOPROP_OR);
+    if (category === "me_turboprop") countQuery = countQuery.or(ME_TURBOPROP_OR);
     if (category === "jet") countQuery = countQuery.or(JET_OR);
     if (category === "sea") countQuery = countQuery.or(SEA_OR);
     const countResult = await countQuery;

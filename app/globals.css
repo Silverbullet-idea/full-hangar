@@ -48,6 +48,11 @@ html[data-theme="light"] [class*="bg-[#1A1A1A]"],
 html[data-theme="light"] [class*="bg-[#1a1a1a]"],
 html[data-theme="light"] [class*="bg-[#161d28]"],
 html[data-theme="light"] [class*="bg-[#141922]"],
+html[data-theme="light"] [class*="bg-[#121923]"],
+html[data-theme="light"] [class*="bg-[#141c27]"],
+html[data-theme="light"] [class*="bg-[#162131]"],
+html[data-theme="light"] [class*="bg-[#161f2d]"],
+html[data-theme="light"] [class*="bg-[#121822]"],
 html[data-theme="light"] [class*="bg-[#0f141d]"],
 html[data-theme="light"] [class*="bg-[#0f172a]"],
 html[data-theme="light"] [class*="bg-black/50"] {
@@ -74,6 +79,40 @@ html[data-theme="light"] [class*="text-[#B2B2B2]"],
 html[data-theme="light"] [class*="text-[#b2b2b2]"],
 html[data-theme="light"] [class*="text-[#9CA3AF]"],
 html[data-theme="light"] [class*="text-[#9ca3af]"] {
+  color: var(--brand-muted) !important;
+}
+
+/* Listing-detail page scoped styles also need light overrides. */
+html[data-theme="light"] .panel,
+html[data-theme="light"] .table-card,
+html[data-theme="light"] .score-badge,
+html[data-theme="light"] .score-notes,
+html[data-theme="light"] .score-inputs-table,
+html[data-theme="light"] .price-history-metrics > div,
+html[data-theme="light"] .price-chart-wrap,
+html[data-theme="light"] .hero-placeholder {
+  background: var(--card-bg) !important;
+  border-color: var(--brand-dark) !important;
+}
+
+html[data-theme="light"] .score-max,
+html[data-theme="light"] .score-guidance,
+html[data-theme="light"] .score-band-list,
+html[data-theme="light"] .score-method,
+html[data-theme="light"] .score-notes,
+html[data-theme="light"] .score-inputs-table th,
+html[data-theme="light"] .metric-label,
+html[data-theme="light"] .fractional-chip-detail {
+  color: var(--brand-muted) !important;
+}
+
+html[data-theme="light"] .score-inputs-table td,
+html[data-theme="light"] .avionics-inline-line,
+html[data-theme="light"] .listing-title {
+  color: var(--brand-white) !important;
+}
+
+html[data-theme="light"] .asking-price-inline {
   color: var(--brand-muted) !important;
 }
 

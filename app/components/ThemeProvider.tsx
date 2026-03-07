@@ -11,7 +11,7 @@ type ThemeContextValue = {
 }
 
 const STORAGE_KEY = "full-hangar-theme"
-const DEFAULT_THEME: ThemeMode = "dark"
+const DEFAULT_THEME: ThemeMode = "light"
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 

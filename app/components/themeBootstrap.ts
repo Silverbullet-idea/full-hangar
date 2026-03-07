@@ -1,5 +1,5 @@
 const STORAGE_KEY = "full-hangar-theme"
-const DEFAULT_THEME = "dark"
+const DEFAULT_THEME = "light"
 
 export function getThemeBootstrapScript() {
   return `

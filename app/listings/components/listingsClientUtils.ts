@@ -2,7 +2,8 @@ export const CATEGORIES = [
   { label: 'All Aircraft', value: null },
   { label: 'Single Engine', value: 'single' },
   { label: 'Multi-Engine', value: 'multi' },
-  { label: 'Turboprop', value: 'turboprop' },
+  { label: 'SE Turboprop', value: 'se_turboprop' },
+  { label: 'ME Turboprop', value: 'me_turboprop' },
   { label: 'Jet', value: 'jet' },
   { label: 'Helicopter', value: 'helicopter' },
   { label: 'Light Sport', value: 'lsp' },
@@ -29,6 +30,11 @@ const includesAny = (text: string, terms: string[]) => {
   return terms.some((term) => normalized.includes(term.toLowerCase()))
 }
 
+const hasWholeWord = (text: string, word: string) => {
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`\\b${escaped}\\b`, "i").test(text)
+}
+
 export const deriveModelFamily = (modelRaw: string) => {
   const model = modelRaw.trim().toUpperCase()
   if (!model) return ''
@@ -44,20 +50,56 @@ export const inferCategoriesForMakeModel = (makeRaw: string, modelRaw: string): 
   const make = makeRaw.toLowerCase()
   const model = modelRaw.toLowerCase()
   const categories: Array<Exclude<CategoryValue, null>> = []
+  const isMultiEngineModel = includesAny(model, ['twin', 'seneca', 'aztec', 'baron', '310', '340', '402', '414', '421'])
+  const isMultiEngineMake = includesAny(make, ['tecnam p2006', 'diamond da42', 'diamond da62'])
+  const isSingleTurboprop =
+    includesAny(make, ['pilatus', 'tbm', 'daher', 'socata', 'quest']) ||
+    includesAny(model, [
+      'pc-12',
+      'pc12',
+      'tbm',
+      'caravan',
+      'grand caravan',
+      '208',
+      'kodiak',
+      'meridian',
+      'm500',
+      'm600',
+      'jetprop',
+      'turbine',
+      'setp',
+    ])
+  const isMultiTurboprop =
+    includesAny(model, [
+      'king air',
+      'conquest',
+      'cheyenne',
+      'mu-2',
+      'mu2',
+      'twin otter',
+      'commander 690',
+      'metro',
+      'metroliner',
+      '441',
+    ]) ||
+    includesAny(make, ['mitsubishi', 'swearingen'])
+
+  const isJet =
+    includesAny(make, ['citation', 'learjet', 'gulfstream', 'embraer', 'bombardier', 'dassault', 'hawker']) ||
+    includesAny(model, ['citation', 'phenom', 'hondajet', 'eclipse', 'premier', 'pc-24', 'pc24'])
 
   if (
-    includesAny(model, ['twin', 'seneca', 'aztec', 'baron', '310', '340', '402', '414', '421']) ||
-    includesAny(make, ['tecnam p2006', 'diamond da42', 'diamond da62'])
+    isMultiEngineModel ||
+    isMultiEngineMake
   ) categories.push('multi')
 
-  if (
-    includesAny(make, ['pilatus', 'tbm', 'daher']) ||
-    includesAny(model, ['king air', 'caravan', 'meridian', 'kodiak'])
-  ) categories.push('turboprop')
+  if (!isJet) {
+    if (isSingleTurboprop && !isMultiTurboprop) categories.push('se_turboprop')
+    if (isMultiTurboprop) categories.push('me_turboprop')
+  }
 
   if (
-    includesAny(make, ['citation', 'learjet', 'gulfstream', 'embraer', 'bombardier', 'dassault', 'hawker']) ||
-    includesAny(model, ['citation', 'phenom', 'hondajet', 'eclipse', 'premier'])
+    isJet
   ) categories.push('jet')
 
   if (
@@ -69,12 +111,31 @@ export const inferCategoriesForMakeModel = (makeRaw: string, modelRaw: string): 
     includesAny(make, ['flight design', 'tecnam', 'jabiru', 'pipistrel'])
   ) categories.push('lsp')
 
-  if (includesAny(model, ['sea', 'float', 'amphibian', 'seaplane']) || includesAny(make, ['icon', 'lake'])) {
+  const isAmphibian =
+    includesAny(model, ['seaplane', 'amphib', 'float', 'flying boat', 'searey', 'sea rey', 'a5']) ||
+    hasWholeWord(model, 'amphibian') ||
+    includesAny(make, ['icon', 'lake', 'seawind', 'progressive aerodyne'])
+
+  if (isAmphibian) {
     categories.push('sea')
   }
 
   if (categories.length === 0) categories.push('single')
   return categories
+}
+
+export const normalizeTopMenuMakeLabel = (makeRaw: string, modelRaw: string) => {
+  const make = makeRaw.trim()
+  const model = modelRaw.trim().toLowerCase()
+  if (!make) return make
+  const lower = make.toLowerCase()
+
+  // Guard against fragmented make labels from some sources.
+  if (lower === 'grand' && model.includes('caravan')) return 'Cessna'
+  if (lower === 'm-class' || lower === 'm class') return 'Piper'
+  if (lower === 'king air') return 'Beechcraft'
+
+  return make
 }
 
 export const normalizeSourceKey = (sourceRaw: string): ListingSourceKey => {

@@ -12,6 +12,7 @@ import {
   collectImageCandidates,
   deriveModelFamily,
   inferCategoriesForMakeModel,
+  normalizeTopMenuMakeLabel,
   normalizeSourceKey,
   TOP_MENU_MIN_COUNT,
   type CategoryValue,
@@ -285,7 +286,8 @@ export default function ListingsClient({
     const makeBuckets: Record<Exclude<CategoryValue, null>, Map<string, number>> = {
       single: new Map<string, number>(),
       multi: new Map<string, number>(),
-      turboprop: new Map<string, number>(),
+      se_turboprop: new Map<string, number>(),
+      me_turboprop: new Map<string, number>(),
       jet: new Map<string, number>(),
       helicopter: new Map<string, number>(),
       lsp: new Map<string, number>(),
@@ -294,7 +296,8 @@ export default function ListingsClient({
     const categoryCounts: Record<Exclude<CategoryValue, null>, number> = {
       single: 0,
       multi: 0,
-      turboprop: 0,
+      se_turboprop: 0,
+      me_turboprop: 0,
       jet: 0,
       helicopter: 0,
       lsp: 0,
@@ -307,41 +310,47 @@ export default function ListingsClient({
       if (!make || !model) continue
       const pairCount = modelPairCountMap[`${make}|||${model}`] ?? 0
       if (pairCount <= 0) continue
+      const normalizedMake = normalizeTopMenuMakeLabel(make, model)
+      if (!normalizedMake) continue
 
       const categories = inferCategoriesForMakeModel(make, model)
       for (const category of categories) {
-        makeBuckets[category].set(make, (makeBuckets[category].get(make) ?? 0) + pairCount)
+        makeBuckets[category].set(normalizedMake, (makeBuckets[category].get(normalizedMake) ?? 0) + pairCount)
         categoryCounts[category] += pairCount
       }
     }
 
     const makesByCategory = {
       single: Array.from(makeBuckets.single.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
       multi: Array.from(makeBuckets.multi.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
-      turboprop: Array.from(makeBuckets.turboprop.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+      se_turboprop: Array.from(makeBuckets.se_turboprop.entries())
+        .filter(([, count]) => count > 0)
+        .map(([make, count]) => ({ make, count }))
+        .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
+      me_turboprop: Array.from(makeBuckets.me_turboprop.entries())
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
       jet: Array.from(makeBuckets.jet.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
       helicopter: Array.from(makeBuckets.helicopter.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
       lsp: Array.from(makeBuckets.lsp.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
       sea: Array.from(makeBuckets.sea.entries())
-        .filter(([, count]) => count >= TOP_MENU_MIN_COUNT)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => b.count - a.count || a.make.localeCompare(b.make)),
     }
@@ -349,15 +358,8 @@ export default function ListingsClient({
     return { makesByCategory, categoryCounts }
   }, [filterOptions.modelPairs, modelPairCountMap])
 
-  const visibleCategories = useMemo(
-    () =>
-      CATEGORIES.filter((category) => {
-        if (category.value === null) return true
-        return (categoryMenuData.categoryCounts[category.value] ?? 0) >= TOP_MENU_MIN_COUNT
-      }),
-    [categoryMenuData.categoryCounts]
-  )
-  const topMenuButtonCount = visibleCategories.length + 3
+  const visibleCategories = useMemo(() => CATEGORIES, [])
+  const topMenuButtonCount = visibleCategories.length + 1
 
   useEffect(() => {
     setCurrentPage(1)
@@ -606,7 +608,6 @@ export default function ListingsClient({
         categoryMenuData={categoryMenuData}
         dealFilter={dealFilter}
         dealTierCountMap={dealTierCountMap}
-        minimumScore={minimumScore}
         buildCategoryHref={buildCategoryHref}
         buildCategoryMakeHref={buildCategoryMakeHref}
         buildDealHref={buildDealHref}
@@ -620,9 +621,6 @@ export default function ListingsClient({
           applyDealPreset(preset)
           setCurrentPage(1)
         }}
-        onSetDealFilter={setDealFilter}
-        onSetMinimumScore={setMinimumScore}
-        onSetSortBy={setSortBy}
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <ListingsFiltersSidebar

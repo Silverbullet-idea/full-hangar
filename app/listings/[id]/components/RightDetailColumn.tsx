@@ -73,16 +73,16 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
         typeof props.marketPricing.high === 'number' &&
         typeof props.marketPricing.median === 'number' ? (
           <div style={{ marginBottom: '0.9rem' }}>
-            <div style={{ fontSize: '0.82rem', color: '#B2B2B2', marginBottom: '0.15rem' }}>Estimated Asking Range</div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--brand-muted)', marginBottom: '0.15rem' }}>Estimated Asking Range</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#86efac' }}>
               {`${props.formatMoney(props.marketPricing.low)} - ${props.formatMoney(props.marketPricing.high)}`}
             </div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--brand-white)', marginTop: '0.2rem' }}>
               {`Median ${props.formatMoney(props.marketPricing.median)}`}
             </div>
           </div>
         ) : (
-          <div style={{ marginBottom: '0.9rem', color: '#B2B2B2', fontSize: '0.86rem' }}>
+          <div style={{ marginBottom: '0.9rem', color: 'var(--brand-muted)', fontSize: '0.86rem' }}>
             No estimated market range available yet for this make/model.
           </div>
         )}
@@ -100,7 +100,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             <span className="score-max">/ 100</span>
           </div>
         </div>
-        <div style={{ marginTop: '0.6rem', fontSize: '0.84rem', color: '#B2B2B2' }}>{props.primaryLabel}</div>
+        <div style={{ marginTop: '0.6rem', fontSize: '0.84rem', color: 'var(--brand-muted)' }}>{props.primaryLabel}</div>
         <ul className="score-band-list">
           <li><strong>85-100</strong>: Strong buy candidate</li>
           <li><strong>70-84</strong>: Good opportunity</li>
@@ -121,18 +121,18 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
           </details>
         ) : null}
         <div style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}>
-          <div style={{ border: '1px solid #3A4454', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
+          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
             {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
           </div>
-          <div style={{ border: '1px solid #3A4454', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
+          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
             {`Condition ${props.safeDisplay(props.formatScore(props.conditionScore))}`}
           </div>
-          <div style={{ border: '1px solid #3A4454', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
+          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
             {`Execution ${props.safeDisplay(props.formatScore(props.executionScore))}`}
           </div>
         </div>
         {(typeof props.compExactCount === 'number' || typeof props.compFamilyCount === 'number' || typeof props.compMakeCount === 'number') ? (
-          <div style={{ marginTop: '0.55rem', fontSize: '0.78rem', color: '#9ca3af' }}>
+          <div style={{ marginTop: '0.55rem', fontSize: '0.78rem', color: 'var(--brand-muted)' }}>
             {`Comp universe - exact: ${props.safeDisplay(props.compExactCount)} | family: ${props.safeDisplay(props.compFamilyCount)} | make: ${props.safeDisplay(props.compMakeCount)}`}
           </div>
         ) : null}
@@ -281,7 +281,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
                   key={`${flag.text}-${index}`}
                   style={{
                     border: `1px solid ${flag.level === 'warning' ? '#af4d27' : flag.level === 'danger' ? '#dc2626' : '#3a4454'}`,
-                    background: flag.level === 'warning' ? '#af4d2717' : flag.level === 'danger' ? '#dc262615' : '#141922',
+                    background: flag.level === 'warning' ? '#af4d2717' : flag.level === 'danger' ? '#dc262615' : 'var(--surface-muted)',
                     borderRadius: '8px',
                     padding: '0.45rem 0.6rem',
                     fontSize: '0.86rem',

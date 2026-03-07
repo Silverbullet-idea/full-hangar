@@ -2,7 +2,7 @@ import ListingsClient from './ListingsClient'
 import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
 
 type SearchParams = Record<string, string | string[] | undefined>
-type CategoryValue = 'single' | 'multi' | 'turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
+type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
 type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
 type OwnershipTypeValue = 'all' | 'full' | 'fractional'
 type SortOption =
@@ -50,7 +50,16 @@ function parseCategory(searchParams?: SearchParams): CategoryValue {
   const raw = searchParams?.category
   const value = (Array.isArray(raw) ? raw[0] : raw)?.trim().toLowerCase()
   if (!value) return null
-  if (value === 'single' || value === 'multi' || value === 'turboprop' || value === 'jet' || value === 'helicopter' || value === 'lsp' || value === 'sea') {
+  if (
+    value === 'single' ||
+    value === 'multi' ||
+    value === 'se_turboprop' ||
+    value === 'me_turboprop' ||
+    value === 'jet' ||
+    value === 'helicopter' ||
+    value === 'lsp' ||
+    value === 'sea'
+  ) {
     return value
   }
   return null

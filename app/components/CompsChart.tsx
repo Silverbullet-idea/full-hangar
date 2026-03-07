@@ -289,7 +289,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   }, [payload, yMetric]);
 
   if (loading) {
-    return <div style={{ height: 280, borderRadius: 10, border: hideChrome ? "1px solid #3a4454" : "1px solid #3a4454", background: "#141922" }} />;
+    return <div style={{ height: 280, borderRadius: 10, border: "1px solid var(--brand-dark)", background: "var(--card-bg)" }} />;
   }
 
   if (error) {
@@ -329,18 +329,18 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   const body = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: "0.55rem" }}>
-        {!hideChrome ? <h3 className="comps-title">Comparable Market Intelligence</h3> : <div style={{ fontSize: "0.82rem", color: "#B2B2B2" }}>Comparable Market Intelligence</div>}
+        {!hideChrome ? <h3 className="comps-title">Comparable Market Intelligence</h3> : <div style={{ fontSize: "0.82rem", color: "var(--brand-muted)" }}>Comparable Market Intelligence</div>}
         <div style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <div style={{ display: "inline-flex", border: "1px solid #3a4454", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ display: "inline-flex", border: "1px solid var(--brand-dark)", borderRadius: 8, overflow: "hidden" }}>
             <button
               type="button"
               onClick={() => setViewMode("time")}
               style={{
                 border: "none",
-                borderRight: "1px solid #3a4454",
+                borderRight: "1px solid var(--brand-dark)",
                 padding: "0.28rem 0.45rem",
-                background: viewMode === "time" ? "#FF9900" : "#141922",
-                color: viewMode === "time" ? "#000000" : "#B2B2B2",
+                background: viewMode === "time" ? "#FF9900" : "var(--card-bg)",
+                color: viewMode === "time" ? "#000000" : "var(--brand-muted)",
                 fontSize: "0.73rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -354,8 +354,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               style={{
                 border: "none",
                 padding: "0.28rem 0.45rem",
-                background: viewMode === "year" ? "#FF9900" : "#141922",
-                color: viewMode === "year" ? "#000000" : "#B2B2B2",
+                background: viewMode === "year" ? "#FF9900" : "var(--card-bg)",
+                color: viewMode === "year" ? "#000000" : "var(--brand-muted)",
                 fontSize: "0.73rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -372,11 +372,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              border: "1px solid #3a4454",
+              border: "1px solid var(--brand-dark)",
               borderRadius: 8,
               padding: "0.28rem 0.45rem",
-              background: submodelOnly ? "#FF9900" : "#141922",
-              color: submodelOnly ? "#000000" : "#B2B2B2",
+              background: submodelOnly ? "#FF9900" : "var(--card-bg)",
+              color: submodelOnly ? "#000000" : "var(--brand-muted)",
               fontSize: "0.73rem",
               fontWeight: 700,
               cursor: "pointer",
@@ -599,7 +599,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
         {payload.metadata.search_criteria_used}
       </div>
       {priceKnownButMissingY.length > 0 ? (
-        <div style={{ marginTop: "0.7rem", border: "1px solid #3a4454", borderRadius: 8, padding: "0.55rem", background: "#141922" }}>
+        <div style={{ marginTop: "0.7rem", border: "1px solid var(--brand-dark)", borderRadius: 8, padding: "0.55rem", background: "var(--card-bg)" }}>
           <div style={{ fontSize: "0.8rem", color: "#FF9900", fontWeight: 700, marginBottom: "0.35rem" }}>
             Price-known comps missing time fields
           </div>
@@ -632,7 +632,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
 
       <style jsx>{`
         .comps-card {
-          ${hideChrome ? "background: transparent; border: none; border-radius: 0; padding: 0;" : "background: #161d28; border: 1px solid #3a4454; border-radius: 12px; padding: 1rem;"}
+          ${hideChrome ? "background: transparent; border: none; border-radius: 0; padding: 0;" : "background: var(--card-bg); border: 1px solid var(--brand-dark); border-radius: 12px; padding: 1rem;"}
         }
         .comps-title {
           margin: 0;
@@ -641,7 +641,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
         }
         .comps-metric-label {
           font-size: 0.82rem;
-          color: #b2b2b2;
+          color: var(--brand-muted);
         }
       `}</style>
     </>
