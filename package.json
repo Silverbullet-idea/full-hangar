@@ -65,20 +65,20 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
+    "@tailwindcss/postcss": "^4.2.1",
+    "autoprefixer": "^10.4.27",
     "next": "^16.1.6",
+    "postcss": "^8.5.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@tailwindcss/postcss": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "autoprefixer": "latest",
-    "postcss": "latest",
-    "tailwindcss": "latest",
     "typescript": "latest"
   }
 }
