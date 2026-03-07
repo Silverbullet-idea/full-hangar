@@ -117,7 +117,6 @@ export default function ListingsClient({
   const [loading, setLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [imageCursor, setImageCursor] = useState<Record<string, number>>({})
-  const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const [appliedSearchTerm, setAppliedSearchTerm] = useState(initialSearchTerm)
   const [currentPage, setCurrentPage] = useState(Math.max(1, initialPage))
   const [pageSize, setPageSize] = useState(Math.min(48, Math.max(12, initialPageSize)))
@@ -151,7 +150,6 @@ export default function ListingsClient({
     setListings(Array.isArray(initialListings) ? initialListings : [])
     setTotalFiltered(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
     setFilterOptions(initialFilterOptions)
-    setSearchTerm(initialSearchTerm)
     setAppliedSearchTerm(initialSearchTerm)
     setCurrentPage(Math.max(1, initialPage))
     setPageSize(Math.min(48, Math.max(12, initialPageSize)))
@@ -655,8 +653,6 @@ export default function ListingsClient({
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <ListingsFiltersSidebar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
           makeFilter={makeFilter}
           setMakeFilter={setMakeFilter}
           modelFilter={modelFilter}
@@ -675,7 +671,6 @@ export default function ListingsClient({
           modelOptions={modelOptions}
           subModelOptions={subModelOptions}
           onResetFilters={() => {
-            setSearchTerm('')
             setMakeFilter('all')
             setModelFilter('')
             setSubModelFilter('')
@@ -685,7 +680,6 @@ export default function ListingsClient({
             setOwnershipType('all')
           }}
           onApplyFilters={() => {
-            setAppliedSearchTerm(searchTerm)
             setAppliedMakeFilter(makeFilter)
             setAppliedModelFilter(modelFilter)
             setAppliedSubModelFilter(subModelFilter)

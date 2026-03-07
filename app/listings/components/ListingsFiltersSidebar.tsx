@@ -12,8 +12,6 @@ type ListingSourceKey =
   | 'unknown'
 
 type ListingsFiltersSidebarProps = {
-  searchTerm: string
-  setSearchTerm: (value: string) => void
   makeFilter: string
   setMakeFilter: (value: string) => void
   modelFilter: string
@@ -37,8 +35,6 @@ type ListingsFiltersSidebarProps = {
 }
 
 export default function ListingsFiltersSidebar({
-  searchTerm,
-  setSearchTerm,
   makeFilter,
   setMakeFilter,
   modelFilter,
@@ -64,15 +60,6 @@ export default function ListingsFiltersSidebar({
     <aside className="h-fit rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-4">
       <div className="mb-3 text-sm font-semibold text-white">Filters</div>
       <div className="flex flex-col gap-3">
-        <label className="text-xs text-brand-muted">
-          Search
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Make, model, year, location..."
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white placeholder:text-brand-muted focus:border-brand-orange focus:outline-none"
-          />
-        </label>
         <label className="text-xs text-brand-muted">
           Make
           <select
