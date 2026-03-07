@@ -1,1 +1,25 @@
-node_modules
+node_modules/
+
+# Next.js local build/dev artifacts
+.next/
+
+# Local environment files (secrets)
+.env.local
+scraper/.env
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Runtime logs
+*.log
+scraper.log
+
+# Local scraper checkpoints/state
+scraper/state/backfill_scores_checkpoint.json
+scraper/state/*.json
+scraper/state/media_refresh/
+
+# Playwright local outputs
+test-results/
+playwright-report/

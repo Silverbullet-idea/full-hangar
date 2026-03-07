@@ -1,7 +1,7 @@
 # Full Hangar — Agent Status Board & Task Playbook
 
 > **Every agent reads this first. Every agent updates this when done.**
-> Last updated: March 4, 2026
+> Last updated: March 5, 2026
 
 This is the living project state. The `.cursor/rules/fullhangar.mdc` file has
 the permanent project context. This file has what's happening RIGHT NOW — plus
@@ -72,6 +72,8 @@ detailed agent prompts for all upcoming tasks.
 - [x] Task 8 baseline pass completed: added `PERFORMANCE_BASELINE.md` with Lighthouse before/after metrics and local audit notes
 - [x] Added `PERFORMANCE_BUDGET.md` with merge-time thresholds (LCP, bundle size, API calls) and verification commands
 - [x] Added `AVIONICS_EXPANSION_PLAN.md` with a parser-first avionics catalog strategy, conservative valuation policy (`P25`, `sample_count >= 3`), and OEM/MSRP-first override rules
+- [x] Created `PUBLIC_LISTINGS_VIEW.md` with canonical view SQL, column inventory, migration checklist, and gap analysis
+- [x] Verified live `public_listings` column set against `PUBLIC_LISTINGS_VIEW.md` (no column drift detected); documented runtime verification note and SQL-introspection fallback
 - [x] Task 11 Phase 1 applied: migration `20260305000045_add_avionics_catalog_tables.sql` is live and `scraper/avionics_catalog_builder.py --segment piston_single --apply` seeded Supabase (`avionics_units=20`, `avionics_aliases=63`, `avionics_certifications=20`, `avionics_source_evidence=20`); added alias dedupe + `.env` loading in builder
 - [x] Task 11 Phase 1 continued: migration `20260305000046_add_avionics_market_value_tables.sql` is live and `scraper/avionics_market_ingest.py --segment piston_single --apply` seeded valuation scaffolding (`avionics_market_values=20`, `avionics_bundle_rules=2`, `avionics_install_factors=4`) using conservative `P25` + `sample_count >= 3` policy defaults
 - [x] Task 11 Phase 2 started: upgraded `scraper/description_parser.py` with `avionics_detailed` quantity extraction, unresolved token capture (`avionics_unresolved`), parser versioning, and GTN Xi/GTX alias coverage; updated `core/intelligence/avionics_intelligence.py` to consume enriched parser fields; parser test suite now 15/15 passing
@@ -80,8 +82,29 @@ detailed agent prompts for all upcoming tasks.
 - [x] Task 11 Phase 2 reporting loop: added `scraper/audit_avionics_coverage.py` + npm shortcut `pipeline:avionics:audit`, generated baseline reports (`scraper/avionics_coverage_audit_latest.json` + `.md`) showing 90-day coverage `matched_rows=45`, `unresolved_rows=0`, `matched_rate_pct=100.0`
 - [x] Task 11 Phase 3 started: `core/intelligence/avionics_intelligence.py` now supports DB-backed unit valuation from `avionics_market_values` with policy order `OEM/MSRP -> P25 (sample_count>=3) -> static fallback`, including per-item source tags in `matched_items`; validated with `pytest scraper/tests/test_avionics_intelligence.py` (6/6) and dry-run backfill (`attempted=5, scored=5, failed=0`)
 - [x] Task 11 Phase 3 continued: added migration `20260305000048_add_avionics_value_source_columns.sql` and wired persisted attribution fields (`avionics_value_source_breakdown`, `avionics_value_source_primary`, `avionics_market_sample_total`) through intelligence + backfill payloads; avionics tests now 7/7 passing and dry-run backfill remains clean (`attempted=5, scored=5, failed=0`)
+- [x] Task 11 Phase 4/rollout continuation: completed source-attribution verification pass (clean backfill slice with no `missing column`/`400` warnings), captured current attribution mix (`market_p25=2`, `fallback_static=458`, `none=540`, `null=2890` of 3890), and expanded Wave 2 coverage by seeding `piston_multi` avionics catalog + valuation rows (`units=10`, `aliases=40`, `market_values=10`); avionics test suite remains green (7/7)
+- [x] Task 11 Phase 4 alias loop: expanded parser/catalog coverage for unresolved tokens `GTN750` and `GTX345R` (parser v`2.0.1` + catalog alias seed), removed stale unresolved rows, reran observation backfill (`processed_listings=199`, `matched=45`, `unresolved=0`), and refreshed coverage audit (`observation_rows_total=55`, `matched_rate_pct=100.0`, `unresolved_rows=0`)
+- [x] Task 11 Phase 4 valuation-depth pass: seeded conservative OEM/MSRP anchors in `scraper/avionics_market_ingest.py` and applied to both `piston_single` + `piston_multi` segments (`oem_seed_rows_total=27`; `piston_single=21`, `piston_multi=6`), then re-scored a clean slice (`attempted=100`, `failed=0`) improving listing attribution mix from `oem_msrp=0 / fallback_static=458` to `oem_msrp=33 / fallback_static=426`
+- [x] Task 11 Phase 5 cutover hardening pass: added canonical capability units (`ADS-B In/Out`, `WAAS`, `Engine Monitor/JPI EDM`, `Stormscope`, `XM Weather`, `Synthetic Vision`, `ESP`, `TAWS-B`, `KX155`) plus OEM anchors, applied catalog + market ingest, and completed bounded production re-score with comps (`attempted=200`, `scored=200`, `failed=0`, `updated=200`) reducing `fallback_static` to `121` and lifting `oem_msrp` to `364` in current attribution snapshot; regression tests remain green (`24 passed`) and coverage audit is still `matched_rate_pct=100`, `unresolved_rows=0`
+- [x] Tier 1 avionics attribution backfill runbook executed: captured baseline snapshot, confirmed parser coverage (`matched_rate_pct=100`, `unresolved_rows=0`), completed full-table avionics attribution refresh (`processed=4385`, `updated=4385`, `failed=0`) and logged before/after delta in `logs/avionics_backfill_tier1_20260306.md` (`null=3253 -> 0`, `oem_msrp=390 -> 1727`, `market_p25=1 -> 2`, `none=553 -> 2264`, `fallback_static=99 -> 392`)
+- [x] Backfill reliability hardening: `scraper/backfill_scores.py` now uses cursor-paginated DB traversal for `--all`/missing-score modes (no first-page replay with `--limit`) plus configurable Supabase timeout controls (`SUPABASE_POSTGREST_TIMEOUT_SECONDS`, `SUPABASE_STORAGE_TIMEOUT_SECONDS`) and slow-row warning telemetry (`BACKFILL_ROW_SLOW_WARNING_SECONDS`)
+- [x] Backfill long-run resilience pass: `core/intelligence/aircraft_intelligence.py` now creates Supabase clients with explicit timeout options and supports `FULL_HANGAR_DISABLE_LIVE_COMP_POOL`; `scraper/backfill_scores.py` now adds resumable checkpoints (`--resume-from-checkpoint`, `--checkpoint-file`), pricing lookup modes (`--pricing-snapshot-mode precomputed|full`), circuit-breaker fallback for slow comp lookups, and standalone comps stage (`--compute-comps-only`) to prevent single-row stalls from blocking full runs
+- [x] Score validator intelligence-version fix: `scraper/validate_scores.py` now defaults to the live scorer version from `core/intelligence/aircraft_intelligence.py` (currently `1.8.0`) with optional `--intelligence-version` override for historical validation runs
+- [x] Parser alias normalization pass: `scraper/description_parser.py` v`2.0.2` now recognizes compact avionics variants (`GTN650XI`, `GMA350`, `GTX330ES`) plus no-space ADS-B forms (`ADSBOUT`/`ADSB IN/OUT`), with test coverage expanded in `scraper/tests/test_description_parser.py` (18/18 passing) and bounded post-patch backfill validation run clean (`attempted=500`, `failed=0`)
+- [x] Source-null enrichment fallback pass: `scraper/backfill_scores.py` now builds parser input from sparse-field fallbacks (`title`, `avionics_description`, `avionics_notes`, `make/model`) and injects freshly parsed `description_intelligence` into same-pass scoring; two consecutive bounded validation backfills stayed clean (`attempted=500`, `failed=0` each) and reduced the 1.7.0 `value_score=58.0` cluster (`500 -> 457 -> 434`, source-null subset `376 -> 338 -> 316`)
+- [x] Hybrid scoring reset cutover (v`1.8.0`) completed: implemented calibrated hybrid score composition in `core/intelligence/aircraft_intelligence.py` (condition/market/execution blend + comp/deal/avionics-source adjustments + sparse-data fallback bands), added calibration-mix diagnostics to `scraper/backfill_scores.py`, and validated with clean bounded batches (`attempted=500`, `failed=0` twice) reducing `value_score=58.0` concentration from `426 -> 210` while preserving `value_score IS NULL=0`; full cutover completed with all 999 listings now on `intelligence_version=1.8.0`, comps recomputed (`computed_groups=30`), and final validator distribution recorded (`unique_scores=181`, most-common `51.70` at `28.6%`, risk mix `MODERATE=883/HIGH=87/CRITICAL=29`)
+- [x] Added `HYBRID_CUTOVER_REPORT.md` documenting hybrid scoring reset execution details, before/after validation metrics, operational notes, and rollback command set for v`1.8.0`
 
 ### Frontend
+- [x] Fractional ownership UX expansion: added `/listings` Ownership Type filter (`all/full/fractional`), card-level fractional badges + `Share Price`/`Ownership` rows, and detail-page `Fractional Ownership` chip with explicit share-to-full-price breakdown; added migration `20260307000049_add_fractional_ownership_fields.sql` with first-class fractional columns and wired scraper/backfill write-through (`is_fractional_ownership`, share ratio/price, normalized full estimate, review flag, evidence JSON).
+- [x] Fractional ownership pricing pass: `scraper/description_parser.py` v`2.0.3` now extracts explicit share terms (`1/10`, `10% ownership`, ordinal share wording) into `description_intelligence.pricing_context`; `scraper/tradaplane_scraper.py` now normalizes explicit fractional share prices to full-aircraft `asking_price`/`price_asking` while preserving raw share metadata and flagging ambiguous partnership-only copy for review; `scraper/backfill_scores.py` now supports targeted re-score selectors (`--id`, `--source-id`) and preserves existing fractional pricing metadata during parser refresh; `/listings/[id]` now displays a fractional-pricing context note beneath the title.
+- [x] Listing detail parsing-utils extraction pass: moved seller-description parsing, description-intelligence parsing, engine-model/manufacturer normalization, avionics line extraction/merge, and avionics render helper from `app/listings/[id]/page.tsx` into `app/listings/[id]/components/detailParsingUtils.tsx`, keeping page behavior and data flow unchanged
+- [x] Listing detail thin-shell follow-up: extracted remaining generic helper logic from `app/listings/[id]/page.tsx` into `app/listings/[id]/components/detailUtils.ts` (price-history normalization/stats/chart helpers, row parsing helpers, source/title/display utilities) with no API or UI behavior changes
+- [x] Listing detail formatter consolidation pass: moved shared detail-page formatting helpers (`formatHours`, `formatIsoDate`, `formatCompTier`, `formatSeatsEngines`) from `app/listings/[id]/page.tsx` into `lib/listings/format.ts` to reduce inline duplication without changing UI behavior
+- [x] Listings shared formatter pass: added `lib/listings/format.ts` companion utilities and switched `app/listings/ListingsClient.tsx` card-value formatting to shared helpers (`formatPriceOrCall`, `formatScore`) with no behavior/layout changes
+- [x] Listings card extraction follow-up: moved remaining card rendering/spec-table JSX from `app/listings/ListingsClient.tsx` into `app/listings/components/ListingCard.tsx`, leaving `ListingsClient` focused on state/fetch/derivations
+- [x] Listings client decomposition pass: extracted `app/listings/ListingsClient.tsx` UI sections into dedicated components (`ListingsTopBanner`, `ListingsFiltersSidebar`, `ListingsResultsToolbar`, `ListingsGridAndPagination`) while preserving existing filtering/sorting/data-fetch behavior
+- [x] Component decomposition pass: extracted `/internal/deals` dashboard sections into dedicated components (`TopStatsRow`, `RecentSalesPanel`, `DealsControlsBar`, `DealsFiltersPanel`, `DealsTable`) and extracted `/listings/[id]` into column components (`LeftDetailColumn`, `RightDetailColumn`) with page-level data flow unchanged
 - [x] `/listings` — browse page with card grid, value score badges, risk badges
 - [x] `/listings/[id]` — detail page with structured data tables, score panel, image gallery
 - [x] Category filter bar (Single Engine, Multi-Engine, Turboprop, Jet, Helicopter, LSP, Sea)
@@ -132,8 +155,17 @@ detailed agent prompts for all upcoming tasks.
 - [x] Listings API now supports `modelFamily` + `subModel` query parameters and returns accurate filtered totals with exact-count mode for correct pagination/readout
 - [x] `/listings` filter UX now supports draft selection + explicit Search apply flow (filters no longer auto-refresh results on every change)
 - [x] Moved `Per Page` control to top toolbar, updated pagination readout to `Page X of Y`, and moved `Deal Rating` + `Value Score` controls into the top category banner order
+- [x] Listings top banner cleanup: removed category/deals count suffixes, forced `Deals` button to render last, and made Make/Model/Submodel filter counts update live as selections change
+- [x] Listings filters/top-bar polish: removed `State` filter UI and restyled top banner buttons (except `Deals`) to unified blue background with white text and yellow hover text
+- [x] Image proxy host allowlist expanded for missing listing photos (`resources.globalair.com`, `cdn.avbuyer.com`, `media.sandhills.com`); verified Gulfstream `/listings?q=Gulfstream` primary images now return HTTP 200 through `/api/image-proxy`
+- [x] Image proxy hardening pass: migrated from brittle exact-host list to safe host-suffix rules for all active scraper ecosystems (`controller.com`, `aerotrader.com`, `barnstormers.com`, `globalair.com`, `avbuyer.com`) plus exact CDN hosts (`dsgiipnwy1jd8.cloudfront.net`, `cdn-media.tilabs.io`, `media.sandhills.com`); added protocol guard and source-aware referer header
+- [x] Comp & Cost chart target-marker reliability: target listing now always renders as a yellow point (`This Aircraft`) even when target price or Y-axis metric is missing by using transparent fallback anchors; tooltip now flags when estimated coordinates are used
+- [x] Listings UI count cleanup: removed count suffixes from Filters (`Make`, `Model`, `Sub Model`, `Source`) and removed numeric count suffixes from top-bar dropdown menus
 - [x] Listing detail `Score Summary` now uses an investment-style breakdown (Market, Condition, Execution), promotes `Investment score` as the primary score when available, and surfaces `Pricing Confidence` in-card
 - [x] Scoring engine now uses a robust comp waterfall (exact submodel year-window → model family → make fallback), with comp-tier/universe metadata surfaced in listing detail `Score Summary`
+- [x] Listings dropdown/search reliability pass: fixed `market_best`/`market_worst` sorting to use market delta (`vs_median_price`), enabled backend handling for `risk_low`/`risk_high`, split `Above Market` vs `Overpriced` deal menu options, added smarter query parsing for multi-term search (`Cessna 152`) and timeout-safe fallbacks so `/listings` and `/api/listings` return graceful responses instead of 500s under heavy query load
+- [x] Listings search performance pass: added lightweight search-only query path in `lib/db/listingsRepository.ts` for header/search-bar traffic (`q`-only requests) with token-aware parsing and direct table lookup fallback, reducing timeout-prone broad view scans while preserving existing filtered-query behavior
+- [x] Added Playwright smoke coverage for listings dropdown/search routes: new `tests/smoke/listings-smoke.spec.js` verifies key dropdown link URLs and core search API/page responses; wired `npm run test:smoke:listings` for quick regression checks
 
 ### Intelligence Engine
 - [x] v1.0.0 — Engine TBO, prop TBO, LLP, deferred maintenance
@@ -143,6 +175,7 @@ detailed agent prompts for all upcoming tasks.
 - [x] v1.4.0 — Deal rating vs market comps + baseline fallback
 - [x] v1.5.0 — STC modification detection + market premium (Penn Yan, Air Plains, STOL, etc.)
 - [x] v1.7.0 — Added market-opportunity + execution + investment scoring layers with pricing-confidence adjustment for top-down deal prioritization
+- [x] v1.8.0 — Hybrid scoring reset: calibrated blend of condition/market/execution with sparse-data fallback bands and calibration-path diagnostics to reduce score clustering while preserving safety overrides
 
 ### Data Pipeline
 - [x] Controller.com scraper (Playwright, all makes)
@@ -165,12 +198,15 @@ detailed agent prompts for all upcoming tasks.
 - [x] Added periodic ASO media-maintenance automation: `scripts/run-aso-media-refresh.ps1` + `scripts/register-aso-media-refresh-task.ps1`, Cursor-visible status files (`ASO_MEDIA_REFRESH_STATUS.md`, `ASO_MEDIA_REFRESH_LIVE.md`, `ASO_MEDIA_REFRESH_HISTORY.md`), and npm aliases (`pipeline:aso:media:refresh`, `pipeline:aso:media:refresh:preview`, `pipeline:aso:media:schedule`)
 - [x] Added optional Playwright fallback to `scraper/aso_media_backfill.py` for no-gallery edge cases and wired scheduled media refresh to run with `-PlaywrightFallback` (current ASO image coverage: primary 150/150, gallery 147/150)
 - [x] Added deep raw-HTML/script image extractor mode to `scraper/aso_media_backfill.py` (`--deep-extractor`) to parse embedded/escaped image URLs before Playwright fallback; stubborn ASO no-gallery IDs currently remain `aso_189664`, `aso_190231`, `aso_199472`
+- [x] Listing media coverage + targeted refresh foundation: added `scraper/report_listing_media_coverage.py` (overall/per-source no-image/at-least-one/more-than-one metrics + candidate exports under `scraper/state/media_refresh`), added npm commands (`pipeline:media:coverage`, `pipeline:media:re-audit`, source refresh shortcuts), added targeted `--media-refresh-only` mode to Trade-A-Plane/Controller/AeroTrader/Barnstormers, and upgraded GlobalAir/AvBuyer/AFS detail parsing to persist gallery `image_urls`; validation batches run (`trade_a_plane updated=5`, `controller updated=0`, `barnstormers updated=0`, `aerotrader blocked by repeated 403`) with active-scope coverage unchanged baseline→post (`overall no_picture=0.20%`, `>=1 image=99.80%`, `>1 image=33.43%`; `aerotrader >1 image=68.23%`, `aso >1 image=96.67%`, `avbuyer >1 image=0.00%`)
+- [x] AvBuyer targeted media-refresh mode + live pass: added `--media-refresh-only`, `--source-ids-file`, and `--refresh-limit` to `scraper/avbuyer_scraper.py` (using `media_refresh_utils` candidate loading/update path), then executed a targeted refresh against `scraper/state/media_refresh/avbuyer/single_image_only.txt` with Playwright; bounded run processed first 100 IDs (`improved=100`, `updated=100`, `failed=0`) and lifted active AvBuyer `>1 image` coverage from `24.80%` to `40.82%` (`158 -> 260` of `637`)
 - [x] GlobalAir integration: aligned `scraper/globalair_scraper.py` to canonical schema/env/upsert/fingerprint/description-intelligence conventions, switched `scraper/scraper.py` compatibility wrapper to GlobalAir as primary, and wired `scripts/run-globalair-pipeline.ps1` plus npm/pipeline aliases (`pipeline:globalair`, `pipeline:globalair:dry`, `pipeline:globalair:preview`, `pipeline:post-scrape:globalair`, `dev:scrape:globalair`)
 - [x] AvBuyer migration pass: aligned `scraper/avbuyer_scraper.py` to shared scraper conventions (`env_check`, `schema`, `scraper_base`, `description_parser`, manufacturer normalization/tiering), added delta-safe upsert/inactive handling + smoke-test CLI controls, added focused targeting (`--model` text filter + `--target-url` direct mode + direct-make fallback), and wired pipeline runner `scripts/run-avbuyer-pipeline.ps1` with npm aliases (`pipeline:avbuyer`, `pipeline:avbuyer:dry`, `pipeline:avbuyer:preview`) after validating twin-piston smoke runs
 - [x] AvBuyer controlled live validation: ran narrow write scope (`twin-piston`, `Cessna`, model `340A`, 1 page) with successful DB ingest (`saved 6/6`), limited FAA enrichment, and limited backfill/comps; fixed two runtime blockers found during live test (`get_supabase` shadowing + mixed-key bulk upsert payloads)
 - [x] AvBuyer wider controlled live pass: executed two additional bounded write runs (`twin-piston` Cessna up to 2 pages, then Piper up to 2 pages) with successful ingest (`saved 10/10` + `11/11`), then completed limited FAA enrichment (`limit=80`) and limited backfill/comps (`limit=80`) with clean scoring update results
 - [x] AvBuyer Beechcraft expansion: executed bounded live write run (`twin-piston` Beechcraft up to 2 pages) with successful ingest (`saved 5/5`), followed by limited FAA enrichment (`limit=60`) and limited backfill/comps (`limit=60`) with no scoring failures
 - [x] AvBuyer phased expansion pass: completed sequence `1→2→3→4` with resume-safe category rollout (twin-piston maintenance pass, added `Diamond`/`Tecnam`/`Vulcanair`, expanded `single-piston`/`turboprops`/`helicopter` plus direct-target `jets` subcategories), then ran stepwise FAA/backfill validation (`enrich_faa --limit 250`, `backfill_scores --compute-comps --limit 250`) with clean scoring (`250/250`, `failed=0`) and updated AvBuyer inventory to `319` rows
+- [x] AvBuyer currency hardening pass: updated `scraper/avbuyer_scraper.py` to enforce USD-only storage (`asking_price`/`price_asking`) via currency-aware parsing plus Playwright dropdown conversion (`#currency-dropdown -> USD`) when listings render in local currency; corrected target listing `ab_372946` to `$259,063` and remediated additional flagged piston outliers (`ab_373592: 3,300,000 -> 198,816`, `ab_372638: 2,100,000 -> 126,519`), with reusable audit reports in `scraper/price_outliers_latest.json` and `scraper/avbuyer_price_remediation_latest.json`
 - [x] DS-1 kickoff: Barnstormers selector audit documented (`scraper/barnstormers_selectors.md`)
 - [x] DS-1 kickoff: Barnstormers scraper implemented (`scraper/barnstormers_scraper.py`) with requests-first + Playwright fallback
 - [x] DS-1 kickoff: Barnstormers pipeline script wired (`scripts/run-barnstormers-pipeline.ps1`) + npm alias (`pipeline:barnstormers`)
@@ -207,8 +243,6 @@ detailed agent prompts for all upcoming tasks.
 - [x] Task 2 foundation started: shared scraper modules (`env_check.py`, `schema.py`, `scraper_base.py`) integrated into Trade-a-Plane + Controller scrapers
 - [x] Task 2 API/repository foundation: added `lib/db/listingsRepository.ts`, refactored `/api/deal-alerts` to repository, added `/api/listings/[id]/full`
 - [x] Task 9A backend progress: added `/api/listings/[id]/comps` endpoint with same-model/year-window comparables and make+category fallback
-- [x] Task 6 Phase 1 progress: added `CONTROLLER_EMAIL_SETUP.md` with Gmail API setup, env vars, and Task Scheduler XML
-- [x] Task 6 Phase 2 progress: added `scraper/controller_email_parser.py` (OAuth Gmail read, HTML parse, schema validate, Supabase upsert, parse-failed label flow)
 - [x] Task 5 progress: added deterministic `scraper/description_parser.py` with extraction helpers + confidence score and integrated `description_intelligence` enrichment into scraper upsert paths
 - [x] Task 5 tests: added `scraper/tests/test_description_parser.py` with 10 parser cases (all passing)
 - [x] Description parser refinement: added engine-model sanitization plus maintenance extraction (`cylinders_since_new_hours`, `hours_since_iran`, `last_annual_inspection`), and wired Trade-A-Plane/Controller upserts to prefer cleaned parser-derived engine models when raw specs are overlong
@@ -252,8 +286,8 @@ detailed agent prompts for all upcoming tasks.
 - [x] DS-3 internal feed fix: `/api/internal/recent-sales` now uses a privileged server-side Supabase client so ownership-change rows are visible in the dashboard (verified count: 3)
 - [x] Task 10 progress: expanded `scraper/config.py` with tiered manufacturer lists + alias normalization helpers, added `--tier` support to Trade-a-Plane and Controller scrapers, and added `scraper/backfill_tiers.py` + migration `20260304000041_add_manufacturer_tier.sql`
 - [x] Task 3 frontend wiring: listing detail FAA panel now shows all accident-history states (green no-history, red accident summary + NTSB link, gray unavailable when N-number is missing)
-- [x] Task 6 parser reliability fix: `scraper/controller_email_parser.py` now uses shared imports safely and calls `safe_upsert_with_fallback` with correct `on_conflict` keys (`source_site,source_id`)
-- [x] Task 6 parser hardening: improved Controller email HTML parsing for relative URLs/card containers/location and duplicate links; added `scraper/tests/test_controller_email_parser.py` (4 passing parser tests)
+- [x] Deprecated Controller alert-ingestion path removed by policy: deleted setup docs, parser/test artifacts, scheduler XML, wrapper script, and related npm commands
+- [x] Task 11 cutover stabilization: added transient Supabase 500 retry handling in `scraper/backfill_scores.py`, produced `AVIONICS_CUTOVER_REPORT.md`, and archived clean bounded production rerun log `logs/avionics_cutover_backfill_retry_20260305_221710.log` (`attempted=200`, `scored=200`, `failed=0`, `updated=200`)
 - [x] Task 10 reliability tests: added `scraper/tests/test_scraper_config.py` covering alias normalization, tier resolution, tier selection, and invalid tier handling (4 passing tests)
 - [x] Task 9B frontend progress: added dynamic comps visualization on listing detail via `app/components/CompsChart.tsx` + `app/listings/[id]/CompsChartPanel.tsx` (desktop scatter by price vs TT/SMOH, mobile value-score bar fallback, API-backed stats line)
 - [x] Listing detail UI polish: merged `Cost Analysis` + `Comparable Market Intelligence` into a single top-right `Comp & Cost` card; estimate range is light green with median shown beneath in white
@@ -285,9 +319,9 @@ Apply in order in Supabase SQL Editor:
 ```
 supabase/migrations/20260301000018_stc_reference.sql
 supabase/migrations/20260301000019_baseline_values.sql
-supabase/migrations/20260301000020_add_deal_comparison_source_to_public_listings_view.sql
+supabase/migrations/20260301000020_add_deal_comparison_source_to_public_listings_view.sql  ⚠️ VIEW CHANGE — update PUBLIC_LISTINGS_VIEW.md after applying
 supabase/migrations/20260302000024_add_listing_media_and_fingerprint_columns.sql
-supabase/migrations/20260302000025_add_media_fields_to_public_listings_view.sql
+supabase/migrations/20260302000025_add_media_fields_to_public_listings_view.sql  ⚠️ VIEW CHANGE — update PUBLIC_LISTINGS_VIEW.md after applying
 supabase/migrations/20260302000026_add_listing_observations_and_active_tracking.sql
 supabase/migrations/20260302000027_add_public_listing_observations_view.sql
 supabase/migrations/20260302000028_add_avionics_detail_columns.sql
@@ -305,6 +339,7 @@ supabase/migrations/20260305000045_add_avionics_catalog_tables.sql
 supabase/migrations/20260305000046_add_avionics_market_value_tables.sql
 supabase/migrations/20260305000047_add_avionics_listing_observations.sql
 supabase/migrations/20260305000048_add_avionics_value_source_columns.sql
+supabase/migrations/20260307000049_add_fractional_ownership_fields.sql
 ```
 
 Note: `20260302000029` intentionally overlaps with `20260302000028` for idempotent schema healing. Running both is safe.
@@ -562,69 +597,19 @@ TESTING:
 
 ---
 
-### TASK 6: Controller.com — Email Alert Pipeline
-**Priority: 🟠 HIGH — Zero bot-detection risk; sustainable long-term**
-**Agent: MISC (setup docs) + BACKEND (parser code)**
-
-```
-Rather than fighting Controller.com's bot protection, use their own email alert system.
-New listings are delivered to an inbox — zero scraping, zero CAPTCHA.
-
-PHASE 1 — SETUP DOCS (MISC agent, create CONTROLLER_EMAIL_SETUP.md):
-  Step-by-step for Ryan:
-  1. Create dedicated Gmail: fullhangar.alerts@gmail.com (or similar)
-  2. Sign up for Controller.com email alerts for categories:
-       Single Engine Piston, Multi-Engine Piston, Turboprop, Jet, Helicopter
-     And makes: Cessna, Piper, Beechcraft, Cirrus, Mooney, Diamond, Commander, Socata, Columbia
-     Set frequency to "Immediate" (document tradeoff vs Daily Digest)
-  3. Enable Gmail API: Google Cloud Console → New Project → Enable Gmail API → 
-     Create OAuth 2.0 credentials → download client_secret.json → save to scraper/
-  4. Add to scraper/.env:
-       GMAIL_CLIENT_ID=...
-       GMAIL_CLIENT_SECRET=...
-       GMAIL_ALERT_ADDRESS=fullhangar.alerts@gmail.com
-  5. Windows Task Scheduler XML config to run parser every 30 minutes (provide exact XML)
-  
-  Include tradeoff section: Email alerts cover new listings only. For historical backfill 
-  see Task 7 (CDP scraper).
-
-PHASE 2 — EMAIL PARSER (BACKEND agent, create scraper/controller_email_parser.py):
-  Install: .venv312\Scripts\pip.exe install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
-
-  A) Connect to Gmail via OAuth (credentials from scraper/.env)
-  
-  B) Search unread Controller.com alert emails:
-     query = 'from:controller.com is:unread'
-     (Adjust from/subject after Ryan verifies a real alert email's headers)
-  
-  C) For each alert email:
-     - Parse HTML body with BeautifulSoup
-     - Extract: title, price, year, make, model, location, listing_url, image_url
-     - Call validate_listing() from scraper/schema.py (Task 2)
-     - Upsert to aircraft_listings with source = "controller_email"
-     - Mark Gmail message as read on success
-     - On parse failure: apply Gmail label "parse-failed", do NOT mark as read, log to scraper.log
-  
-  D) CLI:
-     .venv312\Scripts\python.exe scraper\controller_email_parser.py --check-now
-     .venv312\Scripts\python.exe scraper\controller_email_parser.py --dry-run
-
-Benefits of this approach:
-  ✓ Zero bot-detection risk
-  ✓ Near-real-time new listings via immediate alerts
-  ✓ Same data shape as direct scraping
-  ✓ Sustainable without maintenance
-```
+### TASK 6: Controller.com — Deprecated Alert Pipeline
+**Status: ❌ Removed by policy**
+**Note:** This ingestion path is intentionally deprecated and removed from this repository.
 
 ---
 
 ### TASK 7: Controller.com — Browser-Assisted Historical Scraping (CDP)
-**Priority: 🟡 MEDIUM — For historical backfill; do after Task 6 is live**
+**Priority: 🟡 MEDIUM — For historical backfill**
 **Agent: BACKEND**
 
 ```
-Email alerts cover new listings going forward. For historical data, attach to Ryan's existing 
-authenticated browser session via Chrome DevTools Protocol — never launching a headless bot.
+Use Ryan's existing authenticated browser session via Chrome DevTools Protocol for Controller.com
+listing capture without relying on inbox-based workflows.
 
 CREATE: CONTROLLER_CDP_SETUP.md (instructions for Ryan):
   Launch Brave with remote debugging BEFORE running the script:
@@ -1058,7 +1043,7 @@ VERIFY WITH:
 - `/listings` sorting controls (vs_median_price, days_on_market, price reduction amount)
 - AeroTrader scraper (bot protection heavy; likely needs CDP approach like Task 7)
 - Barnstormers.com scraper (vintage/classic aircraft, simpler site)
-- Nightly email digest of new EXCEPTIONAL_DEAL listings to Ryan
+- Nightly digest of new EXCEPTIONAL_DEAL listings to Ryan
 - User accounts (Supabase Auth) for saved searches and watchlist persistence
 - Landing/marketing home page at `/`
 - Pre-buy inspection checklist PDF export
@@ -1190,10 +1175,6 @@ INTERNAL_PASSWORD=hangar-internal-2026
 ```
 SUPABASE_URL=https://pbbqdlcmgtruhssudwek.supabase.co
 SUPABASE_SERVICE_KEY=[get from Supabase dashboard → Settings → API → service_role key]
-# Add after Task 6 (email alert pipeline):
-# GMAIL_CLIENT_ID=...
-# GMAIL_CLIENT_SECRET=...
-# GMAIL_ALERT_ADDRESS=fullhangar.alerts@gmail.com
 ```
 
 ---

@@ -1,0 +1,293 @@
+# Full Hangar Avionics Expansion Plan
+
+Last updated: March 5, 2026
+Owner: BACKEND
+Status: Ready to execute
+
+## Objective
+
+Expand backend avionics intelligence with two priorities:
+
+1. Build a comprehensive avionics catalog to improve parser extraction accuracy.
+2. Improve installed avionics valuation quality using conservative market logic.
+
+## Locked Decisions (Ryan)
+
+- Conservative anchor: `P25`
+- Minimum sample floor: `sample_count >= 3, if not then 1`
+- Override policy: prefer `OEM/MSRP` when conflicting with market comps
+- Data policy: quality over quantity
+- Segment rollout: piston singles first, then multi-piston, then broader fleet
+
+## Scope and Non-Goals
+
+### In Scope
+
+- Avionics catalog and alias depth
+- FAA/OEM-backed evidence capture
+- Conservative valuation model upgrade
+- Parser extraction quality for real listing text
+- Explainable scoring outputs
+
+### Out of Scope (for this phase)
+
+- Frontend visualization redesign
+- Full turboprop/jet/Part 25 coverage on first release
+- Fully automated ingestion for every FAA source on day one
+
+## Target Data Architecture
+
+## Core Tables
+
+### `avionics_units`
+
+Canonical avionics unit records.
+
+- `id` (bigint, PK)
+- `manufacturer` (text)
+- `model` (text)
+- `canonical_name` (text, unique by manufacturer+model)
+- `function_category` (text)
+- `legacy_vs_glass` (text enum: `legacy`, `glass`, `hybrid`)
+- `priority_family` (text enum: `piston_single`, `piston_multi`, `turboprop`, `rotorcraft`, `jet`)
+- `is_active` (bool default true)
+- `created_at`, `updated_at`
+
+### `avionics_aliases`
+
+Normalized aliases used by parser matching.
+
+- `id` (bigint, PK)
+- `unit_id` (fk -> avionics_units)
+- `alias_text` (text)
+- `alias_norm` (text, lowercase normalized form)
+- `alias_source` (text enum: `faa`, `oem`, `listing`, `manual`)
+- `confidence` (numeric 0-1)
+- unique constraint on (`unit_id`, `alias_norm`)
+
+### `avionics_certifications`
+
+Certification and approval metadata.
+
+- `id` (bigint, PK)
+- `unit_id` (fk -> avionics_units)
+- `authority` (text enum: `FAA`, `EASA`, `OTHER`)
+- `approval_type` (text enum: `TSO`, `STC`, `AML_STC`, `TC`)
+- `approval_ref` (text)
+- `approval_notes` (text)
+- `source_url` (text)
+
+### `avionics_market_values`
+
+Valuation snapshots by segment and category.
+
+- `id` (bigint, PK)
+- `unit_id` (fk -> avionics_units)
+- `aircraft_segment` (text)
+- `sample_count` (int)
+- `price_min` (numeric)
+- `price_p25` (numeric)
+- `price_median` (numeric)
+- `price_p75` (numeric)
+- `price_max` (numeric)
+- `oem_msrp_value` (numeric)
+- `valuation_basis` (text enum: `oem_msrp`, `market_p25`, `blend`)
+- `confidence_score` (numeric 0-1)
+- `computed_at` (timestamptz)
+
+### `avionics_listing_observations`
+
+Per-listing extracted avionics evidence.
+
+- `id` (bigint, PK)
+- `listing_id` (uuid/text, align to existing listing key type)
+- `unit_id` (nullable fk -> avionics_units)
+- `raw_token` (text)
+- `normalized_token` (text)
+- `quantity` (int default 1)
+- `extractor_version` (text)
+- `match_confidence` (numeric 0-1)
+- `match_type` (text enum: `exact_alias`, `fuzzy_alias`, `manual_override`, `unresolved`)
+- `created_at` (timestamptz)
+
+## Supporting Tables
+
+### `avionics_bundle_rules`
+
+Defines conservative bundle multipliers and stack rules.
+
+- `bundle_code`
+- `required_unit_set`
+- `multiplier`
+- `segment`
+- `priority_order`
+
+### `avionics_install_factors`
+
+Installed-value adjustment factors.
+
+- `function_category`
+- `segment`
+- `install_factor`
+- `obsolescence_haircut`
+- `confidence_discount_rule`
+
+## Source Strategy (Quality-First)
+
+## Tier A (Authoritative, ingest first)
+
+1. FAA ADS-B Certified Equipment datasets
+2. FAA TSO references relevant to GA avionics functions
+3. FAA ADS-B search-by-aircraft outputs for common piston singles
+
+## Tier B (High quality, ingest second)
+
+1. OEM documentation and product support pages:
+   - Garmin
+   - Avidyne
+   - Aspen
+   - uAvionix
+2. AML/STC references with explicit model applicability
+
+## Tier C (Curated supplemental)
+
+1. Large MRO capability lists
+2. Structured avionics installer references
+
+## Tier D (Pricing and noise capture only)
+
+1. Existing `aircraft_component_sales` avionics records
+2. Listing-derived observations and legacy text variants
+
+## Parser and Matching Plan
+
+## Parser Upgrade Goals
+
+- Move from simple substring matching to alias dictionary + token normalization.
+- Add quantity extraction (`dual`, `2x`, `pair`).
+- Add suffix and variant handling (`Xi`, `W`, spacing/hyphen variants).
+- Preserve unresolved high-frequency tokens for queue-based alias expansion.
+
+## Parser Output Contract
+
+Extend `description_intelligence` with:
+
+- `avionics_detailed`: array of `{raw, normalized, canonical_unit_id, canonical_name, qty, confidence, source}`
+- `avionics_unresolved`: array of unresolved normalized tokens
+- `avionics_parser_version`: semantic version string
+
+## Valuation Policy (Conservative)
+
+## Unit-Level Value Selection Logic
+
+Given a unit and segment:
+
+1. If trustworthy `OEM/MSRP` exists, use it as primary basis.
+2. Else if `sample_count >= 3`, use market `P25`.
+3. Else use conservative fallback default table.
+
+## Final Installed Value
+
+`installed_value = base_value * quantity * install_factor * confidence_discount * obsolescence_haircut`
+
+Apply bundle multipliers only after conservative unit values are computed.
+
+## Risk Controls
+
+- Cap extreme outliers using winsorization before percentile calculations.
+- Avoid optimistic stacking for overlapping systems.
+- For ambiguous matches, apply lower confidence discount.
+
+## Segment Rollout Sequence
+
+## Wave 1: Piston Singles (Immediate)
+
+Prioritize:
+
+- Garmin GTN/GNS/G3X/G5/GFC/GTX families
+- Aspen Evolution families
+- Avidyne IFD/Entegra families
+- uAvionix ADS-B units
+- BendixKing and S-TEC legacy autopilot stack
+
+## Wave 2: Multi-Piston
+
+Extend coverage with higher-end autopilot and surveillance combinations.
+
+## Wave 3: Turboprop, Rotorcraft, Jet
+
+Broaden categories after Wave 1 and 2 quality thresholds are met.
+
+## Implementation Sequence
+
+## Phase 0 - Planning and Baseline (1-2 days)
+
+- Create baseline report of current avionics extraction coverage.
+- Freeze current `avionics_intelligence.py` behavior for A/B comparison.
+- Define acceptance metrics and test set.
+
+## Phase 1 - Schema and Seed (3-4 days)
+
+- Add migrations for new avionics tables.
+- Seed initial piston-single catalog and aliases from Tier A/B sources.
+- Create data ingestion stubs and provenance tracking.
+
+## Phase 2 - Parser Upgrade (3-5 days)
+
+- Build normalized alias resolver.
+- Add quantity and variant extraction.
+- Save per-listing observations and unresolved tokens.
+- Add tests for real-world noisy listing snippets.
+
+## Phase 3 - Valuation Engine Upgrade (3-5 days)
+
+- Build unit-level value resolver (`OEM/MSRP` first, then `P25` if sample floor met).
+- Add conservative install factors and bundle rule logic.
+- Compute and store `avionics_market_values` snapshots.
+
+## Phase 4 - Shadow Run and Tuning (3-4 days)
+
+- Run old and new avionics scoring in parallel.
+- Compare drift and confidence by listing cohort.
+- Tune alias confidence and conservative discounts.
+
+## Phase 5 - Production Cutover (1-2 days)
+
+- Switch `avionics_intelligence.py` to DB-backed sources.
+- Keep fallback behavior for sparse units.
+- Re-run backfill and validate no score regressions.
+
+## Deliverables
+
+1. `supabase/migrations/20260305000045_add_avionics_catalog_tables.sql`
+2. `supabase/migrations/20260305000046_add_avionics_market_value_tables.sql`
+3. `supabase/migrations/20260305000047_add_avionics_listing_observations.sql`
+4. `scraper/avionics_catalog_builder.py`
+5. `scraper/avionics_market_ingest.py`
+6. `scraper/audit_avionics_coverage.py`
+7. Parser/scoring tests for new extraction and valuation behavior
+
+## Acceptance Criteria
+
+- Parser precision for piston-single gold set >= 92%
+- Unresolved-token rate reduced by >= 40% from baseline
+- At least 90% of high-frequency piston-single avionics tokens map to canonical units
+- No optimistic valuation spikes after conservative policy enforcement
+- Score explanations include valuation basis and confidence source
+
+## Verification Commands
+
+```bash
+.venv312\Scripts\python.exe scraper\avionics_catalog_builder.py --segment piston_single --dry-run
+.venv312\Scripts\python.exe scraper\avionics_market_ingest.py --segment piston_single --dry-run
+.venv312\Scripts\python.exe -m pytest scraper\tests\test_avionics_intelligence.py -v
+.venv312\Scripts\python.exe scraper\audit_avionics_coverage.py --segment piston_single
+.venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
+```
+
+## Open Items to Resolve During Execution
+
+- Final authoritative source for OEM/MSRP normalization fields per manufacturer
+- Unit identity strategy for families where model naming changes by generation
+- Whether to persist one global value per unit or per aircraft segment/version
+
