@@ -4,6 +4,11 @@ import { getListingsPage } from "../../../lib/db/listingsRepository";
 export async function GET(request: NextRequest) {
   const startedAt = Date.now();
   const search = request.nextUrl.searchParams;
+  const ownershipTypeRaw = (search.get("ownershipType") ?? "all").toLowerCase();
+  const ownershipType =
+    ownershipTypeRaw === "fractional" || ownershipTypeRaw === "full" || ownershipTypeRaw === "all"
+      ? ownershipTypeRaw
+      : "all";
 
   try {
     const result = await getListingsPage({
@@ -22,7 +27,7 @@ export async function GET(request: NextRequest) {
       maxPrice: Number(search.get("maxPrice") ?? 0),
       sortBy: search.get("sortBy") ?? "value_desc",
       category: search.get("category") ?? "",
-      ownershipType: search.get("ownershipType") ?? "all",
+      ownershipType,
     });
 
     const elapsedMs = Date.now() - startedAt;

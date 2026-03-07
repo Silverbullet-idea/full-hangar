@@ -28,6 +28,20 @@ export type AircraftListing = {
   vs_median_price: number | null
   comps_sample_size: number | null
   deal_comparison_source: string | null
+  market_opportunity_score: number | null
+  condition_score: number | null
+  execution_score: number | null
+  investment_score: number | null
+  pricing_confidence: string | null
+  comp_selection_tier: string | null
+  comp_universe_size: number | null
+  comp_exact_count: number | null
+  comp_family_count: number | null
+  comp_make_count: number | null
+  comp_median_price: number | null
+  comp_p25_price: number | null
+  comp_p75_price: number | null
+  mispricing_zscore: number | null
   deferred_total: number | null
   true_cost: number | null
   intelligence_version: string | null
