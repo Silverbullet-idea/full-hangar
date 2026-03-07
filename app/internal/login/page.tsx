@@ -3,6 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start";
+const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end";
+
 export default function InternalLoginPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -15,6 +18,9 @@ export default function InternalLoginPage() {
     setIsSubmitting(true);
 
     try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(NAV_LOADING_START_EVENT));
+      }
       const response = await fetch("/api/internal/auth", {
         method: "POST",
         headers: {
@@ -34,6 +40,9 @@ export default function InternalLoginPage() {
       setError("Unable to sign in right now. Please try again.");
     } finally {
       setIsSubmitting(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(NAV_LOADING_END_EVENT));
+      }
     }
   }
 

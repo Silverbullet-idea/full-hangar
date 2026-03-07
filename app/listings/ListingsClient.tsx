@@ -203,6 +203,9 @@ export default function ListingsClient({
 
     const loadFilterOptions = async () => {
       try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('fullhangar:navigation-loading-start'))
+        }
         const response = await fetch('/api/listings/options', { cache: 'no-store' })
         const payload = await response.json()
         if (!response.ok || payload?.error) throw new Error(payload?.error ?? 'Unable to load options')
@@ -221,6 +224,10 @@ export default function ListingsClient({
         })
       } catch {
         // Keep empty options if request fails.
+      } finally {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('fullhangar:navigation-loading-end'))
+        }
       }
     }
     loadFilterOptions()

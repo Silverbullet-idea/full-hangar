@@ -13,10 +13,24 @@ const WATCHLIST_KEY = 'watchlist'
 const DEALS_ACTIVE_TAB_KEY = 'internal_deals_active_tab'
 const DEALS_SORT_KEY = 'internal_deals_sort'
 const DEALS_PRESET_KEY = 'internal_deals_preset'
+const NAV_LOADING_START_EVENT = 'fullhangar:navigation-loading-start'
+const NAV_LOADING_END_EVENT = 'fullhangar:navigation-loading-end'
 const DEFAULT_TIERS = new Set(['EXCEPTIONAL_DEAL', 'GOOD_DEAL'])
 const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKET', 'OVERPRICED'] as const
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+const startNavigationLoading = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(NAV_LOADING_START_EVENT))
+  }
+}
+
+const endNavigationLoading = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(NAV_LOADING_END_EVENT))
+  }
+}
 
 export default function InternalDealsPage() {
   const [rows, setRows] = useState<DealListing[]>([])
@@ -88,45 +102,48 @@ export default function InternalDealsPage() {
 
   useEffect(() => {
     ;(async () => {
-      const { data, error } = await supabase
-        .from('public_listings')
-        .select('*')
-        .or('asking_price.lte.60000,asking_price.is.null')
-        .order('deal_rating', { ascending: false, nullsFirst: false })
-        .limit(2500)
-
-      if (error) {
-        console.error('Failed to load internal deals:', error)
-        setLoading(false)
-        return
-      }
-
-      const baseRows = (data ?? []) as DealListing[]
-      if (baseRows.length === 0) {
-        setRows(baseRows)
-        setLoading(false)
-        return
-      }
-
-      const idParam = baseRows.map((row) => row.id).filter(Boolean).join(',')
       try {
-        const response = await fetch(`/api/internal/deal-signals?ids=${encodeURIComponent(idParam)}`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const payload = await response.json()
-        const signalRows = Array.isArray(payload?.data) ? (payload.data as DealListing[]) : []
-        const signalById = new Map(signalRows.map((row) => [String(row.id), row]))
-        const merged = baseRows.map((row) => ({ ...row, ...(signalById.get(String(row.id)) ?? {}) }))
-        setRows(merged)
-      } catch (signalError) {
-        console.error('Failed to load internal deal signals:', signalError)
-        setRows(baseRows)
+        startNavigationLoading()
+        const { data, error } = await supabase
+          .from('public_listings')
+          .select('*')
+          .or('asking_price.lte.60000,asking_price.is.null')
+          .order('deal_rating', { ascending: false, nullsFirst: false })
+          .limit(2500)
+
+        if (error) {
+          console.error('Failed to load internal deals:', error)
+          return
+        }
+
+        const baseRows = (data ?? []) as DealListing[]
+        if (baseRows.length === 0) {
+          setRows(baseRows)
+          return
+        }
+
+        const idParam = baseRows.map((row) => row.id).filter(Boolean).join(',')
+        try {
+          const response = await fetch(`/api/internal/deal-signals?ids=${encodeURIComponent(idParam)}`)
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const payload = await response.json()
+          const signalRows = Array.isArray(payload?.data) ? (payload.data as DealListing[]) : []
+          const signalById = new Map(signalRows.map((row) => [String(row.id), row]))
+          const merged = baseRows.map((row) => ({ ...row, ...(signalById.get(String(row.id)) ?? {}) }))
+          setRows(merged)
+        } catch (signalError) {
+          console.error('Failed to load internal deal signals:', signalError)
+          setRows(baseRows)
+        }
       } finally {
         setLoading(false)
+        endNavigationLoading()
       }
     })()
   }, [])
 
   useEffect(() => {
+    startNavigationLoading()
     fetch('/api/internal/recent-sales?days=30&limit=20')
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -140,6 +157,7 @@ export default function InternalDealsPage() {
       })
       .finally(() => {
         setRecentSalesLoading(false)
+        endNavigationLoading()
       })
   }, [])
 

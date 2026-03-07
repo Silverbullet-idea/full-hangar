@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 
 const EXAMPLE_PLACEHOLDER = "Try: Cessna 172, Piper Meridian, N12345"
+const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start"
 
 export default function HeaderSearchBar() {
   const router = useRouter()
@@ -12,6 +13,9 @@ export default function HeaderSearchBar() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(NAV_LOADING_START_EVENT))
+    }
 
     const trimmed = query.trim()
     if (!trimmed) {

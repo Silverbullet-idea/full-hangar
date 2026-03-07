@@ -112,7 +112,9 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
 
   useEffect(() => {
     if (!isNavigating) return
-    if (pendingListingsNavigationRef.current && pathname === "/listings") {
+    if (pendingListingsNavigationRef.current) {
+      // Keep overlay visible through detail -> listings transition.
+      if (pathname !== "/listings") return
       if (loadingLocksRef.current > 0) return
       clearListingsGraceTimer()
       listingsGraceTimerRef.current = window.setTimeout(() => {
@@ -122,7 +124,6 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
       }, LISTINGS_NAV_GRACE_MS)
       return
     }
-    pendingListingsNavigationRef.current = false
     clearListingsGraceTimer()
     if (loadingLocksRef.current > 0) return
     const rafId = window.requestAnimationFrame(() => {
