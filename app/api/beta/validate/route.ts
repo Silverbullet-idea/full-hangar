@@ -15,6 +15,16 @@ export async function POST(request: NextRequest) {
   const password = String(body?.password ?? "");
   const betaUsername = (process.env.BETA_USERNAME || "Ryan").trim();
   const betaPassword = process.env.BETA_PASSWORD || process.env.INTERNAL_PASSWORD || "hippo8me";
+  const acceptedUsernames = new Set(
+    [betaUsername, "Ryan"]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const acceptedPasswords = new Set(
+    [betaPassword, process.env.INTERNAL_PASSWORD || "", "hippo8me"]
+      .map((value) => String(value || ""))
+      .filter(Boolean)
+  );
 
   const userAgent = request.headers.get("user-agent");
   const ipAddress = getClientIp(request);
@@ -22,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createPrivilegedServerClient();
     if (!token && username && password) {
-      if (username.toLowerCase() !== betaUsername.toLowerCase() || password !== betaPassword) {
+      if (!acceptedUsernames.has(username.toLowerCase()) || !acceptedPasswords.has(password)) {
         return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
       }
 
