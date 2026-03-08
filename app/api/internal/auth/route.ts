@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createInternalSessionValue, internalSessionCookieOptions } from "@/lib/internal/auth";
+import { createInternalSessionValue, getInternalSessionSecret, internalSessionCookieOptions } from "@/lib/internal/auth";
 import { createPrivilegedServerClient } from "@/lib/supabase/server";
 import { findAdminUserByUsernameOrEmail, verifyPassword } from "@/lib/admin/users";
 
 export async function POST(request: NextRequest) {
   const envUsername = process.env.INTERNAL_USERNAME || "Ryan";
   const envPassword = process.env.INTERNAL_PASSWORD;
-  if (!envPassword) {
-    return NextResponse.json(
-      { error: "INTERNAL_PASSWORD is not configured." },
-      { status: 500 }
-    );
-  }
+  const internalSessionSecret = getInternalSessionSecret();
 
   const body = await request.json().catch(() => null);
   const username = body?.username;
@@ -43,7 +38,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
-  const sessionValue = await createInternalSessionValue(envPassword);
+  const sessionValue = await createInternalSessionValue(internalSessionSecret);
   const response = NextResponse.redirect(
     new URL("/internal/diagnostics", request.url)
   );

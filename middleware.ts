@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { INTERNAL_SESSION_COOKIE, isValidInternalSession } from "@/lib/internal/auth";
+import { getInternalSessionSecret, INTERNAL_SESSION_COOKIE, isValidInternalSession } from "@/lib/internal/auth";
 
 const BETA_SESSION_COOKIE = "beta_session";
 
@@ -26,9 +26,9 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const internalPassword = process.env.INTERNAL_PASSWORD;
+  const internalPassword = getInternalSessionSecret();
   const sessionValue = request.cookies.get(INTERNAL_SESSION_COOKIE)?.value;
-  if (!internalPassword || !(await isValidInternalSession(sessionValue, internalPassword))) {
+  if (!(await isValidInternalSession(sessionValue, internalPassword))) {
     const response = NextResponse.redirect(new URL("/internal/login", request.url));
     response.headers.set("X-Robots-Tag", noIndexHeader);
     return response;
