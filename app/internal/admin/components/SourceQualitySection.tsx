@@ -1,0 +1,221 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type SourceQualityRow = {
+  source: string;
+  active_listings: number;
+  pct_with_price: number;
+  pct_with_n_number: number;
+  pct_with_total_time: number;
+  pct_with_smoh: number;
+  pct_with_engine_model: number;
+  pct_with_location: number;
+  max_completeness_pct: number;
+  avg_score: number | null;
+  tiers: {
+    pct_90_100: number;
+    pct_70_89: number;
+    pct_under_70: number;
+  };
+  field_coverage: Record<string, number>;
+  unknown_domains: Array<{ domain: string; count: number }>;
+};
+
+type SourceQualityPayload = {
+  computed_at: string;
+  completeness_fields: string[];
+  sources: SourceQualityRow[];
+};
+
+function fmtPct(value: number) {
+  return `${value.toFixed(1)}%`;
+}
+
+function heatmapCellClass(value: number) {
+  if (value > 85) return "bg-emerald-700/70";
+  if (value >= 60) return "bg-brand-orange/50";
+  return "bg-brand-burn/55";
+}
+
+function sourceLabel(source: string) {
+  if (source === "unknown") return "unknown";
+  return source;
+}
+
+export function SourceQualitySection() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [payload, setPayload] = useState<SourceQualityPayload | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch("/api/internal/source-quality");
+        const body = (await response.json()) as Partial<SourceQualityPayload> & { error?: string };
+        if (!response.ok) {
+          throw new Error(body.error ?? "Failed to load source quality");
+        }
+        if (!cancelled) {
+          setPayload({
+            computed_at: String(body.computed_at ?? ""),
+            completeness_fields: Array.isArray(body.completeness_fields) ? body.completeness_fields : [],
+            sources: Array.isArray(body.sources) ? (body.sources as SourceQualityRow[]) : [],
+          });
+        }
+      } catch (fetchError) {
+        if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : "Failed to load source quality");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const rows = useMemo(() => payload?.sources ?? [], [payload]);
+  const fields = useMemo(() => payload?.completeness_fields ?? [], [payload]);
+
+  if (loading) {
+    return (
+      <section className="space-y-4">
+        <article className="rounded border border-brand-dark bg-card-bg p-4">
+          <h2 className="text-lg font-semibold">Inventory by Source — Detail View</h2>
+          <div className="mt-3 h-44 animate-pulse rounded bg-[#111111]" />
+        </article>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="rounded border border-brand-dark bg-card-bg p-4">
+        <h2 className="text-lg font-semibold">Inventory by Source — Detail View</h2>
+        <p className="mt-2 text-sm text-red-400">{error}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-4">
+      <article className="rounded border border-brand-dark bg-card-bg p-4">
+        <h2 className="text-lg font-semibold">Inventory by Source — Detail View</h2>
+        <p className="mt-1 text-xs text-brand-muted">
+          Live source-level inventory and completeness health. Updated: {payload?.computed_at ? new Date(payload.computed_at).toLocaleString() : "n/a"}
+        </p>
+        <div className="mt-3 overflow-auto rounded border border-brand-dark">
+          <table className="min-w-[1100px] text-sm">
+            <thead className="sticky top-0 bg-[#111111] text-left text-xs uppercase tracking-wide text-brand-muted">
+              <tr>
+                <th className="px-3 py-2">Source</th>
+                <th className="px-3 py-2">Active Listings</th>
+                <th className="px-3 py-2">% with Price</th>
+                <th className="px-3 py-2">% with N-Number</th>
+                <th className="px-3 py-2">% with Total Time</th>
+                <th className="px-3 py-2">% with SMOH</th>
+                <th className="px-3 py-2">% with Engine Model</th>
+                <th className="px-3 py-2">% with Location</th>
+                <th className="px-3 py-2">Max Completeness %</th>
+                <th className="px-3 py-2">Avg Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.source} className="border-t border-brand-dark hover:bg-[#1d1d1d]">
+                  <td className="px-3 py-2 font-semibold">
+                    {sourceLabel(row.source)}
+                    {row.source === "unknown" && row.unknown_domains.length > 0 ? (
+                      <details className="mt-1 rounded border border-brand-dark p-2 text-xs font-normal">
+                        <summary className="cursor-pointer text-brand-orange">Top source_url domains</summary>
+                        <ul className="mt-1 space-y-1 text-brand-muted">
+                          {row.unknown_domains.map((domain) => (
+                            <li key={domain.domain}>
+                              {domain.domain} ({domain.count.toLocaleString()})
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-2">{row.active_listings.toLocaleString()}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_price)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_n_number)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_total_time)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_smoh)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_engine_model)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_location)}</td>
+                  <td className="px-3 py-2 text-brand-orange">{fmtPct(row.max_completeness_pct)}</td>
+                  <td className="px-3 py-2">{row.avg_score === null ? "n/a" : row.avg_score.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article className="rounded border border-brand-dark bg-card-bg p-4">
+        <h3 className="text-base font-semibold">Completeness Tier Distribution by Source</h3>
+        <p className="mt-1 text-xs text-brand-muted">Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%.</p>
+        <div className="mt-3 space-y-2">
+          {rows.map((row) => (
+            <div key={`${row.source}-tiers`} className="grid grid-cols-[170px_1fr_120px] items-center gap-3 text-xs">
+              <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
+              <div className="flex h-3 overflow-hidden rounded bg-[#111111]">
+                <div className="bg-emerald-600" style={{ width: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
+                <div className="bg-brand-orange" style={{ width: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
+                <div className="bg-brand-burn" style={{ width: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
+              </div>
+              <div className="text-right text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article className="rounded border border-brand-dark bg-card-bg p-4">
+        <h3 className="text-base font-semibold">Field Coverage by Source</h3>
+        <p className="mt-1 text-xs text-brand-muted">Per-field fill percentage aligned to the 15-field completeness definition.</p>
+        <div className="mt-3 overflow-auto rounded border border-brand-dark">
+          <table className="min-w-[1250px] text-xs">
+            <thead className="sticky top-0 bg-[#111111] uppercase tracking-wide text-brand-muted">
+              <tr>
+                <th className="px-2 py-2 text-left">Source</th>
+                {fields.map((field) => (
+                  <th key={field} className="px-2 py-2 text-left">
+                    {field}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={`${row.source}-heat`} className="border-t border-brand-dark">
+                  <td className="px-2 py-2 font-semibold">{sourceLabel(row.source)}</td>
+                  {fields.map((field) => {
+                    const pct = row.field_coverage[field] ?? 0;
+                    return (
+                      <td key={`${row.source}-${field}`} className="px-2 py-2">
+                        <div className={`rounded px-1.5 py-1 text-center text-[11px] ${heatmapCellClass(pct)}`}>{fmtPct(pct)}</div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-brand-muted">
+          <span className="rounded border border-brand-dark px-2 py-1">Green &gt; 85%</span>
+          <span className="rounded border border-brand-dark px-2 py-1">Yellow 60-85%</span>
+          <span className="rounded border border-brand-dark px-2 py-1">Red &lt; 60%</span>
+        </div>
+      </article>
+    </section>
+  );
+}

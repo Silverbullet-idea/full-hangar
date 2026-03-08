@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { computeBuyerIntelligence, computeDataQuality, computePlatformStats, listInvitesWithSessions } from "@/lib/admin/analytics";
-import { CompletenessDonut, SourceInventoryChart } from "./components/AdminCharts";
+import { CompletenessDonut } from "./components/AdminCharts";
+import { SourceQualitySection } from "./components/SourceQualitySection";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,9 @@ export default async function InternalAdminPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <article className="rounded border border-brand-dark bg-card-bg p-4 lg:col-span-2">
-          <h2 className="mb-2 text-lg font-semibold">Inventory by Source</h2>
-          <SourceInventoryChart rows={dataQuality.source_stats} />
-        </article>
+        <div className="lg:col-span-2">
+          <SourceQualitySection />
+        </div>
         <article className="rounded border border-brand-dark bg-card-bg p-4">
           <h2 className="mb-2 text-lg font-semibold">Completeness Distribution</h2>
           <CompletenessDonut distribution={dataQuality.completeness_distribution} />

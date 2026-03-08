@@ -51,6 +51,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
+- `/internal/admin` now includes source-level inventory detail view (table, completeness tiers, unknown-domain disambiguation, and 15-field coverage heatmap).
 
 ### Backend, Pipeline, and Data Sources
 
@@ -59,6 +60,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Additional sources integrated and iterated (AeroTrader, AFS, ASO, GlobalAir, AvBuyer, Barnstormers).
 - Non-aircraft detection/hide workflow implemented and operationalized.
 - FAA enrichment + ownership-transfer feed + internal recent-sales wiring completed.
+- Avionics Wave 1 source audit + local seed assets shipped (`scraper/avionics_source_research.md`, `scraper/AVIONICS_DATA_SOURCES_REPORT.md`, `scraper/avionics_catalog_seed.py`, and `scraper/data/avionics/avionics_master_catalog.json` with 165 units).
 - Internal admin APIs added for data quality, platform stats, buyer intelligence, and invite management.
 - Listing media resilience hardened (URL validation, gallery failover, proxy-safe placeholders, integrity audit tooling).
 
