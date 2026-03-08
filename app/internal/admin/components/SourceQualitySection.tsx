@@ -161,36 +161,50 @@ export function SourceQualitySection() {
           Live source-level inventory and completeness health. Updated: {payload?.computed_at ? new Date(payload.computed_at).toLocaleString() : "n/a"}
         </p>
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-          {rankedRows.map((row) => (
-            <Link
-              key={`${row.source}-health`}
-              href={`/listings?source=${encodeURIComponent(row.source)}`}
-              aria-label={`View ${sourceLabel(row.source)} listings`}
-              className="block rounded border border-brand-dark p-2 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">{sourceLabel(row.source)}</p>
-                <p className={`text-sm font-bold ${healthClass(row.source_health_score)}`}>{row.source_health_score.toFixed(1)}</p>
-              </div>
-              <p className="mt-1 text-brand-muted">Health score</p>
-              <div className="mt-1 space-y-0.5 text-brand-muted">
-                <p>Critical avg: {fmtPct(row.avg_critical_completeness_pct)}</p>
-                <p>Full avg: {fmtPct(row.avg_full_completeness_pct)}</p>
-                <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
-              </div>
-              {row.alerts.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {row.alerts.slice(0, 2).map((alert, index) => (
-                    <span key={`${row.source}-alert-${index}`} className={`rounded border px-1.5 py-0.5 text-[10px] ${alertBadgeClass(alert.level)}`}>
-                      {alert.label}
-                    </span>
-                  ))}
+          {rankedRows.map((row) => {
+            const canOpenListings = row.active_listings > 0;
+            const cardClass = canOpenListings
+              ? "block rounded border border-brand-dark p-2 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
+              : "rounded border border-brand-dark p-2 text-xs opacity-70";
+            const content = (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{sourceLabel(row.source)}</p>
+                  <p className={`text-sm font-bold ${healthClass(row.source_health_score)}`}>{row.source_health_score.toFixed(1)}</p>
                 </div>
-              ) : (
-                <p className="mt-2 text-[10px] text-emerald-500">No active alerts</p>
-              )}
-            </Link>
-          ))}
+                <p className="mt-1 text-brand-muted">Health score</p>
+                <div className="mt-1 space-y-0.5 text-brand-muted">
+                  <p>Active: {row.active_listings.toLocaleString()}</p>
+                  <p>Critical avg: {fmtPct(row.avg_critical_completeness_pct)}</p>
+                  <p>Full avg: {fmtPct(row.avg_full_completeness_pct)}</p>
+                  <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
+                </div>
+                {row.alerts.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {row.alerts.slice(0, 2).map((alert, index) => (
+                      <span key={`${row.source}-alert-${index}`} className={`rounded border px-1.5 py-0.5 text-[10px] ${alertBadgeClass(alert.level)}`}>
+                        {alert.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[10px] text-emerald-500">No active alerts</p>
+                )}
+                {!canOpenListings ? <p className="mt-1 text-[10px] text-brand-muted">No active listings to open.</p> : null}
+              </>
+            );
+            if (!canOpenListings) return <div key={`${row.source}-health`} className={cardClass}>{content}</div>;
+            return (
+              <Link
+                key={`${row.source}-health`}
+                href={`/listings?source=${encodeURIComponent(row.source)}`}
+                aria-label={`View ${sourceLabel(row.source)} listings`}
+                className={cardClass}
+              >
+                {content}
+              </Link>
+            );
+          })}
         </div>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
           <table className="min-w-[1650px] text-sm">
@@ -271,30 +285,43 @@ export function SourceQualitySection() {
           Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%. Freshness and weekly deltas included for quick scraper health triage.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {rows.map((row) => (
-            <Link
-              key={`${row.source}-tiers`}
-              href={`/listings?source=${encodeURIComponent(row.source)}`}
-              aria-label={`View ${sourceLabel(row.source)} listings`}
-              className="block rounded border border-brand-dark p-3 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
-                <div className="text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
-              </div>
-              <div className="mx-auto flex h-32 w-8 flex-col-reverse overflow-hidden rounded bg-[#111111]">
-                <div className="bg-brand-burn" style={{ height: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
-                <div className="bg-brand-orange" style={{ height: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
-                <div className="bg-emerald-600" style={{ height: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
-              </div>
-              <div className="mt-2 space-y-0.5 text-brand-muted">
-                <p>90-100: {fmtPct(row.tiers.pct_90_100)}</p>
-                <p>70-89: {fmtPct(row.tiers.pct_70_89)}</p>
-                <p>&lt;70: {fmtPct(row.tiers.pct_under_70)}</p>
-                <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
-              </div>
-            </Link>
-          ))}
+          {rows.map((row) => {
+            const canOpenListings = row.active_listings > 0;
+            const cardClass = canOpenListings
+              ? "block rounded border border-brand-dark p-3 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
+              : "rounded border border-brand-dark p-3 text-xs opacity-70";
+            const content = (
+              <>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
+                  <div className="text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
+                </div>
+                <div className="mx-auto flex h-32 w-8 flex-col-reverse overflow-hidden rounded bg-[#111111]">
+                  <div className="bg-brand-burn" style={{ height: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
+                  <div className="bg-brand-orange" style={{ height: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
+                  <div className="bg-emerald-600" style={{ height: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
+                </div>
+                <div className="mt-2 space-y-0.5 text-brand-muted">
+                  <p>90-100: {fmtPct(row.tiers.pct_90_100)}</p>
+                  <p>70-89: {fmtPct(row.tiers.pct_70_89)}</p>
+                  <p>&lt;70: {fmtPct(row.tiers.pct_under_70)}</p>
+                  <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
+                </div>
+                {!canOpenListings ? <p className="mt-1 text-[10px] text-brand-muted">No active listings to open.</p> : null}
+              </>
+            );
+            if (!canOpenListings) return <div key={`${row.source}-tiers`} className={cardClass}>{content}</div>;
+            return (
+              <Link
+                key={`${row.source}-tiers`}
+                href={`/listings?source=${encodeURIComponent(row.source)}`}
+                aria-label={`View ${sourceLabel(row.source)} listings`}
+                className={cardClass}
+              >
+                {content}
+              </Link>
+            );
+          })}
         </div>
       </article>
 

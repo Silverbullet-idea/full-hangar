@@ -131,8 +131,16 @@ export async function getListings(filters: ListingFilters = {}) {
   return result.data ?? [];
 }
 
-const LISTINGS_PAGE_COLUMNS =
-  "id,source,source_id,listing_url,url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+const LISTINGS_PAGE_COLUMNS_PUBLIC =
+  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+const LISTINGS_PAGE_COLUMNS_AIRCRAFT =
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+
+function columnsForListingsTable(table: string): string {
+  return table === "aircraft_listings"
+    ? LISTINGS_PAGE_COLUMNS_AIRCRAFT
+    : LISTINGS_PAGE_COLUMNS_PUBLIC;
+}
 
 const SE_TURBOPROP_OR =
   "make.ilike.%Pilatus%,make.ilike.%TBM%,make.ilike.%Daher%,make.ilike.%Socata%,make.ilike.%Quest%,model.ilike.%PC-12%,model.ilike.%PC12%,model.ilike.%TBM%,model.ilike.%Caravan%,model.ilike.%Grand Caravan%,model.ilike.%208%,model.ilike.%Meridian%,model.ilike.%M500%,model.ilike.%M600%,model.ilike.%Kodiak%,model.ilike.%Jetprop%";
@@ -391,6 +399,78 @@ function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
   );
 }
 
+function normalizeSourceFilterValue(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized === "tap" || normalized === "trade-a-plane" || normalized === "tradeaplane" || normalized === "trade_a_plane" || normalized === "tradaplane") {
+    return "tradaplane";
+  }
+  if (normalized === "aircraftforsale" || normalized === "aircraft_for_sale" || normalized === "afs") return "afs";
+  if (normalized === "aero_trader") return "aerotrader";
+  if (normalized === "global_air") return "globalair";
+  if (normalized === "ctrl") return "controller";
+  return normalized;
+}
+
+function sourceAliasesForFilter(normalizedSource: string): string[] {
+  if (normalizedSource === "tradaplane") return ["tap", "trade-a-plane", "tradeaplane", "trade_a_plane", "tradaplane"];
+  if (normalizedSource === "controller") return ["controller", "ctrl"];
+  if (normalizedSource === "afs") return ["aircraftforsale", "aircraft_for_sale", "afs"];
+  if (normalizedSource === "aerotrader") return ["aerotrader", "aero_trader"];
+  if (normalizedSource === "globalair") return ["globalair", "global_air"];
+  return [normalizedSource];
+}
+
+function sourceDomainNeedlesForFilter(normalizedSource: string): string[] {
+  if (normalizedSource === "tradaplane") return ["trade-a-plane", "tradeaplane"];
+  if (normalizedSource === "controller" || normalizedSource === "controller_cdp") return ["controller"];
+  if (normalizedSource === "aerotrader") return ["aerotrader"];
+  if (normalizedSource === "afs") return ["aircraftforsale"];
+  if (normalizedSource === "aso") return ["aso"];
+  if (normalizedSource === "globalair") return ["globalair"];
+  if (normalizedSource === "barnstormers") return ["barnstormers"];
+  if (normalizedSource === "avbuyer") return ["avbuyer"];
+  return [];
+}
+
+function applySourceFilter(
+  query: any,
+  sourceInput: string,
+  includeExtendedSourceFields: boolean
+) {
+  const normalizedSource = normalizeSourceFilterValue(sourceInput);
+  if (!normalizedSource) return query;
+
+  const fields = includeExtendedSourceFields
+    ? ["source", "source_site", "listing_source"]
+    : ["source"];
+
+  if (normalizedSource === "unknown") {
+    const unknownClauses = fields.flatMap((field) => [
+      `${field}.is.null`,
+      `${field}.eq.`,
+      `${field}.eq.unknown`,
+    ]);
+    return query.or(unknownClauses.join(","));
+  }
+
+  const aliases = sourceAliasesForFilter(normalizedSource);
+  const clauses = fields.flatMap((field) => aliases.map((alias) => `${field}.eq.${alias}`));
+  if (normalizedSource === "controller") {
+    for (const field of fields) {
+      clauses.push(`${field}.like.controller*`);
+    }
+  }
+  if (includeExtendedSourceFields) {
+    const domainNeedles = sourceDomainNeedlesForFilter(normalizedSource);
+    for (const needle of domainNeedles) {
+      clauses.push(`source_url.ilike.*${needle}*`);
+      clauses.push(`url.ilike.*${needle}*`);
+    }
+  }
+  return query.or(clauses.join(","));
+}
+
 async function runSimpleSearchListingsPage(
   supabase: ReturnType<typeof createServerClient>,
   opts: {
@@ -407,7 +487,7 @@ async function runSimpleSearchListingsPage(
   const { parsedSearch, sortBy, from, to, page, pageSize, ownershipType, preferDealTier } = opts;
   let query = supabase
     .from("aircraft_listings")
-    .select(LISTINGS_PAGE_COLUMNS)
+    .select(LISTINGS_PAGE_COLUMNS_AIRCRAFT)
     .eq("is_active", true);
 
   if (parsedSearch.makeToken) query = query.ilike("make", `%${parsedSearch.makeToken}%`);
@@ -454,9 +534,10 @@ async function runDefaultCuratedListingsPage(
   }
 ) {
   const { listBaseTable, from, to, page, pageSize, ownershipType } = opts;
+  const columns = columnsForListingsTable(listBaseTable);
   const candidateQuery = supabase
     .from(listBaseTable)
-    .select(LISTINGS_PAGE_COLUMNS)
+    .select(columns)
     .eq("is_active", true)
     .eq("deal_tier", "EXCEPTIONAL_DEAL")
     .not("primary_image_url", "is", null)
@@ -485,7 +566,6 @@ async function runDefaultCuratedListingsPage(
 }
 
 export async function getListingsPage(query: ListingsPageQuery = {}) {
-  const supabase = createServerClient();
   const page = Math.max(1, Number(query.page ?? 1));
   const pageSize = Math.max(1, Math.min(100, Number(query.pageSize ?? 24)));
   const from = (page - 1) * pageSize;
@@ -506,10 +586,16 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const minValueScore = Number(query.minValueScore ?? 0);
   const maxPrice = Number(query.maxPrice ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
+  const hasSourceFilter = source.length > 0;
   const listBaseTable =
-    ownershipType === "fractional" || ownershipType === "full"
+    hasSourceFilter || ownershipType === "fractional" || ownershipType === "full"
       ? "aircraft_listings"
       : "public_listings";
+  const listBaseColumns = columnsForListingsTable(listBaseTable);
+  const supabase =
+    listBaseTable === "aircraft_listings"
+      ? createPrivilegedServerClient()
+      : createServerClient();
 
   if (isDefaultListingsLandingQuery(query)) {
     return runDefaultCuratedListingsPage(supabase, {
@@ -524,7 +610,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 
   let dbQuery = supabase
     .from(listBaseTable)
-    .select(LISTINGS_PAGE_COLUMNS)
+    .select(listBaseColumns)
     .eq("is_active", true);
 
   const parsedSearch = parseListingsSearch(q);
@@ -554,15 +640,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (subModel) dbQuery = dbQuery.ilike("model", subModel);
   else if (modelFamily) dbQuery = dbQuery.ilike("model", `${modelFamily}%`);
   else if (model) dbQuery = dbQuery.ilike("model", `%${model}%`);
-  if (source === "trade-a-plane") dbQuery = dbQuery.or("source.eq.tap,source.eq.trade-a-plane,source.eq.tradaplane");
-  else if (source === "controller") dbQuery = dbQuery.or("source.eq.controller,source.eq.ctrl,source.like.controller*");
-  else if (source === "aircraftforsale" || source === "afs") dbQuery = dbQuery.or("source.eq.aircraftforsale,source.eq.afs");
-  else if (source === "aerotrader") dbQuery = dbQuery.or("source.eq.aerotrader,source.eq.aero_trader");
-  else if (source === "globalair") dbQuery = dbQuery.or("source.eq.globalair,source.eq.global_air");
-  else if (source === "barnstormers") dbQuery = dbQuery.eq("source", "barnstormers");
-  else if (source === "aso") dbQuery = dbQuery.eq("source", "aso");
-  else if (source === "controller_cdp") dbQuery = dbQuery.eq("source", "controller_cdp");
-  else if (source) dbQuery = dbQuery.eq("source", source);
+  dbQuery = applySourceFilter(dbQuery, source, listBaseTable === "aircraft_listings");
   if (state) dbQuery = dbQuery.eq("location_state", state.toUpperCase());
   if (risk) dbQuery = dbQuery.eq("risk_level", risk.toUpperCase());
   if (dealTier === "TOP_DEALS") dbQuery = dbQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
@@ -602,7 +680,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (result.error && String(result.error.message).toLowerCase().includes("statement timeout")) {
     let fallbackQuery = supabase
       .from(listBaseTable)
-      .select(LISTINGS_PAGE_COLUMNS)
+      .select(listBaseColumns)
       .eq("is_active", true);
     if (parsedSearch.makeToken) fallbackQuery = fallbackQuery.ilike("make", `%${parsedSearch.makeToken}%`);
     if (parsedSearch.modelToken) fallbackQuery = fallbackQuery.ilike("model", `%${parsedSearch.modelToken}%`);
@@ -612,15 +690,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (subModel) fallbackQuery = fallbackQuery.ilike("model", subModel);
     else if (modelFamily) fallbackQuery = fallbackQuery.ilike("model", `${modelFamily}%`);
     else if (model) fallbackQuery = fallbackQuery.ilike("model", `%${model}%`);
-    if (source === "trade-a-plane") fallbackQuery = fallbackQuery.or("source.eq.tap,source.eq.trade-a-plane,source.eq.tradaplane");
-    else if (source === "controller") fallbackQuery = fallbackQuery.or("source.eq.controller,source.eq.ctrl,source.like.controller*");
-    else if (source === "aircraftforsale" || source === "afs") fallbackQuery = fallbackQuery.or("source.eq.aircraftforsale,source.eq.afs");
-    else if (source === "aerotrader") fallbackQuery = fallbackQuery.or("source.eq.aerotrader,source.eq.aero_trader");
-    else if (source === "globalair") fallbackQuery = fallbackQuery.or("source.eq.globalair,source.eq.global_air");
-    else if (source === "barnstormers") fallbackQuery = fallbackQuery.eq("source", "barnstormers");
-    else if (source === "aso") fallbackQuery = fallbackQuery.eq("source", "aso");
-    else if (source === "controller_cdp") fallbackQuery = fallbackQuery.eq("source", "controller_cdp");
-    else if (source) fallbackQuery = fallbackQuery.eq("source", source);
+    fallbackQuery = applySourceFilter(fallbackQuery, source, listBaseTable === "aircraft_listings");
     if (state) fallbackQuery = fallbackQuery.eq("location_state", state.toUpperCase());
     if (risk) fallbackQuery = fallbackQuery.eq("risk_level", risk.toUpperCase());
     if (dealTier === "TOP_DEALS") fallbackQuery = fallbackQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
@@ -644,7 +714,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     // Last-resort fallback: keep search responsive on hot terms.
     const emergencyQuery = supabase
       .from(listBaseTable)
-      .select(LISTINGS_PAGE_COLUMNS)
+      .select(listBaseColumns)
       .eq("is_active", true)
       .or(`make.ilike.%${q}%,model.ilike.%${q}%`)
       .order("deal_rating", { ascending: false, nullsFirst: false })
@@ -661,7 +731,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       if (q) {
         let tableFallback = supabase
           .from("aircraft_listings")
-          .select(LISTINGS_PAGE_COLUMNS)
+          .select(LISTINGS_PAGE_COLUMNS_AIRCRAFT)
           .eq("is_active", true);
 
         if (parsedSearch.makeToken) tableFallback = tableFallback.ilike("make", `%${parsedSearch.makeToken}%`);
@@ -711,15 +781,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (subModel) countQuery = countQuery.ilike("model", subModel);
     else if (modelFamily) countQuery = countQuery.ilike("model", `${modelFamily}%`);
     else if (model) countQuery = countQuery.ilike("model", `%${model}%`);
-    if (source === "trade-a-plane") countQuery = countQuery.or("source.eq.tap,source.eq.trade-a-plane,source.eq.tradaplane");
-    else if (source === "controller") countQuery = countQuery.or("source.eq.controller,source.eq.ctrl,source.like.controller*");
-    else if (source === "aircraftforsale" || source === "afs") countQuery = countQuery.or("source.eq.aircraftforsale,source.eq.afs");
-    else if (source === "aerotrader") countQuery = countQuery.or("source.eq.aerotrader,source.eq.aero_trader");
-    else if (source === "globalair") countQuery = countQuery.or("source.eq.globalair,source.eq.global_air");
-    else if (source === "barnstormers") countQuery = countQuery.eq("source", "barnstormers");
-    else if (source === "aso") countQuery = countQuery.eq("source", "aso");
-    else if (source === "controller_cdp") countQuery = countQuery.eq("source", "controller_cdp");
-    else if (source) countQuery = countQuery.eq("source", source);
+    countQuery = applySourceFilter(countQuery, source, listBaseTable === "aircraft_listings");
     if (state) countQuery = countQuery.eq("location_state", state.toUpperCase());
     if (risk) countQuery = countQuery.eq("risk_level", risk.toUpperCase());
     if (dealTier === "TOP_DEALS") countQuery = countQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
