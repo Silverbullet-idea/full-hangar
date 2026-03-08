@@ -16,6 +16,15 @@ const EMPTY_PLATFORM = {
     added_last_7_days: 0,
     score_coverage_pct: 0,
     by_source: {} as Record<string, number>,
+    source_freshness: [] as Array<{
+      source: string;
+      active_listings: number;
+      seen_last_24h_pct: number;
+      seen_last_72h_pct: number;
+      new_last_24h: number;
+      new_last_7d: number;
+      last_seen_at: string | null;
+    }>,
   },
   deals: {
     high_score_listings: 0,
@@ -91,6 +100,7 @@ export default async function InternalAdminPage() {
     if (bi === -1) return -1;
     return ai - bi;
   });
+  const freshnessBySource = platform.listings.source_freshness ?? [];
 
   return (
     <main className="space-y-4 p-4 md:p-6">
@@ -138,6 +148,36 @@ export default async function InternalAdminPage() {
           {sourceCounts.length === 0 ? (
             <p className="text-sm text-brand-muted">No source breakdown available.</p>
           ) : null}
+        </div>
+        <div className="mt-3 overflow-auto rounded border border-brand-dark">
+          <table className="min-w-[780px] text-xs">
+            <thead className="bg-[#111111] uppercase tracking-wide text-brand-muted">
+              <tr>
+                <th className="px-2 py-2 text-left">Source</th>
+                <th className="px-2 py-2 text-left">Active</th>
+                <th className="px-2 py-2 text-left">Seen 24h %</th>
+                <th className="px-2 py-2 text-left">Seen 72h %</th>
+                <th className="px-2 py-2 text-left">New 24h</th>
+                <th className="px-2 py-2 text-left">New 7d</th>
+                <th className="px-2 py-2 text-left">Last Seen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {freshnessBySource.map((row) => (
+                <tr key={`fresh-${row.source}`} className="border-t border-brand-dark">
+                  <td className="px-2 py-2 font-semibold">{row.source}</td>
+                  <td className="px-2 py-2">{row.active_listings.toLocaleString()}</td>
+                  <td className="px-2 py-2">{row.seen_last_24h_pct.toFixed(1)}%</td>
+                  <td className="px-2 py-2">{row.seen_last_72h_pct.toFixed(1)}%</td>
+                  <td className="px-2 py-2">{row.new_last_24h.toLocaleString()}</td>
+                  <td className="px-2 py-2">{row.new_last_7d.toLocaleString()}</td>
+                  <td className="px-2 py-2 text-brand-muted">
+                    {row.last_seen_at ? new Date(row.last_seen_at).toLocaleString() : "n/a"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

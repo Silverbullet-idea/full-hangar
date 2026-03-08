@@ -49,7 +49,7 @@ function normalizeSource(value: unknown): string {
 }
 
 function inferSource(row: ListingRow): string {
-  const candidates = [row.source, row.source_site, row.listing_source];
+  const candidates = [row.source_site, row.listing_source, row.source];
   for (const candidate of candidates) {
     const normalized = normalizeSource(candidate);
     if (normalized !== "unknown") return normalized;

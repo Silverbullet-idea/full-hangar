@@ -49,7 +49,7 @@ function parseDomain(urlValue: unknown): string | null {
 }
 
 function inferSource(row: ListingRow): string {
-  const candidates = [row.source, row.source_site, row.listing_source];
+  const candidates = [row.source_site, row.listing_source, row.source];
   for (const candidate of candidates) {
     const normalized = normalizeSource(candidate);
     if (normalized !== "unknown") return normalized;
@@ -134,6 +134,13 @@ function percentile(values: number[], p: number): number {
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   return percentile(values, 0.5);
+}
+
+function rowTimestamp(value: unknown): number | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const ts = Date.parse(raw);
+  return Number.isFinite(ts) ? ts : null;
 }
 
 async function getActiveListings(): Promise<ListingRow[]> {
@@ -274,6 +281,10 @@ export async function computePlatformStats() {
   };
 
   const listingBySource: Record<string, number> = {};
+  const freshnessBySource = new Map<
+    string,
+    { active: number; seen24h: number; seen72h: number; new24h: number; new7d: number; latestSeenTs: number | null }
+  >();
   const makeCounts = new Map<string, number>();
   let withScore = 0;
   let withoutScore = 0;
@@ -291,6 +302,11 @@ export async function computePlatformStats() {
   for (const row of rows) {
     const source = inferSource(row);
     listingBySource[source] = (listingBySource[source] ?? 0) + 1;
+    if (!freshnessBySource.has(source)) {
+      freshnessBySource.set(source, { active: 0, seen24h: 0, seen72h: 0, new24h: 0, new7d: 0, latestSeenTs: null });
+    }
+    const freshness = freshnessBySource.get(source)!;
+    freshness.active += 1;
 
     const make = String(row.make ?? "").trim();
     if (make) makeCounts.set(make, (makeCounts.get(make) ?? 0) + 1);
@@ -318,6 +334,19 @@ export async function computePlatformStats() {
     if (created !== null) {
       if (now - created <= 7 * dayMs) added7 += 1;
       if (now - created <= 30 * dayMs) added30 += 1;
+      if (now - created <= 1 * dayMs) freshness.new24h += 1;
+      if (now - created <= 7 * dayMs) freshness.new7d += 1;
+    }
+
+    const seenTs =
+      rowTimestamp(row.last_seen_date) ??
+      rowTimestamp(row.updated_at) ??
+      rowTimestamp(row.scraped_at) ??
+      rowTimestamp(row.created_at);
+    if (seenTs !== null) {
+      if (now - seenTs <= 1 * dayMs) freshness.seen24h += 1;
+      if (now - seenTs <= 3 * dayMs) freshness.seen72h += 1;
+      freshness.latestSeenTs = freshness.latestSeenTs === null ? seenTs : Math.max(freshness.latestSeenTs, seenTs);
     }
 
     if (row.price_reduced === true) {
@@ -334,6 +363,17 @@ export async function computePlatformStats() {
 
   const scoreCoveragePct = rows.length > 0 ? Number(((withScore / rows.length) * 100).toFixed(1)) : 0;
   const avgDaysOnMarket = avgDomCount > 0 ? Number((avgDomNumerator / avgDomCount).toFixed(1)) : 0;
+  const sourceFreshness = Array.from(freshnessBySource.entries())
+    .map(([source, stats]) => ({
+      source,
+      active_listings: stats.active,
+      seen_last_24h_pct: stats.active > 0 ? Number(((stats.seen24h / stats.active) * 100).toFixed(1)) : 0,
+      seen_last_72h_pct: stats.active > 0 ? Number(((stats.seen72h / stats.active) * 100).toFixed(1)) : 0,
+      new_last_24h: stats.new24h,
+      new_last_7d: stats.new7d,
+      last_seen_at: stats.latestSeenTs ? new Date(stats.latestSeenTs).toISOString() : null,
+    }))
+    .sort((a, b) => b.active_listings - a.active_listings);
 
   const [ownershipChanges30d, ebaySoldRecords, faaRecordsLoaded, engineTboRecords, propTboRecords, avionicsCatalogUnits] =
     await Promise.all([
@@ -354,6 +394,7 @@ export async function computePlatformStats() {
       without_score: withoutScore,
       score_coverage_pct: scoreCoveragePct,
       by_source: listingBySource,
+      source_freshness: sourceFreshness,
       by_make: topMakes,
       price_distribution: {
         under_50k: under50k,
