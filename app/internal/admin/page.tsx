@@ -10,13 +10,72 @@ function statValue(value: number | string) {
   return value;
 }
 
+const EMPTY_PLATFORM = {
+  listings: {
+    total_active: 0,
+    added_last_7_days: 0,
+    score_coverage_pct: 0,
+  },
+  deals: {
+    high_score_listings: 0,
+    price_reductions_last_7d: 0,
+  },
+  market_intelligence: {
+    ownership_changes_detected_30d: 0,
+    faa_records_loaded: 0,
+  },
+};
+
+const EMPTY_DATA_QUALITY = {
+  overall_completeness_pct: 0,
+  completeness_distribution: {
+    excellent: 0,
+    good: 0,
+    fair: 0,
+    sparse: 0,
+  },
+  field_stats: [] as Array<{ field: string; category: string; fill_pct: number }>,
+};
+
+const EMPTY_BUYER = {
+  deal_patterns: {
+    aging_high_value: [] as Array<{ listing_id: string; year: number; make: string; model: string; price: number }>,
+    price_drops: [] as Array<{ listing_id: string; year: number; make: string; model: string; reduction_pct: number }>,
+  },
+};
+
+const EMPTY_INVITES = {
+  invites: [] as Array<Record<string, unknown>>,
+  stats: {
+    currently_active_sessions: 0,
+  },
+};
+
 export default async function InternalAdminPage() {
-  const [platform, dataQuality, buyer, invites] = await Promise.all([
+  const [platformResult, qualityResult, buyerResult, invitesResult] = await Promise.allSettled([
     computePlatformStats(),
     computeDataQuality(),
     computeBuyerIntelligence(),
     listInvitesWithSessions(),
   ]);
+
+  if (platformResult.status === "rejected") {
+    console.error("[admin] computePlatformStats failed", platformResult.reason);
+  }
+  if (qualityResult.status === "rejected") {
+    console.error("[admin] computeDataQuality failed", qualityResult.reason);
+  }
+  if (buyerResult.status === "rejected") {
+    console.error("[admin] computeBuyerIntelligence failed", buyerResult.reason);
+  }
+  if (invitesResult.status === "rejected") {
+    console.error("[admin] listInvitesWithSessions failed", invitesResult.reason);
+  }
+
+  const platform = platformResult.status === "fulfilled" ? platformResult.value : EMPTY_PLATFORM;
+  const dataQuality = qualityResult.status === "fulfilled" ? qualityResult.value : EMPTY_DATA_QUALITY;
+  const buyer = buyerResult.status === "fulfilled" ? buyerResult.value : EMPTY_BUYER;
+  const invites = invitesResult.status === "fulfilled" ? invitesResult.value : EMPTY_INVITES;
   const inviteRows = invites.invites as Array<Record<string, unknown>>;
 
   const avgValueScore = platform.listings.total_active

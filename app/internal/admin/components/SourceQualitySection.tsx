@@ -11,13 +11,35 @@ type SourceQualityRow = {
   pct_with_smoh: number;
   pct_with_engine_model: number;
   pct_with_location: number;
+  critical_completeness_pct: number;
   max_completeness_pct: number;
   avg_score: number | null;
+  avg_full_completeness_pct: number;
+  avg_critical_completeness_pct: number;
   tiers: {
     pct_90_100: number;
     pct_70_89: number;
     pct_under_70: number;
   };
+  trend: {
+    added_last_7d: number;
+    added_prev_7d: number;
+    added_delta_pct: number | null;
+    full_completeness_last_7d_pct: number | null;
+    full_completeness_prev_7d_pct: number | null;
+    full_completeness_delta_pct: number | null;
+    avg_score_last_7d: number | null;
+    avg_score_prev_7d: number | null;
+    avg_score_delta: number | null;
+  };
+  freshness: {
+    seen_last_24h_pct: number;
+    seen_last_72h_pct: number;
+    seen_last_7d_pct: number;
+    median_days_since_seen: number;
+  };
+  source_health_score: number;
+  alerts: Array<{ level: "critical" | "warning"; label: string; detail: string }>;
   field_coverage: Record<string, number>;
   unknown_domains: Array<{ domain: string; count: number }>;
 };
@@ -25,6 +47,7 @@ type SourceQualityRow = {
 type SourceQualityPayload = {
   computed_at: string;
   completeness_fields: string[];
+  critical_fields: string[];
   sources: SourceQualityRow[];
 };
 
@@ -41,6 +64,29 @@ function heatmapCellClass(value: number) {
 function sourceLabel(source: string) {
   if (source === "unknown") return "unknown";
   return source;
+}
+
+function fmtDelta(value: number | null, suffix = "") {
+  if (value === null) return "n/a";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(1)}${suffix}`;
+}
+
+function deltaClass(value: number | null) {
+  if (value === null) return "text-brand-muted";
+  const positive = value > 0;
+  return positive ? "text-emerald-500" : value < 0 ? "text-brand-burn" : "text-brand-muted";
+}
+
+function healthClass(score: number) {
+  if (score >= 80) return "text-emerald-500";
+  if (score >= 65) return "text-brand-orange";
+  return "text-brand-burn";
+}
+
+function alertBadgeClass(level: "critical" | "warning") {
+  if (level === "critical") return "border-brand-burn text-brand-burn";
+  return "border-brand-orange text-brand-orange";
 }
 
 export function SourceQualitySection() {
@@ -64,6 +110,7 @@ export function SourceQualitySection() {
           setPayload({
             computed_at: String(body.computed_at ?? ""),
             completeness_fields: Array.isArray(body.completeness_fields) ? body.completeness_fields : [],
+            critical_fields: Array.isArray(body.critical_fields) ? body.critical_fields : [],
             sources: Array.isArray(body.sources) ? (body.sources as SourceQualityRow[]) : [],
           });
         }
@@ -82,6 +129,8 @@ export function SourceQualitySection() {
 
   const rows = useMemo(() => payload?.sources ?? [], [payload]);
   const fields = useMemo(() => payload?.completeness_fields ?? [], [payload]);
+  const criticalFields = useMemo(() => payload?.critical_fields ?? [], [payload]);
+  const rankedRows = useMemo(() => [...rows].sort((a, b) => b.source_health_score - a.source_health_score), [rows]);
 
   if (loading) {
     return (
@@ -110,12 +159,43 @@ export function SourceQualitySection() {
         <p className="mt-1 text-xs text-brand-muted">
           Live source-level inventory and completeness health. Updated: {payload?.computed_at ? new Date(payload.computed_at).toLocaleString() : "n/a"}
         </p>
+        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          {rankedRows.map((row) => (
+            <div key={`${row.source}-health`} className="rounded border border-brand-dark p-2 text-xs">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{sourceLabel(row.source)}</p>
+                <p className={`text-sm font-bold ${healthClass(row.source_health_score)}`}>{row.source_health_score.toFixed(1)}</p>
+              </div>
+              <p className="mt-1 text-brand-muted">Health score</p>
+              <div className="mt-1 space-y-0.5 text-brand-muted">
+                <p>Critical avg: {fmtPct(row.avg_critical_completeness_pct)}</p>
+                <p>Full avg: {fmtPct(row.avg_full_completeness_pct)}</p>
+                <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
+              </div>
+              {row.alerts.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {row.alerts.slice(0, 2).map((alert, index) => (
+                    <span key={`${row.source}-alert-${index}`} className={`rounded border px-1.5 py-0.5 text-[10px] ${alertBadgeClass(alert.level)}`}>
+                      {alert.label}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-[10px] text-emerald-500">No active alerts</p>
+              )}
+            </div>
+          ))}
+        </div>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
-          <table className="min-w-[1100px] text-sm">
+          <table className="min-w-[1650px] text-sm">
             <thead className="sticky top-0 bg-[#111111] text-left text-xs uppercase tracking-wide text-brand-muted">
               <tr>
                 <th className="px-3 py-2">Source</th>
                 <th className="px-3 py-2">Active Listings</th>
+                <th className="px-3 py-2">Health Score</th>
+                <th className="px-3 py-2">Critical 100%</th>
+                <th className="px-3 py-2">Avg Critical</th>
+                <th className="px-3 py-2">Avg Full</th>
                 <th className="px-3 py-2">% with Price</th>
                 <th className="px-3 py-2">% with N-Number</th>
                 <th className="px-3 py-2">% with Total Time</th>
@@ -123,6 +203,9 @@ export function SourceQualitySection() {
                 <th className="px-3 py-2">% with Engine Model</th>
                 <th className="px-3 py-2">% with Location</th>
                 <th className="px-3 py-2">Max Completeness %</th>
+                <th className="px-3 py-2">7d Added Δ</th>
+                <th className="px-3 py-2">7d Full Δ</th>
+                <th className="px-3 py-2">7d Score Δ</th>
                 <th className="px-3 py-2">Avg Score</th>
               </tr>
             </thead>
@@ -143,8 +226,21 @@ export function SourceQualitySection() {
                         </ul>
                       </details>
                     ) : null}
+                    {row.alerts.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {row.alerts.map((alert, index) => (
+                          <span key={`${row.source}-table-alert-${index}`} title={alert.detail} className={`rounded border px-1.5 py-0.5 text-[10px] ${alertBadgeClass(alert.level)}`}>
+                            {alert.label}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2">{row.active_listings.toLocaleString()}</td>
+                  <td className={`px-3 py-2 font-semibold ${healthClass(row.source_health_score)}`}>{row.source_health_score.toFixed(1)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.critical_completeness_pct)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.avg_critical_completeness_pct)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.avg_full_completeness_pct)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_price)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_n_number)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_total_time)}</td>
@@ -152,6 +248,9 @@ export function SourceQualitySection() {
                   <td className="px-3 py-2">{fmtPct(row.pct_with_engine_model)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_location)}</td>
                   <td className="px-3 py-2 text-brand-orange">{fmtPct(row.max_completeness_pct)}</td>
+                  <td className={`px-3 py-2 ${deltaClass(row.trend.added_delta_pct)}`}>{fmtDelta(row.trend.added_delta_pct, "%")}</td>
+                  <td className={`px-3 py-2 ${deltaClass(row.trend.full_completeness_delta_pct)}`}>{fmtDelta(row.trend.full_completeness_delta_pct, " pts")}</td>
+                  <td className={`px-3 py-2 ${deltaClass(row.trend.avg_score_delta)}`}>{fmtDelta(row.trend.avg_score_delta)}</td>
                   <td className="px-3 py-2">{row.avg_score === null ? "n/a" : row.avg_score.toFixed(1)}</td>
                 </tr>
               ))}
@@ -162,15 +261,20 @@ export function SourceQualitySection() {
 
       <article className="rounded border border-brand-dark bg-card-bg p-4">
         <h3 className="text-base font-semibold">Completeness Tier Distribution by Source</h3>
-        <p className="mt-1 text-xs text-brand-muted">Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%.</p>
+        <p className="mt-1 text-xs text-brand-muted">
+          Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%. Freshness and weekly deltas included for quick scraper health triage.
+        </p>
         <div className="mt-3 space-y-2">
           {rows.map((row) => (
-            <div key={`${row.source}-tiers`} className="grid grid-cols-[170px_1fr_120px] items-center gap-3 text-xs">
+            <div key={`${row.source}-tiers`} className="grid grid-cols-[140px_1fr_210px_150px] items-center gap-3 text-xs">
               <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
               <div className="flex h-3 overflow-hidden rounded bg-[#111111]">
                 <div className="bg-emerald-600" style={{ width: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
                 <div className="bg-brand-orange" style={{ width: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
                 <div className="bg-brand-burn" style={{ width: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
+              </div>
+              <div className="text-brand-muted">
+                Seen 24h: {fmtPct(row.freshness.seen_last_24h_pct)} | Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}
               </div>
               <div className="text-right text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
             </div>
@@ -180,7 +284,9 @@ export function SourceQualitySection() {
 
       <article className="rounded border border-brand-dark bg-card-bg p-4">
         <h3 className="text-base font-semibold">Field Coverage by Source</h3>
-        <p className="mt-1 text-xs text-brand-muted">Per-field fill percentage aligned to the 15-field completeness definition.</p>
+        <p className="mt-1 text-xs text-brand-muted">
+          Per-field fill percentage aligned to the 15-field completeness definition. Critical fields: {criticalFields.join(", ")}.
+        </p>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
           <table className="min-w-[1250px] text-xs">
             <thead className="sticky top-0 bg-[#111111] uppercase tracking-wide text-brand-muted">

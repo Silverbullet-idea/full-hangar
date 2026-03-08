@@ -22,6 +22,8 @@ const COMPLETENESS_FIELDS = [
   "aircraft_type",
 ] as const;
 
+const CRITICAL_COMPLETENESS_FIELDS = ["year", "make", "model", "asking_price", "n_number", "total_time_airframe", "location_raw"] as const;
+
 const SOURCE_ORDER = ["tradaplane", "controller", "barnstormers", "aso", "aerotrader", "afs", "globalair", "avbuyer"];
 
 function normalizeSource(value: unknown): string {
@@ -59,6 +61,34 @@ function toPercent(numerator: number, denominator: number): number {
   return Number(((numerator / denominator) * 100).toFixed(1));
 }
 
+function parseTimestamp(value: unknown): number | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const ts = Date.parse(raw);
+  return Number.isFinite(ts) ? ts : null;
+}
+
+function avg(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+  return sorted[mid];
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function formatDelta(value: number): number {
+  return Number(value.toFixed(1));
+}
+
 function parseDomain(sourceUrl: unknown): string | null {
   const raw = String(sourceUrl ?? "").trim();
   if (!raw) return null;
@@ -80,7 +110,7 @@ export async function GET(request: NextRequest) {
     const result = await supabase
       .from("aircraft_listings")
       .select(
-        "source,source_url,value_score,asking_price,n_number,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type"
+        "source,source_url,value_score,asking_price,n_number,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type,created_at,updated_at,last_seen_date,scraped_at,first_seen_date,listing_date"
       )
       .eq("is_active", true)
       .limit(15000);
@@ -90,6 +120,10 @@ export async function GET(request: NextRequest) {
     }
 
     const rows = (result.data ?? []) as ListingRow[];
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const recent7Start = now - 7 * dayMs;
+    const prev7Start = now - 14 * dayMs;
     const bySource = new Map<string, ListingRow[]>();
     for (const row of rows) {
       const source = normalizeSource(row.source);
@@ -108,11 +142,24 @@ export async function GET(request: NextRequest) {
         let withEngineModel = 0;
         let withLocation = 0;
         let maxComplete = 0;
+        let criticalComplete = 0;
         let scoreCount = 0;
         let scoreTotal = 0;
         let tierHigh = 0;
         let tierMid = 0;
         let tierLow = 0;
+        let fullCompletenessTotal = 0;
+        let criticalCompletenessTotal = 0;
+        const scoreRecent7: number[] = [];
+        const scorePrev7: number[] = [];
+        const fullRecent7: number[] = [];
+        const fullPrev7: number[] = [];
+        let addedRecent7 = 0;
+        let addedPrev7 = 0;
+        let seen24h = 0;
+        let seen72h = 0;
+        let seen7d = 0;
+        const seenAgeDays: number[] = [];
         const unknownDomainCounts = new Map<string, number>();
         const fieldCounts: Record<string, number> = {};
         for (const field of COMPLETENESS_FIELDS) fieldCounts[field] = 0;
@@ -126,22 +173,60 @@ export async function GET(request: NextRequest) {
           if (hasValue(row.location_raw)) withLocation += 1;
 
           let filled = 0;
+          let criticalFilled = 0;
           for (const field of COMPLETENESS_FIELDS) {
             if (hasValue(row[field])) {
               fieldCounts[field] += 1;
               filled += 1;
             }
           }
+          for (const field of CRITICAL_COMPLETENESS_FIELDS) {
+            if (hasValue(row[field])) criticalFilled += 1;
+          }
           const completenessPct = (filled / COMPLETENESS_FIELDS.length) * 100;
+          const criticalCompletenessPct = (criticalFilled / CRITICAL_COMPLETENESS_FIELDS.length) * 100;
+          fullCompletenessTotal += completenessPct;
+          criticalCompletenessTotal += criticalCompletenessPct;
           if (completenessPct >= 90) tierHigh += 1;
           else if (completenessPct >= 70) tierMid += 1;
           else tierLow += 1;
           if (filled === COMPLETENESS_FIELDS.length) maxComplete += 1;
+          if (criticalFilled === CRITICAL_COMPLETENESS_FIELDS.length) criticalComplete += 1;
 
           const score = asNumber(row.value_score);
           if (score !== null) {
             scoreCount += 1;
             scoreTotal += score;
+          }
+
+          const createdAtTs =
+            parseTimestamp(row.first_seen_date) ??
+            parseTimestamp(row.created_at) ??
+            parseTimestamp(row.listing_date) ??
+            parseTimestamp(row.scraped_at);
+          if (createdAtTs !== null) {
+            if (createdAtTs >= recent7Start) {
+              addedRecent7 += 1;
+              fullRecent7.push(completenessPct);
+              if (score !== null) scoreRecent7.push(score);
+            } else if (createdAtTs >= prev7Start && createdAtTs < recent7Start) {
+              addedPrev7 += 1;
+              fullPrev7.push(completenessPct);
+              if (score !== null) scorePrev7.push(score);
+            }
+          }
+
+          const seenTs =
+            parseTimestamp(row.last_seen_date) ??
+            parseTimestamp(row.updated_at) ??
+            parseTimestamp(row.scraped_at) ??
+            parseTimestamp(row.created_at);
+          if (seenTs !== null) {
+            const ageMs = now - seenTs;
+            if (ageMs <= 1 * dayMs) seen24h += 1;
+            if (ageMs <= 3 * dayMs) seen72h += 1;
+            if (ageMs <= 7 * dayMs) seen7d += 1;
+            if (ageMs >= 0) seenAgeDays.push(ageMs / dayMs);
           }
 
           if (source === "unknown") {
@@ -162,6 +247,70 @@ export async function GET(request: NextRequest) {
           fieldCoverage[field] = toPercent(fieldCounts[field], total);
         }
 
+        const avgFullCompletenessPct = total > 0 ? Number((fullCompletenessTotal / total).toFixed(1)) : 0;
+        const avgCriticalCompletenessPct = total > 0 ? Number((criticalCompletenessTotal / total).toFixed(1)) : 0;
+        const scoreAvgRecent7 = scoreRecent7.length > 0 ? Number(avg(scoreRecent7).toFixed(1)) : null;
+        const scoreAvgPrev7 = scorePrev7.length > 0 ? Number(avg(scorePrev7).toFixed(1)) : null;
+        const fullAvgRecent7 = fullRecent7.length > 0 ? Number(avg(fullRecent7).toFixed(1)) : null;
+        const fullAvgPrev7 = fullPrev7.length > 0 ? Number(avg(fullPrev7).toFixed(1)) : null;
+
+        const addedDeltaPct = addedPrev7 > 0 ? formatDelta(((addedRecent7 - addedPrev7) / addedPrev7) * 100) : null;
+        const fullCompletenessDeltaPct =
+          fullAvgRecent7 !== null && fullAvgPrev7 !== null ? formatDelta(fullAvgRecent7 - fullAvgPrev7) : null;
+        const scoreDelta =
+          scoreAvgRecent7 !== null && scoreAvgPrev7 !== null ? formatDelta(scoreAvgRecent7 - scoreAvgPrev7) : null;
+
+        const freshnessSeen24h = toPercent(seen24h, total);
+        const freshnessSeen72h = toPercent(seen72h, total);
+        const freshnessSeen7d = toPercent(seen7d, total);
+        const medianDaysSinceSeen = Number(median(seenAgeDays).toFixed(1));
+
+        const avgScoreValue = scoreCount > 0 ? Number((scoreTotal / scoreCount).toFixed(1)) : null;
+        const healthScoreRaw =
+          avgCriticalCompletenessPct * 0.35 +
+          avgFullCompletenessPct * 0.25 +
+          freshnessSeen7d * 0.2 +
+          toPercent(withPrice, total) * 0.1 +
+          (avgScoreValue ?? 50) * 0.1;
+        const healthScore = Number(clamp(healthScoreRaw, 0, 100).toFixed(1));
+
+        const alerts: Array<{ level: "critical" | "warning"; label: string; detail: string }> = [];
+        if (avgCriticalCompletenessPct < 65) {
+          alerts.push({
+            level: "critical",
+            label: "Critical fields weak",
+            detail: `Critical completeness is ${avgCriticalCompletenessPct.toFixed(1)}%.`,
+          });
+        }
+        if (freshnessSeen72h < 35) {
+          alerts.push({
+            level: "warning",
+            label: "Refresh lag",
+            detail: `Only ${freshnessSeen72h.toFixed(1)}% seen in last 72h.`,
+          });
+        }
+        if (fullCompletenessDeltaPct !== null && fullCompletenessDeltaPct <= -5) {
+          alerts.push({
+            level: "warning",
+            label: "Completeness down",
+            detail: `7d full completeness delta is ${fullCompletenessDeltaPct.toFixed(1)} pts.`,
+          });
+        }
+        if (addedPrev7 >= 20 && addedDeltaPct !== null && addedDeltaPct <= -30) {
+          alerts.push({
+            level: "warning",
+            label: "Volume drop",
+            detail: `Added listings changed ${addedDeltaPct.toFixed(1)}% vs previous week.`,
+          });
+        }
+        if (source === "unknown") {
+          alerts.push({
+            level: "warning",
+            label: "Unknown source needs mapping",
+            detail: "Review top source_url domains to classify this source.",
+          });
+        }
+
         return {
           source,
           active_listings: total,
@@ -171,13 +320,35 @@ export async function GET(request: NextRequest) {
           pct_with_smoh: toPercent(withSmoh, total),
           pct_with_engine_model: toPercent(withEngineModel, total),
           pct_with_location: toPercent(withLocation, total),
+          critical_completeness_pct: toPercent(criticalComplete, total),
           max_completeness_pct: toPercent(maxComplete, total),
-          avg_score: scoreCount > 0 ? Number((scoreTotal / scoreCount).toFixed(1)) : null,
+          avg_score: avgScoreValue,
+          avg_full_completeness_pct: avgFullCompletenessPct,
+          avg_critical_completeness_pct: avgCriticalCompletenessPct,
           tiers: {
             pct_90_100: toPercent(tierHigh, total),
             pct_70_89: toPercent(tierMid, total),
             pct_under_70: toPercent(tierLow, total),
           },
+          trend: {
+            added_last_7d: addedRecent7,
+            added_prev_7d: addedPrev7,
+            added_delta_pct: addedDeltaPct,
+            full_completeness_last_7d_pct: fullAvgRecent7,
+            full_completeness_prev_7d_pct: fullAvgPrev7,
+            full_completeness_delta_pct: fullCompletenessDeltaPct,
+            avg_score_last_7d: scoreAvgRecent7,
+            avg_score_prev_7d: scoreAvgPrev7,
+            avg_score_delta: scoreDelta,
+          },
+          freshness: {
+            seen_last_24h_pct: freshnessSeen24h,
+            seen_last_72h_pct: freshnessSeen72h,
+            seen_last_7d_pct: freshnessSeen7d,
+            median_days_since_seen: medianDaysSinceSeen,
+          },
+          source_health_score: healthScore,
+          alerts,
           field_coverage: fieldCoverage,
           unknown_domains: unknownDomains,
         };
@@ -194,6 +365,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       computed_at: new Date().toISOString(),
       completeness_fields: COMPLETENESS_FIELDS,
+      critical_fields: CRITICAL_COMPLETENESS_FIELDS,
       sources,
     });
   } catch (error) {
