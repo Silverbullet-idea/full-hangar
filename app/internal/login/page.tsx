@@ -35,7 +35,7 @@ export default function InternalLoginPage() {
         return;
       }
 
-      router.push("/internal/diagnostics");
+      router.push("/internal/admin");
       router.refresh();
     } catch {
       setError("Unable to sign in right now. Please try again.");

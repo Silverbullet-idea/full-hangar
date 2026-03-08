@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const sessionValue = await createInternalSessionValue(internalSessionSecret);
   const response = NextResponse.redirect(
-    new URL("/internal/diagnostics", request.url)
+    new URL("/internal/admin", request.url)
   );
 
   response.cookies.set({
