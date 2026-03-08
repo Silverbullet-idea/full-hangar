@@ -254,6 +254,13 @@ async function safeCount(table: string): Promise<number> {
   return result.count;
 }
 
+async function safeCountByColumn(table: string, column: string): Promise<number> {
+  const supabase = createPrivilegedServerClient();
+  const result = await supabase.from(table).select(column, { count: "exact", head: true });
+  if (result.error || typeof result.count !== "number") return 0;
+  return result.count;
+}
+
 export async function computePlatformStats() {
   const rows = await getActiveListings();
   const now = Date.now();
@@ -332,7 +339,7 @@ export async function computePlatformStats() {
     await Promise.all([
       safeCount("detected_ownership_changes"),
       safeCount("ebay_sold_components"),
-      safeCount("faa_reference_aircraft"),
+      safeCountByColumn("faa_aircraft_ref", "mfr_mdl_code"),
       safeCount("engine_tbo_reference"),
       safeCount("prop_tbo_reference"),
       safeCount("avionics_catalog"),
