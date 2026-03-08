@@ -136,7 +136,7 @@ export default function ListingCard({
           {imageNode}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <div className="truncate text-lg font-semibold text-white">{titleText}</div>
+              <div className="truncate text-lg font-semibold text-white" suppressHydrationWarning>{titleText}</div>
               {ownershipBadgeText ? (
                 <span className="shrink-0 rounded border border-[#FF9900] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold text-[#FF9900]">
                   {ownershipBadgeText}
@@ -148,7 +148,7 @@ export default function ListingCard({
                 </span>
               ) : null}
             </div>
-            <div className="mt-1 text-sm text-brand-muted">{locationText}</div>
+            <div className="mt-1 text-sm text-brand-muted" suppressHydrationWarning>{locationText}</div>
             {renderSpecTable(listingKey, specRows)}
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function ListingCard({
             {imageNode}
             <div className="mt-1 min-w-0">
               <div className="flex items-center gap-1">
-                <div className="truncate text-sm font-semibold text-white">{titleText}</div>
+                <div className="truncate text-sm font-semibold text-white" suppressHydrationWarning>{titleText}</div>
                 {ownershipBadgeText ? (
                   <span className="shrink-0 rounded border border-[#FF9900] bg-[#141922] px-1 py-0.5 text-[9px] font-semibold text-[#FF9900]">
                     {ownershipBadgeText}
@@ -179,7 +179,7 @@ export default function ListingCard({
                   </span>
                 ) : null}
               </div>
-              <div className="truncate text-[11px] text-brand-muted">{locationText}</div>
+              <div className="truncate text-[11px] text-brand-muted" suppressHydrationWarning>{locationText}</div>
             </div>
           </div>
           <div className="min-w-0 flex-1">
@@ -197,7 +197,7 @@ export default function ListingCard({
     >
       {imageNode}
       <div className="flex items-center gap-2">
-        <div className="font-semibold text-white">{titleText}</div>
+        <div className="font-semibold text-white" suppressHydrationWarning>{titleText}</div>
         {ownershipBadgeText ? (
           <span className="shrink-0 rounded border border-[#FF9900] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold text-[#FF9900]">
             {ownershipBadgeText}
@@ -209,7 +209,7 @@ export default function ListingCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-1 text-sm text-brand-muted">{locationText}</div>
+      <div className="mt-1 text-sm text-brand-muted" suppressHydrationWarning>{locationText}</div>
       {renderSpecTable(listingKey, specRows)}
     </a>
   )
