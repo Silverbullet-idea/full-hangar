@@ -264,19 +264,24 @@ export function SourceQualitySection() {
         <p className="mt-1 text-xs text-brand-muted">
           Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%. Freshness and weekly deltas included for quick scraper health triage.
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((row) => (
-            <div key={`${row.source}-tiers`} className="grid grid-cols-[140px_1fr_210px_150px] items-center gap-3 text-xs">
-              <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
-              <div className="flex h-3 overflow-hidden rounded bg-[#111111]">
-                <div className="bg-emerald-600" style={{ width: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
-                <div className="bg-brand-orange" style={{ width: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
-                <div className="bg-brand-burn" style={{ width: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
+            <div key={`${row.source}-tiers`} className="rounded border border-brand-dark p-3 text-xs">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
+                <div className="text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
               </div>
-              <div className="text-brand-muted">
-                Seen 24h: {fmtPct(row.freshness.seen_last_24h_pct)} | Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}
+              <div className="mx-auto flex h-32 w-8 flex-col-reverse overflow-hidden rounded bg-[#111111]">
+                <div className="bg-brand-burn" style={{ height: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
+                <div className="bg-brand-orange" style={{ height: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
+                <div className="bg-emerald-600" style={{ height: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
               </div>
-              <div className="text-right text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
+              <div className="mt-2 space-y-0.5 text-brand-muted">
+                <p>90-100: {fmtPct(row.tiers.pct_90_100)}</p>
+                <p>70-89: {fmtPct(row.tiers.pct_70_89)}</p>
+                <p>&lt;70: {fmtPct(row.tiers.pct_under_70)}</p>
+                <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -285,25 +290,25 @@ export function SourceQualitySection() {
       <article className="rounded border border-brand-dark bg-card-bg p-4">
         <h3 className="text-base font-semibold">Field Coverage by Source</h3>
         <p className="mt-1 text-xs text-brand-muted">
-          Per-field fill percentage aligned to the 15-field completeness definition. Critical fields: {criticalFields.join(", ")}.
+          Per-field fill percentage aligned to the 15-field completeness definition (active listings). Critical fields: {criticalFields.join(", ")}.
         </p>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
-          <table className="min-w-[1250px] text-xs">
+          <table className="min-w-full text-xs">
             <thead className="sticky top-0 bg-[#111111] uppercase tracking-wide text-brand-muted">
               <tr>
-                <th className="px-2 py-2 text-left">Source</th>
-                {fields.map((field) => (
-                  <th key={field} className="px-2 py-2 text-left">
-                    {field}
+                <th className="px-2 py-2 text-left">Field</th>
+                {rows.map((row) => (
+                  <th key={row.source} className="px-2 py-2 text-left">
+                    {sourceLabel(row.source)}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={`${row.source}-heat`} className="border-t border-brand-dark">
-                  <td className="px-2 py-2 font-semibold">{sourceLabel(row.source)}</td>
-                  {fields.map((field) => {
+              {fields.map((field) => (
+                <tr key={`field-row-${field}`} className="border-t border-brand-dark">
+                  <td className="px-2 py-2 font-semibold">{field}</td>
+                  {rows.map((row) => {
                     const pct = row.field_coverage[field] ?? 0;
                     return (
                       <td key={`${row.source}-${field}`} className="px-2 py-2">
