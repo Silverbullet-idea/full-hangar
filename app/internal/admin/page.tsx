@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { computeBuyerIntelligence, computeDataQuality, computePlatformStats, listInvitesWithSessions } from "@/lib/admin/analytics";
-import { CompletenessDonut } from "./components/AdminCharts";
 import { SourceQualitySection } from "./components/SourceQualitySection";
 
 export const dynamic = "force-dynamic";
@@ -181,15 +180,8 @@ export default async function InternalAdminPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SourceQualitySection />
-        </div>
-        <article className="rounded border border-brand-dark bg-card-bg p-4">
-          <h2 className="mb-2 text-lg font-semibold">Completeness Distribution</h2>
-          <CompletenessDonut distribution={dataQuality.completeness_distribution} />
-          <p className="text-xs text-brand-muted">Overall completeness: {dataQuality.overall_completeness_pct}%</p>
-        </article>
+      <section>
+        <SourceQualitySection />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
