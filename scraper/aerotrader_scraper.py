@@ -30,12 +30,26 @@ try:
     from schema import validate_listing
     from scraper_base import safe_upsert_with_fallback, setup_logging, get_supabase
 except ImportError:  # pragma: no cover
-    from .config import get_manufacturer_tier, normalize_manufacturer
-    from .description_parser import parse_description
-    from .env_check import env_check
-    from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file, seen_within_hours
-    from .schema import validate_listing
-    from .scraper_base import safe_upsert_with_fallback, setup_logging, get_supabase
+    try:
+        from .config import get_manufacturer_tier, normalize_manufacturer
+        from .description_parser import parse_description
+        from .env_check import env_check
+        from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file, seen_within_hours
+        from .schema import validate_listing
+        from .scraper_base import safe_upsert_with_fallback, setup_logging, get_supabase
+    except ImportError:
+        # Keep media-refresh workflows runnable even if manufacturer config is unavailable.
+        from .description_parser import parse_description
+        from .env_check import env_check
+        from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file, seen_within_hours
+        from .schema import validate_listing
+        from .scraper_base import safe_upsert_with_fallback, setup_logging, get_supabase
+
+        def normalize_manufacturer(value: Any) -> str:
+            return str(value or "").strip()
+
+        def get_manufacturer_tier(_: Any) -> None:
+            return None
 
 load_dotenv()
 

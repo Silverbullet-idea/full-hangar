@@ -58,6 +58,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Non-aircraft detection/hide workflow implemented and operationalized.
 - FAA enrichment + ownership-transfer feed + internal recent-sales wiring completed.
 - Internal admin APIs added for data quality, platform stats, buyer intelligence, and invite management.
+- Listing media resilience hardened (URL validation, gallery failover, proxy-safe placeholders, integrity audit tooling).
 
 ### Intelligence and Scoring
 
@@ -159,6 +160,7 @@ npm run pipeline:faa-monitor
 # Intelligence / audits
 npm run pipeline:avionics:audit
 npm run pipeline:media:coverage:active
+npm run pipeline:media:integrity
 .venv312\Scripts\python.exe scraper\validate_scores.py
 ```
 

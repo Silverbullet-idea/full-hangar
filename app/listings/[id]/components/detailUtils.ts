@@ -69,28 +69,34 @@ export function buildPriceHistoryChart(points: PriceHistoryPoint[]): {
 
 export function collectImageUrls(primaryImageUrl: unknown, raw: UnknownRow): string[] {
   const values: string[] = []
-  if (typeof primaryImageUrl === "string" && primaryImageUrl.trim()) {
-    values.push(primaryImageUrl.trim())
+  const pushIfValidImageUrl = (candidate: unknown) => {
+    if (typeof candidate !== "string" || !candidate.trim()) return
+    const normalized = toAbsoluteHttpUrl(candidate)
+    if (normalized) values.push(normalized)
   }
+
+  pushIfValidImageUrl(primaryImageUrl)
   const fromRaw = raw?.image_urls
   if (Array.isArray(fromRaw)) {
     for (const value of fromRaw) {
-      if (typeof value === "string" && value.trim()) {
-        values.push(value.trim())
-      }
+      pushIfValidImageUrl(value)
     }
   } else if (typeof fromRaw === "string" && fromRaw.trim()) {
     try {
       const parsed = JSON.parse(fromRaw)
       if (Array.isArray(parsed)) {
         for (const value of parsed) {
-          if (typeof value === "string" && value.trim()) {
-            values.push(value.trim())
-          }
+          pushIfValidImageUrl(value)
         }
       }
     } catch {
-      values.push(fromRaw.trim())
+      if (fromRaw.includes(",")) {
+        for (const value of fromRaw.split(",")) {
+          pushIfValidImageUrl(value)
+        }
+      } else {
+        pushIfValidImageUrl(fromRaw)
+      }
     }
   }
   return Array.from(new Set(values))
@@ -241,6 +247,22 @@ export function toProxyImageUrl(url: string): string {
   return `/api/image-proxy?url=${encodeURIComponent(url)}`
 }
 
+export function buildListingFallbackImagePath(input: {
+  source: string | null | undefined
+  sourceId: string | null | undefined
+  title: string | null | undefined
+}): string {
+  const params = new URLSearchParams()
+  const source = String(input.source ?? "").trim()
+  const sourceId = String(input.sourceId ?? "").trim()
+  const title = String(input.title ?? "").trim()
+  if (source) params.set("source", source)
+  if (sourceId) params.set("sourceId", sourceId)
+  if (title) params.set("title", title)
+  const query = params.toString()
+  return query ? `/api/listing-fallback-image?${query}` : "/api/listing-fallback-image"
+}
+
 export function safeDisplay(
   value: string | number | null | undefined,
   options?: {
@@ -292,4 +314,16 @@ function toNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : null
+}
+
+function toAbsoluteHttpUrl(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null
+    return parsed.toString()
+  } catch {
+    return null
+  }
 }

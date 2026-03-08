@@ -4,6 +4,7 @@ import { cache, type ReactNode } from "react"
 import LeftDetailColumn from "./components/LeftDetailColumn"
 import RightDetailColumn from "./components/RightDetailColumn"
 import {
+  buildListingFallbackImagePath,
   buildPriceHistoryChart,
   buildPriceHistoryStats,
   collectImageUrls,
@@ -153,6 +154,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const sourceUrl = listingRow.url || pickText(raw, ["source_url", "listing_url", "url"])
   const sourceLinkLabel = getSourceLinkLabel(listingRow.source, listingRow.source_id, sourceUrl)
   const titleText = formatTitle(listingRow.year, listingRow.make, listingRow.model, listingRow.title)
+  const fallbackImageUrl = buildListingFallbackImagePath({
+    source: listingRow.source,
+    sourceId: listingRow.source_id,
+    title: titleText,
+  })
   const descriptionText = listingRow.description_full || listingRow.description || ""
   const descriptionIntelligence = parseDescriptionIntelligence(raw)
   const parsedDescription = parseSellerDescription(descriptionText)
@@ -477,6 +483,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         <LeftDetailColumn
           primaryImageUrl={primaryImageUrl}
           galleryUrls={galleryUrls}
+          fallbackImageUrl={fallbackImageUrl}
           title={listingRow.title || "Aircraft listing"}
           aircraftRows={aircraftRows}
           engineRows={engineRows}

@@ -12,6 +12,7 @@ type LeftDetailColumnProps = {
   sourceLinkLabel: string
   logbookUrls: string[]
   dealTier?: string | null
+  fallbackImageUrl?: string | null
 }
 
 function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, ReactNode]> }) {
@@ -75,6 +76,7 @@ export default function LeftDetailColumn({
   sourceLinkLabel,
   logbookUrls,
   dealTier = null,
+  fallbackImageUrl = null,
 }: LeftDetailColumnProps) {
   const imageUrls = [
     ...new Set([
@@ -85,7 +87,12 @@ export default function LeftDetailColumn({
 
   return (
     <section className="panel">
-      <ListingImageGallery title={title || 'Aircraft listing'} imageUrls={imageUrls} dealTier={dealTier} />
+      <ListingImageGallery
+        title={title || "Aircraft listing"}
+        imageUrls={imageUrls}
+        dealTier={dealTier}
+        fallbackImageUrl={fallbackImageUrl}
+      />
 
       <div style={{ marginTop: '0.9rem', display: 'grid', gap: '0.9rem' }}>
         <DetailTableCard title="Aircraft Details" rows={aircraftRows} />

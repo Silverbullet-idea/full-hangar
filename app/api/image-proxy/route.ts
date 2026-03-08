@@ -35,23 +35,23 @@ function placeholderImageResponse(reason: string) {
 
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url')
-  if (!rawUrl) return new NextResponse('Missing url', { status: 400 })
+  if (!rawUrl) return placeholderImageResponse('missing_url')
 
   let parsedUrl: URL
   try {
     parsedUrl = new URL(rawUrl)
   } catch {
-    return new NextResponse('Invalid url', { status: 400 })
+    return placeholderImageResponse('invalid_url')
   }
 
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-    return new NextResponse('Invalid protocol', { status: 400 })
+    return placeholderImageResponse('invalid_protocol')
   }
 
   // Only proxy from known listing/image hosts (prevent open proxy abuse)
   const host = parsedUrl.hostname.toLowerCase()
   const isAllowed = isAllowedHost(host)
-  if (!isAllowed) return new NextResponse('Forbidden', { status: 403 })
+  if (!isAllowed) return placeholderImageResponse('forbidden_host')
 
   try {
     let response = await fetch(parsedUrl.toString(), {

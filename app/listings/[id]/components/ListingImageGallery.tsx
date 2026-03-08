@@ -8,25 +8,40 @@ type ListingImageGalleryProps = {
   title: string;
   imageUrls: string[];
   dealTier?: string | null;
+  fallbackImageUrl?: string | null;
 };
 
 const SWIPE_THRESHOLD_PX = 40;
 
 function toProxySrc(url: string): string {
+  if (url.startsWith("/")) return url;
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
 
-export default function ListingImageGallery({ title, imageUrls, dealTier = null }: ListingImageGalleryProps) {
+export default function ListingImageGallery({
+  title,
+  imageUrls,
+  dealTier = null,
+  fallbackImageUrl = null,
+}: ListingImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<string[]>([]);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const safeImageUrls = useMemo(
     () => imageUrls.map((value) => String(value || "").trim()).filter(Boolean),
     [imageUrls]
   );
-  const hasMultipleImages = safeImageUrls.length > 1;
-  const heroUrl = safeImageUrls[0] ?? "";
+  const failedUrlSet = useMemo(() => new Set(failedUrls), [failedUrls]);
+  const displayImageUrls = useMemo(
+    () => safeImageUrls.filter((url) => !failedUrlSet.has(url)),
+    [safeImageUrls, failedUrlSet]
+  );
+  const fallbackUrl = String(fallbackImageUrl || "").trim();
+  const effectiveImageUrls = displayImageUrls.length > 0 ? displayImageUrls : (fallbackUrl ? [fallbackUrl] : []);
+  const hasMultipleImages = effectiveImageUrls.length > 1;
+  const heroUrl = effectiveImageUrls[0] ?? "";
   const dealTierMeta = getDealTierMeta(dealTier);
   const dealTierBadgeClass = dealTierMeta
     ? dealTierMeta.tone === "green"
@@ -49,9 +64,14 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
   } as const;
 
   const jumpToIndex = (nextIndex: number) => {
-    if (!safeImageUrls.length) return;
-    const bounded = (nextIndex + safeImageUrls.length) % safeImageUrls.length;
+    if (!displayImageUrls.length) return;
+    const bounded = (nextIndex + displayImageUrls.length) % displayImageUrls.length;
     setActiveIndex(bounded);
+  };
+
+  const markFailed = (url: string) => {
+    if (!url) return;
+    setFailedUrls((previous) => (previous.includes(url) ? previous : [...previous, url]));
   };
 
   const openModalAt = (index: number) => {
@@ -85,7 +105,22 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isModalOpen, activeIndex, safeImageUrls.length]);
+  }, [isModalOpen, activeIndex, displayImageUrls.length]);
+
+  useEffect(() => {
+    setFailedUrls([]);
+  }, [safeImageUrls]);
+
+  useEffect(() => {
+    if (!effectiveImageUrls.length) {
+      setActiveIndex(0);
+      if (isModalOpen) setIsModalOpen(false);
+      return;
+    }
+    if (activeIndex >= effectiveImageUrls.length) {
+      setActiveIndex(0);
+    }
+  }, [activeIndex, effectiveImageUrls.length, isModalOpen]);
 
   if (!heroUrl) {
     return (
@@ -119,6 +154,7 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
             sizes="(max-width: 980px) 100vw, 50vw"
             unoptimized
             priority
+            onError={() => markFailed(heroUrl)}
           />
           {dealTierMeta ? (
             <span className={`absolute right-3 top-3 inline-flex rounded border px-2 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur-sm ${dealTierBadgeClass}`}>
@@ -127,15 +163,15 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
           ) : null}
           {hasMultipleImages ? (
             <span className="absolute bottom-2 right-2 rounded px-2 py-1 text-[11px] font-semibold" style={counterPillStyle}>
-              {`1 / ${safeImageUrls.length}`}
+              {`1 / ${effectiveImageUrls.length}`}
             </span>
           ) : null}
         </button>
       </div>
 
-      {safeImageUrls.length > 1 ? (
+      {effectiveImageUrls.length > 1 ? (
         <div className="image-gallery-grid">
-          {safeImageUrls.slice(1).map((url, index) => (
+          {effectiveImageUrls.slice(1).map((url, index) => (
             <button
               key={url}
               type="button"
@@ -153,6 +189,7 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
                 sizes="(max-width: 980px) 33vw, 16vw"
                 unoptimized
                 loading="lazy"
+                onError={() => markFailed(url)}
               />
             </button>
           ))}
@@ -206,13 +243,14 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
               }}
             >
               <Image
-                src={toProxySrc(safeImageUrls[activeIndex])}
+                src={toProxySrc(effectiveImageUrls[activeIndex])}
                 alt={`${title || "Aircraft listing"} image ${activeIndex + 1}`}
                 fill
                 sizes="100vw"
                 unoptimized
                 className="object-contain"
                 priority
+                onError={() => markFailed(effectiveImageUrls[activeIndex] ?? "")}
               />
             </div>
             <div className="mt-2 flex items-center justify-between">
@@ -225,7 +263,7 @@ export default function ListingImageGallery({ title, imageUrls, dealTier = null 
                 Prev
               </button>
               <div className="text-sm font-semibold" style={{ color: "var(--brand-white)" }}>
-                {`${activeIndex + 1} / ${safeImageUrls.length}`}
+                {`${activeIndex + 1} / ${effectiveImageUrls.length}`}
               </div>
               <button
                 type="button"
