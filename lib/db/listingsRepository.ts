@@ -586,9 +586,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const minValueScore = Number(query.minValueScore ?? 0);
   const maxPrice = Number(query.maxPrice ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
-  const hasSourceFilter = source.length > 0;
   const listBaseTable =
-    hasSourceFilter || ownershipType === "fractional" || ownershipType === "full"
+    ownershipType === "fractional" || ownershipType === "full"
       ? "aircraft_listings"
       : "public_listings";
   const listBaseColumns = columnsForListingsTable(listBaseTable);
