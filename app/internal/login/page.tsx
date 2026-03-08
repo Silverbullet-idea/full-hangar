@@ -8,6 +8,7 @@ const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end";
 
 export default function InternalLoginPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("Ryan");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,11 +27,11 @@ export default function InternalLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!response.ok) {
-        setError("Incorrect password.");
+        setError("Incorrect username or password.");
         return;
       }
 
@@ -65,6 +66,15 @@ export default function InternalLoginPage() {
         }}
       >
         <h1 style={{ margin: 0 }}>Internal Login</h1>
+        <label htmlFor="internal-username">Username</label>
+        <input
+          id="internal-username"
+          type="text"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          required
+          autoComplete="username"
+        />
         <label htmlFor="internal-password">Password</label>
         <input
           id="internal-password"

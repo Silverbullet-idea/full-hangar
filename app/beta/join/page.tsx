@@ -6,23 +6,32 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function BetaJoinPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [username, setUsername] = useState("Ryan");
+  const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const prefillToken = useMemo(() => String(searchParams.get("token") ?? "").trim(), [searchParams]);
 
-  async function submitToken(nextToken: string) {
+  async function submitAuth(nextToken: string) {
     setLoading(true);
     setError("");
     try {
+      const payloadBody =
+        nextToken.length > 0
+          ? { token: nextToken }
+          : { username: username.trim(), password };
       const response = await fetch("/api/beta/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: nextToken }),
+        body: JSON.stringify(payloadBody),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (payload?.error === "invalid_credentials") {
+          throw new Error("Incorrect username or password.");
+        }
         throw new Error(
           payload?.error === "invite_expired" || payload?.error === "invalid_invite" || payload?.error === "invite_already_used"
             ? "This invite link is invalid or has expired. Contact Ryan for a new link."
@@ -41,12 +50,12 @@ export default function BetaJoinPage() {
   useEffect(() => {
     if (!prefillToken) return;
     setToken(prefillToken);
-    submitToken(prefillToken);
+    submitAuth(prefillToken);
   }, [prefillToken]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await submitToken(token.trim());
+    await submitAuth(token.trim());
   }
 
   return (
@@ -57,10 +66,25 @@ export default function BetaJoinPage() {
         <form className="mt-4 space-y-2" onSubmit={onSubmit}>
           <input
             className="w-full rounded border border-brand-dark bg-transparent px-3 py-2"
-            placeholder="Enter your invite code"
+            placeholder="Username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            autoComplete="username"
+          />
+          <input
+            className="w-full rounded border border-brand-dark bg-transparent px-3 py-2"
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+          />
+          <p className="text-xs text-brand-muted">Or use an invite token below.</p>
+          <input
+            className="w-full rounded border border-brand-dark bg-transparent px-3 py-2"
+            placeholder="Invite token (optional)"
             value={token}
             onChange={(event) => setToken(event.target.value)}
-            required
           />
           <button className="w-full rounded bg-brand-orange px-3 py-2 font-semibold text-black" type="submit" disabled={loading}>
             {loading ? "Checking access..." : "Access Beta Dashboard"}

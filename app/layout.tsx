@@ -80,9 +80,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                     <HeaderSearchBar />
                     <nav>
-                      <a href="/listings" className="text-sm text-brand-muted hover:text-brand-orange">
-                        Browse Aircraft
-                      </a>
+                      <div className="flex items-center gap-3">
+                        <a href="/internal/login" className="text-sm text-brand-muted hover:text-brand-orange">
+                          Admin Login
+                        </a>
+                        <a href="/beta/join" className="text-sm text-brand-muted hover:text-brand-orange">
+                          Beta Login
+                        </a>
+                      </div>
                     </nav>
                     <ThemeToggle />
                   </div>

@@ -11,12 +11,41 @@ function getClientIp(request: NextRequest): string | null {
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const token = String(body?.token ?? "").trim();
-  if (!token) {
-    return NextResponse.json({ error: "token_required" }, { status: 400 });
-  }
+  const username = String(body?.username ?? "").trim();
+  const password = String(body?.password ?? "");
+  const betaUsername = (process.env.BETA_USERNAME || "Ryan").trim();
+  const betaPassword = process.env.BETA_PASSWORD || process.env.INTERNAL_PASSWORD || "hippo8me";
+
+  const userAgent = request.headers.get("user-agent");
+  const ipAddress = getClientIp(request);
 
   try {
     const supabase = createPrivilegedServerClient();
+    if (!token && username && password) {
+      if (username.toLowerCase() !== betaUsername.toLowerCase() || password !== betaPassword) {
+        return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
+      }
+
+      const credentialSession = await supabase
+        .from("beta_sessions")
+        .insert({
+          invite_id: null,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        })
+        .select("session_token")
+        .single();
+      if (credentialSession.error) throw new Error(credentialSession.error.message);
+
+      const response = NextResponse.json({ ok: true });
+      response.cookies.set(buildBetaSessionCookie(credentialSession.data.session_token));
+      return response;
+    }
+
+    if (!token) {
+      return NextResponse.json({ error: "token_or_credentials_required" }, { status: 400 });
+    }
+
     const inviteResult = await supabase
       .from("beta_invites")
       .select("id,token,is_active,expires_at,used_at")
@@ -38,12 +67,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const userAgent = request.headers.get("user-agent");
     const sessionInsert = await supabase
       .from("beta_sessions")
       .insert({
         invite_id: invite.id,
-        ip_address: getClientIp(request),
+        ip_address: ipAddress,
         user_agent: userAgent,
       })
       .select("session_token")
