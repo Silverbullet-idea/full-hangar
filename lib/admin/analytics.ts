@@ -14,15 +14,54 @@ const SOURCE_ORDER = [
   "avbuyer",
 ];
 
+const DOMAIN_SOURCE_HINTS: Array<[string, string]> = [
+  ["aerotrader", "aerotrader"],
+  ["controller", "controller"],
+  ["trade-a-plane", "tradaplane"],
+  ["tradeaplane", "tradaplane"],
+  ["barnstormers", "barnstormers"],
+  ["globalair", "globalair"],
+  ["aircraftforsale", "afs"],
+  ["aso", "aso"],
+  ["avbuyer", "avbuyer"],
+];
+
 function normalizeSource(value: unknown): string {
   const raw = String(value ?? "").trim().toLowerCase();
   if (!raw) return "unknown";
-  if (raw === "tap" || raw === "trade-a-plane" || raw === "tradeaplane") return "tradaplane";
+  if (raw === "tap" || raw === "trade-a-plane" || raw === "tradeaplane" || raw === "trade_a_plane") return "tradaplane";
   if (raw.startsWith("controller")) return "controller";
   if (raw === "aircraftforsale") return "afs";
   if (raw === "aero_trader") return "aerotrader";
   if (raw === "global_air") return "globalair";
   return raw;
+}
+
+function parseDomain(urlValue: unknown): string | null {
+  const raw = String(urlValue ?? "").trim();
+  if (!raw) return null;
+  try {
+    const withProtocol = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
+    return new URL(withProtocol).hostname.toLowerCase().replace(/^www\./, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+function inferSource(row: ListingRow): string {
+  const candidates = [row.source, row.source_site, row.listing_source];
+  for (const candidate of candidates) {
+    const normalized = normalizeSource(candidate);
+    if (normalized !== "unknown") return normalized;
+  }
+
+  const domain = parseDomain(row.source_url ?? row.url ?? row.listing_url ?? null);
+  if (domain) {
+    for (const [needle, source] of DOMAIN_SOURCE_HINTS) {
+      if (domain.includes(needle)) return source;
+    }
+  }
+  return "unknown";
 }
 
 function asNumber(value: unknown): number | null {
@@ -99,9 +138,19 @@ function median(values: number[]): number {
 
 async function getActiveListings(): Promise<ListingRow[]> {
   const supabase = createPrivilegedServerClient();
-  const result = await supabase.from("aircraft_listings").select("*").eq("is_active", true).limit(10000);
-  if (result.error) throw new Error(result.error.message);
-  return (result.data ?? []) as ListingRow[];
+  const pageSize = 1000;
+  const rows: ListingRow[] = [];
+  let from = 0;
+  while (true) {
+    const to = from + pageSize - 1;
+    const result = await supabase.from("aircraft_listings").select("*").eq("is_active", true).range(from, to);
+    if (result.error) throw new Error(result.error.message);
+    const pageRows = (result.data ?? []) as ListingRow[];
+    rows.push(...pageRows);
+    if (pageRows.length < pageSize) break;
+    from += pageSize;
+  }
+  return rows;
 }
 
 export async function computeDataQuality() {
@@ -124,7 +173,7 @@ export async function computeDataQuality() {
 
   const bySource = new Map<string, ListingRow[]>();
   for (const row of rows) {
-    const source = normalizeSource(row.source);
+    const source = inferSource(row);
     if (!bySource.has(source)) bySource.set(source, []);
     bySource.get(source)!.push(row);
   }
@@ -233,7 +282,7 @@ export async function computePlatformStats() {
   let avgDomCount = 0;
 
   for (const row of rows) {
-    const source = normalizeSource(row.source);
+    const source = inferSource(row);
     listingBySource[source] = (listingBySource[source] ?? 0) + 1;
 
     const make = String(row.make ?? "").trim();

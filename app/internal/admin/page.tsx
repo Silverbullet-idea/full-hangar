@@ -15,6 +15,7 @@ const EMPTY_PLATFORM = {
     total_active: 0,
     added_last_7_days: 0,
     score_coverage_pct: 0,
+    by_source: {} as Record<string, number>,
   },
   deals: {
     high_score_listings: 0,
@@ -81,6 +82,15 @@ export default async function InternalAdminPage() {
   const avgValueScore = platform.listings.total_active
     ? Math.round((platform.deals.high_score_listings / platform.listings.total_active) * 100)
     : 0;
+  const sourceOrder = ["aerotrader", "controller", "tradaplane", "barnstormers", "aso", "afs", "globalair", "avbuyer", "unknown"];
+  const sourceCounts = Object.entries(platform.listings.by_source ?? {}).sort((a, b) => {
+    const ai = sourceOrder.indexOf(a[0]);
+    const bi = sourceOrder.indexOf(b[0]);
+    if (ai === -1 && bi === -1) return b[1] - a[1];
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 
   return (
     <main className="space-y-4 p-4 md:p-6">
@@ -107,6 +117,28 @@ export default async function InternalAdminPage() {
             <p className="mt-1 text-2xl font-semibold text-brand-orange">{statValue(stat.value)}</p>
           </article>
         ))}
+      </section>
+
+      <section className="rounded border border-brand-dark bg-card-bg p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Source Inventory</h2>
+          <p className="text-xs text-brand-muted">Total active: {platform.listings.total_active.toLocaleString()}</p>
+        </div>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {sourceCounts.map(([source, count]) => {
+            const pct = platform.listings.total_active > 0 ? ((count / platform.listings.total_active) * 100).toFixed(1) : "0.0";
+            return (
+              <div key={source} className="rounded border border-brand-dark px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-brand-muted">{source}</p>
+                <p className="mt-1 text-lg font-semibold text-brand-orange">{count.toLocaleString()}</p>
+                <p className="text-xs text-brand-muted">{pct}% of active inventory</p>
+              </div>
+            );
+          })}
+          {sourceCounts.length === 0 ? (
+            <p className="text-sm text-brand-muted">No source breakdown available.</p>
+          ) : null}
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

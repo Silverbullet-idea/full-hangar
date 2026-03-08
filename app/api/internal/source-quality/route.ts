@@ -25,16 +25,42 @@ const COMPLETENESS_FIELDS = [
 const CRITICAL_COMPLETENESS_FIELDS = ["year", "make", "model", "asking_price", "n_number", "total_time_airframe", "location_raw"] as const;
 
 const SOURCE_ORDER = ["tradaplane", "controller", "barnstormers", "aso", "aerotrader", "afs", "globalair", "avbuyer"];
+const DOMAIN_SOURCE_HINTS: Array<[string, string]> = [
+  ["aerotrader", "aerotrader"],
+  ["controller", "controller"],
+  ["trade-a-plane", "tradaplane"],
+  ["tradeaplane", "tradaplane"],
+  ["barnstormers", "barnstormers"],
+  ["globalair", "globalair"],
+  ["aircraftforsale", "afs"],
+  ["aso", "aso"],
+  ["avbuyer", "avbuyer"],
+];
 
 function normalizeSource(value: unknown): string {
   const raw = String(value ?? "").trim().toLowerCase();
   if (!raw) return "unknown";
-  if (raw === "tap" || raw === "trade-a-plane" || raw === "tradeaplane") return "tradaplane";
+  if (raw === "tap" || raw === "trade-a-plane" || raw === "tradeaplane" || raw === "trade_a_plane") return "tradaplane";
   if (raw.startsWith("controller")) return "controller";
   if (raw === "aircraftforsale") return "afs";
   if (raw === "aero_trader") return "aerotrader";
   if (raw === "global_air") return "globalair";
   return raw;
+}
+
+function inferSource(row: ListingRow): string {
+  const candidates = [row.source, row.source_site, row.listing_source];
+  for (const candidate of candidates) {
+    const normalized = normalizeSource(candidate);
+    if (normalized !== "unknown") return normalized;
+  }
+  const domain = parseDomain(row.source_url ?? row.url ?? null);
+  if (domain) {
+    for (const [needle, source] of DOMAIN_SOURCE_HINTS) {
+      if (domain.includes(needle)) return source;
+    }
+  }
+  return "unknown";
 }
 
 function asNumber(value: unknown): number | null {
@@ -107,26 +133,35 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = createPrivilegedServerClient();
-    const result = await supabase
-      .from("aircraft_listings")
-      .select(
-        "source,source_url,value_score,asking_price,n_number,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type,created_at,updated_at,last_seen_date,scraped_at,first_seen_date,listing_date"
-      )
-      .eq("is_active", true)
-      .limit(15000);
-
-    if (result.error) {
-      throw new Error(result.error.message);
+    const columns =
+      "source,source_site,listing_source,source_url,url,value_score,asking_price,n_number,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type,created_at,updated_at,last_seen_date,scraped_at,first_seen_date,listing_date";
+    const pageSize = 1000;
+    const rows: ListingRow[] = [];
+    let from = 0;
+    while (true) {
+      const to = from + pageSize - 1;
+      const result = await supabase
+        .from("aircraft_listings")
+        .select(columns)
+        .eq("is_active", true)
+        .range(from, to);
+      if (result.error) throw new Error(result.error.message);
+      const pageRows = (result.data ?? []) as ListingRow[];
+      rows.push(...pageRows);
+      if (pageRows.length < pageSize) break;
+      from += pageSize;
     }
-
-    const rows = (result.data ?? []) as ListingRow[];
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
     const recent7Start = now - 7 * dayMs;
     const prev7Start = now - 14 * dayMs;
     const bySource = new Map<string, ListingRow[]>();
+    for (const knownSource of SOURCE_ORDER) {
+      bySource.set(knownSource, []);
+    }
+    bySource.set("unknown", []);
     for (const row of rows) {
-      const source = normalizeSource(row.source);
+      const source = inferSource(row);
       if (!bySource.has(source)) bySource.set(source, []);
       bySource.get(source)!.push(row);
     }
@@ -230,7 +265,7 @@ export async function GET(request: NextRequest) {
           }
 
           if (source === "unknown") {
-            const domain = parseDomain(row.source_url);
+            const domain = parseDomain(row.source_url ?? row.url ?? null);
             if (domain) unknownDomainCounts.set(domain, (unknownDomainCounts.get(domain) ?? 0) + 1);
           }
         }
