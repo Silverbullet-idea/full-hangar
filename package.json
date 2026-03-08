@@ -66,6 +66,7 @@
     "pipeline:media:re-audit": ".venv312\\Scripts\\python.exe scraper\\report_listing_media_coverage.py --active-only",
     "pipeline:summary": "powershell -ExecutionPolicy Bypass -File .\\summarize-pipeline-log.ps1",
     "test:smoke:listings": "playwright test tests/smoke/listings-smoke.spec.js --reporter=line",
+    "admin:seed-user": "node ./seed-admin-user.mjs",
     "build": "next build",
     "start": "next start"
   },

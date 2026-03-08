@@ -102,6 +102,9 @@ export default async function InternalAdminPage() {
           <Link href="/internal/admin/invites" className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black">
             Create New Invite Link
           </Link>
+          <Link href="/internal/admin/users" className="mt-2 inline-block rounded border border-brand-dark px-3 py-2 text-sm">
+            Manage Users & Google Access
+          </Link>
           <div className="mt-3 space-y-1 text-xs text-brand-muted">
             {inviteRows.slice(0, 5).map((row) => (
               <p key={String(row.id)}>

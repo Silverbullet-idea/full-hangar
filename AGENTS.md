@@ -1,7 +1,7 @@
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 7, 2026
+> Last updated: March 8, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -40,6 +40,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Project architecture and refactor baseline documented in `REFACTOR_PLAN.md`.
 - Admin portal shipped at `/internal/admin` with data quality, buyer intelligence, and invite management.
 - Beta invite/session schema added via migration `20260307000050_add_beta_invites.sql`.
+- Admin user management and password hashing utilities shipped (`/internal/admin/users`, `lib/admin/users.ts`).
 
 ### Frontend Product and UX
 
@@ -49,6 +50,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
+- `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -103,7 +105,7 @@ Each item should stay one-line actionable with clear completion criteria.
 
 ## Pending Migrations (Needs Verification)
 
-Historical notes in prior versions listed a long migration queue (`20260301000018` through `20260307000050`) while other notes stated many were already live. Reconcile against the target Supabase project before running any replay.
+Historical notes in prior versions listed a long migration queue (`20260301000018` through `20260307000051`) while other notes stated many were already live. Reconcile against the target Supabase project before running any replay.
 
 Recommended verification flow:
 
@@ -192,6 +194,7 @@ Never expose service-role keys to client/browser code.
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 INTERNAL_PASSWORD=...
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
 ```
 
 `scraper/.env` (Python):
