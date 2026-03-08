@@ -38,6 +38,8 @@ This is the short, operational board for current work. Permanent standards stay 
 - Supabase server access standardized via `lib/supabase/server.ts` (`createServerClient` and `createPrivilegedServerClient`).
 - Post-scrape pipeline flow and KPI/log summarization utilities added.
 - Project architecture and refactor baseline documented in `REFACTOR_PLAN.md`.
+- Admin portal shipped at `/internal/admin` with data quality, buyer intelligence, and invite management.
+- Beta invite/session schema added via migration `20260307000050_add_beta_invites.sql`.
 
 ### Frontend Product and UX
 
@@ -46,6 +48,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
+- `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -54,6 +57,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Additional sources integrated and iterated (AeroTrader, AFS, ASO, GlobalAir, AvBuyer, Barnstormers).
 - Non-aircraft detection/hide workflow implemented and operationalized.
 - FAA enrichment + ownership-transfer feed + internal recent-sales wiring completed.
+- Internal admin APIs added for data quality, platform stats, buyer intelligence, and invite management.
 
 ### Intelligence and Scoring
 
@@ -61,6 +65,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Avionics parser/catalog/valuation expansion completed through rollout + attribution persistence.
 - Description parser expanded with richer normalization and maintenance context extraction.
 - Comps selection/waterfall logic improved and reflected in listing detail score explanations.
+- Canonical completeness scoring map added in `lib/admin/completeness.ts` for parser-focused data quality recommendations.
 
 ---
 
@@ -97,7 +102,7 @@ Each item should stay one-line actionable with clear completion criteria.
 
 ## Pending Migrations (Needs Verification)
 
-Historical notes in prior versions listed a long migration queue (`20260301000018` through `20260307000049`) while other notes stated many were already live. Reconcile against the target Supabase project before running any replay.
+Historical notes in prior versions listed a long migration queue (`20260301000018` through `20260307000050`) while other notes stated many were already live. Reconcile against the target Supabase project before running any replay.
 
 Recommended verification flow:
 

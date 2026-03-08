@@ -1,70 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { INTERNAL_SESSION_COOKIE, isValidInternalSession } from "@/lib/internal/auth";
 
-const SESSION_COOKIE_NAME = "internal_session";
-const MAX_SESSION_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-async function signValue(value: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signatureBuffer = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(value)
-  );
-  const signatureBytes = new Uint8Array(signatureBuffer);
-  return Array.from(signatureBytes)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function isValidSession(
-  sessionValue: string | undefined,
-  secret: string
-): Promise<boolean> {
-  if (!sessionValue) return false;
-
-  const [issuedAtRaw, signature] = sessionValue.split(".");
-  if (!issuedAtRaw || !signature) return false;
-
-  const issuedAt = Number(issuedAtRaw);
-  if (!Number.isFinite(issuedAt)) return false;
-  if (Date.now() - issuedAt > MAX_SESSION_AGE_MS) return false;
-
-  const expectedSignature = await signValue(issuedAtRaw, secret);
-  return expectedSignature === signature;
-}
+const BETA_SESSION_COOKIE = "beta_session";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const noIndexHeader = "noindex, nofollow";
+  const response = NextResponse.next();
+  response.headers.set("X-Robots-Tag", noIndexHeader);
 
   // Allow the login page itself.
   if (pathname === "/internal/login" || pathname.startsWith("/internal/login/")) {
-    const response = NextResponse.next();
-    response.headers.set("X-Robots-Tag", noIndexHeader);
+    return response;
+  }
+
+  if (pathname.startsWith("/beta/join")) {
+    return response;
+  }
+
+  if (pathname.startsWith("/beta/dashboard")) {
+    const betaSession = request.cookies.get(BETA_SESSION_COOKIE)?.value;
+    if (!betaSession) {
+      return NextResponse.redirect(new URL("/beta/join?error=session_expired", request.url));
+    }
     return response;
   }
 
   const internalPassword = process.env.INTERNAL_PASSWORD;
-  const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-
-  if (!internalPassword || !(await isValidSession(sessionValue, internalPassword))) {
+  const sessionValue = request.cookies.get(INTERNAL_SESSION_COOKIE)?.value;
+  if (!internalPassword || !(await isValidInternalSession(sessionValue, internalPassword))) {
     const response = NextResponse.redirect(new URL("/internal/login", request.url));
     response.headers.set("X-Robots-Tag", noIndexHeader);
     return response;
   }
 
-  const response = NextResponse.next();
-  response.headers.set("X-Robots-Tag", noIndexHeader);
   return response;
 }
 
 export const config = {
-  matcher: ["/internal/:path*"],
+  matcher: ["/internal/:path*", "/beta/:path*"],
 };
