@@ -1,0 +1,3845 @@
+[
+  {
+    "manufacturer": "Apollo",
+    "model": "GX 50",
+    "canonical_name": "Apollo GX 50",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "GX 50",
+      "Apollo GX 50",
+      "GX50",
+      "GX-50"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Apollo",
+    "model": "GX 60",
+    "canonical_name": "Apollo GX 60",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "GX 60",
+      "Apollo GX 60",
+      "GX60",
+      "GX-60"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Apollo",
+    "model": "MX20",
+    "canonical_name": "Apollo MX20",
+    "function_category": "MFD",
+    "tso_refs": [
+      "TSO-C113"
+    ],
+    "aliases": [
+      "MX20",
+      "Apollo MX20",
+      "MX 20"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Appareo",
+    "model": "Stratus ES",
+    "canonical_name": "Appareo Stratus ES",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "Stratus ES",
+      "Appareo Stratus ES",
+      "StratusES",
+      "Stratus-ES"
+    ],
+    "oem_msrp_usd": 2895,
+    "msrp_source": "appareo aviation sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Appareo",
+    "model": "Stratus ESG",
+    "canonical_name": "Appareo Stratus ESG",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "Stratus ESG",
+      "Appareo Stratus ESG",
+      "StratusESG",
+      "Stratus-ESG"
+    ],
+    "oem_msrp_usd": 3295,
+    "msrp_source": "appareo aviation sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "ATX 100G",
+    "canonical_name": "Aspen Avionics ATX 100G",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "ATX 100G",
+      "Aspen Avionics ATX 100G",
+      "ATX100G",
+      "ATX-100G",
+      "ATX 100 G",
+      "100G"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "ATX100",
+    "canonical_name": "Aspen Avionics ATX100",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "ATX100",
+      "Aspen Avionics ATX100",
+      "ATX 100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "From FAA approved list"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000 E5",
+    "canonical_name": "Aspen Avionics EFD1000 E5",
+    "function_category": "Electronic Flight Instrument",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "EFD1000 E5",
+      "Aspen Avionics EFD1000 E5",
+      "EFD1000E5",
+      "EFD1000-E5",
+      "EFD 1000 E 5"
+    ],
+    "oem_msrp_usd": 4995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Entry-level evolution display"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000 MFD",
+    "canonical_name": "Aspen Avionics EFD1000 MFD",
+    "function_category": "MFD",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "EFD1000 MFD",
+      "Aspen Avionics EFD1000 MFD",
+      "EFD1000MFD",
+      "EFD1000-MFD",
+      "EFD 1000 MFD"
+    ],
+    "oem_msrp_usd": 6995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000 MFD MAX",
+    "canonical_name": "Aspen Avionics EFD1000 MFD MAX",
+    "function_category": "MFD",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "EFD1000 MFD MAX",
+      "Aspen Avionics EFD1000 MFD MAX",
+      "EFD1000MFDMAX",
+      "EFD1000-MFD-MAX",
+      "EFD 1000 MFD MAX"
+    ],
+    "oem_msrp_usd": 8995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000 Pro",
+    "canonical_name": "Aspen Avionics EFD1000 Pro",
+    "function_category": "PFD",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "EFD1000 Pro",
+      "Aspen Avionics EFD1000 Pro",
+      "EFD1000Pro",
+      "EFD1000-Pro",
+      "EFD 1000 Pro"
+    ],
+    "oem_msrp_usd": 7995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Evolution primary display"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000 Pro MAX",
+    "canonical_name": "Aspen Avionics EFD1000 Pro MAX",
+    "function_category": "PFD",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "EFD1000 Pro MAX",
+      "Aspen Avionics EFD1000 Pro MAX",
+      "EFD1000ProMAX",
+      "EFD1000-Pro-MAX",
+      "EFD 1000 Pro MAX"
+    ],
+    "oem_msrp_usd": 9995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "Evolution 1500",
+    "canonical_name": "Aspen Avionics Evolution 1500",
+    "function_category": "PFD/MFD Suite",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Evolution 1500",
+      "Aspen Avionics Evolution 1500",
+      "Evolution1500",
+      "Evolution-1500",
+      "1500"
+    ],
+    "oem_msrp_usd": 13995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Dual-screen configuration"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "Evolution 2000",
+    "canonical_name": "Aspen Avionics Evolution 2000",
+    "function_category": "PFD/MFD Suite",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Evolution 2000",
+      "Aspen Avionics Evolution 2000",
+      "Evolution2000",
+      "Evolution-2000",
+      "2000"
+    ],
+    "oem_msrp_usd": 17995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Triple-screen configuration"
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "MAX PFD",
+    "canonical_name": "Aspen Avionics MAX PFD",
+    "function_category": "PFD",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "MAX PFD",
+      "Aspen Avionics MAX PFD",
+      "MAXPFD",
+      "MAX-PFD"
+    ],
+    "oem_msrp_usd": 9995,
+    "msrp_source": "aspen dealer sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Common listing shorthand"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "ADS-B SkyTrax 100",
+    "canonical_name": "Avidyne ADS-B SkyTrax 100",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "ADS-B SkyTrax 100",
+      "Avidyne ADS-B SkyTrax 100",
+      "ADSBSkyTrax100",
+      "ADS-B-SkyTrax-100",
+      "ADS B SkyTrax 100",
+      "100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "AXP 322",
+    "canonical_name": "Avidyne AXP 322",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "AXP 322",
+      "Avidyne AXP 322",
+      "AXP322",
+      "AXP-322",
+      "322"
+    ],
+    "oem_msrp_usd": 4495,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "AXP 340",
+    "canonical_name": "Avidyne AXP 340",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "AXP 340",
+      "Avidyne AXP 340",
+      "AXP340",
+      "AXP-340",
+      "340"
+    ],
+    "oem_msrp_usd": 4895,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Remote mode-S transponder"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "DFC90",
+    "canonical_name": "Avidyne DFC90",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "DFC90",
+      "Avidyne DFC90",
+      "DFC 90"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 4200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Digital autopilot for Cirrus/Entegra"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "EX500",
+    "canonical_name": "Avidyne EX500",
+    "function_category": "Multi-Function Display",
+    "tso_refs": [
+      "TSO-C113"
+    ],
+    "aliases": [
+      "EX500",
+      "Avidyne EX500",
+      "EX 500"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "EX600",
+    "canonical_name": "Avidyne EX600",
+    "function_category": "Multi-Function Display",
+    "tso_refs": [
+      "TSO-C113"
+    ],
+    "aliases": [
+      "EX600",
+      "Avidyne EX600",
+      "EX 600"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2400,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "Entegra MFD",
+    "canonical_name": "Avidyne Entegra MFD",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "TC"
+    ],
+    "aliases": [
+      "Entegra MFD",
+      "Avidyne Entegra MFD",
+      "EntegraMFD",
+      "Entegra-MFD"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "Entegra PFD",
+    "canonical_name": "Avidyne Entegra PFD",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "TC"
+    ],
+    "aliases": [
+      "Entegra PFD",
+      "Avidyne Entegra PFD",
+      "EntegraPFD",
+      "Entegra-PFD"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "IFD 410",
+    "canonical_name": "Avidyne IFD 410",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "IFD 410",
+      "Avidyne IFD 410",
+      "IFD410",
+      "IFD-410",
+      "410"
+    ],
+    "oem_msrp_usd": 9999,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Slide-in class"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "IFD 440",
+    "canonical_name": "Avidyne IFD 440",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "IFD 440",
+      "Avidyne IFD 440",
+      "IFD440",
+      "IFD-440",
+      "440"
+    ],
+    "oem_msrp_usd": 11999,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "IFD 540",
+    "canonical_name": "Avidyne IFD 540",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "IFD 540",
+      "Avidyne IFD 540",
+      "IFD540",
+      "IFD-540",
+      "540"
+    ],
+    "oem_msrp_usd": 17999,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "IFD 550",
+    "canonical_name": "Avidyne IFD 550",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "IFD 550",
+      "Avidyne IFD 550",
+      "IFD550",
+      "IFD-550",
+      "550"
+    ],
+    "oem_msrp_usd": 21999,
+    "msrp_source": "avidyne.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Synthetic vision"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "IFD100",
+    "canonical_name": "Avidyne IFD100",
+    "function_category": "Tablet Companion",
+    "tso_refs": [],
+    "aliases": [
+      "IFD100",
+      "Avidyne IFD100",
+      "IFD 100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "software",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Companion app, not panel hardware"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "MLB100 SkyTrax",
+    "canonical_name": "Avidyne MLB100 SkyTrax",
+    "function_category": "ADS-B In",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "MLB100 SkyTrax",
+      "Avidyne MLB100 SkyTrax",
+      "MLB100SkyTrax",
+      "MLB100-SkyTrax",
+      "MLB 100 SkyTrax"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "SkyTrax 100"
+  },
+  {
+    "manufacturer": "Avidyne",
+    "model": "R9 Integrated Flight Deck",
+    "canonical_name": "Avidyne R9 Integrated Flight Deck",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "TC"
+    ],
+    "aliases": [
+      "R9 Integrated Flight Deck",
+      "Avidyne R9 Integrated Flight Deck",
+      "R9IntegratedFlightDeck",
+      "R9-Integrated-Flight-Deck",
+      "R 9 Integrated Flight Deck"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "program specific",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Factory integrated"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "AeroCruze 100",
+    "canonical_name": "BendixKing AeroCruze 100",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "AeroCruze 100",
+      "BendixKing AeroCruze 100",
+      "AeroCruze100",
+      "AeroCruze-100",
+      "100"
+    ],
+    "oem_msrp_usd": 4995,
+    "msrp_source": "bendixking.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Former TruTrak Vizion"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "AeroCruze 230",
+    "canonical_name": "BendixKing AeroCruze 230",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "AeroCruze 230",
+      "BendixKing AeroCruze 230",
+      "AeroCruze230",
+      "AeroCruze-230",
+      "230"
+    ],
+    "oem_msrp_usd": 6995,
+    "msrp_source": "bendixking.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "KFC 230 branding"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KAP 100",
+    "canonical_name": "BendixKing KAP 100",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KAP 100",
+      "BendixKing KAP 100",
+      "KAP100",
+      "KAP-100",
+      "100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KAP 140",
+    "canonical_name": "BendixKing KAP 140",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KAP 140",
+      "BendixKing KAP 140",
+      "KAP140",
+      "KAP-140",
+      "140"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC 150",
+    "canonical_name": "BendixKing KFC 150",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KFC 150",
+      "BendixKing KFC 150",
+      "KFC150",
+      "KFC-150",
+      "150"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 5400,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC 200",
+    "canonical_name": "BendixKing KFC 200",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KFC 200",
+      "BendixKing KFC 200",
+      "KFC200",
+      "KFC-200",
+      "200"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 6100,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC 225",
+    "canonical_name": "BendixKing KFC 225",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KFC 225",
+      "BendixKing KFC 225",
+      "KFC225",
+      "KFC-225",
+      "225"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 8200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KGX 130",
+    "canonical_name": "BendixKing KGX 130",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "KGX 130",
+      "BendixKing KGX 130",
+      "KGX130",
+      "KGX-130",
+      "130"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KGX 130T",
+    "canonical_name": "BendixKing KGX 130T",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "KGX 130T",
+      "BendixKing KGX 130T",
+      "KGX130T",
+      "KGX-130T",
+      "KGX 130 T",
+      "130T"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KGX 150",
+    "canonical_name": "BendixKing KGX 150",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "KGX 150",
+      "BendixKing KGX 150",
+      "KGX150",
+      "KGX-150",
+      "150"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KGX 150T",
+    "canonical_name": "BendixKing KGX 150T",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "KGX 150T",
+      "BendixKing KGX 150T",
+      "KGX150T",
+      "KGX-150T",
+      "KGX 150 T",
+      "150T"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 208",
+    "canonical_name": "BendixKing KI 208",
+    "function_category": "Course Deviation Indicator",
+    "tso_refs": [
+      "TSO-C34e"
+    ],
+    "aliases": [
+      "KI 208",
+      "BendixKing KI 208",
+      "KI208",
+      "KI-208",
+      "208"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 550,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 209",
+    "canonical_name": "BendixKing KI 209",
+    "function_category": "Course Deviation Indicator",
+    "tso_refs": [
+      "TSO-C34e"
+    ],
+    "aliases": [
+      "KI 209",
+      "BendixKing KI 209",
+      "KI209",
+      "KI-209",
+      "209"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 89B",
+    "canonical_name": "BendixKing KLN 89B",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "KLN 89B",
+      "BendixKing KLN 89B",
+      "KLN89B",
+      "KLN-89B",
+      "KLN 89 B",
+      "89B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 94",
+    "canonical_name": "BendixKing KLN 94",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "KLN 94",
+      "BendixKing KLN 94",
+      "KLN94",
+      "KLN-94"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KMA 24",
+    "canonical_name": "BendixKing KMA 24",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "KMA 24",
+      "BendixKing KMA 24",
+      "KMA24",
+      "KMA-24"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KMA 28",
+    "canonical_name": "BendixKing KMA 28",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "KMA 28",
+      "BendixKing KMA 28",
+      "KMA28",
+      "KMA-28"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KN 62A",
+    "canonical_name": "BendixKing KN 62A",
+    "function_category": "DME",
+    "tso_refs": [
+      "TSO-C66"
+    ],
+    "aliases": [
+      "KN 62A",
+      "BendixKing KN 62A",
+      "KN62A",
+      "KN-62A",
+      "KN 62 A",
+      "62A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KNS 80",
+    "canonical_name": "BendixKing KNS 80",
+    "function_category": "NAV",
+    "tso_refs": [
+      "TSO-C40c"
+    ],
+    "aliases": [
+      "KNS 80",
+      "BendixKing KNS 80",
+      "KNS80",
+      "KNS-80"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 550,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KR 87",
+    "canonical_name": "BendixKing KR 87",
+    "function_category": "ADF",
+    "tso_refs": [
+      "TSO-C41"
+    ],
+    "aliases": [
+      "KR 87",
+      "BendixKing KR 87",
+      "KR87",
+      "KR-87"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KS 200",
+    "canonical_name": "BendixKing KS 200",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KS 200",
+      "BendixKing KS 200",
+      "KS200",
+      "KS-200",
+      "200"
+    ],
+    "oem_msrp_usd": 3595,
+    "msrp_source": "bendixking.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 74",
+    "canonical_name": "BendixKing KT 74",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "KT 74",
+      "BendixKing KT 74",
+      "KT74",
+      "KT-74"
+    ],
+    "oem_msrp_usd": 4499,
+    "msrp_source": "bendixking.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 76A",
+    "canonical_name": "BendixKing KT 76A",
+    "function_category": "Transponder",
+    "tso_refs": [
+      "TSO-C74c"
+    ],
+    "aliases": [
+      "KT 76A",
+      "BendixKing KT 76A",
+      "KT76A",
+      "KT-76A",
+      "KT 76 A",
+      "76A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 76C",
+    "canonical_name": "BendixKing KT 76C",
+    "function_category": "Transponder",
+    "tso_refs": [
+      "TSO-C74c"
+    ],
+    "aliases": [
+      "KT 76C",
+      "BendixKing KT 76C",
+      "KT76C",
+      "KT-76C",
+      "KT 76 C",
+      "76C"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 78A",
+    "canonical_name": "BendixKing KT 78A",
+    "function_category": "Transponder",
+    "tso_refs": [
+      "TSO-C74c"
+    ],
+    "aliases": [
+      "KT 78A",
+      "BendixKing KT 78A",
+      "KT78A",
+      "KT-78A",
+      "KT 78 A",
+      "78A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 600,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 155",
+    "canonical_name": "BendixKing KX 155",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 155",
+      "BendixKing KX 155",
+      "KX155",
+      "KX-155",
+      "155"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 155A",
+    "canonical_name": "BendixKing KX 155A",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 155A",
+      "BendixKing KX 155A",
+      "KX155A",
+      "KX-155A",
+      "KX 155 A",
+      "155A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1600,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 165",
+    "canonical_name": "BendixKing KX 165",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 165",
+      "BendixKing KX 165",
+      "KX165",
+      "KX-165",
+      "165"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 165A",
+    "canonical_name": "BendixKing KX 165A",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 165A",
+      "BendixKing KX 165A",
+      "KX165A",
+      "KX-165A",
+      "KX 165 A",
+      "165A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 2100,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 170B",
+    "canonical_name": "BendixKing KX 170B",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 170B",
+      "BendixKing KX 170B",
+      "KX170B",
+      "KX-170B",
+      "KX 170 B",
+      "170B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 175B",
+    "canonical_name": "BendixKing KX 175B",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 175B",
+      "BendixKing KX 175B",
+      "KX175B",
+      "KX-175B",
+      "KX 175 B",
+      "175B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 200",
+    "canonical_name": "BendixKing KX 200",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d"
+    ],
+    "aliases": [
+      "KX 200",
+      "BendixKing KX 200",
+      "KX200",
+      "KX-200",
+      "200"
+    ],
+    "oem_msrp_usd": 3395,
+    "msrp_source": "bendixking.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "MST 70B",
+    "canonical_name": "BendixKing MST 70B",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "MST 70B",
+      "BendixKing MST 70B",
+      "MST70B",
+      "MST-70B",
+      "MST 70 B",
+      "70B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "1201",
+    "canonical_name": "FreeFlight 1201",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e"
+    ],
+    "aliases": [
+      "1201",
+      "FreeFlight 1201",
+      "FreeFlight-1201"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "special order",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "1203C",
+    "canonical_name": "FreeFlight 1203C",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e"
+    ],
+    "aliases": [
+      "1203C",
+      "FreeFlight 1203C",
+      "1203 C"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "special order",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL -1090- TX",
+    "canonical_name": "FreeFlight FDL -1090- TX",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL -1090- TX",
+      "FreeFlight FDL -1090- TX",
+      "FDL1090TX",
+      "FDL--1090--TX",
+      "FDL 1090 TX",
+      "1090"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL -978- GTX E",
+    "canonical_name": "FreeFlight FDL -978- GTX E",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL -978- GTX E",
+      "FreeFlight FDL -978- GTX E",
+      "FDL978GTXE",
+      "FDL--978--GTX-E",
+      "FDL 978 GTX E",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL -978- TX",
+    "canonical_name": "FreeFlight FDL -978- TX",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL -978- TX",
+      "FreeFlight FDL -978- TX",
+      "FDL978TX",
+      "FDL--978--TX",
+      "FDL 978 TX",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL -978- XVR",
+    "canonical_name": "FreeFlight FDL -978- XVR",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL -978- XVR",
+      "FreeFlight FDL -978- XVR",
+      "FDL978XVR",
+      "FDL--978--XVR",
+      "FDL 978 XVR",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL- 978 -RX",
+    "canonical_name": "FreeFlight FDL- 978 -RX",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL- 978 -RX",
+      "FreeFlight FDL- 978 -RX",
+      "FDL978RX",
+      "FDL--978--RX",
+      "FDL 978 RX",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL- 978 -TXL",
+    "canonical_name": "FreeFlight FDL- 978 -TXL",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL- 978 -TXL",
+      "FreeFlight FDL- 978 -TXL",
+      "FDL978TXL",
+      "FDL--978--TXL",
+      "FDL 978 TXL",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL- 978 -XVRL",
+    "canonical_name": "FreeFlight FDL- 978 -XVRL",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL- 978 -XVRL",
+      "FreeFlight FDL- 978 -XVRL",
+      "FDL978XVRL",
+      "FDL--978--XVRL",
+      "FDL 978 XVRL",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL-978-GTX",
+    "canonical_name": "FreeFlight FDL-978-GTX",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL-978-GTX",
+      "FreeFlight FDL-978-GTX",
+      "FDL978GTX",
+      "FDL 978 GTX",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "FreeFlight",
+    "model": "FDL-978-GTX A",
+    "canonical_name": "FreeFlight FDL-978-GTX A",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "FDL-978-GTX A",
+      "FreeFlight FDL-978-GTX A",
+      "FDL978GTXA",
+      "FDL-978-GTX-A",
+      "FDL 978 GTX A",
+      "978"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G3X Touch",
+    "canonical_name": "Garmin G3X Touch",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "G3X Touch",
+      "Garmin G3X Touch",
+      "G3XTouch",
+      "G3X-Touch",
+      "G 3X Touch",
+      "G3 X Touch"
+    ],
+    "oem_msrp_usd": 8995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Display family"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G5",
+    "canonical_name": "Garmin G5",
+    "function_category": "Electronic Flight Instrument",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Garmin G5",
+      "G 5",
+      "G5"
+    ],
+    "oem_msrp_usd": 2495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G500 TXi",
+    "canonical_name": "Garmin G500 TXi",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "G500 TXi",
+      "Garmin G500 TXi",
+      "G500TXi",
+      "G500-TXi",
+      "G 500 TXi",
+      "G500 T Xi"
+    ],
+    "oem_msrp_usd": 15995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G600 TXi",
+    "canonical_name": "Garmin G600 TXi",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "G600 TXi",
+      "Garmin G600 TXi",
+      "G600TXi",
+      "G600-TXi",
+      "G 600 TXi",
+      "G600 T Xi"
+    ],
+    "oem_msrp_usd": 25995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL -84H",
+    "canonical_name": "Garmin GDL -84H",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL -84H",
+      "Garmin GDL -84H",
+      "GDL84H",
+      "GDL--84H",
+      "GDL 84H",
+      "GDL -84 H",
+      "84H"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL -88",
+    "canonical_name": "Garmin GDL -88",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL -88",
+      "Garmin GDL -88",
+      "GDL88",
+      "GDL--88",
+      "GDL 88"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL -88DH",
+    "canonical_name": "Garmin GDL -88DH",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL -88DH",
+      "Garmin GDL -88DH",
+      "GDL88DH",
+      "GDL--88DH",
+      "GDL 88DH",
+      "GDL -88 DH",
+      "88DH"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL -88H",
+    "canonical_name": "Garmin GDL -88H",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL -88H",
+      "Garmin GDL -88H",
+      "GDL88H",
+      "GDL--88H",
+      "GDL 88H",
+      "GDL -88 H",
+      "88H"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL -88x",
+    "canonical_name": "Garmin GDL -88x",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL -88x",
+      "Garmin GDL -88x",
+      "GDL88x",
+      "GDL--88x",
+      "GDL 88x",
+      "GDL -88 x",
+      "88X"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 82",
+    "canonical_name": "Garmin GDL 82",
+    "function_category": "UAT ADS-B Out",
+    "tso_refs": [
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "GDL 82",
+      "Garmin GDL 82",
+      "GDL82",
+      "GDL-82"
+    ],
+    "oem_msrp_usd": 1795,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Entry ADS-B Out"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL- 84",
+    "canonical_name": "Garmin GDL- 84",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL- 84",
+      "Garmin GDL- 84",
+      "GDL84",
+      "GDL--84",
+      "GDL 84"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL- 88D",
+    "canonical_name": "Garmin GDL- 88D",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "GDL- 88D",
+      "Garmin GDL- 88D",
+      "GDL88D",
+      "GDL--88D",
+      "GDL 88D",
+      "GDL- 88 D",
+      "88D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 460",
+    "canonical_name": "Garmin GDU 460",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GDU 460",
+      "Garmin GDU 460",
+      "GDU460",
+      "GDU-460",
+      "460"
+    ],
+    "oem_msrp_usd": 3995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "10.6 inch display"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 470",
+    "canonical_name": "Garmin GDU 470",
+    "function_category": "PFD/MFD",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GDU 470",
+      "Garmin GDU 470",
+      "GDU470",
+      "GDU-470",
+      "470"
+    ],
+    "oem_msrp_usd": 4295,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GFC 500",
+    "canonical_name": "Garmin GFC 500",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GFC 500",
+      "Garmin GFC 500",
+      "GFC500",
+      "GFC-500",
+      "500"
+    ],
+    "oem_msrp_usd": 8995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "2-axis baseline kit"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GFC 600",
+    "canonical_name": "Garmin GFC 600",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GFC 600",
+      "Garmin GFC 600",
+      "GFC600",
+      "GFC-600",
+      "600"
+    ],
+    "oem_msrp_usd": 19995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Higher-performance autopilot"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GI 275",
+    "canonical_name": "Garmin GI 275",
+    "function_category": "Electronic Flight Instrument",
+    "tso_refs": [
+      "TSO-C4c",
+      "TSO-C113a"
+    ],
+    "aliases": [
+      "GI 275",
+      "Garmin GI 275",
+      "GI275",
+      "GI-275",
+      "275"
+    ],
+    "oem_msrp_usd": 3995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Round gauge replacement"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 340",
+    "canonical_name": "Garmin GMA 340",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "GMA 340",
+      "Garmin GMA 340",
+      "GMA340",
+      "GMA-340",
+      "340"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 345",
+    "canonical_name": "Garmin GMA 345",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "GMA 345",
+      "Garmin GMA 345",
+      "GMA345",
+      "GMA-345",
+      "345"
+    ],
+    "oem_msrp_usd": 2495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Bluetooth audio panel"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 345c",
+    "canonical_name": "Garmin GMA 345c",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "GMA 345c",
+      "Garmin GMA 345c",
+      "GMA345c",
+      "GMA-345c",
+      "GMA 345 c",
+      "345C"
+    ],
+    "oem_msrp_usd": 2795,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Touchscreen audio panel"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 347",
+    "canonical_name": "Garmin GMA 347",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "GMA 347",
+      "Garmin GMA 347",
+      "GMA347",
+      "GMA-347",
+      "347"
+    ],
+    "oem_msrp_usd": 3495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 255A",
+    "canonical_name": "Garmin GNC 255A",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d",
+      "TSO-C40c"
+    ],
+    "aliases": [
+      "GNC 255A",
+      "Garmin GNC 255A",
+      "GNC255A",
+      "GNC-255A",
+      "GNC 255 A",
+      "255A"
+    ],
+    "oem_msrp_usd": 4495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 255B",
+    "canonical_name": "Garmin GNC 255B",
+    "function_category": "NAV/COMM",
+    "tso_refs": [
+      "TSO-C37d",
+      "TSO-C38d",
+      "TSO-C40c"
+    ],
+    "aliases": [
+      "GNC 255B",
+      "Garmin GNC 255B",
+      "GNC255B",
+      "GNC-255B",
+      "GNC 255 B",
+      "255B"
+    ],
+    "oem_msrp_usd": 4995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 355",
+    "canonical_name": "Garmin GNC 355",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNC 355",
+      "Garmin GNC 355",
+      "GNC355",
+      "GNC-355",
+      "355"
+    ],
+    "oem_msrp_usd": 7995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 420W",
+    "canonical_name": "Garmin GNC 420W",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNC 420W",
+      "Garmin GNC 420W",
+      "GNC420W",
+      "GNC-420W",
+      "GNC 420 W",
+      "420W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 420W 420AW",
+    "canonical_name": "Garmin GNC 420W 420AW",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNC 420W 420AW",
+      "Garmin GNC 420W 420AW",
+      "GNC420W420AW",
+      "GNC-420W-420AW",
+      "GNC 420 W 420 AW",
+      "420W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 420W AW",
+    "canonical_name": "Garmin GNC 420W AW",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNC 420W AW",
+      "Garmin GNC 420W AW",
+      "GNC420WAW",
+      "GNC-420W-AW",
+      "GNC 420 W AW",
+      "420W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 430",
+    "canonical_name": "Garmin GNS 430",
+    "function_category": "GPS/NAV/COMM",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "GNS 430",
+      "Garmin GNS 430",
+      "GNS430",
+      "GNS-430",
+      "430"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 4200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Non-WAAS"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 430A",
+    "canonical_name": "Garmin GNS 430A",
+    "function_category": "GPS/NAV/COMM",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "GNS 430A",
+      "Garmin GNS 430A",
+      "GNS430A",
+      "GNS-430A",
+      "GNS 430 A",
+      "430A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 4800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 430W",
+    "canonical_name": "Garmin GNS 430W",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNS 430W",
+      "Garmin GNS 430W",
+      "GNS430W",
+      "GNS-430W",
+      "GNS 430 W",
+      "430W",
+      "Garmin 430 WAAS"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 430W 430AW 480 530W 530AW",
+    "canonical_name": "Garmin GNS 430W 430AW 480 530W 530AW",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNS 430W 430AW 480 530W 530AW",
+      "Garmin GNS 430W 430AW 480 530W 530AW",
+      "GNS430W430AW480530W530AW",
+      "GNS-430W-430AW-480-530W-530AW",
+      "GNS 430 W 430 AW 480 530 W 530 AW",
+      "430W",
+      "Garmin 430 WAAS"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 480",
+    "canonical_name": "Garmin GNS 480",
+    "function_category": "GPS/NAV/COMM",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNS 480",
+      "Garmin GNS 480",
+      "GNS480",
+      "GNS-480",
+      "480"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 6200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "CNX80 lineage"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 530",
+    "canonical_name": "Garmin GNS 530",
+    "function_category": "GPS/NAV/COMM",
+    "tso_refs": [
+      "TSO-C129a"
+    ],
+    "aliases": [
+      "GNS 530",
+      "Garmin GNS 530",
+      "GNS530",
+      "GNS-530",
+      "530"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 6200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Non-WAAS"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNS 530W",
+    "canonical_name": "Garmin GNS 530W",
+    "function_category": "GPS/NAV/COMM",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GNS 530W",
+      "Garmin GNS 530W",
+      "GNS530W",
+      "GNS-530W",
+      "GNS 530 W",
+      "530W",
+      "Garmin 530 WAAS"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 9800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "WAAS"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNX 375",
+    "canonical_name": "Garmin GNX 375",
+    "function_category": "GPS/XPDR ADS-B",
+    "tso_refs": [
+      "TSO-C146e",
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GNX 375",
+      "Garmin GNX 375",
+      "GNX375",
+      "GNX-375",
+      "375"
+    ],
+    "oem_msrp_usd": 7995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Integrated transponder"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 175",
+    "canonical_name": "Garmin GPS 175",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GPS 175",
+      "Garmin GPS 175",
+      "GPS175",
+      "GPS-175",
+      "175"
+    ],
+    "oem_msrp_usd": 4995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 3000",
+    "canonical_name": "Garmin GPS 3000",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GPS 3000",
+      "Garmin GPS 3000",
+      "GPS3000",
+      "GPS-3000",
+      "3000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 400W",
+    "canonical_name": "Garmin GPS 400W",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GPS 400W",
+      "Garmin GPS 400W",
+      "GPS400W",
+      "GPS-400W",
+      "GPS 400 W",
+      "400W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 400W 500W GNX 375",
+    "canonical_name": "Garmin GPS 400W 500W GNX 375",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GPS 400W 500W GNX 375",
+      "Garmin GPS 400W 500W GNX 375",
+      "GPS400W500WGNX375",
+      "GPS-400W-500W-GNX-375",
+      "GPS 400 W 500 W GNX 375",
+      "400W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 500W",
+    "canonical_name": "Garmin GPS 500W",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GPS 500W",
+      "Garmin GPS 500W",
+      "GPS500W",
+      "GPS-500W",
+      "GPS 500 W",
+      "500W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 5300,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 625",
+    "canonical_name": "Garmin GTN 625",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 625",
+      "Garmin GTN 625",
+      "GTN625",
+      "GTN-625",
+      "625"
+    ],
+    "oem_msrp_usd": 6495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Touchscreen navigator"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 635",
+    "canonical_name": "Garmin GTN 635",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 635",
+      "Garmin GTN 635",
+      "GTN635",
+      "GTN-635",
+      "635"
+    ],
+    "oem_msrp_usd": 8995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Touchscreen navigator"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 650",
+    "canonical_name": "Garmin GTN 650",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 650",
+      "Garmin GTN 650",
+      "GTN650",
+      "GTN-650",
+      "650"
+    ],
+    "oem_msrp_usd": 11995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 650Xi",
+    "canonical_name": "Garmin GTN 650Xi",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 650Xi",
+      "Garmin GTN 650Xi",
+      "GTN650Xi",
+      "GTN-650Xi",
+      "GTN 650 Xi",
+      "650XI"
+    ],
+    "oem_msrp_usd": 12995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Xi generation"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 725",
+    "canonical_name": "Garmin GTN 725",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 725",
+      "Garmin GTN 725",
+      "GTN725",
+      "GTN-725",
+      "725"
+    ],
+    "oem_msrp_usd": 14995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 750",
+    "canonical_name": "Garmin GTN 750",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 750",
+      "Garmin GTN 750",
+      "GTN750",
+      "GTN-750",
+      "750"
+    ],
+    "oem_msrp_usd": 17995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 750Xi",
+    "canonical_name": "Garmin GTN 750Xi",
+    "function_category": "GPS/NAV/COMM IFD",
+    "tso_refs": [
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 750Xi",
+      "Garmin GTN 750Xi",
+      "GTN750Xi",
+      "GTN-750Xi",
+      "GTN 750 Xi",
+      "750XI"
+    ],
+    "oem_msrp_usd": 19995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Xi generation"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 7xx",
+    "canonical_name": "Garmin GTN 7xx",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 7xx",
+      "Garmin GTN 7xx",
+      "GTN7xx",
+      "GTN-7xx",
+      "GTN 7 xx"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 7xx 7xx Xi",
+    "canonical_name": "Garmin GTN 7xx 7xx Xi",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "GTN 7xx 7xx Xi",
+      "Garmin GTN 7xx 7xx Xi",
+      "GTN7xx7xxXi",
+      "GTN-7xx-7xx-Xi",
+      "GTN 7 xx 7 xx Xi",
+      "GTN 7xx 7xxXi"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTR 200",
+    "canonical_name": "Garmin GTR 200",
+    "function_category": "COMM",
+    "tso_refs": [
+      "TSO-C169a"
+    ],
+    "aliases": [
+      "GTR 200",
+      "Garmin GTR 200",
+      "GTR200",
+      "GTR-200",
+      "200"
+    ],
+    "oem_msrp_usd": 1395,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTR 225",
+    "canonical_name": "Garmin GTR 225",
+    "function_category": "COMM",
+    "tso_refs": [
+      "TSO-C169a"
+    ],
+    "aliases": [
+      "GTR 225",
+      "Garmin GTR 225",
+      "GTR225",
+      "GTR-225",
+      "225"
+    ],
+    "oem_msrp_usd": 2295,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX -3000",
+    "canonical_name": "Garmin GTX -3000",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX -3000",
+      "Garmin GTX -3000",
+      "GTX3000",
+      "GTX--3000",
+      "GTX 3000",
+      "3000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX -330 ES",
+    "canonical_name": "Garmin GTX -330 ES",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX -330 ES",
+      "Garmin GTX -330 ES",
+      "GTX330ES",
+      "GTX--330-ES",
+      "GTX 330 ES",
+      "330"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX -330x",
+    "canonical_name": "Garmin GTX -330x",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX -330x",
+      "Garmin GTX -330x",
+      "GTX330x",
+      "GTX--330x",
+      "GTX 330x",
+      "GTX -330 x",
+      "330X"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX -33H ES",
+    "canonical_name": "Garmin GTX -33H ES",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX -33H ES",
+      "Garmin GTX -33H ES",
+      "GTX33HES",
+      "GTX--33H-ES",
+      "GTX 33H ES",
+      "GTX -33 H ES",
+      "33H"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX -33x ES",
+    "canonical_name": "Garmin GTX -33x ES",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX -33x ES",
+      "Garmin GTX -33x ES",
+      "GTX33xES",
+      "GTX--33x-ES",
+      "GTX 33x ES",
+      "GTX -33 x ES",
+      "33X"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 327",
+    "canonical_name": "Garmin GTX 327",
+    "function_category": "Transponder",
+    "tso_refs": [
+      "TSO-C74c"
+    ],
+    "aliases": [
+      "GTX 327",
+      "Garmin GTX 327",
+      "GTX327",
+      "GTX-327",
+      "327"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "discontinued",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Mode C transponder"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 335",
+    "canonical_name": "Garmin GTX 335",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX 335",
+      "Garmin GTX 335",
+      "GTX335",
+      "GTX-335",
+      "335"
+    ],
+    "oem_msrp_usd": 3495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 335R",
+    "canonical_name": "Garmin GTX 335R",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX 335R",
+      "Garmin GTX 335R",
+      "GTX335R",
+      "GTX-335R",
+      "GTX 335 R",
+      "335R"
+    ],
+    "oem_msrp_usd": 3495,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Remote mount"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 345",
+    "canonical_name": "Garmin GTX 345",
+    "function_category": "Transponder ADS-B In/Out",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c",
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "GTX 345",
+      "Garmin GTX 345",
+      "GTX345",
+      "GTX-345",
+      "345"
+    ],
+    "oem_msrp_usd": 5995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 345R",
+    "canonical_name": "Garmin GTX 345R",
+    "function_category": "Transponder ADS-B In/Out",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c",
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "GTX 345R",
+      "Garmin GTX 345R",
+      "GTX345R",
+      "GTX-345R",
+      "GTX 345 R",
+      "345R"
+    ],
+    "oem_msrp_usd": 5995,
+    "msrp_source": "garmin.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Remote mount"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-23",
+    "canonical_name": "Garmin GTX-23",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX-23",
+      "Garmin GTX-23",
+      "GTX23",
+      "GTX 23"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-335D",
+    "canonical_name": "Garmin GTX-335D",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX-335D",
+      "Garmin GTX-335D",
+      "GTX335D",
+      "GTX 335D",
+      "GTX-335 D",
+      "335D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-345D",
+    "canonical_name": "Garmin GTX-345D",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX-345D",
+      "Garmin GTX-345D",
+      "GTX345D",
+      "GTX 345D",
+      "GTX-345 D",
+      "345D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-35R",
+    "canonical_name": "Garmin GTX-35R",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX-35R",
+      "Garmin GTX-35R",
+      "GTX35R",
+      "GTX 35R",
+      "GTX-35 R",
+      "35R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-45R",
+    "canonical_name": "Garmin GTX-45R",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "GTX-45R",
+      "Garmin GTX-45R",
+      "GTX45R",
+      "GTX 45R",
+      "GTX-45 R",
+      "45R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "Lynx NGT-9000",
+    "canonical_name": "L3Harris Lynx NGT-9000",
+    "function_category": "Transponder ADS-B In/Out",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c",
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "Lynx NGT-9000",
+      "L3Harris Lynx NGT-9000",
+      "LynxNGT9000",
+      "Lynx-NGT-9000",
+      "Lynx NGT 9000",
+      "9000"
+    ],
+    "oem_msrp_usd": 6395,
+    "msrp_source": "l3harris avionics sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT -1000",
+    "canonical_name": "L3Harris NGT -1000",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "NGT -1000",
+      "L3Harris NGT -1000",
+      "NGT1000",
+      "NGT--1000",
+      "NGT 1000",
+      "1000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT -2000",
+    "canonical_name": "L3Harris NGT -2000",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "NGT -2000",
+      "L3Harris NGT -2000",
+      "NGT2000",
+      "NGT--2000",
+      "NGT 2000",
+      "2000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT -2000 2500",
+    "canonical_name": "L3Harris NGT -2000 2500",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e",
+      "TSO-C146e"
+    ],
+    "aliases": [
+      "NGT -2000 2500",
+      "L3Harris NGT -2000 2500",
+      "NGT20002500",
+      "NGT--2000-2500",
+      "NGT 2000 2500",
+      "2000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_position_source_2021"
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT -9000",
+    "canonical_name": "L3Harris NGT -9000",
+    "function_category": "Avionics",
+    "tso_refs": [],
+    "aliases": [
+      "NGT -9000",
+      "L3Harris NGT -9000",
+      "NGT9000",
+      "NGT--9000",
+      "NGT 9000",
+      "9000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "faa_adsb_certified_equipment_2021"
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT-2500",
+    "canonical_name": "L3Harris NGT-2500",
+    "function_category": "ADS-B In",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "NGT-2500",
+      "L3Harris NGT-2500",
+      "NGT2500",
+      "NGT 2500",
+      "2500"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "3100",
+    "canonical_name": "S-TEC 3100",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "3100",
+      "S-TEC 3100",
+      "S-TEC-3100"
+    ],
+    "oem_msrp_usd": 8995,
+    "msrp_source": "genesys aerosystems sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Digital retrofit autopilot"
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "PSS 60",
+    "canonical_name": "S-TEC PSS 60",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "PSS 60",
+      "S-TEC PSS 60",
+      "PSS60",
+      "PSS-60"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 20",
+    "canonical_name": "S-TEC System 20",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 20",
+      "S-TEC System 20",
+      "System20",
+      "System-20"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Genesys legacy line"
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 30",
+    "canonical_name": "S-TEC System 30",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 30",
+      "S-TEC System 30",
+      "System30",
+      "System-30"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 40",
+    "canonical_name": "S-TEC System 40",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 40",
+      "S-TEC System 40",
+      "System40",
+      "System-40"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 50",
+    "canonical_name": "S-TEC System 50",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 50",
+      "S-TEC System 50",
+      "System50",
+      "System-50"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 55X",
+    "canonical_name": "S-TEC System 55X",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 55X",
+      "S-TEC System 55X",
+      "System55X",
+      "System-55X",
+      "System 55 X",
+      "55X"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 4200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Common listing token: 55X"
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 60-2",
+    "canonical_name": "S-TEC System 60-2",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 60-2",
+      "S-TEC System 60-2",
+      "System602",
+      "System-60-2",
+      "System 60 2"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy",
+    "market_estimate_usd": 6200,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "System 65",
+    "canonical_name": "S-TEC System 65",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "System 65",
+      "S-TEC System 65",
+      "System65",
+      "System-65"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 5900,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Trig",
+    "model": "TN72",
+    "canonical_name": "Trig TN72",
+    "function_category": "GPS Position Source",
+    "tso_refs": [
+      "TSO-C145e"
+    ],
+    "aliases": [
+      "TN72",
+      "Trig TN72",
+      "TN 72"
+    ],
+    "oem_msrp_usd": 1195,
+    "msrp_source": "trig-avionics sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Trig",
+    "model": "TT21",
+    "canonical_name": "Trig TT21",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "TT21",
+      "Trig TT21",
+      "TT 21"
+    ],
+    "oem_msrp_usd": 2395,
+    "msrp_source": "trig-avionics sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Trig",
+    "model": "TT22",
+    "canonical_name": "Trig TT22",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "TT22",
+      "Trig TT22",
+      "TT 22"
+    ],
+    "oem_msrp_usd": 2995,
+    "msrp_source": "trig-avionics sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "Trig",
+    "model": "TT31",
+    "canonical_name": "Trig TT31",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "TT31",
+      "Trig TT31",
+      "TT 31"
+    ],
+    "oem_msrp_usd": 3395,
+    "msrp_source": "trig-avionics sheets 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": ""
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "AV-30-C",
+    "canonical_name": "uAvionix AV-30-C",
+    "function_category": "Electronic Flight Instrument",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "AV-30-C",
+      "uAvionix AV-30-C",
+      "AV30C",
+      "AV 30 C"
+    ],
+    "oem_msrp_usd": 2399,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Certified display"
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "AV-30-E",
+    "canonical_name": "uAvionix AV-30-E",
+    "function_category": "Electronic Flight Instrument",
+    "tso_refs": [],
+    "aliases": [
+      "AV-30-E",
+      "uAvionix AV-30-E",
+      "AV30E",
+      "AV 30 E"
+    ],
+    "oem_msrp_usd": 1999,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Experimental variant"
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "ping200XR",
+    "canonical_name": "uAvionix ping200XR",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "ping200XR",
+      "uAvionix ping200XR",
+      "ping 200XR",
+      "ping200 XR"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "ebay_completed_sales_2025",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "UAS and panel use cases"
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "skyBeacon",
+    "canonical_name": "uAvionix skyBeacon",
+    "function_category": "ADS-B Out",
+    "tso_refs": [
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "skyBeacon",
+      "uAvionix skyBeacon",
+      "uAvionix-skyBeacon"
+    ],
+    "oem_msrp_usd": 2199,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Wingtip ADS-B Out"
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "tailBeacon",
+    "canonical_name": "uAvionix tailBeacon",
+    "function_category": "ADS-B Out",
+    "tso_refs": [
+      "TSO-C154c"
+    ],
+    "aliases": [
+      "tailBeacon",
+      "uAvionix tailBeacon",
+      "uAvionix-tailBeacon"
+    ],
+    "oem_msrp_usd": 2299,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Rudder ADS-B Out"
+  },
+  {
+    "manufacturer": "uAvionix",
+    "model": "tailBeaconX",
+    "canonical_name": "uAvionix tailBeaconX",
+    "function_category": "Transponder ADS-B",
+    "tso_refs": [
+      "TSO-C112f",
+      "TSO-C166c"
+    ],
+    "aliases": [
+      "tailBeaconX",
+      "uAvionix tailBeaconX",
+      "uAvionix-tailBeaconX"
+    ],
+    "oem_msrp_usd": 2499,
+    "msrp_source": "uavionix.com 2025",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "1090ES solution"
+  }
+]
