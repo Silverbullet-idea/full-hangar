@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type SourceQualityRow = {
@@ -161,7 +162,12 @@ export function SourceQualitySection() {
         </p>
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           {rankedRows.map((row) => (
-            <div key={`${row.source}-health`} className="rounded border border-brand-dark p-2 text-xs">
+            <Link
+              key={`${row.source}-health`}
+              href={`/listings?source=${encodeURIComponent(row.source)}`}
+              aria-label={`View ${sourceLabel(row.source)} listings`}
+              className="block rounded border border-brand-dark p-2 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
+            >
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{sourceLabel(row.source)}</p>
                 <p className={`text-sm font-bold ${healthClass(row.source_health_score)}`}>{row.source_health_score.toFixed(1)}</p>
@@ -183,7 +189,7 @@ export function SourceQualitySection() {
               ) : (
                 <p className="mt-2 text-[10px] text-emerald-500">No active alerts</p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
@@ -266,7 +272,12 @@ export function SourceQualitySection() {
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((row) => (
-            <div key={`${row.source}-tiers`} className="rounded border border-brand-dark p-3 text-xs">
+            <Link
+              key={`${row.source}-tiers`}
+              href={`/listings?source=${encodeURIComponent(row.source)}`}
+              aria-label={`View ${sourceLabel(row.source)} listings`}
+              className="block rounded border border-brand-dark p-3 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
+            >
               <div className="mb-2 flex items-center justify-between">
                 <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
                 <div className="text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
@@ -282,7 +293,7 @@ export function SourceQualitySection() {
                 <p>&lt;70: {fmtPct(row.tiers.pct_under_70)}</p>
                 <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </article>
