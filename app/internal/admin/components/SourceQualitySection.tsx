@@ -52,6 +52,18 @@ type SourceQualityPayload = {
   sources: SourceQualityRow[];
 };
 
+type TierConfig = {
+  key: keyof SourceQualityRow["tiers"];
+  label: string;
+  barClass: string;
+};
+
+const TIER_CONFIGS: TierConfig[] = [
+  { key: "pct_90_100", label: "90-100%", barClass: "bg-emerald-600" },
+  { key: "pct_70_89", label: "70-89%", barClass: "bg-brand-orange" },
+  { key: "pct_under_70", label: "<70%", barClass: "bg-brand-burn" },
+];
+
 function fmtPct(value: number) {
   return `${value.toFixed(1)}%`;
 }
@@ -132,6 +144,10 @@ export function SourceQualitySection() {
   const fields = useMemo(() => payload?.completeness_fields ?? [], [payload]);
   const criticalFields = useMemo(() => payload?.critical_fields ?? [], [payload]);
   const rankedRows = useMemo(() => [...rows].sort((a, b) => b.source_health_score - a.source_health_score), [rows]);
+  const tierOrderedRows = useMemo(
+    () => [...rows].sort((a, b) => b.active_listings - a.active_listings || a.source.localeCompare(b.source)),
+    [rows]
+  );
 
   if (loading) {
     return (
@@ -282,46 +298,57 @@ export function SourceQualitySection() {
       <article className="rounded border border-brand-dark bg-card-bg p-4">
         <h3 className="text-base font-semibold">Completeness Tier Distribution by Source</h3>
         <p className="mt-1 text-xs text-brand-muted">
-          Stacked tiers: green 90-100%, amber 70-89%, red &lt; 70%. Freshness and weekly deltas included for quick scraper health triage.
+          Tier-first view (axes swapped): each row is a tier and each bar compares sources within that tier.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {rows.map((row) => {
-            const canOpenListings = row.active_listings > 0;
-            const cardClass = canOpenListings
-              ? "block rounded border border-brand-dark p-3 text-xs transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
-              : "rounded border border-brand-dark p-3 text-xs opacity-70";
-            const content = (
-              <>
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="font-semibold text-brand-muted">{sourceLabel(row.source)}</div>
-                  <div className="text-brand-muted">{row.active_listings.toLocaleString()} listings</div>
-                </div>
-                <div className="mx-auto flex h-32 w-8 flex-col-reverse overflow-hidden rounded bg-[#111111]">
-                  <div className="bg-brand-burn" style={{ height: `${row.tiers.pct_under_70}%` }} title={`<70: ${fmtPct(row.tiers.pct_under_70)}`} />
-                  <div className="bg-brand-orange" style={{ height: `${row.tiers.pct_70_89}%` }} title={`70-89: ${fmtPct(row.tiers.pct_70_89)}`} />
-                  <div className="bg-emerald-600" style={{ height: `${row.tiers.pct_90_100}%` }} title={`90-100: ${fmtPct(row.tiers.pct_90_100)}`} />
-                </div>
-                <div className="mt-2 space-y-0.5 text-brand-muted">
-                  <p>90-100: {fmtPct(row.tiers.pct_90_100)}</p>
-                  <p>70-89: {fmtPct(row.tiers.pct_70_89)}</p>
-                  <p>&lt;70: {fmtPct(row.tiers.pct_under_70)}</p>
-                  <p>Seen 72h: {fmtPct(row.freshness.seen_last_72h_pct)}</p>
-                </div>
-                {!canOpenListings ? <p className="mt-1 text-[10px] text-brand-muted">No active listings to open.</p> : null}
-              </>
-            );
-            if (!canOpenListings) return <div key={`${row.source}-tiers`} className={cardClass}>{content}</div>;
-            return (
-              <Link
-                key={`${row.source}-tiers`}
-                href={`/listings?source=${encodeURIComponent(row.source)}`}
-                aria-label={`View ${sourceLabel(row.source)} listings`}
-                className={cardClass}
-              >
-                {content}
-              </Link>
-            );
-          })}
+        <div className="mt-3 space-y-3">
+          {TIER_CONFIGS.map((tier) => (
+            <div key={`tier-row-${tier.key}`} className="rounded border border-brand-dark p-3">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <p className="font-semibold text-brand-muted">{tier.label}</p>
+                <span className="text-brand-muted">Source comparison</span>
+              </div>
+              <div className="space-y-2">
+                {tierOrderedRows
+                  .map((row) => ({
+                    row,
+                    value: row.tiers[tier.key],
+                  }))
+                  .map(({ row, value }) => {
+                    const canOpenListings = row.active_listings > 0;
+                    const content = (
+                      <div className="grid grid-cols-[130px_1fr_56px] items-center gap-2 text-xs">
+                        <div className="truncate font-semibold text-brand-muted" title={sourceLabel(row.source)}>
+                          {sourceLabel(row.source)}
+                        </div>
+                        <div className="h-3 overflow-hidden rounded bg-[#111111]" title={`${sourceLabel(row.source)} ${tier.label}: ${fmtPct(value)}`}>
+                          <div className={`h-full ${tier.barClass}`} style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+                        </div>
+                        <div className="text-right text-brand-muted">{fmtPct(value)}</div>
+                      </div>
+                    );
+
+                    if (!canOpenListings) {
+                      return (
+                        <div key={`${row.source}-${tier.key}`} className="opacity-70">
+                          {content}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={`${row.source}-${tier.key}`}
+                        href={`/listings?source=${encodeURIComponent(row.source)}`}
+                        aria-label={`View ${sourceLabel(row.source)} listings`}
+                        className="block rounded px-1 py-1 transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
+                      >
+                        {content}
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          ))}
         </div>
       </article>
 
