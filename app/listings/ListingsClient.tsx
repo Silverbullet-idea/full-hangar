@@ -163,6 +163,10 @@ export default function ListingsClient({
     setAppliedMaxPrice(Math.max(0, initialMaxPrice))
     setCategoryFilter(initialCategoryFilter)
     setSortBy(initialSortBy)
+    if (typeof window !== 'undefined') {
+      // Release navigation overlay only after new listings payload is mounted.
+      window.dispatchEvent(new Event('fullhangar:navigation-loading-end'))
+    }
   }, [
     initialListings,
     initialTotalFiltered,

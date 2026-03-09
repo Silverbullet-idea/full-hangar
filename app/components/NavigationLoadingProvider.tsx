@@ -4,7 +4,6 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react"
 
 const FAILSAFE_HIDE_MS = 15000
-const LISTINGS_NAV_GRACE_MS = 350
 const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start"
 const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end"
 
@@ -32,7 +31,6 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   const searchParams = useSearchParams()
   const [isNavigating, setIsNavigating] = useState(false)
   const hideTimerRef = useRef<number | null>(null)
-  const listingsGraceTimerRef = useRef<number | null>(null)
   const loadingLocksRef = useRef(0)
   const pendingListingsNavigationRef = useRef(false)
 
@@ -40,13 +38,6 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
     if (hideTimerRef.current) {
       window.clearTimeout(hideTimerRef.current)
       hideTimerRef.current = null
-    }
-  }
-
-  const clearListingsGraceTimer = () => {
-    if (listingsGraceTimerRef.current) {
-      window.clearTimeout(listingsGraceTimerRef.current)
-      listingsGraceTimerRef.current = null
     }
   }
 
@@ -83,19 +74,21 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
 
       const resolved = new URL(anchor.href, window.location.href)
       pendingListingsNavigationRef.current = resolved.pathname === "/listings"
+      if (pendingListingsNavigationRef.current) {
+        // Keep overlay until ListingsClient confirms the new payload is mounted.
+        loadingLocksRef.current += 1
+      }
       startOverlay()
     }
 
     const onLoadingStart = () => {
       pendingListingsNavigationRef.current = false
-      clearListingsGraceTimer()
       loadingLocksRef.current += 1
       startOverlay()
     }
 
     const onLoadingEnd = () => {
       pendingListingsNavigationRef.current = false
-      clearListingsGraceTimer()
       loadingLocksRef.current = Math.max(0, loadingLocksRef.current - 1)
       endOverlay()
     }
@@ -113,18 +106,13 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   useEffect(() => {
     if (!isNavigating) return
     if (pendingListingsNavigationRef.current) {
-      // Keep overlay visible through detail -> listings transition.
+      // Keep overlay visible through listing transitions.
       if (pathname !== "/listings") return
       if (loadingLocksRef.current > 0) return
-      clearListingsGraceTimer()
-      listingsGraceTimerRef.current = window.setTimeout(() => {
-        pendingListingsNavigationRef.current = false
-        listingsGraceTimerRef.current = null
-        endOverlay()
-      }, LISTINGS_NAV_GRACE_MS)
+      pendingListingsNavigationRef.current = false
+      endOverlay()
       return
     }
-    clearListingsGraceTimer()
     if (loadingLocksRef.current > 0) return
     const rafId = window.requestAnimationFrame(() => {
       endOverlay()
@@ -135,7 +123,6 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   useEffect(
     () => () => {
       clearHideTimer()
-      clearListingsGraceTimer()
     },
     []
   )
