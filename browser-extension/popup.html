@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>Full Hangar Harvester</title>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-text">FullHangar</div>
+    <div class="subtitle">Controller.com Harvester</div>
+  </div>
+
+  <div class="bridge-status" id="bridge-status">
+    <span class="dot" id="bridge-dot"></span>
+    <span id="bridge-label">Checking bridge...</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="stat-extracted">0</div>
+      <div class="stat-label">Extracted</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="stat-upserted">0</div>
+      <div class="stat-label">Saved to DB</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="stat-failed">0</div>
+      <div class="stat-label">Failed</div>
+    </div>
+  </div>
+
+  <div class="current-status" id="current-status">Idle</div>
+
+  <div class="section-label">Target Makes</div>
+  <textarea id="makes-input" placeholder="One make per line, e.g.:&#10;Cessna&#10;Piper&#10;Beechcraft"></textarea>
+
+  <div class="section-label">Harvest Mode</div>
+  <select id="mode-select">
+    <option value="cards_only">Cards Only (Fast - list page data)</option>
+    <option value="cards_and_details">Cards + Details (Thorough - visits each listing)</option>
+  </select>
+
+  <div class="button-row">
+    <button id="btn-start" class="btn btn-green">Start</button>
+    <button id="btn-stop" class="btn btn-red" disabled>Stop</button>
+    <button id="btn-resume" class="btn btn-orange" disabled>Resume</button>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
