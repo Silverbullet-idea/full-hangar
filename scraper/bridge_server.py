@@ -169,6 +169,10 @@ def normalize_and_validate_listing(raw: dict[str, Any], existing_source_ids: set
     normalized, warnings = validate_listing(row)
     if warnings:
         return None, "; ".join(warnings)
+
+    # Extension-only debug metadata (prefixed with "_") must never be sent to DB.
+    # Supabase rejects unknown columns during upsert payload expansion.
+    normalized = {k: v for k, v in normalized.items() if not str(k).startswith("_")}
     return normalized, None
 
 
@@ -219,6 +223,11 @@ def upsert_batches(*, supabase: Any, listings: list[dict[str, Any]], dry_run: bo
                     logger=LOG,
                 )
             upserted += saved
+            failed_in_batch = max(0, len(batch) - saved)
+            if failed_in_batch:
+                errors += failed_in_batch
+                state.last_error_at = datetime.now(timezone.utc).isoformat()
+                LOG.warning("[INGEST] batch partial failure size=%s saved=%s failed=%s", len(batch), saved, failed_in_batch)
             state.last_batch_at = datetime.now(timezone.utc).isoformat()
             write_checkpoint(state)
             LOG.info("[INGEST] batch_size=%s upserted=%s errors=%s", len(batch), saved, errors)
