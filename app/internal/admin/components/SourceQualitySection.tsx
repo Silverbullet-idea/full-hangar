@@ -52,17 +52,25 @@ type SourceQualityPayload = {
   sources: SourceQualityRow[];
 };
 
-type TierConfig = {
-  key: keyof SourceQualityRow["tiers"];
-  label: string;
-  barClass: string;
-};
-
-const TIER_CONFIGS: TierConfig[] = [
-  { key: "pct_90_100", label: "90-100%", barClass: "bg-emerald-600" },
-  { key: "pct_70_89", label: "70-89%", barClass: "bg-brand-orange" },
-  { key: "pct_under_70", label: "<70%", barClass: "bg-brand-burn" },
-];
+type SortDirection = "asc" | "desc";
+type SortKey =
+  | "source"
+  | "active_listings"
+  | "source_health_score"
+  | "critical_completeness_pct"
+  | "avg_critical_completeness_pct"
+  | "avg_full_completeness_pct"
+  | "pct_with_price"
+  | "pct_with_n_number"
+  | "pct_with_total_time"
+  | "pct_with_smoh"
+  | "pct_with_engine_model"
+  | "pct_with_location"
+  | "max_completeness_pct"
+  | "trend_added_delta_pct"
+  | "trend_full_completeness_delta_pct"
+  | "trend_avg_score_delta"
+  | "avg_score";
 
 function fmtPct(value: number) {
   return `${value.toFixed(1)}%`;
@@ -106,6 +114,8 @@ export function SourceQualitySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [payload, setPayload] = useState<SourceQualityPayload | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("source_health_score");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
     let cancelled = false;
@@ -144,10 +154,69 @@ export function SourceQualitySection() {
   const fields = useMemo(() => payload?.completeness_fields ?? [], [payload]);
   const criticalFields = useMemo(() => payload?.critical_fields ?? [], [payload]);
   const rankedRows = useMemo(() => [...rows].sort((a, b) => b.source_health_score - a.source_health_score), [rows]);
-  const tierOrderedRows = useMemo(
-    () => [...rows].sort((a, b) => b.active_listings - a.active_listings || a.source.localeCompare(b.source)),
-    [rows]
-  );
+  const sortedRows = useMemo(() => {
+    const numericValue = (row: SourceQualityRow): number => {
+      switch (sortKey) {
+        case "active_listings":
+          return row.active_listings;
+        case "source_health_score":
+          return row.source_health_score;
+        case "critical_completeness_pct":
+          return row.critical_completeness_pct;
+        case "avg_critical_completeness_pct":
+          return row.avg_critical_completeness_pct;
+        case "avg_full_completeness_pct":
+          return row.avg_full_completeness_pct;
+        case "pct_with_price":
+          return row.pct_with_price;
+        case "pct_with_n_number":
+          return row.pct_with_n_number;
+        case "pct_with_total_time":
+          return row.pct_with_total_time;
+        case "pct_with_smoh":
+          return row.pct_with_smoh;
+        case "pct_with_engine_model":
+          return row.pct_with_engine_model;
+        case "pct_with_location":
+          return row.pct_with_location;
+        case "max_completeness_pct":
+          return row.max_completeness_pct;
+        case "trend_added_delta_pct":
+          return row.trend.added_delta_pct ?? Number.NEGATIVE_INFINITY;
+        case "trend_full_completeness_delta_pct":
+          return row.trend.full_completeness_delta_pct ?? Number.NEGATIVE_INFINITY;
+        case "trend_avg_score_delta":
+          return row.trend.avg_score_delta ?? Number.NEGATIVE_INFINITY;
+        case "avg_score":
+          return row.avg_score ?? Number.NEGATIVE_INFINITY;
+        default:
+          return 0;
+      }
+    };
+
+    return [...rows].sort((a, b) => {
+      if (sortKey === "source") {
+        const cmp = a.source.localeCompare(b.source);
+        return sortDirection === "asc" ? cmp : -cmp;
+      }
+      const cmp = numericValue(a) - numericValue(b);
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [rows, sortDirection, sortKey]);
+
+  const toggleSort = (nextKey: SortKey) => {
+    if (sortKey === nextKey) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(nextKey);
+    setSortDirection(nextKey === "source" ? "asc" : "desc");
+  };
+
+  const sortArrow = (key: SortKey) => {
+    if (sortKey !== key) return "↕";
+    return sortDirection === "asc" ? "↑" : "↓";
+  };
 
   if (loading) {
     return (
@@ -226,27 +295,95 @@ export function SourceQualitySection() {
           <table className="min-w-[1650px] text-sm">
             <thead className="sticky top-0 bg-[#111111] text-left text-xs uppercase tracking-wide text-brand-muted">
               <tr>
-                <th className="px-3 py-2">Source</th>
-                <th className="px-3 py-2">Active Listings</th>
-                <th className="px-3 py-2">Health Score</th>
-                <th className="px-3 py-2">Critical 100%</th>
-                <th className="px-3 py-2">Avg Critical</th>
-                <th className="px-3 py-2">Avg Full</th>
-                <th className="px-3 py-2">% with Price</th>
-                <th className="px-3 py-2">% with N-Number</th>
-                <th className="px-3 py-2">% with Total Time</th>
-                <th className="px-3 py-2">% with SMOH</th>
-                <th className="px-3 py-2">% with Engine Model</th>
-                <th className="px-3 py-2">% with Location</th>
-                <th className="px-3 py-2">Max Completeness %</th>
-                <th className="px-3 py-2">7d Added Δ</th>
-                <th className="px-3 py-2">7d Full Δ</th>
-                <th className="px-3 py-2">7d Score Δ</th>
-                <th className="px-3 py-2">Avg Score</th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("source")}>
+                    Source <span aria-hidden>{sortArrow("source")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("active_listings")}>
+                    Active Listings <span aria-hidden>{sortArrow("active_listings")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("source_health_score")}>
+                    Health Score <span aria-hidden>{sortArrow("source_health_score")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("critical_completeness_pct")}>
+                    Critical 100% <span aria-hidden>{sortArrow("critical_completeness_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("avg_critical_completeness_pct")}>
+                    Avg Critical <span aria-hidden>{sortArrow("avg_critical_completeness_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("avg_full_completeness_pct")}>
+                    Avg Full <span aria-hidden>{sortArrow("avg_full_completeness_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_price")}>
+                    % with Price <span aria-hidden>{sortArrow("pct_with_price")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_n_number")}>
+                    % with N-Number <span aria-hidden>{sortArrow("pct_with_n_number")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_total_time")}>
+                    % with Total Time <span aria-hidden>{sortArrow("pct_with_total_time")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_smoh")}>
+                    % with SMOH <span aria-hidden>{sortArrow("pct_with_smoh")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_engine_model")}>
+                    % with Engine Model <span aria-hidden>{sortArrow("pct_with_engine_model")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_location")}>
+                    % with Location <span aria-hidden>{sortArrow("pct_with_location")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("max_completeness_pct")}>
+                    Max Completeness % <span aria-hidden>{sortArrow("max_completeness_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("trend_added_delta_pct")}>
+                    7d Added Δ <span aria-hidden>{sortArrow("trend_added_delta_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("trend_full_completeness_delta_pct")}>
+                    7d Full Δ <span aria-hidden>{sortArrow("trend_full_completeness_delta_pct")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("trend_avg_score_delta")}>
+                    7d Score Δ <span aria-hidden>{sortArrow("trend_avg_score_delta")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("avg_score")}>
+                    Avg Score <span aria-hidden>{sortArrow("avg_score")}</span>
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {sortedRows.map((row) => (
                 <tr key={row.source} className="border-t border-brand-dark hover:bg-[#1d1d1d]">
                   <td className="px-3 py-2 font-semibold">
                     {sourceLabel(row.source)}
@@ -292,63 +429,6 @@ export function SourceQualitySection() {
               ))}
             </tbody>
           </table>
-        </div>
-      </article>
-
-      <article className="rounded border border-brand-dark bg-card-bg p-4">
-        <h3 className="text-base font-semibold">Completeness Tier Distribution by Source</h3>
-        <p className="mt-1 text-xs text-brand-muted">
-          Tier-first view (axes swapped): each row is a tier and each bar compares sources within that tier.
-        </p>
-        <div className="mt-3 space-y-3">
-          {TIER_CONFIGS.map((tier) => (
-            <div key={`tier-row-${tier.key}`} className="rounded border border-brand-dark p-3">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <p className="font-semibold text-brand-muted">{tier.label}</p>
-                <span className="text-brand-muted">Source comparison</span>
-              </div>
-              <div className="space-y-2">
-                {tierOrderedRows
-                  .map((row) => ({
-                    row,
-                    value: row.tiers[tier.key],
-                  }))
-                  .map(({ row, value }) => {
-                    const canOpenListings = row.active_listings > 0;
-                    const content = (
-                      <div className="grid grid-cols-[130px_1fr_56px] items-center gap-2 text-xs">
-                        <div className="truncate font-semibold text-brand-muted" title={sourceLabel(row.source)}>
-                          {sourceLabel(row.source)}
-                        </div>
-                        <div className="h-3 overflow-hidden rounded bg-[#111111]" title={`${sourceLabel(row.source)} ${tier.label}: ${fmtPct(value)}`}>
-                          <div className={`h-full ${tier.barClass}`} style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
-                        </div>
-                        <div className="text-right text-brand-muted">{fmtPct(value)}</div>
-                      </div>
-                    );
-
-                    if (!canOpenListings) {
-                      return (
-                        <div key={`${row.source}-${tier.key}`} className="opacity-70">
-                          {content}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <Link
-                        key={`${row.source}-${tier.key}`}
-                        href={`/listings?source=${encodeURIComponent(row.source)}`}
-                        aria-label={`View ${sourceLabel(row.source)} listings`}
-                        className="block rounded px-1 py-1 transition hover:bg-[#1d1d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
-                      >
-                        {content}
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          ))}
         </div>
       </article>
 
