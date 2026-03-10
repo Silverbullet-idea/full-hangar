@@ -98,6 +98,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - TAP/ASO smoke status: TAP multi-engine category and probe modes still hit anti-bot blocks; ASO direct category micro-run is too large under current fallback shape, so single-listing ASO probe-upsert was used for verification and confirmed `props_raw` persistence (`aso_146991`) while engine-array coverage remains pending broader ASO write passes.
 - GlobalAir parser expansion landed for detail pages: canonical `state` fallback hardening, broader spec extraction (`engine_tbo_hours`, `time_since_new_engine`), richer section capture, and structured `engines_raw/props_raw` extraction with per-engine/prop timing mapping into `engine_count`, `time_since_overhaul`, `second_engine_time_since_overhaul`, `time_since_prop_overhaul`, and `second_time_since_prop_overhaul` when present.
 - Shared schema normalization now prefers overhaul-typed rows in `engines_raw/props_raw` before fallback hour inference, preventing non-overhaul engine metrics from being mis-mapped into canonical overhaul completeness fields.
+- TAP self-healing scraper v2 built (`scraper/tap_auto_scraper.py`). DataDome bypass via cookie injection. Confirmed selectors from live HTML. Self-healing at 4 levels. All categories. Completeness score reporting. Commands: `npm run tap:auto | tap:auto:resume | tap:cookie:status | tap:score:report`.
 
 ### Intelligence and Scoring
 
@@ -212,6 +213,12 @@ npm run pipeline:faa-monitor
 npm run pipeline:avionics:audit
 npm run pipeline:media:coverage:active
 npm run pipeline:media:integrity
+npm run tap:auto
+npm run tap:auto:resume
+npm run tap:cookie:status
+npm run tap:score:report
+npm run tap:auto:singleengine
+.venv312\Scripts\python.exe scraper\tap_auto_scraper.py --score-report
 .venv312\Scripts\python.exe scraper\validate_scores.py
 ```
 
