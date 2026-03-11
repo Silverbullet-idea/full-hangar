@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CompletenessDonut } from "../components/AdminCharts";
 
 type FieldRow = {
   field: string;
@@ -57,8 +56,8 @@ export default function DataQualityClient(props: Props) {
         <div className="mt-2 text-4xl font-bold text-brand-orange">{props.overallCompletenessPct}%</div>
       </header>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <article className="rounded border border-brand-dark bg-card-bg p-4 lg:col-span-2">
+      <section>
+        <article className="rounded border border-brand-dark bg-card-bg p-4">
           <div className="mb-3 flex items-center gap-2 text-xs">
             <button className="rounded border border-brand-dark px-2 py-1" onClick={() => { setSortKey("fill_pct"); setAscending(true); }}>
               Sort: Worst Fill %
@@ -105,11 +104,6 @@ export default function DataQualityClient(props: Props) {
               </tbody>
             </table>
           </div>
-        </article>
-
-        <article className="rounded border border-brand-dark bg-card-bg p-4">
-          <h2 className="text-lg font-semibold">Completeness Mix</h2>
-          <CompletenessDonut distribution={props.distribution} />
         </article>
       </section>
 
