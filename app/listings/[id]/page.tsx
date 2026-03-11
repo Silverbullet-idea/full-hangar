@@ -42,7 +42,13 @@ import {
   formatSeatsEngines,
   getRiskClass,
 } from "../../../lib/listings/format"
-import { getListingById, getListingPriceHistory, getListingRawById, getSimilarMarketPricing } from "../../../lib/listings/queries"
+import {
+  getListingById,
+  getListingPriceHistory,
+  getListingRawById,
+  getSiblingListingsByNNumber,
+  getSimilarMarketPricing,
+} from "../../../lib/listings/queries"
 import type { AircraftListing } from "../../../lib/types"
 import { DEFAULT_OG_IMAGE_PATH, toAbsoluteUrl, titleFromParts } from "../../../lib/seo/site"
 
@@ -146,7 +152,8 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const imageUrls = collectImageUrls(listingRow.primary_image_url, raw)
   const faaMatched = toBool(raw, "faa_matched")
   const registrationAlert = pickText(raw, ["faa_registration_alert"])
-  const nNumber = safeDisplay(listingRow.n_number || pickText(raw, ["n_number"]))
+  const listingNNumber = pickText(raw, ["n_number"]) || listingRow.n_number || null
+  const nNumber = safeDisplay(listingNNumber)
   const accidentCount = pickNumber(raw, ["accident_count"]) ?? 0
   const mostRecentAccidentDate = pickText(raw, ["most_recent_accident_date"])
   const mostSevereDamage = pickText(raw, ["most_severe_damage"])
@@ -242,7 +249,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const fractionalPricingContext = descriptionIntelligence.pricingContext
   const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
   const fractionalPricingNote = buildFractionalPricingNote(fractionalBreakdown)
-  const marketPricing = await getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year)
+  const [marketPricing, siblingListingsRaw, priceHistoryRaw] = await Promise.all([
+    getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year),
+    listingNNumber ? getSiblingListingsByNNumber(listingNNumber, { limit: 12 }) : Promise.resolve([]),
+    getListingPriceHistory(listingRow.source, listingRow.source_id, 730),
+  ])
   const effectiveCompSource = resolveCompSource(dealComparisonSource, marketPricing?.sampleSize ?? null)
   const effectiveDataConfidence = resolveDataConfidence(dataConfidence, listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null)
   const scoreMethodSummary = buildScoreMethodSummary(
@@ -253,10 +264,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     scoreExplanation.length
   )
   const confidenceSignals = buildConfidenceSignals(listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null, dataConfidence)
-  const priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
   const priceHistory = normalizePriceHistory(priceHistoryRaw)
   const priceHistoryStats = buildPriceHistoryStats(priceHistory)
   const priceHistoryChart = buildPriceHistoryChart(priceHistory)
+  const siblingListingPrices = buildSiblingListingPriceRows({
+    currentListing: listingRow,
+    currentListingUrl: sourceUrl,
+    siblingRows: siblingListingsRaw,
+  })
+  const siblingListingCount = siblingListingPrices.length
   const detectedStcs = collectKeyValueList(raw, "stc_modifications")
   const hasGlassCockpit = toBool(raw, "has_glass_cockpit")
   const isSteamGauge = toBool(raw, "is_steam_gauge")
@@ -477,6 +493,13 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           {fractionalBreakdown.shareLabel ? <span className="fractional-chip-detail">{fractionalBreakdown.shareLabel}</span> : null}
         </div>
       ) : null}
+      {siblingListingCount > 1 ? (
+        <div className="multi-listing-badge-row">
+          <span className="multi-listing-badge">
+            {`${siblingListingCount} active listings found`}
+          </span>
+        </div>
+      ) : null}
       {fractionalPricingNote ? <p className="fractional-pricing-note">{fractionalPricingNote}</p> : null}
 
       <div className="detail-grid">
@@ -490,6 +513,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           descriptionText={descriptionText}
           sourceUrl={sourceUrl}
           sourceLinkLabel={sourceLinkLabel}
+          siblingListingPrices={siblingListingPrices}
           logbookUrls={logbookUrls}
           dealTier={detailDealTier}
         />
@@ -582,6 +606,21 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         .fractional-chip-detail {
           color: #d1d5db;
           font-size: 12px;
+        }
+        .multi-listing-badge-row {
+          margin: -2px 0 12px;
+        }
+        .multi-listing-badge {
+          display: inline-flex;
+          align-items: center;
+          border: 1px solid #3b82f6;
+          background: #0f172a;
+          color: #93c5fd;
+          border-radius: 999px;
+          padding: 4px 10px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.01em;
         }
         .detail-grid {
           display: grid;
@@ -865,6 +904,103 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
       `}</style>
     </main>
   )
+}
+
+function buildSiblingListingPriceRows(input: {
+  currentListing: AircraftListing
+  currentListingUrl: string | null
+  siblingRows: unknown[]
+}): Array<{
+  key: string
+  sourceLabel: string
+  priceLabel: string
+  listingUrl: string | null
+}> {
+  const rows: Array<{
+    key: string
+    sourceLabel: string
+    priceLabel: string
+    listingUrl: string | null
+    isCurrent: boolean
+  }> = []
+
+  const currentPrice =
+    typeof input.currentListing.asking_price === "number"
+      ? input.currentListing.asking_price
+      : typeof input.currentListing.price_asking === "number"
+      ? input.currentListing.price_asking
+      : null
+  const currentSourceId = String(input.currentListing.source_id ?? "").trim()
+  rows.push({
+    key: `current:${currentSourceId || input.currentListing.id}`,
+    sourceLabel: `${sourceDisplayName(input.currentListing.source, currentSourceId, input.currentListingUrl)} (this listing)`,
+    priceLabel: typeof currentPrice === "number" && currentPrice > 0 ? formatMoney(currentPrice) : "Call for Price",
+    listingUrl: input.currentListingUrl,
+    isCurrent: true,
+  })
+
+  if (Array.isArray(input.siblingRows)) {
+    for (const item of input.siblingRows) {
+      if (!item || typeof item !== "object") continue
+      const row = item as Record<string, unknown>
+      const source = typeof row.source === "string" ? row.source : null
+      const sourceId = typeof row.source_id === "string" ? row.source_id : null
+      const listingUrl = firstText(row.listing_url, row.url)
+      const askingPrice = toPositiveNumber(row.asking_price) ?? toPositiveNumber(row.price_asking)
+      const isCurrent =
+        String(sourceId ?? "").trim() &&
+        String(sourceId ?? "").trim().toLowerCase() === currentSourceId.toLowerCase()
+
+      rows.push({
+        key: `sibling:${String(row.id ?? sourceId ?? `${source ?? "unknown"}:${askingPrice ?? "na"}`)}`,
+        sourceLabel: sourceDisplayName(source, sourceId, listingUrl),
+        priceLabel: typeof askingPrice === "number" ? formatMoney(askingPrice) : "Call for Price",
+        listingUrl,
+        isCurrent,
+      })
+    }
+  }
+
+  const deduped = new Map<string, (typeof rows)[number]>()
+  for (const row of rows) {
+    const sourceKey = row.sourceLabel.toLowerCase().replace(" (this listing)", "")
+    const key = `${sourceKey}|${row.isCurrent ? "current" : "other"}`
+    if (!deduped.has(key)) deduped.set(key, row)
+  }
+
+  return Array.from(deduped.values())
+    .sort((a, b) => {
+      if (a.isCurrent && !b.isCurrent) return -1
+      if (!a.isCurrent && b.isCurrent) return 1
+      return a.sourceLabel.localeCompare(b.sourceLabel)
+    })
+    .map(({ key, sourceLabel, priceLabel, listingUrl }) => ({
+      key,
+      sourceLabel,
+      priceLabel,
+      listingUrl,
+    }))
+}
+
+function sourceDisplayName(source: string | null | undefined, sourceId: string | null | undefined, listingUrl: string | null): string {
+  const linkLabel = getSourceLinkLabel(source, sourceId, listingUrl).replace(/^View on\s+/i, "").replace(/^View\s+/i, "")
+  const normalized = linkLabel.replace(/\.com$/i, "").trim()
+  return normalized || "Original Listing"
+}
+
+function toPositiveNumber(value: unknown): number | null {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return null
+  return parsed
+}
+
+function firstText(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim()
+    }
+  }
+  return null
 }
 
 function formatAirworthy(raw: UnknownRow, parsedDescription?: ParsedSellerDescription): string {

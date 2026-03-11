@@ -13,6 +13,12 @@ type LeftDetailColumnProps = {
   logbookUrls: string[]
   dealTier?: string | null
   fallbackImageUrl?: string | null
+  siblingListingPrices?: Array<{
+    key: string
+    sourceLabel: string
+    priceLabel: string
+    listingUrl: string | null
+  }>
 }
 
 function DetailTableCard({ title, rows }: { title: string; rows: Array<[string, ReactNode]> }) {
@@ -77,6 +83,7 @@ export default function LeftDetailColumn({
   logbookUrls,
   dealTier = null,
   fallbackImageUrl = null,
+  siblingListingPrices = [],
 }: LeftDetailColumnProps) {
   const imageUrls = [
     ...new Set([
@@ -84,6 +91,16 @@ export default function LeftDetailColumn({
       ...galleryUrls.map((value) => String(value || '').trim()),
     ].filter(Boolean)),
   ]
+  const siblingPriceRows: Array<[string, ReactNode]> = siblingListingPrices.map((row) => [
+    row.sourceLabel,
+    row.listingUrl ? (
+      <a href={row.listingUrl} target="_blank" rel="noreferrer">
+        {row.priceLabel}
+      </a>
+    ) : (
+      row.priceLabel
+    ),
+  ])
 
   return (
     <section className="panel">
@@ -109,6 +126,8 @@ export default function LeftDetailColumn({
           </a>
         </p>
       ) : null}
+
+      {siblingPriceRows.length > 0 ? <DetailTableCard title="Also Listed On" rows={siblingPriceRows} /> : null}
 
       {logbookUrls.length > 0 ? (
         <div style={{ marginTop: '1rem' }}>

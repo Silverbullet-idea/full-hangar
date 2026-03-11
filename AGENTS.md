@@ -36,6 +36,7 @@ This is the short, operational board for current work. Permanent standards stay 
 
 - Next.js 16 setup stabilized on port `3001` with restart-oriented dev workflow.
 - Supabase server access standardized via `lib/supabase/server.ts` (`createServerClient` and `createPrivilegedServerClient`).
+- Supabase Security Advisor hardening migration added (`20260311000053_harden_public_schema_security_advisor.sql`) to switch exposed public views to `security_invoker` and enforce RLS on `public.faa_registry`/`public.backfill_runs`.
 - Post-scrape pipeline flow and KPI/log summarization utilities added.
 - Project architecture and refactor baseline documented in `REFACTOR_PLAN.md`.
 - Admin portal shipped at `/internal/admin` with data quality, buyer intelligence, and invite management.
@@ -48,6 +49,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Global header/search improvements shipped, including listings search entry and inventory-aware UX updates.
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
+- Listing detail pages now surface same-aircraft cross-source price rows (matched by `n_number`) so users can compare concurrent asking prices across marketplaces from one detail view.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
@@ -99,6 +101,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - GlobalAir parser expansion landed for detail pages: canonical `state` fallback hardening, broader spec extraction (`engine_tbo_hours`, `time_since_new_engine`), richer section capture, and structured `engines_raw/props_raw` extraction with per-engine/prop timing mapping into `engine_count`, `time_since_overhaul`, `second_engine_time_since_overhaul`, `time_since_prop_overhaul`, and `second_time_since_prop_overhaul` when present.
 - Shared schema normalization now prefers overhaul-typed rows in `engines_raw/props_raw` before fallback hour inference, preventing non-overhaul engine metrics from being mis-mapped into canonical overhaul completeness fields.
 - Browser extension harvester built for Controller.com anti-bot bypass (`browser-extension/` + `scraper/bridge_server.py`). Bypasses Distil Networks by running inside user's real browser session with toolbar popup controls. Start bridge with: `npm run extension:bridge`.
+- Parallel GlobalAir browser-extension lane added without touching Controller assets (`browser-extension-globalair/` + `scraper/bridge_server_globalair.py`) using dedicated bridge port `8766` via `npm run extension:bridge:globalair`.
 - TAP self-healing scraper v2 built (`scraper/tap_auto_scraper.py`). DataDome bypass via cookie injection. Confirmed selectors from live HTML. Self-healing at 4 levels. All categories. Completeness score reporting. Commands: `npm run tap:auto | tap:auto:resume | tap:cookie:status | tap:score:report`.
 
 ### Intelligence and Scoring
@@ -225,6 +228,8 @@ npm run tap:auto:singleengine
 # Extension bridge (start before opening extension popup)
 npm run extension:bridge
 npm run extension:bridge:dryrun
+npm run extension:bridge:globalair
+npm run extension:bridge:globalair:dryrun
 .venv312\Scripts\python.exe scraper\test_bridge_server.py
 ```
 
