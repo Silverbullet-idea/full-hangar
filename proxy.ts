@@ -3,7 +3,7 @@ import { getInternalSessionSecret, INTERNAL_SESSION_COOKIE, isValidInternalSessi
 
 const BETA_SESSION_COOKIE = "beta_session";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const noIndexHeader = "noindex, nofollow";
   const response = NextResponse.next();
