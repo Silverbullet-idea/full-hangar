@@ -41,6 +41,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Admin portal shipped at `/internal/admin` with data quality, buyer intelligence, and invite management.
 - Beta invite/session schema added via migration `20260307000050_add_beta_invites.sql`.
 - Admin user management and password hashing utilities shipped (`/internal/admin/users`, `lib/admin/users.ts`).
+- Manual production redeploy trigger commit was pushed on `main` after stale admin HTML/caching behavior.
 
 ### Frontend Product and UX
 
