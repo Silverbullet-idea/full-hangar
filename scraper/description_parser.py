@@ -217,6 +217,48 @@ def extract_times(text: str) -> dict[str, int]:
             if value is not None:
                 out[key] = value
                 break
+
+    # Twin/multi-engine variants (conservative patterns).
+    engine_1_patterns = [
+        r"\bengine\s*#?\s*1\b[^.:\n]{0,60}\b(?:smoh|tso|tsn|since\s+major)\b[:\s-]*([\d,]{2,7})",
+        r"\b(?:smoh|tso|tsn)\s*#?\s*1\b[:\s-]*([\d,]{2,7})",
+    ]
+    engine_2_patterns = [
+        r"\bengine\s*#?\s*2\b[^.:\n]{0,60}\b(?:smoh|tso|tsn|since\s+major)\b[:\s-]*([\d,]{2,7})",
+        r"\b(?:smoh|tso|tsn)\s*#?\s*2\b[:\s-]*([\d,]{2,7})",
+    ]
+    prop_1_patterns = [
+        r"\bprop(?:eller)?\s*#?\s*1\b[^.:\n]{0,60}\b(?:spoh|overhaul)\b[:\s-]*([\d,]{2,7})",
+        r"\bspoh\s*#?\s*1\b[:\s-]*([\d,]{2,7})",
+    ]
+    prop_2_patterns = [
+        r"\bprop(?:eller)?\s*#?\s*2\b[^.:\n]{0,60}\b(?:spoh|overhaul)\b[:\s-]*([\d,]{2,7})",
+        r"\bspoh\s*#?\s*2\b[:\s-]*([\d,]{2,7})",
+    ]
+
+    def _first_value(patterns_list: list[str]) -> int | None:
+        for pattern in patterns_list:
+            match = re.search(pattern, src, flags=re.IGNORECASE)
+            if not match:
+                continue
+            parsed = _int_from_number_text(match.group(1))
+            if parsed is not None:
+                return parsed
+        return None
+
+    engine_1 = _first_value(engine_1_patterns)
+    engine_2 = _first_value(engine_2_patterns)
+    prop_1 = _first_value(prop_1_patterns)
+    prop_2 = _first_value(prop_2_patterns)
+
+    if engine_1 is not None:
+        out["engine_smoh"] = out.get("engine_smoh", engine_1)
+    if engine_2 is not None:
+        out["second_engine_smoh"] = engine_2
+    if prop_1 is not None:
+        out["prop_spoh"] = out.get("prop_spoh", prop_1)
+    if prop_2 is not None:
+        out["second_prop_spoh"] = prop_2
     return out
 
 

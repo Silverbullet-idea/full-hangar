@@ -71,6 +71,8 @@ HUMAN_PAGE_RENDER_WAIT_MS = (3500, 7000)
 HUMAN_BETWEEN_MAKES_SECONDS = (20.0, 45.0)
 HUMAN_MICRO_PAUSE_SECONDS = (0.4, 1.4)
 HUMAN_OCCASIONAL_PAUSE_SECONDS = (4.0, 9.0)
+HUMAN_BEFORE_DETAIL_SECONDS = (0.8, 2.0)
+HUMAN_AFTER_DETAIL_RETURN_SECONDS = (2.4, 4.8)
 
 # Confirmed from Controller search URL patterns in DevTools and external task notes.
 CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {
@@ -93,6 +95,10 @@ CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {
     "turbine_float": (71, "amphibious_float"),
     "turbine_amphibious_floatplanes": (71, "amphibious_float"),
 }
+
+
+class CaptchaPauseRequested(RuntimeError):
+    """Raised when scraper is intentionally paused for manual restart."""
 
 
 async def _create_browser_context(playwright):
@@ -162,6 +168,51 @@ def _parse_price(price_text: str) -> Optional[int]:
         return int(numeric)
     except ValueError:
         return None
+
+
+def _parse_hours_value(raw_text: str) -> Optional[int]:
+    """
+    Parse an hours-like integer from mixed spec text.
+    Examples: "1,245", "1,245 HRS", "SMOH: 845", "TTSN 2,010".
+    """
+    if not raw_text:
+        return None
+    match = re.search(r"[\d,]{2,7}", raw_text)
+    if not match:
+        return None
+    try:
+        return int(match.group().replace(",", ""))
+    except ValueError:
+        return None
+
+
+def _extract_engine_position(label: str) -> str:
+    match = re.search(r"\bengine\s*(\d+)\b", label or "", re.IGNORECASE)
+    if match:
+        return f"engine_{match.group(1)}"
+    return "engine_1"
+
+
+def _extract_prop_position(label: str) -> str:
+    match = re.search(r"\bprop(?:eller)?\s*(\d+)\b", label or "", re.IGNORECASE)
+    if match:
+        return f"prop_{match.group(1)}"
+    return "prop_1"
+
+
+def _dedupe_metric_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    deduped: list[dict[str, object]] = []
+    seen_positions: set[str] = set()
+    for row in rows:
+        position = str(row.get("position") or "").strip().lower()
+        if not position:
+            position = f"position_{len(deduped) + 1}"
+            row["position"] = position
+        if position in seen_positions:
+            continue
+        seen_positions.add(position)
+        deduped.append(row)
+    return deduped
 
 
 def _extract_source_id(listing_url: str) -> str:
@@ -392,16 +443,39 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
                 p = _parse_price(price_text)
                 if p:
                     extra["price_asking"] = p
+                    extra["asking_price"] = p
 
         # --- Location (confirmed: div.detail__machine-location, double underscore) ---
         loc_el = soup.select_one("div.detail__machine-location")
         if loc_el:
             loc_text = re.sub(r"Aircraft\s*Location\s*:", "", loc_el.get_text(strip=True), flags=re.I).strip()
+            if loc_text:
+                extra["location_raw"] = loc_text
             city, state = _split_city_state(loc_text)
             if city:
                 extra["location_city"] = city
             if state:
                 extra["location_state"] = state
+                extra["state"] = state
+
+        # --- Seller info (dealer/private) ---
+        seller_name = ""
+        seller_branch = soup.select_one(".dealer-contact__branch-name strong, .dealer-contact__branch-name")
+        if seller_branch:
+            seller_name = seller_branch.get_text(" ", strip=True)
+        if not seller_name:
+            seller_title = soup.select_one(".seller-info h2, .seller-info h3, .sellerName [itemprop='name']")
+            if seller_title:
+                seller_name = seller_title.get_text(" ", strip=True)
+        if seller_name:
+            extra["seller_name"] = seller_name
+            branch_area = soup.select_one(".dealer-contact, [class*='dealer-contact']")
+            if branch_area:
+                extra["seller_type"] = "dealer"
+            else:
+                upper = seller_name.upper()
+                dealer_terms = ("LLC", "INC", "CORP", "AVIATION", "AIRCRAFT", "SALES", "JETS")
+                extra["seller_type"] = "dealer" if any(term in upper for term in dealer_terms) else "private"
 
         # --- Photos/Gallery: collect all available image URLs ---
         gallery_urls: list[str] = []
@@ -483,16 +557,99 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
                 if cleaned_engine_model:
                     extra["engine_model"] = cleaned_engine_model
                 break
+        engine_rows: list[dict[str, object]] = []
+        for spec_key, spec_val in specs.items():
+            spec_key_lower = spec_key.lower()
+            if "engine" not in spec_key_lower:
+                continue
+            if not any(token in spec_key_lower for token in ("time", "smoh", "overhaul", "tso", "tsn")):
+                continue
+            hours_value = _parse_hours_value(spec_val)
+            if hours_value is None:
+                continue
+            engine_rows.append(
+                {
+                    "position": _extract_engine_position(spec_key_lower),
+                    "metric_type": "ENGINE_TIME",
+                    "metric_raw": spec_val,
+                    "metric_hours": hours_value,
+                    "source_key": spec_key,
+                }
+            )
+
+        engine_rows.sort(key=lambda item: str(item.get("position") or ""))
+        engine_rows = _dedupe_metric_rows(engine_rows)
+        if engine_rows:
+            extra["engines_raw"] = engine_rows
+            extra["engine_count"] = len(engine_rows)
+            first_hours = _parse_hours_value(str(engine_rows[0].get("metric_raw") or ""))
+            if first_hours is not None:
+                extra["engine_time_since_overhaul"] = first_hours
+                extra["time_since_overhaul"] = first_hours
+            if len(engine_rows) >= 2:
+                second_hours = _parse_hours_value(str(engine_rows[1].get("metric_raw") or ""))
+                if second_hours is not None:
+                    extra["second_engine_time_since_overhaul"] = second_hours
+
         for key in ("engine 1 time", "engine time", "smoh", "time since overhaul"):
             if key in specs:
-                val = re.search(r"[\d,]+", specs[key])
-                if val:
-                    extra["engine_time_since_overhaul"] = int(val.group().replace(",", ""))
+                hours_value = _parse_hours_value(specs[key])
+                if hours_value is not None:
+                    extra.setdefault("engine_time_since_overhaul", hours_value)
+                    extra.setdefault("time_since_overhaul", hours_value)
                     break
         if "engine tbo" in specs:
-            val = re.search(r"[\d,]+", specs["engine tbo"])
-            if val:
-                extra["engine_tbo_hours"] = int(val.group().replace(",", ""))
+            hours_value = _parse_hours_value(specs["engine tbo"])
+            if hours_value is not None:
+                extra["engine_tbo_hours"] = hours_value
+
+        # Propeller: map to canonical completeness field for audit visibility.
+        prop_rows: list[dict[str, object]] = []
+        for spec_key, spec_val in specs.items():
+            spec_key_lower = spec_key.lower()
+            if not any(token in spec_key_lower for token in ("prop", "propeller")):
+                continue
+            if not any(token in spec_key_lower for token in ("time", "spoh", "overhaul", "smoh")):
+                continue
+            hours_value = _parse_hours_value(spec_val)
+            if hours_value is None:
+                continue
+            prop_rows.append(
+                {
+                    "position": _extract_prop_position(spec_key_lower),
+                    "metric_type": "PROP_TIME",
+                    "metric_raw": spec_val,
+                    "metric_hours": hours_value,
+                    "source_key": spec_key,
+                }
+            )
+
+        prop_rows.sort(key=lambda item: str(item.get("position") or ""))
+        prop_rows = _dedupe_metric_rows(prop_rows)
+        if prop_rows:
+            extra["props_raw"] = prop_rows
+            first_prop_hours = _parse_hours_value(str(prop_rows[0].get("metric_raw") or ""))
+            if first_prop_hours is not None:
+                extra["time_since_prop_overhaul"] = first_prop_hours
+            if len(prop_rows) >= 2:
+                second_prop_hours = _parse_hours_value(str(prop_rows[1].get("metric_raw") or ""))
+                if second_prop_hours is not None:
+                    extra["second_time_since_prop_overhaul"] = second_prop_hours
+
+        for key in (
+            "prop 1 time",
+            "prop time",
+            "propeller time",
+            "spoh",
+            "prop smoh",
+            "time since prop overhaul",
+            "time since propeller overhaul",
+        ):
+            if key in specs:
+                hours_value = _parse_hours_value(specs[key])
+                if hours_value is not None:
+                    extra.setdefault("time_since_prop_overhaul", hours_value)
+                    break
 
         # Avionics
         for key in ("flight deck manufacturer/model", "avionics/radios", "avionics"):
@@ -678,10 +835,13 @@ def parse_listing_card(card, default_aircraft_type: str = "single_engine_piston"
             "model": model_text or None,
             "year": year_value,
             "price_asking": price_value,
+            "asking_price": price_value,
             "serial_number": serial_value,
             "n_number": n_number,
+            "location_raw": location_text or None,
             "location_city": city,
             "location_state": state,
+            "state": state,
             "total_time_airframe": tt_value,
             "primary_image_url": primary_image_url,
             "description": description or None,
@@ -724,6 +884,13 @@ async def wait_for_manual_captcha_resume(label: str, *, resume_mode: str = "file
     True pause mode: halt all requests until operator explicitly resumes.
     Resume by creating scraper/.captcha_resume.
     """
+    if resume_mode == "stop":
+        log.warning(
+            "[%s] CAPTCHA/challenge detected. Scraper paused for manual restart. "
+            "Restart with --resume when ready.",
+            label,
+        )
+        raise CaptchaPauseRequested(label)
     if resume_mode == "prompt":
         log.warning(
             "[%s] CAPTCHA/challenge detected. Scraper is paused. "
@@ -853,6 +1020,7 @@ async def scrape_make(
     failed_entries: Optional[list[dict[str, Any]]] = None,
     session_stats: Optional[dict[str, Any]] = None,
     captcha_resume_mode: str = "file",
+    force_detail_fetch: bool = False,
 ) -> list[dict]:
     """Scrape one make by incrementing page=1..N until no new cards appear."""
     listings: list[dict] = []
@@ -916,15 +1084,16 @@ async def scrape_make(
             existing_state = existing_fingerprints.get(str(source_id), {})
             previous_fingerprint = str(existing_state.get("listing_fingerprint") or "")
             recently_scraped = _seen_within_hours(existing_state.get("last_seen_date"), 48)
-            should_fetch_detail = previous_fingerprint != listing["listing_fingerprint"]
+            should_fetch_detail = force_detail_fetch or (previous_fingerprint != listing["listing_fingerprint"])
 
             # Fetch detail page for richer data + human-like navigation
             detail_url = listing.get("url")
             if fetch_details and detail_url and should_fetch_detail:
-                if recently_scraped and previous_fingerprint == listing["listing_fingerprint"]:
+                if (not force_detail_fetch) and recently_scraped and previous_fingerprint == listing["listing_fingerprint"]:
                     log.info("[%s] Skipping detail fetch (seen within 48h) source_id=%s", make, source_id)
                 else:
                     log.info(f"[{make}] Fetching detail: {detail_url}")
+                    await asyncio.sleep(random.uniform(*HUMAN_BEFORE_DETAIL_SECONDS))
                     try:
                         extra = await fetch_listing_detail(page, detail_url)
                         if not extra:
@@ -953,6 +1122,7 @@ async def scrape_make(
                     # Go back to search results
                     await page.go_back(wait_until="domcontentloaded", timeout=15000)
                     await page.wait_for_timeout(random.uniform(2000, 4000))
+                    await asyncio.sleep(random.uniform(*HUMAN_AFTER_DETAIL_RETURN_SECONDS))
             elif detail_url and fetch_details:
                 log.info("[%s] Skipping unchanged detail fetch for source_id=%s", make, source_id)
 
@@ -1030,6 +1200,7 @@ async def scrape_category(
     failed_entries: Optional[list[dict[str, Any]]] = None,
     session_stats: Optional[dict[str, Any]] = None,
     captcha_resume_mode: str = "file",
+    force_detail_fetch: bool = False,
 ) -> list[dict]:
     category_id, aircraft_type = CONTROLLER_CATEGORIES[category_key]
     label = f"category:{category_key}"
@@ -1076,15 +1247,17 @@ async def scrape_category(
             existing_state = existing_fingerprints.get(str(source_id), {})
             previous_fingerprint = str(existing_state.get("listing_fingerprint") or "")
             recently_scraped = _seen_within_hours(existing_state.get("last_seen_date"), 48)
-            should_fetch_detail = previous_fingerprint != listing["listing_fingerprint"]
+            should_fetch_detail = force_detail_fetch or (previous_fingerprint != listing["listing_fingerprint"])
 
             detail_url = listing.get("url")
             if fetch_details and detail_url and should_fetch_detail:
-                if recently_scraped and previous_fingerprint == listing["listing_fingerprint"]:
+                if (not force_detail_fetch) and recently_scraped and previous_fingerprint == listing["listing_fingerprint"]:
                     pass
                 else:
+                    await asyncio.sleep(random.uniform(*HUMAN_BEFORE_DETAIL_SECONDS))
                     try:
                         listing.update(await fetch_listing_detail(page, detail_url))
+                        await asyncio.sleep(random.uniform(*HUMAN_AFTER_DETAIL_RETURN_SECONDS))
                     except Exception as exc:
                         if session_stats is not None:
                             if session_stats.get("first_error_at_listing") is None:
@@ -1179,6 +1352,11 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
             parsed_smoh = parsed_intel.get("times", {}).get("engine_smoh")
             if listing.get("engine_time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, int):
                 listing["engine_time_since_overhaul"] = parsed_smoh
+            if listing.get("time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, int):
+                listing["time_since_overhaul"] = parsed_smoh
+            parsed_spoh = parsed_intel.get("times", {}).get("prop_spoh")
+            if listing.get("time_since_prop_overhaul") in (None, "", 0) and isinstance(parsed_spoh, int):
+                listing["time_since_prop_overhaul"] = parsed_spoh
             parsed_tt = parsed_intel.get("times", {}).get("total_time")
             if listing.get("total_time_airframe") in (None, "", 0) and isinstance(parsed_tt, int):
                 listing["total_time_airframe"] = parsed_tt
@@ -1249,24 +1427,60 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
             for key in all_keys:
                 row.setdefault(key, None)
 
-    try:
-        saved = safe_upsert_with_fallback(
-            supabase=supabase,
-            table="aircraft_listings",
-            rows=rows,
-            on_conflict="source_site,source_id",
-            fallback_match_keys=["source_site", "source_id"],
-            logger=log,
+    # This workspace DB enforces uniqueness on source_listing_id path in some environments.
+    # Try that conflict key first, then fall back.
+    conflict_attempts = [
+        ("source_site,source_listing_id", ["source_site", "source_listing_id"]),
+        ("source_site,source_id", ["source_site", "source_id"]),
+    ]
+    saved = 0
+    last_exc: Exception | None = None
+    for on_conflict, match_keys in conflict_attempts:
+        try:
+            saved = safe_upsert_with_fallback(
+                supabase=supabase,
+                table="aircraft_listings",
+                rows=rows,
+                on_conflict=on_conflict,
+                fallback_match_keys=match_keys,
+                logger=log,
+            )
+            if saved:
+                break
+        except Exception as exc:
+            last_exc = exc
+            msg = str(exc)
+            if "no unique or exclusion constraint matching the ON CONFLICT specification" in msg:
+                log.warning("Batch upsert conflict key unsupported (%s). Trying next fallback.", on_conflict)
+                continue
+            log.error(f"Batch upsert failed: {exc}")
+            break
+    if saved == 0:
+        log.warning(
+            "Falling back to row-level upserts after batch path saved 0 rows%s.",
+            f" ({last_exc})" if last_exc else "",
         )
-    except Exception as exc:
-        log.error(f"Batch upsert failed: {exc}")
-        saved = 0
         for row in rows:
-            try:
-                supabase.table("aircraft_listings").upsert(row, on_conflict="source_site,source_id").execute()
-                saved += 1
-            except Exception as row_exc:
-                log.error(f"Failed upsert for source_id={row.get('source_id')}: {row_exc}")
+            row_saved = False
+            for on_conflict, _match_keys in conflict_attempts:
+                try:
+                    supabase.table("aircraft_listings").upsert(row, on_conflict=on_conflict).execute()
+                    saved += 1
+                    row_saved = True
+                    break
+                except Exception as row_exc:
+                    msg = str(row_exc)
+                    if "no unique or exclusion constraint matching the ON CONFLICT specification" in msg:
+                        log.warning(
+                            "Row upsert conflict key unsupported (%s) for %s. Trying next fallback.",
+                            on_conflict,
+                            row.get("source_id"),
+                        )
+                        continue
+                    log.error(f"Failed upsert for source_id={row.get('source_id')}: {row_exc}")
+                    break
+            if not row_saved:
+                log.warning("Row upsert failed for %s after all conflict fallbacks.", row.get("source_id"))
     if observation_rows:
         try:
             supabase.table("listing_observations").upsert(
@@ -1377,10 +1591,15 @@ async def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Max listings per make (default: no limit)")
     parser.add_argument("--no-detail", action="store_true", help="Skip detail-page enrichment for fast smoke tests")
     parser.add_argument(
+        "--force-details",
+        action="store_true",
+        help="Force detail-page fetch even when listing fingerprint is unchanged.",
+    )
+    parser.add_argument(
         "--captcha-resume",
-        choices=["file", "prompt"],
-        default="file",
-        help="How to resume after CAPTCHA pause: create scraper/.captcha_resume (file) or press Enter in terminal (prompt).",
+        choices=["file", "prompt", "stop"],
+        default="stop",
+        help="CAPTCHA behavior: file marker resume, prompt resume, or stop for manual restart.",
     )
     parser.add_argument(
         "--cdp-url",
@@ -1487,15 +1706,16 @@ async def main() -> None:
     per_make_counts: dict[str, int] = {}
     collected: list[dict] = []
 
-    async with async_playwright() as playwright:
-        if args.cdp_url:
-            log.info("Connecting to existing browser via CDP: %s", args.cdp_url)
-            browser, context = await _connect_cdp_context(playwright, args.cdp_url)
-        else:
-            browser, context = await _create_browser_context(playwright)
-        page = await context.new_page()
+    paused_for_captcha = False
+    try:
+        async with async_playwright() as playwright:
+            if args.cdp_url:
+                log.info("Connecting to existing browser via CDP: %s", args.cdp_url)
+                browser, context = await _connect_cdp_context(playwright, args.cdp_url)
+            else:
+                browser, context = await _create_browser_context(playwright)
+            page = await context.new_page()
 
-        try:
             if args.media_refresh_only:
                 if supabase is None:
                     supabase = get_supabase()
@@ -1588,6 +1808,7 @@ async def main() -> None:
                         failed_entries=failed_entries,
                         session_stats=session_stats,
                         captcha_resume_mode=args.captcha_resume,
+                        force_detail_fetch=args.force_details,
                     )
 
                     if args.dry_run:
@@ -1669,6 +1890,7 @@ async def main() -> None:
                         failed_entries=failed_entries,
                         session_stats=session_stats,
                         captcha_resume_mode=args.captcha_resume,
+                        force_detail_fetch=args.force_details,
                     )
                     count = len(make_listings)
                     total_count += count
@@ -1710,8 +1932,9 @@ async def main() -> None:
                             between_delay = random.uniform(*HUMAN_BETWEEN_MAKES_SECONDS)
                             log.info(f"Waiting {between_delay:.1f}s before next make...")
                             await asyncio.sleep(between_delay)
-        finally:
-            await browser.close()
+    except CaptchaPauseRequested:
+        paused_for_captcha = True
+        log.warning("Paused for CAPTCHA. Waiting for manual restart command.")
 
     if args.output:
         output_path = Path(args.output)
@@ -1757,7 +1980,8 @@ async def main() -> None:
             batch_size=batch_size,
             session_notes=notes,
         )
-    clear_checkpoint(checkpoint_file)
+    if not paused_for_captcha:
+        clear_checkpoint(checkpoint_file)
 
 
 if __name__ == "__main__":

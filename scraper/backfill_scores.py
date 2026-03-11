@@ -44,16 +44,24 @@ load_dotenv()
 
 from core.intelligence.aircraft_intelligence import INTELLIGENCE_VERSION, aircraft_intelligence_score
 from backfill_log import log_backfill_run, log_scoring_error
-from compute_market_comps import (
-    build_comps_payload,
-    fetch_all_rows,
-    fetch_sold_rows,
-    fetch_transfer_rows,
-    upsert_market_comps,
-)
+try:
+    from compute_market_comps import (
+        build_comps_payload,
+        fetch_all_rows,
+        fetch_sold_rows,
+        fetch_transfer_rows,
+        upsert_market_comps,
+    )
+    HAS_COMPS_MODULE = True
+except Exception:
+    build_comps_payload = None
+    fetch_all_rows = None
+    fetch_sold_rows = None
+    fetch_transfer_rows = None
+    upsert_market_comps = None
+    HAS_COMPS_MODULE = False
 from controller_scraper import _STATE_ABBREV, _normalize_state
 from description_parser import parse_description, sanitize_engine_model
-from supabase.lib.client_options import ClientOptions
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -378,11 +386,8 @@ def get_supabase():
     key = os.environ.get("SUPABASE_SERVICE_KEY")
     if not url or not key:
         raise EnvironmentError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in .env")
-    options = ClientOptions(
-        postgrest_client_timeout=POSTGREST_TIMEOUT_SECONDS,
-        storage_client_timeout=STORAGE_TIMEOUT_SECONDS,
-    )
-    return create_client(url, key, options=options)
+    # Keep client creation compatible across supabase-py versions in this repo snapshot.
+    return create_client(url, key)
 
 
 def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
@@ -1065,6 +1070,11 @@ def run_backfill_from_json(
 
 
 def run_compute_comps_stage(*, dry_run: bool) -> None:
+    if not HAS_COMPS_MODULE:
+        log.warning(
+            "Skipping market comps recompute: compute_market_comps.py is not available in this workspace snapshot."
+        )
+        return
     comps_supabase = get_supabase()
     all_rows = fetch_all_rows(comps_supabase)
     sold_rows = fetch_sold_rows(comps_supabase)

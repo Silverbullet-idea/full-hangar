@@ -23,7 +23,7 @@ function applyTheme(theme: ThemeMode) {
 function readStoredTheme(): ThemeMode {
   if (typeof window === "undefined") return DEFAULT_THEME
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === "light" ? "light" : "dark"
+  return stored === "dark" ? "dark" : "light"
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

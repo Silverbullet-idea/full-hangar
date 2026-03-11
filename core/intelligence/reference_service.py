@@ -231,3 +231,26 @@ def get_llp_rules(make: str, model: str) -> list[dict]:
                 "applicable": r.get("applicable"),
             })
     return out
+
+
+def lookup_engine_tbo_from_model(engine_model: str | None) -> dict:
+    """
+    Resolve engine model to TBO/calendar defaults used by aircraft intelligence.
+
+    Return shape is stable for callers:
+      {found: bool, tbo_hours: int|None, calendar_years: int|None}
+    """
+    if not engine_model:
+        return {"found": False, "tbo_hours": None, "calendar_years": None}
+
+    ref = get_engine_reference(engine_model)
+    tbo_hours = ref.get("tbo_hours")
+    calendar_years = ref.get("calendar_years")
+    if tbo_hours is None:
+        return {"found": False, "tbo_hours": None, "calendar_years": None}
+
+    return {
+        "found": True,
+        "tbo_hours": int(tbo_hours),
+        "calendar_years": int(calendar_years) if calendar_years is not None else None,
+    }

@@ -27,8 +27,27 @@ def score_completeness(listing: dict) -> float:
         "location_raw", "state", "seller_name", "seller_type",
         "primary_image_url", "aircraft_type",
     ]
+    # Only score second-engine timing on aircraft that are actually multi-engine.
+    # Singles should never be penalized for not having an engine #2.
+    if _is_multi_engine_listing(listing):
+        valuable.append("second_engine_time_since_overhaul")
     present = sum(1 for k in valuable if listing.get(k) is not None and listing.get(k) != "")
     return min(100, (present / len(valuable)) * 100)
+
+
+def _is_multi_engine_listing(listing: dict) -> bool:
+    engine_count = listing.get("engine_count")
+    try:
+        if engine_count is not None and int(engine_count) >= 2:
+            return True
+    except (TypeError, ValueError):
+        pass
+
+    aircraft_type = str(listing.get("aircraft_type") or "").lower()
+    model = str(listing.get("model") or "").lower()
+    make = str(listing.get("make") or "").lower()
+    joined = f"{aircraft_type} {make} {model}"
+    return any(token in joined for token in ("twin", "multi_engine", "multi-engine", "multi engine"))
 
 
 def score_maintenance(listing: dict) -> float:

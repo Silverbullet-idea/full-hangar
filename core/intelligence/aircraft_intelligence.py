@@ -1147,10 +1147,27 @@ def _has_location_data(listing: dict) -> bool:
     return False
 
 
+def _is_multi_engine_listing(listing: dict) -> bool:
+    engine_count = listing.get("engine_count")
+    try:
+        if engine_count is not None and int(engine_count) >= 2:
+            return True
+    except (TypeError, ValueError):
+        pass
+
+    aircraft_type = str(listing.get("aircraft_type") or "").lower()
+    model = str(listing.get("model") or "").lower()
+    make = str(listing.get("make") or "").lower()
+    joined = f"{aircraft_type} {make} {model}"
+    return any(token in joined for token in ("twin", "multi_engine", "multi-engine", "multi engine"))
+
+
 def _collect_data_quality_signals(listing: dict, engine: dict, prop: dict) -> dict:
     engine_time_known = bool(engine.get("engine_time_known"))
     engine_tbo_known = bool(engine.get("tbo_known"))
     prop_data_known = prop.get("hours_remaining") is not None or listing.get("time_since_prop_overhaul") is not None
+    multi_engine = _is_multi_engine_listing(listing)
+    second_engine_time_known = listing.get("second_engine_time_since_overhaul") is not None
     location_known = _has_location_data(listing)
     annual_known = bool(listing.get("last_annual_date"))
     elt_known = bool(listing.get("elt_expiry_date"))
@@ -1160,6 +1177,8 @@ def _collect_data_quality_signals(listing: dict, engine: dict, prop: dict) -> di
         missing_fields.append("engine_time_since_overhaul")
     if not engine_tbo_known:
         missing_fields.append("engine_tbo_hours")
+    if multi_engine and not second_engine_time_known:
+        missing_fields.append("second_engine_time_since_overhaul")
     if not prop_data_known:
         missing_fields.append("prop_time_since_overhaul")
     if not location_known:
@@ -1172,6 +1191,8 @@ def _collect_data_quality_signals(listing: dict, engine: dict, prop: dict) -> di
     return {
         "engine_time_known": engine_time_known,
         "engine_tbo_known": engine_tbo_known,
+        "multi_engine": multi_engine,
+        "second_engine_time_known": second_engine_time_known if multi_engine else None,
         "prop_data_known": prop_data_known,
         "location_known": location_known,
         "annual_known": annual_known,
@@ -1184,6 +1205,8 @@ def _confidence_from_signals(signals: dict) -> tuple[int, str, float]:
     confidence_score = 0
     confidence_score += 35 if signals.get("engine_time_known") else 0
     confidence_score += 25 if signals.get("engine_tbo_known") else 0
+    if signals.get("multi_engine"):
+        confidence_score += 10 if signals.get("second_engine_time_known") else 0
     confidence_score += 20 if signals.get("prop_data_known") else 0
     confidence_score += 10 if signals.get("location_known") else 0
     confidence_score += 5 if signals.get("annual_known") else 0

@@ -74,6 +74,8 @@
     "pipeline:summary": "powershell -ExecutionPolicy Bypass -File .\\summarize-pipeline-log.ps1",
     "extension:bridge": "powershell -File scripts/run-extension-bridge.ps1",
     "extension:bridge:dryrun": "powershell -File scripts/run-extension-bridge.ps1 --dry-run",
+    "extension:bridge:globalair": "powershell -File scripts/run-extension-bridge-globalair.ps1",
+    "extension:bridge:globalair:dryrun": "powershell -File scripts/run-extension-bridge-globalair.ps1 --dry-run",
     "test:smoke:listings": "playwright test tests/smoke/listings-smoke.spec.js --reporter=line",
     "admin:seed-user": "node ./seed-admin-user.mjs",
     "build": "next build",

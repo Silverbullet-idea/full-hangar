@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Full Hangar Harvester (GlobalAir)",
+  "version": "1.0.0",
+  "description": "Full Hangar - GlobalAir listing harvester. Extracts aircraft data into the intelligence pipeline.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.globalair.com/*",
+    "http://localhost:8766/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.globalair.com/*"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "css": [
+        "content_style.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Full Hangar GlobalAir Harvester"
+  }
+}

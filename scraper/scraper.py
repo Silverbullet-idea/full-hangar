@@ -540,6 +540,8 @@ def upsert_listings(supabase: Client, listings: list[dict]) -> int:
         if not row.get("source_id") and not row.get("source_url"):
             continue
         row["source"] = "aerotrader"
+        row["source_site"] = "aerotrader"
+        row["listing_source"] = "aerotrader"
         row["updated_at"] = datetime.now(timezone.utc).isoformat()
         clean.append(row)
 
@@ -547,14 +549,14 @@ def upsert_listings(supabase: Client, listings: list[dict]) -> int:
         return 0
 
     try:
-        supabase.table("aircraft_listings").upsert(clean, on_conflict="source,source_id").execute()
+        supabase.table("aircraft_listings").upsert(clean, on_conflict="source_site,source_id").execute()
         return len(clean)
     except Exception as e:
         log.error(f"Database upsert error: {e}")
         saved = 0
         for row in clean:
             try:
-                supabase.table("aircraft_listings").upsert(row, on_conflict="source,source_id").execute()
+                supabase.table("aircraft_listings").upsert(row, on_conflict="source_site,source_id").execute()
                 saved += 1
             except Exception as e2:
                 log.error(f"  Failed single upsert for {row.get('source_id')}: {e2}")
@@ -564,7 +566,7 @@ def upsert_listings(supabase: Client, listings: list[dict]) -> int:
 def get_scraped_makes(supabase: Client) -> set:
     """Return set of makes already in DB (for --resume mode)."""
     try:
-        result = supabase.table("aircraft_listings").select("make").eq("source", "aerotrader").execute()
+        result = supabase.table("aircraft_listings").select("make").eq("source_site", "aerotrader").execute()
         return {r["make"] for r in result.data if r.get("make")}
     except Exception:
         return set()

@@ -1,29 +1,17 @@
-"""
-Trade-A-Plane aircraft listing scraper (requests-first, Playwright fallback).
-
-Usage:
-    python scraper/tradaplane_scraper.py
-    python scraper/tradaplane_scraper.py --make Cessna --limit 5 --dry-run
-    python scraper/tradaplane_scraper.py --output scraper/trade_a_plane_all.json --verbose
-"""
-
 from __future__ import annotations
 
 import argparse
-import hashlib
-import html as html_module
+import asyncio
 import json
 import logging
+import os
 import random
 import re
-import time
-import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
-from typing import Any, Callable, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 
-import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -32,1601 +20,1166 @@ if TYPE_CHECKING:
 
 try:
     from adaptive_rate import AdaptiveRateLimiter
-    from config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
-    from description_parser import parse_description, sanitize_engine_model
+    from config import TRADAPLANE_CATEGORIES, get_manufacturer_tier, normalize_manufacturer
+    from description_parser import extract_times, parse_description
     from env_check import env_check
-    from media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
     from schema import validate_listing
     from scraper_base import (
         compute_listing_fingerprint,
+        fetch_existing_state,
         get_supabase,
+        mark_inactive_listings,
+        refresh_seen_for_unchanged,
         safe_upsert_with_fallback,
         setup_logging,
+        should_skip_detail,
     )
 except ImportError:  # pragma: no cover
     from .adaptive_rate import AdaptiveRateLimiter
-    from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
-    from .description_parser import parse_description, sanitize_engine_model
+    from .config import TRADAPLANE_CATEGORIES, get_manufacturer_tier, normalize_manufacturer
+    from .description_parser import extract_times, parse_description
     from .env_check import env_check
-    from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
     from .schema import validate_listing
     from .scraper_base import (
         compute_listing_fingerprint,
+        fetch_existing_state,
         get_supabase,
+        mark_inactive_listings,
+        refresh_seen_for_unchanged,
         safe_upsert_with_fallback,
         setup_logging,
+        should_skip_detail,
     )
 
 load_dotenv()
-
-
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://www.trade-a-plane.com"
 SEARCH_PATH = "/search"
-DEFAULT_CHECKPOINT_FILE = Path("scraper/state/tradaplane_checkpoint.json")
-FAILED_URLS_FILE = Path("scraper/failed_urls_tap.json")
-
-REQUEST_TIMEOUT = 30
-DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/122.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive",
-}
-
-N_NUMBER_PATTERN = re.compile(r"\bN[\s\-]*([0-9]{1,5}[A-HJ-NP-Z]{0,2})\b", re.I)
+COOKIE_FILE = Path("scraper/tap_cookies.json")
+BLOCK_RETRY_SECONDS = 90
+MAX_BLOCK_STREAK = 3
+DETAIL_STALE_DAYS = 2
+MAX_GALLERY_IMAGES = 20
 
 
-def build_make_url(make: str, page: int = 1) -> str:
-    """
-    Build Trade-A-Plane search URL for piston single by make.
-    """
-    params: dict[str, str] = {
-        "category_level1": "Single Engine Piston",
-        "make": make.upper(),
-        "s-type": "aircraft",
-    }
-    if page > 1:
-        params["page"] = str(page)
-    return f"{BASE_URL}{SEARCH_PATH}?{urlencode(params)}"
+class AntiBotThresholdReached(RuntimeError):
+    pass
 
 
-def _parse_price(price_text: str) -> Optional[int]:
-    if not price_text:
-        return None
-    if "call" in price_text.lower():
-        return None
-    matches = re.findall(r"\d[\d,]*", price_text)
-    if not matches:
+def _block_message() -> str:
+    return "TAP anti-bot threshold reached - verify session/cookies before resuming"
+
+
+def _is_probable_block(html_text: str) -> bool:
+    low = (html_text or "").lower()
+    return any(
+        marker in low
+        for marker in (
+            "please enable js and disable any ad blocker",
+            "captcha-delivery.com",
+            "verify you are human",
+            "access denied",
+            "challenge",
+        )
+    )
+
+
+def _parse_price(text: str) -> Optional[int]:
+    num = re.sub(r"[^\d]", "", text or "")
+    if not num:
         return None
     try:
-        return int(matches[0].replace(",", ""))
+        return int(num)
     except ValueError:
         return None
 
 
-def _extract_price_text(text: str) -> Optional[str]:
-    if not text:
-        return None
-    money_match = re.search(r"\$\s*[\d,]+", text)
-    if money_match:
-        return money_match.group(0)
-    usd_match = re.search(r"\bUSD\s*[\$]?\s*[\d,]+\b", text, flags=re.I)
-    if usd_match:
-        return usd_match.group(0)
-    call_match = re.search(r"\bcall(?:\s+for\s+price)?\b", text, flags=re.I)
-    if call_match:
-        return "Call"
-    return None
+def _extract_price_text(text: str) -> str:
+    src = text or ""
+    money = re.search(r"\$\s*[\d,]{3,}", src)
+    if money:
+        return money.group(0)
+    usd = re.search(r"\bUSD\b\s*\$?\s*[\d,]{3,}", src, flags=re.I)
+    if usd:
+        return usd.group(0)
+    return ""
 
 
-def _normalize_n_number(raw_value: str | None) -> Optional[str]:
-    if not raw_value:
-        return None
-    compact = re.sub(r"[^A-Za-z0-9]", "", raw_value).upper()
-    if not compact:
-        return None
-    if not compact.startswith("N"):
-        compact = f"N{compact}"
-    if re.fullmatch(r"N[0-9]{1,5}[A-HJ-NP-Z]{0,2}", compact):
-        return compact
-    return None
-
-
-def _extract_n_number(text: str) -> Optional[str]:
-    if not text:
-        return None
-    match = N_NUMBER_PATTERN.search(text.upper())
-    if not match:
-        return None
-    return _normalize_n_number(f"N{match.group(1)}")
-
-
-def _extract_listing_numeric_id(listing_url: str) -> Optional[str]:
-    parsed = urlparse(listing_url)
+def _extract_listing_id(url: str) -> Optional[str]:
+    parsed = urlparse(url)
     query = parse_qs(parsed.query)
     for key in ("listing_id", "id"):
-        values = query.get(key) or []
-        if values and values[0].strip().isdigit():
-            return values[0].strip()
-
-    segments = [seg for seg in parsed.path.strip("/").split("/") if seg]
-    for seg in reversed(segments):
+        values = query.get(key)
+        if values:
+            candidate = str(values[0]).strip()
+            if candidate.isdigit():
+                return candidate
+    for seg in reversed([seg for seg in parsed.path.split("/") if seg]):
         if re.fullmatch(r"\d{4,12}", seg):
             return seg
-
-    tail_digits = re.search(r"(\d{4,12})$", parsed.path)
-    if tail_digits:
-        return tail_digits.group(1)
     return None
 
 
-def _extract_source_id(listing_url: str) -> str:
-    numeric = _extract_listing_numeric_id(listing_url)
-    if numeric:
-        return f"tap_{numeric}"
-    digest = hashlib.sha1(listing_url.encode("utf-8")).hexdigest()[:12]
-    return f"tap_{digest}"
+def _source_id(url: str) -> Optional[str]:
+    listing_id = _extract_listing_id(url)
+    return f"tap_{listing_id}" if listing_id else None
 
 
 def _split_city_state(location_text: str) -> tuple[Optional[str], Optional[str]]:
-    clean = (location_text or "").strip()
+    clean = re.sub(r"\s+", " ", (location_text or "").strip())
     if not clean:
         return None, None
-    parts = [p.strip() for p in clean.split(",")]
-    if len(parts) >= 2:
-        city = parts[0] or None
-        state_raw = parts[1].split()[0] if parts[1] else ""
-        state = state_raw.upper()[:2] if state_raw else None
-        return city, state
-    return clean, None
+    state_match = re.search(r"\b([A-Z]{2})\b(?:\s+USA)?\s*$", clean)
+    state = state_match.group(1) if state_match else None
+    parts = [p.strip() for p in clean.split(",") if p.strip()]
+    city = parts[0] if parts else clean
+    return city or None, state
 
 
-def _extract_year_make_model(title_text: str) -> tuple[Optional[int], Optional[str], Optional[str]]:
-    if not title_text:
-        return None, None, None
-    normalized = re.sub(r"\s+", " ", title_text).strip()
-    year_match = re.search(r"\b(19|20)\d{2}\b", normalized)
-    if not year_match:
-        return None, None, normalized or None
-
-    year_val = int(year_match.group(0))
-    after_year = normalized[year_match.end() :].strip()
-    if not after_year:
-        return year_val, None, None
-    parts = after_year.split(None, 1)
-    make_val = parts[0].title() if parts else None
-    model_val = parts[1].strip() if len(parts) > 1 else None
-    return year_val, make_val, model_val
+def _valid_url(value: str) -> bool:
+    parsed = urlparse(str(value or ""))
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
-def _looks_like_block_page(html_text: str) -> bool:
-    low = (html_text or "").lower()
-    if "result_listing" in low or "data-listing_id" in low:
-        return False
-    if len(low) < 3000 and "trade-a-plane.com" in low:
-        return True
-    block_markers = (
-        "access denied",
-        "cloudflare",
-        "captcha",
-        "robot check",
-        "verify you are human",
-    )
-    return any(marker in low for marker in block_markers)
+def _normalize_image_url(src: str) -> Optional[str]:
+    candidate = urljoin(BASE_URL, (src or "").strip())
+    if not _valid_url(candidate):
+        return None
+    if any(token in candidate.lower() for token in ("logo", "icon", "sprite", "placeholder", "ajax_loader", "insurance.png")):
+        return None
+    return candidate
 
 
-def _extract_next_page_url(soup: BeautifulSoup, current_url: str, page_num: int) -> Optional[str]:
-    next_link = soup.select_one("a[rel='next'], a.next")
-    if next_link and next_link.get("href"):
-        return urljoin(BASE_URL, next_link.get("href"))
-
-    for anchor in soup.select("a[href]"):
-        text = anchor.get_text(" ", strip=True)
-        if text in (">", ">>", "Next", "NEXT"):
-            return urljoin(BASE_URL, anchor.get("href"))
-
-    parsed = urlparse(current_url)
-    query = parse_qs(parsed.query)
-    candidate = page_num + 1
-    if "page" in query:
-        query["page"] = [str(candidate)]
-        return parsed._replace(query=urlencode(query, doseq=True)).geturl()
-    query["page"] = [str(candidate)]
-    return parsed._replace(query=urlencode(query, doseq=True)).geturl()
-
-
-def _extract_logbook_urls(soup: BeautifulSoup) -> list[str]:
-    links: list[str] = []
-    seen: set[str] = set()
-    keywords = (
-        "logbook",
-        "logs",
-        "maintenance records",
-        "airframe records",
-        "engine records",
-        "records",
-    )
-    for anchor in soup.select("a[href]"):
-        href = (anchor.get("href") or "").strip()
-        if not href:
-            continue
-        absolute = urljoin(BASE_URL, href)
-        text = anchor.get_text(" ", strip=True).lower()
-        low_href = absolute.lower()
-        is_doc = any(low_href.endswith(ext) for ext in (".pdf", ".doc", ".docx", ".xls", ".xlsx"))
-        is_logbook = any(key in text for key in keywords) or any(key in low_href for key in ("logbook", "record", "logs"))
-        if not (is_doc or is_logbook):
-            continue
-        if absolute in seen:
-            continue
-        seen.add(absolute)
-        links.append(absolute)
-    return links
-
-
-def _extract_detail_sections(soup: BeautifulSoup) -> dict[str, str]:
-    """Extract key/value text blocks from listing detail panels."""
-    sections: dict[str, str] = {}
-    for box in soup.select(".btm-detail-box"):
-        header_el = box.select_one("h3")
-        header = header_el.get_text(" ", strip=True).lower() if header_el else ""
-        if not header:
-            continue
-
-        content_parts: list[str] = []
-        for block in box.select("pre, p, li, td"):
-            text = html_module.unescape(block.get_text(" ", strip=True))
-            text = re.sub(r"\s+", " ", text).strip()
-            if text:
-                content_parts.append(text)
-
-        if not content_parts:
-            # Fallback to raw text while removing the header copy.
-            text = html_module.unescape(box.get_text(" ", strip=True))
-            text = re.sub(r"\s+", " ", text).strip()
-            if text and text.lower().startswith(header):
-                text = text[len(header) :].strip(" :|-")
-            if text:
-                content_parts = [text]
-
-        if content_parts:
-            sections[header] = "\n".join(dict.fromkeys(content_parts))
-    return sections
-
-
-def _fetch_existing_listing_state(supabase: "Client", source_ids: list[str]) -> dict[str, dict[str, Any]]:
-    if not source_ids:
-        return {}
-    existing: dict[str, dict[str, Any]] = {}
-    unique_source_ids = list(dict.fromkeys(source_ids))
-    for idx in range(0, len(unique_source_ids), 200):
-        chunk = unique_source_ids[idx : idx + 200]
-        rows = (
-            supabase.table("aircraft_listings")
-            .select(
-                "source_id,listing_fingerprint,price_asking,asking_price,"
-                "description_full,avionics_description,total_time_airframe,engine_time_since_overhaul,"
-                "last_seen_date,url"
-            )
-            .eq("source_site", "trade_a_plane")
-            .in_("source_id", chunk)
-            .execute()
-        )
-        for row in rows.data or []:
-            sid = row.get("source_id")
-            if sid is None:
-                continue
-            existing[str(sid)] = {
-                "listing_fingerprint": str(row.get("listing_fingerprint") or ""),
-                "price_asking": row.get("price_asking"),
-                "asking_price": row.get("asking_price"),
-                "description_full": row.get("description_full"),
-                "avionics_description": row.get("avionics_description"),
-                "total_time_airframe": row.get("total_time_airframe"),
-                "engine_time_since_overhaul": row.get("engine_time_since_overhaul"),
-                "last_seen_date": row.get("last_seen_date"),
-                "url": row.get("url"),
-            }
-    return existing
-
-
-def _seen_within_hours(last_seen_date: Any, hours: int) -> bool:
-    if not last_seen_date:
-        return False
+def _parse_int(value: Any) -> Optional[int]:
     try:
-        if isinstance(last_seen_date, str):
-            text = last_seen_date.strip()
-            if len(text) == 10:
-                seen_dt = datetime.fromisoformat(text).replace(tzinfo=timezone.utc)
-            else:
-                seen_dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
-                if seen_dt.tzinfo is None:
-                    seen_dt = seen_dt.replace(tzinfo=timezone.utc)
-        elif isinstance(last_seen_date, datetime):
-            seen_dt = last_seen_date if last_seen_date.tzinfo else last_seen_date.replace(tzinfo=timezone.utc)
-        else:
-            return False
-        age_seconds = (datetime.now(timezone.utc) - seen_dt).total_seconds()
-        return age_seconds <= hours * 3600
+        if value is None:
+            return None
+        text = str(value).replace(",", " ").strip()
+        direct = re.search(r"\b\d+\b", text)
+        if not direct:
+            return None
+        return int(direct.group(0))
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_tap_engine_prop_rows(soup: BeautifulSoup) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    engines: list[dict[str, Any]] = []
+    props: list[dict[str, Any]] = []
+
+    for tbl in soup.find_all("table"):
+        rows = tbl.find_all("tr")
+        if len(rows) < 2:
+            continue
+
+        header_cells = [cell.get_text(" ", strip=True).lower() for cell in rows[0].find_all(["th", "td"])]
+        metric_cols: list[tuple[int, str]] = []
+        for idx, header in enumerate(header_cells):
+            token = header.replace(" ", "")
+            if "spoh" in token or "propsinceoverhaul" in token:
+                metric_cols.append((idx, "SPOH"))
+            elif "tso" in token or "tsmoh" in token or "smoh" in token:
+                metric_cols.append((idx, "TSO"))
+            elif "tsn" in token:
+                metric_cols.append((idx, "TSN"))
+        if not metric_cols:
+            continue
+
+        section_heading = ""
+        heading_node = tbl.find_previous(["h1", "h2", "h3", "h4", "h5", "h6", "div", "span"])
+        if heading_node:
+            section_heading = heading_node.get_text(" ", strip=True).lower()
+
+        for row in rows[1:]:
+            cells = [cell.get_text(" ", strip=True) for cell in row.find_all(["th", "td"])]
+            if not cells:
+                continue
+            position = (cells[0] if cells else "").strip() or f"E{len(engines) + len(props) + 1}"
+            for metric_idx, metric_type in metric_cols:
+                if metric_idx >= len(cells):
+                    continue
+                metric_raw = cells[metric_idx].strip()
+                if not metric_raw:
+                    continue
+                metric_hours = _parse_int(metric_raw)
+                record = {
+                    "position": position,
+                    "metric_type": metric_type,
+                    "metric_raw": metric_raw,
+                    "metric_hours": metric_hours,
+                }
+                if metric_type == "SPOH" or "prop" in section_heading:
+                    props.append(record)
+                else:
+                    engines.append(record)
+    return engines, props
+
+
+def _extract_general_specs_engine_prop_rows(soup: BeautifulSoup) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    engines: list[dict[str, Any]] = []
+    props: list[dict[str, Any]] = []
+    specs_root = soup.select_one("#general_specs")
+    if not specs_root:
+        return engines, props
+
+    for row in specs_root.select("p"):
+        label_el = row.select_one("label")
+        label = (label_el.get_text(" ", strip=True) if label_el else "").strip().lower().rstrip(":")
+        raw_text = row.get_text(" ", strip=True)
+        value = raw_text
+        if label_el:
+            label_text = label_el.get_text(" ", strip=True)
+            value = raw_text.replace(label_text, "", 1).strip(" :")
+        metric_hours = _parse_int(value)
+        if metric_hours is None:
+            continue
+
+        if "engine 1 time" in label:
+            engines.append(
+                {"position": "Engine 1", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours}
+            )
+        elif "engine 2 time" in label:
+            engines.append(
+                {"position": "Engine 2", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours}
+            )
+        elif label == "engine time":
+            engines.append({"position": "Engine 1", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours})
+        elif "prop 1 time" in label:
+            props.append({"position": "Prop 1", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours})
+        elif "prop 2 time" in label:
+            props.append({"position": "Prop 2", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours})
+        elif label == "prop time":
+            props.append({"position": "Prop 1", "metric_type": "TIME", "metric_raw": value, "metric_hours": metric_hours})
+
+    return engines, props
+
+
+def _normalize_cookie_entry(raw_cookie: dict[str, Any]) -> Optional[dict[str, Any]]:
+    name = str(raw_cookie.get("name") or "").strip()
+    value = str(raw_cookie.get("value") or "")
+    if not name:
+        return None
+
+    normalized: dict[str, Any] = {"name": name, "value": value}
+    domain = raw_cookie.get("domain")
+    path = raw_cookie.get("path")
+    if domain:
+        normalized["domain"] = str(domain)
+    if path:
+        normalized["path"] = str(path)
+    normalized["httpOnly"] = bool(raw_cookie.get("httpOnly", False))
+    normalized["secure"] = bool(raw_cookie.get("secure", False))
+
+    same_site_raw = str(raw_cookie.get("sameSite") or "").strip().lower()
+    same_site_map = {
+        "no_restriction": "None",
+        "none": "None",
+        "lax": "Lax",
+        "strict": "Strict",
+        "unspecified": "Lax",
+    }
+    mapped = same_site_map.get(same_site_raw)
+    if mapped:
+        normalized["sameSite"] = mapped
+
+    exp = raw_cookie.get("expirationDate")
+    if exp not in (None, "", 0):
+        try:
+            normalized["expires"] = int(float(exp))
+        except (TypeError, ValueError):
+            pass
+    return normalized
+
+
+def build_category_url(category_name: str, page: int) -> str:
+    params = dict(TRADAPLANE_CATEGORIES[category_name].get("params", {}))
+    minimal_mode = str(params.pop("_minimal", "")).strip() in {"1", "true", "yes"}
+    if page > 1:
+        params["s-page"] = str(page)
+    if not minimal_mode:
+        params.setdefault("s-page_size", "24")
+        params.setdefault("s-sort_key", "days_since_update")
+        params.setdefault("s-sort_order", "asc")
+    return f"{BASE_URL}{SEARCH_PATH}?{urlencode(params)}"
+
+
+async def _create_browser_context(playwright, *, load_cookies: bool):
+    browser = await playwright.chromium.launch(
+        headless=False,
+        args=["--no-sandbox", "--disable-blink-features=AutomationControlled", "--disable-dev-shm-usage"],
+    )
+    context = await browser.new_context(
+        user_agent=(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        viewport={"width": 1280, "height": 840},
+        locale="en-US",
+    )
+    if load_cookies and COOKIE_FILE.exists():
+        try:
+            cookies = json.loads(COOKIE_FILE.read_text(encoding="utf-8"))
+            if isinstance(cookies, list):
+                normalized = [
+                    cookie
+                    for cookie in (_normalize_cookie_entry(item) for item in cookies if isinstance(item, dict))
+                    if cookie is not None
+                ]
+                if normalized:
+                    await context.add_cookies(normalized)
+                    log.info("Loaded %s TAP cookies from %s", len(normalized), COOKIE_FILE)
+        except Exception as exc:
+            log.warning("Failed to load cookie file %s: %s", COOKIE_FILE, exc)
+    return browser, context
+
+
+async def _human_pause(min_seconds: float = 0.35, max_seconds: float = 1.25) -> None:
+    await asyncio.sleep(random.uniform(max(0.0, min_seconds), max(min_seconds, max_seconds)))
+
+
+async def _human_warmup(page) -> None:
+    try:
+        await page.goto(BASE_URL, wait_until="domcontentloaded", timeout=45000)
+        await _human_pause(1.4, 2.8)
+        viewport = page.viewport_size or {"width": 1280, "height": 840}
+        for _ in range(random.randint(2, 4)):
+            x = random.randint(80, max(120, int(viewport["width"] * 0.85)))
+            y = random.randint(120, max(220, int(viewport["height"] * 0.85)))
+            await page.mouse.move(x, y, steps=random.randint(8, 20))
+            await _human_pause(0.2, 0.7)
+            await page.mouse.wheel(0, random.randint(220, 560))
+            await _human_pause(0.6, 1.5)
+        await page.mouse.wheel(0, -random.randint(140, 360))
+        await _human_pause(0.5, 1.3)
+    except Exception as exc:
+        log.warning("Warmup interaction skipped: %s", exc)
+
+
+async def _first_selector(page, selectors: list[str]) -> Optional[str]:
+    for selector in selectors:
+        try:
+            locator = page.locator(selector).first
+            if await locator.count() > 0 and await locator.is_visible():
+                return selector
+        except Exception:
+            continue
+    return None
+
+
+async def _human_type(page, selector: str, value: str) -> bool:
+    try:
+        locator = page.locator(selector).first
+        await locator.click()
+        await _human_pause(0.2, 0.5)
+        await locator.fill("")
+        for ch in value:
+            await locator.type(ch, delay=random.randint(40, 130))
+        await _human_pause(0.2, 0.6)
+        return True
     except Exception:
         return False
 
 
-def load_checkpoint(checkpoint_file: Path) -> Optional[dict[str, Any]]:
-    if not checkpoint_file.exists():
-        return None
+async def maybe_login_tap(page, *, username: Optional[str], password: Optional[str]) -> bool:
+    if not username or not password:
+        return False
+    login_url = urljoin(BASE_URL, "/login")
     try:
-        payload = json.loads(checkpoint_file.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            return None
-        return payload
-    except Exception as exc:
-        log.warning("Failed to read checkpoint %s: %s", checkpoint_file, exc)
-        return None
+        await page.goto(login_url, wait_until="domcontentloaded", timeout=45000)
+        await _human_pause(1.0, 2.2)
 
-
-def save_checkpoint(checkpoint_file: Path, payload: dict[str, Any]) -> None:
-    checkpoint_file.parent.mkdir(parents=True, exist_ok=True)
-    checkpoint_file.write_text(json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8")
-
-
-def clear_checkpoint(checkpoint_file: Path) -> None:
-    if checkpoint_file.exists():
-        checkpoint_file.unlink(missing_ok=True)
-
-
-def load_failed_entries(failed_file: Path) -> list[dict[str, Any]]:
-    if not failed_file.exists():
-        return []
-    try:
-        payload = json.loads(failed_file.read_text(encoding="utf-8"))
-    except Exception as exc:
-        log.warning("Failed to read failed URL file %s: %s", failed_file, exc)
-        return []
-    if not isinstance(payload, list):
-        return []
-    return [entry for entry in payload if isinstance(entry, dict)]
-
-
-def save_failed_entries(failed_file: Path, failed_entries: list[dict[str, Any]]) -> None:
-    failed_file.parent.mkdir(parents=True, exist_ok=True)
-    failed_file.write_text(json.dumps(failed_entries, indent=2, ensure_ascii=True), encoding="utf-8")
-
-
-def log_scraper_session(
-    supabase: "Client",
-    *,
-    site: str,
-    started_at: datetime,
-    ended_at: datetime,
-    listings_attempted: int,
-    listings_succeeded: int,
-    first_error_at_listing: int | None,
-    error_type: str | None,
-    avg_delay_ms: int,
-    batch_size: int,
-    session_notes: str,
-) -> None:
-    row = {
-        "id": str(uuid.uuid4()),
-        "site": site,
-        "started_at": started_at.isoformat(),
-        "ended_at": ended_at.isoformat(),
-        "listings_attempted": listings_attempted,
-        "listings_succeeded": listings_succeeded,
-        "first_error_at_listing": first_error_at_listing,
-        "error_type": error_type,
-        "avg_delay_ms": avg_delay_ms,
-        "batch_size": batch_size,
-        "session_notes": session_notes[:1000],
-    }
-    try:
-        supabase.table("scraper_sessions").insert(row).execute()
-    except Exception as exc:
-        log.warning("Failed to write scraper session row: %s", exc)
-
-
-class HtmlFetcher:
-    """Requests-first HTML fetcher with optional Playwright fallback."""
-
-    def __init__(self, use_playwright_fallback: bool = True) -> None:
-        self.session = requests.Session()
-        self.session.headers.update(DEFAULT_HEADERS)
-        self.use_playwright_fallback = use_playwright_fallback
-
-    def fetch(self, url: str) -> Optional[str]:
-        try:
-            response = self.session.get(url, timeout=REQUEST_TIMEOUT)
-            if response.status_code == 200:
-                if not _looks_like_block_page(response.text):
-                    return response.text
-                log.warning("Potential challenge/block page via requests: %s", url)
-            else:
-                log.warning("Non-200 status %s for %s", response.status_code, url)
-        except requests.RequestException as exc:
-            log.warning("Requests fetch failed for %s: %s", url, exc)
-
-        if not self.use_playwright_fallback:
-            return None
-        return self._fetch_with_playwright(url)
-
-    def _fetch_with_playwright(self, url: str) -> Optional[str]:
-        try:
-            from playwright.sync_api import sync_playwright
-        except Exception as exc:
-            log.warning("Playwright unavailable; cannot fallback for %s (%s)", url, exc)
-            return None
-
-        try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(
-                    headless=False,
-                    args=[
-                        "--no-sandbox",
-                        "--disable-blink-features=AutomationControlled",
-                        "--disable-dev-shm-usage",
-                    ],
-                )
-                context = browser.new_context(
-                    user_agent=DEFAULT_HEADERS["User-Agent"],
-                    viewport={"width": 1366, "height": 900},
-                    locale="en-US",
-                )
-                context.add_init_script(
-                    """
-                    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-                    Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3] });
-                    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-                    """
-                )
-                page = context.new_page()
-                response = page.goto(url, wait_until="domcontentloaded", timeout=45000)
-                page.wait_for_timeout(random.uniform(4500, 7000))
-                html = page.content()
-                status = response.status if response else None
-                context.close()
-                browser.close()
-                if status != 200:
-                    log.warning("Playwright non-200 status %s for %s", status, url)
-                    return None
-                return html
-        except Exception as exc:
-            log.warning("Playwright fallback failed for %s: %s", url, exc)
-            return None
-
-
-def _collect_specs_from_soup(soup: BeautifulSoup) -> dict[str, str]:
-    specs: dict[str, str] = {}
-
-    for row in soup.select("table tr"):
-        cells = row.find_all(["th", "td"])
-        if len(cells) < 2:
-            continue
-        key = cells[0].get_text(" ", strip=True).lower().rstrip(":")
-        value = cells[1].get_text(" ", strip=True)
-        if key and value:
-            specs[key] = value
-
-    for dt in soup.select("dt"):
-        key = dt.get_text(" ", strip=True).lower().rstrip(":")
-        dd = dt.find_next_sibling("dd")
-        if not dd:
-            continue
-        value = dd.get_text(" ", strip=True)
-        if key and value and key not in specs:
-            specs[key] = value
-
-    for label in soup.select(".spec-label, .label"):
-        key = label.get_text(" ", strip=True).lower().rstrip(":")
-        value_el = label.find_next_sibling()
-        if not value_el:
-            continue
-        value = value_el.get_text(" ", strip=True)
-        if key and value and key not in specs:
-            specs[key] = value
-
-    return specs
-
-
-def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
-    extra: dict = {}
-    html = fetcher.fetch(listing_url)
-    if not html:
-        return extra
-
-    soup = BeautifulSoup(html, "html.parser")
-    raw_text = soup.get_text(" ", strip=True)
-    sections = _extract_detail_sections(soup)
-
-    # Price
-    price_text = None
-    price_el = soup.select_one(".price, .listing-price, .ask-price, .detail-price")
-    if price_el:
-        price_text = price_el.get_text(" ", strip=True)
-    if not price_text:
-        price_text = _extract_price_text(raw_text)
-    if price_text:
-        price = _parse_price(price_text)
-        if price is not None:
-            extra["price_asking"] = price
-
-    # Images
-    images: list[str] = []
-    seen: set[str] = set()
-    for img in soup.select("img[src], img[data-src]"):
-        src = (img.get("data-src") or img.get("src") or "").strip()
-        if not src:
-            continue
-        absolute = urljoin(BASE_URL, src)
-        if absolute in seen:
-            continue
-        low = absolute.lower()
-        if any(
-            skip in low
-            for skip in (
-                "/_common/images/",
-                "/search/images/",
-                "chicklet",
-                "ajax_loader",
-                "insurance.png",
-                "aopa_loan_calc",
-                "logo",
-                "icon",
-                "sprite",
-                "placeholder",
-            )
-        ):
-            continue
-        seen.add(absolute)
-        images.append(absolute)
-    if images:
-        extra["primary_image_url"] = images[0]
-        extra["image_urls"] = images
-
-    logbook_urls = _extract_logbook_urls(soup)
-    if logbook_urls:
-        extra["logbook_urls"] = logbook_urls
-
-    # Location and seller
-    location_text = None
-    location_el = soup.select_one(".listing-location, .location, [itemprop='address']")
-    if location_el:
-        location_text = location_el.get_text(" ", strip=True)
-    if not location_text:
-        location_match = re.search(r"\b([A-Za-z .'-]+,\s*[A-Z]{2})(?:\s+USA)?\b", raw_text)
-        if location_match:
-            location_text = location_match.group(1)
-    if location_text:
-        city, state = _split_city_state(location_text)
-        if city:
-            extra["location_city"] = city
-        if state:
-            extra["location_state"] = state
-
-    seller_el = soup.select_one(".seller, .dealer, .contact-name, [itemprop='seller']")
-    if seller_el:
-        seller = seller_el.get_text(" ", strip=True)
-        if seller:
-            extra["seller_name"] = seller
-
-    desc_el = soup.select_one(".description, #description, .listing-description, .remarks")
-    if desc_el:
-        desc = html_module.unescape(desc_el.get_text(" ", strip=True))
-        if desc:
-            extra["description"] = desc
-    detailed_desc = sections.get("detailed description")
-    if detailed_desc:
-        extra["description"] = detailed_desc
-
-    if sections:
-        preferred_order = [
-            "detailed description",
-            "avionics / equipment",
-            "engines / mods / prop",
-            "interior / exterior",
-            "general specs (cont.)",
-            "airframe",
-            "remarks",
-        ]
-        chunk_lines: list[str] = []
-        for key in preferred_order:
-            value = sections.get(key)
-            if value:
-                chunk_lines.append(f"{key.title()}:\n{value}")
-        for key, value in sections.items():
-            if key not in preferred_order:
-                chunk_lines.append(f"{key.title()}:\n{value}")
-        description_full = "\n\n".join(chunk_lines).strip()
-        if description_full:
-            extra["description_full"] = description_full
-
-    n_number = _extract_n_number(raw_text)
-
-    specs = _collect_specs_from_soup(soup)
-    if specs:
-        log.debug("Detail specs parsed: %s", list(specs.keys()))
-
-    if not n_number:
-        for key in (
-            "registration",
-            "registration #",
-            "n-number",
-            "n number",
-            "tail number",
-            "tail #",
-            "reg #",
-            "aircraft registration",
-        ):
-            if key in specs:
-                n_number = _extract_n_number(specs[key] or "")
-                if n_number:
-                    break
-
-    if "year" in specs:
-        m = re.search(r"\b(19|20)\d{2}\b", specs["year"])
-        if m:
-            extra["year"] = int(m.group(0))
-
-    for make_key in ("make", "manufacturer"):
-        if make_key in specs:
-            extra["make"] = specs[make_key].strip().title()
-            break
-
-    if "model" in specs:
-        extra["model"] = specs["model"].strip()
-
-    for key in ("total time", "ttaf", "airframe time"):
-        if key in specs:
-            m = re.search(r"[\d,]+", specs[key])
-            if m:
-                extra["total_time_airframe"] = int(m.group(0).replace(",", ""))
-                break
-    if "total_time_airframe" not in extra:
-        m = re.search(r"\b(?:total\s*time|ttaf)\s*[:\-]?\s*([\d,]{2,7})\b", raw_text, flags=re.I)
-        if m:
-            extra["total_time_airframe"] = int(m.group(1).replace(",", ""))
-
-    for key in ("smoh", "engine time", "time since overhaul", "time since major overhaul"):
-        if key in specs:
-            m = re.search(r"[\d,]+", specs[key])
-            if m:
-                extra["engine_time_since_overhaul"] = int(m.group(0).replace(",", ""))
-                break
-    if "engine_time_since_overhaul" not in extra:
-        smoh_patterns = (
-            r"\b(?:engine\s*1\s*time|smoh|stoh)\s*[:\-]?\s*([\d,]{2,7})\b",
+        user_selector = await _first_selector(
+            page,
+            [
+                "input[name='username']",
+                "input[name='email']",
+                "input[type='email']",
+                "#email",
+                "#email_modal",
+                "input[id*='user']",
+            ],
         )
-        for pattern in smoh_patterns:
-            m = re.search(pattern, raw_text, flags=re.I)
-            if m:
-                extra["engine_time_since_overhaul"] = int(m.group(1).replace(",", ""))
-                break
-
-    for key in ("engine", "engine model", "engine make/model", "powerplant"):
-        if key in specs:
-            cleaned_engine_model = sanitize_engine_model(specs[key].strip())
-            if cleaned_engine_model:
-                extra["engine_model"] = cleaned_engine_model
-            break
-
-    for key in ("avionics", "avionics/radios", "panel"):
-        if key in specs:
-            extra["avionics_description"] = html_module.unescape(specs[key]).strip()
-            break
-    if "avionics_description" not in extra:
-        avionics_block = sections.get("avionics / equipment")
-        if avionics_block:
-            extra["avionics_description"] = avionics_block
-
-    if n_number:
-        extra["n_number"] = n_number
-
-    return extra
-
-
-def parse_listing_card(card) -> Optional[dict]:
-    try:
-        link = (
-            card.select_one("a.log_listing_click[href]")
-            or card.select_one("a.result_listing_click[href]")
-            or card.select_one("a.listing_click[href]")
-            or card.select_one("a[href*='listing_id='][href]")
-            or card.select_one("a[href*='/search/'][href]")
-            or card.select_one("a[href]")
+        pass_selector = await _first_selector(
+            page,
+            [
+                "input[name='password']",
+                "input[type='password']",
+                "#password",
+                "#password_modal",
+            ],
         )
-        if not link:
-            return None
+        if not user_selector or not pass_selector:
+            log.warning("TAP login form fields were not detected on /login")
+            return False
 
-        href = (link.get("href") or "").strip()
-        if not href:
-            return None
+        typed_user = await _human_type(page, user_selector, username)
+        typed_pass = await _human_type(page, pass_selector, password)
+        if not typed_user or not typed_pass:
+            log.warning("TAP login typing failed")
+            return False
 
-        listing_url = urljoin(BASE_URL, href)
-        if "trade-a-plane.com" not in urlparse(listing_url).netloc:
-            return None
-
-        source_id = _extract_source_id(listing_url)
-
-        title_el = (
-            card.select_one("a#title")
-            or card.select_one(".result-title")
-            or card.select_one(".listing-title")
-            or card.select_one("h2, h3, h4")
-            or link
+        auto_login_selector = await _first_selector(
+            page,
+            [
+                "#defaultCheck",
+                "input[name='autologin']",
+                "input[type='checkbox'][id*='auto']",
+                "input[type='checkbox'][name*='auto']",
+            ],
         )
-        title_text = title_el.get("title", "").strip() if title_el else ""
-        if not title_text and title_el:
-            title_text = title_el.get_text(" ", strip=True)
-        title_text = re.sub(r"\s*-\s*Listing\s*#:\s*\d+\s*$", "", title_text, flags=re.I).strip()
-        year, make, model = _extract_year_make_model(title_text)
+        if auto_login_selector:
+            try:
+                checkbox = page.locator(auto_login_selector).first
+                if not await checkbox.is_checked():
+                    await checkbox.click()
+                    await _human_pause(0.2, 0.6)
+            except Exception:
+                log.warning("TAP auto-login checkbox detected but could not be toggled")
 
-        card_text = card.get_text(" ", strip=True)
-        n_number = _extract_n_number(card_text)
-        price_text = None
-        price_el = card.select_one(".price, .listing-price, .result-price, .sale_price")
-        if price_el:
-            price_text = price_el.get_text(" ", strip=True)
-        if not price_text:
-            price_text = _extract_price_text(card_text)
-        price_asking = _parse_price(_extract_price_text(price_text or "") or (price_text or ""))
+        submit_selector = await _first_selector(
+            page,
+            [
+                "button[type='submit']",
+                "button:has-text('Log in')",
+                "button:has-text('Login')",
+                "input[type='submit']",
+            ],
+        )
+        if submit_selector:
+            await page.locator(submit_selector).first.click()
+        else:
+            await page.keyboard.press("Enter")
+        await _human_pause(2.0, 4.2)
 
-        location_text = ""
-        location_el = card.select_one(".location, .listing-location, .city-state, .address")
-        if location_el:
-            location_text = location_el.get_text(" ", strip=True)
-        if not location_text:
-            loc_match = re.search(r"\b[A-Za-z .'-]+,\s*[A-Z]{2}\b", card_text)
-            if loc_match:
-                location_text = loc_match.group(0)
-        city, state = _split_city_state(location_text)
-
-        img_el = card.select_one("img[src]")
-        primary_image_url = urljoin(BASE_URL, img_el.get("src")) if img_el and img_el.get("src") else None
-
-        description = None
-        desc_el = card.select_one(".description, .listing-description, .summary")
-        if desc_el:
-            description = html_module.unescape(desc_el.get_text(" ", strip=True)).strip() or None
-            if description:
-                description = re.sub(r"\s*more\s+info\s*$", "", description, flags=re.I).strip()
-
-        return {
-            "source_site": "trade_a_plane",
-            "listing_source": "trade_a_plane",
-            "source_id": source_id,
-            "source_listing_id": source_id,
-            "url": listing_url,
-            "make": make,
-            "model": model,
-            "year": year,
-            "price_asking": price_asking,
-            "location_city": city,
-            "location_state": state,
-            "primary_image_url": primary_image_url,
-            "description": description,
-            "n_number": n_number,
-            "aircraft_type": "piston_single",
-        }
+        page_html = (await page.content()).lower()
+        current_url = page.url.lower()
+        success = ("my account" in page_html) or ("/account" in current_url) or ("logout" in page_html)
+        if success:
+            log.info("TAP login appears successful")
+            return True
+        log.warning("TAP login attempt finished but success markers were not detected")
+        return False
     except Exception as exc:
-        log.warning("Error parsing listing card: %s", exc)
-        return None
+        log.warning("TAP login attempt failed: %s", exc)
+        return False
 
 
-def _extract_cards(soup: BeautifulSoup) -> list:
-    selectors = [
+async def fetch_page_soup(page, url: str) -> tuple[Optional[BeautifulSoup], bool]:
+    try:
+        response = await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        await page.wait_for_timeout(random.uniform(2600, 4200))
+        html = await page.content()
+        soup = BeautifulSoup(html, "html.parser")
+        if response and response.status in (429, 503):
+            return None, True
+        # Trust parsed cards over marker text; TAP pages can include challenge strings in static assets.
+        if _get_cards(soup):
+            return soup, False
+        if _is_probable_block(html):
+            return None, True
+        return soup, False
+    except Exception as exc:
+        log.warning("Failed to fetch %s: %s", url, exc)
+        return None, True
+
+
+def _get_cards(soup: BeautifulSoup) -> list:
+    for selector in (
         "div.result_listing",
         "div[class*='result_listing']",
         "div.result-listing",
         "div.result-listing-holder",
-        "div[class*='result-listing']",
         "article.listing-card",
-    ]
-    for selector in selectors:
+    ):
         cards = soup.select(selector)
         if cards:
             return cards
     return []
 
 
-def scrape_make(
-    fetcher: HtmlFetcher,
-    make: str,
-    limit: Optional[int] = None,
-    start_page: int = 1,
-    on_page_complete: Optional[Callable[[int, list[dict]], None]] = None,
-    supabase: Optional["Client"] = None,
-    limiter: Optional[AdaptiveRateLimiter] = None,
-    session_deadline_epoch: Optional[float] = None,
-    failed_entries: Optional[list[dict[str, Any]]] = None,
-    session_stats: Optional[dict[str, Any]] = None,
-) -> list[dict]:
-    listings: list[dict] = []
+def parse_listing_card(card, category_name: str) -> Optional[dict[str, Any]]:
+    link = (
+        card.select_one("a.log_listing_click[href]")
+        or card.select_one("a.result_listing_click[href]")
+        or card.select_one("a.listing_click[href]")
+        or card.select_one("a[href*='listing_id=']")
+        or card.select_one("a[href]")
+    )
+    if not link:
+        return None
+    href = (link.get("href") or "").strip()
+    if not href:
+        return None
+    url = urljoin(BASE_URL, href)
+    if "trade-a-plane.com" not in urlparse(url).netloc:
+        return None
+    source_id = _source_id(url)
+    if not source_id:
+        return None
+
+    title_el = card.select_one("a#title") or card.select_one(".result-title") or card.select_one(".listing-title") or card.select_one("h2, h3, h4")
+    title = title_el.get_text(" ", strip=True) if title_el else link.get_text(" ", strip=True)
+    title = re.sub(r"\s+", " ", (title or "")).strip()
+
+    year = None
+    make = None
+    model = None
+    year_match = re.search(r"\b(19|20)\d{2}\b", title)
+    if year_match:
+        year = int(year_match.group(0))
+        tail = title[year_match.end() :].strip()
+        parts = tail.split(None, 1)
+        if parts:
+            make = parts[0].title()
+            model = parts[1].strip() if len(parts) > 1 else None
+
+    price_el = card.select_one(".txt-price, .price, .listing-price, .result-price, .sale_price")
+    raw_price_text = price_el.get_text(" ", strip=True) if price_el else card.get_text(" ", strip=True)
+    price_text = _extract_price_text(raw_price_text)
+    price = None if "call" in (raw_price_text or "").lower() else _parse_price(price_text)
+    if price is None:
+        onclick_blob = " ".join(
+            str(node.get("onclick") or "")
+            for node in card.select("[onclick*='build_referral_link']")
+        )
+        onclick_price_match = re.search(r"build_referral_link\(\s*'([\d,]+(?:\.\d+)?)'", onclick_blob, flags=re.I)
+        if onclick_price_match:
+            price = _parse_price(onclick_price_match.group(1))
+
+    location_el = card.select_one(".location, .listing-location, .city-state, .address")
+    location_raw = location_el.get_text(" ", strip=True) if location_el else ""
+    if not location_raw:
+        loc_match = re.search(r"\b[A-Za-z .'-]+,\s*[A-Z]{2}\b", card.get_text(" ", strip=True))
+        location_raw = loc_match.group(0) if loc_match else ""
+    location_city, location_state = _split_city_state(location_raw)
+    n_number = None
+    reg_el = card.select_one(".txt-reg-num")
+    reg_text = reg_el.get_text(" ", strip=True) if reg_el else ""
+    nnum_match = re.search(r"\bN\d{1,5}[A-Z]{0,2}\b", reg_text, flags=re.I)
+    if nnum_match:
+        n_number = nnum_match.group(0).upper()
+    total_time_airframe = None
+    tt_el = card.select_one(".txt-total-time")
+    if tt_el:
+        tt_text = tt_el.get_text(" ", strip=True)
+        tt_match = re.search(r"\b([\d,]{2,7})\b", tt_text)
+        if tt_match:
+            try:
+                total_time_airframe = int(tt_match.group(1).replace(",", ""))
+            except ValueError:
+                total_time_airframe = None
+
+    thumb = None
+    img = card.select_one("img[src], img[data-src]")
+    if img:
+        thumb = _normalize_image_url(str(img.get("data-src") or img.get("src") or ""))
+
+    days_on_market = None
+    dom_match = re.search(r"\b(\d+)\s+days?\s+ago\b", card.get_text(" ", strip=True), flags=re.I)
+    if dom_match:
+        days_on_market = int(dom_match.group(1))
+
+    desc_el = card.select_one("p.description, .description, .listing-description, .result-description")
+    description_snippet = ""
+    if desc_el:
+        description_snippet = re.sub(r"\s+", " ", desc_el.get_text(" ", strip=True)).strip()
+
+    seller_el = card.select_one(
+        ".seller-name, .dealer-name, .seller, .company_name, .company-name, [itemprop='name'], a[href*='seller_id=']"
+    )
+    seller_name = re.sub(r"\s+", " ", seller_el.get_text(" ", strip=True)).strip() if seller_el else None
+    seller_type = None
+    text_blob = card.get_text(" ", strip=True).lower()
+    if "dealer" in text_blob:
+        seller_type = "dealer"
+    elif "broker" in text_blob:
+        seller_type = "broker"
+    elif "private" in text_blob:
+        seller_type = "private"
+
+    return {
+        "source": "trade_a_plane",
+        "source_site": "trade_a_plane",
+        "listing_source": "trade_a_plane",
+        "source_id": source_id,
+        "source_listing_id": source_id,
+        "url": url,
+        "title": title or None,
+        "year": year,
+        "make": make,
+        "model": model,
+        "price_asking": price,
+        "location_raw": location_raw or None,
+        "location_city": location_city,
+        "location_state": location_state,
+        "state": location_state,
+        "primary_image_url": thumb,
+        "days_on_market": days_on_market,
+        "description": description_snippet or None,
+        "n_number": n_number,
+        "total_time_airframe": total_time_airframe,
+        "seller_name": seller_name,
+        "seller_type": seller_type,
+        "aircraft_type": str(TRADAPLANE_CATEGORIES[category_name].get("aircraft_type") or "single_engine_piston"),
+    }
+
+
+async def fetch_listing_detail(page, url: str) -> tuple[dict[str, Any], bool]:
+    soup, blocked = await fetch_page_soup(page, url)
+    if blocked or not soup:
+        return {}, True
+
+    detail = extract_listing_detail_from_soup(soup)
+    return detail, False
+
+
+def extract_listing_detail_from_soup(soup: BeautifulSoup) -> dict[str, Any]:
+    detail: dict[str, Any] = {}
+    page_text = soup.get_text(" ", strip=True)
+
+    desc_el = soup.select_one(".description, #description, .listing-description, .remarks")
+    description_raw = re.sub(r"\s+", " ", desc_el.get_text(" ", strip=True)).strip() if desc_el else ""
+    detail["description_raw"] = description_raw
+    detail["description"] = description_raw
+
+    merged_text = f"{description_raw}\n{page_text}".strip()
+    times = extract_times(merged_text)
+    if isinstance(times.get("total_time"), int):
+        detail["total_time_airframe"] = times["total_time"]
+    if isinstance(times.get("engine_smoh"), int):
+        detail["engine_time_since_overhaul"] = times["engine_smoh"]
+        detail["time_since_overhaul"] = times["engine_smoh"]
+        detail["smoh"] = times["engine_smoh"]
+    if isinstance(times.get("prop_spoh"), int):
+        detail["time_since_prop_overhaul"] = times["prop_spoh"]
+        detail["spoh"] = times["prop_spoh"]
+    if isinstance(times.get("engine_stop"), int):
+        detail["stoh"] = times["engine_stop"]
+    snew_match = re.search(r"\bSNEW\b[:\s-]*([\d,]{1,7})", merged_text, flags=re.I)
+    if snew_match:
+        detail["snew"] = int(snew_match.group(1).replace(",", ""))
+
+    n_match = re.search(r"\bN\d{1,5}[A-Z]{0,2}\b", merged_text, flags=re.I)
+    if n_match:
+        detail["n_number"] = n_match.group(0).upper()
+    serial_match = re.search(r"\b(?:serial(?: number)?|s/n|sn)\b[:#\s-]*([A-Z0-9-]{3,40})", merged_text, flags=re.I)
+    if serial_match:
+        detail["serial_number"] = serial_match.group(1)
+
+    engines, props = _extract_tap_engine_prop_rows(soup)
+    if not engines and not props:
+        fallback_engines, fallback_props = _extract_general_specs_engine_prop_rows(soup)
+        engines = fallback_engines
+        props = fallback_props
+    if engines:
+        detail["engines_raw"] = engines
+        engine_positions: list[str] = []
+        engine_hours: list[int] = []
+        for row in engines:
+            pos = str(row.get("position") or "").strip()
+            if pos and pos not in engine_positions:
+                engine_positions.append(pos)
+            if isinstance(row.get("metric_hours"), int):
+                engine_hours.append(int(row["metric_hours"]))
+        if engine_positions:
+            detail["engine_count"] = len(engine_positions)
+        elif engine_hours:
+            detail["engine_count"] = max(1, len(engine_hours))
+        if engine_hours:
+            detail["engine_time_since_overhaul"] = engine_hours[0]
+            detail["time_since_overhaul"] = engine_hours[0]
+        if len(engine_hours) >= 2:
+            detail["second_engine_time_since_overhaul"] = engine_hours[1]
+    if props:
+        detail["props_raw"] = props
+        prop_hours = [int(row["metric_hours"]) for row in props if isinstance(row.get("metric_hours"), int)]
+        if prop_hours:
+            detail["time_since_prop_overhaul"] = prop_hours[0]
+        if len(prop_hours) >= 2:
+            detail["second_time_since_prop_overhaul"] = prop_hours[1]
+
+    image_urls: list[str] = []
+    seen: set[str] = set()
+    for img in soup.select("img[src], img[data-src]"):
+        normalized = _normalize_image_url(str(img.get("data-src") or img.get("src") or ""))
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        image_urls.append(normalized)
+        if len(image_urls) >= MAX_GALLERY_IMAGES:
+            break
+    if image_urls:
+        detail["primary_image_url"] = image_urls[0]
+        detail["gallery_image_urls"] = image_urls[1:]
+        detail["image_urls"] = image_urls
+
+    return detail
+
+
+def _fingerprint_seed(listing: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "title": str(listing.get("title") or ""),
+        "price_asking": listing.get("price_asking"),
+        "description_head": str(listing.get("description_raw") or listing.get("description") or "")[:200],
+    }
+
+
+async def scrape_category(
+    *,
+    page: Any,
+    category_name: str,
+    supabase: Optional["Client"],
+    limiter: Optional[AdaptiveRateLimiter],
+    limit: Optional[int],
+    dry_run: bool,
+    resume: bool,
+    fetch_detail: bool,
+    block_retry_seconds: int,
+    max_block_streak: int,
+    start_page: int,
+    max_pages: Optional[int],
+    page_delay_min: float,
+    page_delay_max: float,
+    force_detail_refresh: bool,
+) -> list[dict[str, Any]]:
+    listings: list[dict[str, Any]] = []
     seen_source_ids: set[str] = set()
-    page_num = max(1, start_page)
-    page_url = build_make_url(make, page=page_num)
+    consecutive_blocks = 0
+    page_num = max(1, int(start_page))
+    pages_scraped = 0
+    did_warmup = False
 
     while True:
-        if session_deadline_epoch and time.time() >= session_deadline_epoch:
-            log.warning("[%s] Session budget reached before page %s.", make, page_num)
+        if max_pages is not None and pages_scraped >= max_pages:
+            log.info("[%s] Reached max-pages=%s; stopping", category_name, max_pages)
             break
-        log.info("[%s] Fetching page %s: %s", make, page_num, page_url)
-        html = fetcher.fetch(page_url)
-        if not html:
-            log.warning("[%s] Skipping page %s due to fetch failure.", make, page_num)
-            break
+        if not did_warmup and category_name in {"Jet", "All Aircraft"}:
+            warmup_url = "https://www.trade-a-plane.com/search?category_level1=Single+Engine+Piston&s-type=aircraft"
+            _warm_soup, _ = await fetch_page_soup(page, warmup_url)
+            did_warmup = True
+        page_url = build_category_url(category_name, page=page_num)
+        log.info("[%s] Fetching page %s: %s", category_name, page_num, page_url)
+        soup, blocked = await fetch_page_soup(page, page_url)
+        if blocked or not soup:
+            consecutive_blocks += 1
+            if limiter:
+                limiter.on_challenge_or_429()
+            if consecutive_blocks >= max_block_streak:
+                log.error(_block_message())
+                raise AntiBotThresholdReached(_block_message())
+            log.warning("[%s] Results blocked, sleeping %ss", category_name, block_retry_seconds)
+            await asyncio.sleep(block_retry_seconds)
+            continue
 
-        soup = BeautifulSoup(html, "html.parser")
-        cards = _extract_cards(soup)
-        log.info("[%s] Page %s cards found: %s", make, page_num, len(cards))
+        cards = _get_cards(soup)
         if not cards:
-            log.warning("[%s] No cards found on page %s", make, page_num)
+            log.info("[%s] No cards on page %s; stopping", category_name, page_num)
             break
+        pages_scraped += 1
+        consecutive_blocks = 0
 
-        parsed_cards: list[dict] = []
-        for card in cards:
-            listing = parse_listing_card(card)
-            if listing:
-                parsed_cards.append(listing)
+        parsed = [row for row in (parse_listing_card(card, category_name) for card in cards) if row]
+        source_ids = [str(row["source_id"]) for row in parsed if row.get("source_id")]
+        existing_by_id = (
+            fetch_existing_state(
+                supabase,
+                source_site="trade_a_plane",
+                source_ids=source_ids,
+                select_columns="source_id,listing_fingerprint,last_seen_date,is_active",
+            )
+            if supabase and source_ids
+            else {}
+        )
 
-        existing_state: dict[str, dict[str, Any]] = {}
-        if supabase and parsed_cards:
-            source_ids = [str(item.get("source_id")) for item in parsed_cards if item.get("source_id")]
-            existing_state = _fetch_existing_listing_state(supabase, source_ids)
-
-        new_cards_on_page = 0
-        page_new_listings: list[dict] = []
-        for listing in parsed_cards:
-            if session_deadline_epoch and time.time() >= session_deadline_epoch:
-                log.warning("[%s] Session budget reached mid-page; stopping.", make)
-                if on_page_complete and page_new_listings:
-                    on_page_complete(page_num, page_new_listings)
-                return listings
-            source_id = listing["source_id"]
+        unchanged_ids: list[str] = []
+        for listing in parsed:
+            source_id = str(listing["source_id"])
             if source_id in seen_source_ids:
                 continue
             seen_source_ids.add(source_id)
-            if session_stats is not None:
-                session_stats["attempted"] = int(session_stats.get("attempted", 0)) + 1
-            listing["listing_fingerprint"] = compute_listing_fingerprint(
-                listing,
-                fields=[
-                    "source_site",
-                    "source_id",
-                    "url",
-                    "price_asking",
-                    "year",
-                    "make",
-                    "model",
-                    "location_city",
-                    "location_state",
-                    "description",
-                ],
-            )
-            existing = existing_state.get(str(source_id), {})
-            previous_fingerprint = str(existing.get("listing_fingerprint") or "")
-            existing_price = existing.get("price_asking")
-            if existing_price is None:
-                existing_price = existing.get("asking_price")
-            needs_price_backfill = existing_price in (None, "", 0, "0")
-            needs_rich_detail_backfill = not existing.get("description_full") or not existing.get("avionics_description")
-            recently_scraped = _seen_within_hours(existing.get("last_seen_date"), 48)
-            should_fetch_detail = (
-                previous_fingerprint != listing["listing_fingerprint"]
-                or needs_price_backfill
-                or needs_rich_detail_backfill
-            )
+            existing_row = existing_by_id.get(source_id)
 
-            detail_url = listing.get("url")
-            if detail_url and should_fetch_detail:
-                if recently_scraped and previous_fingerprint == listing["listing_fingerprint"]:
-                    log.info("[%s] Skipping detail fetch (seen within 48h) source_id=%s", make, source_id)
-                else:
-                    if needs_price_backfill and previous_fingerprint == listing["listing_fingerprint"]:
-                        log.info("[%s] Fetching detail for missing-price backfill source_id=%s", make, source_id)
-                    if needs_rich_detail_backfill and previous_fingerprint == listing["listing_fingerprint"]:
-                        log.info("[%s] Fetching detail for rich-text backfill source_id=%s", make, source_id)
-                    log.info("[%s] Fetching detail: %s", make, detail_url)
-                    try:
-                        extra = fetch_listing_detail(fetcher, detail_url)
-                        if not extra:
-                            if limiter:
-                                limiter.on_challenge_or_429()
-                            time.sleep(random.uniform(1.0, 2.0))
-                            extra = fetch_listing_detail(fetcher, detail_url)
-                        listing.update(extra)
-                    except Exception as exc:
-                        if session_stats is not None:
-                            if session_stats.get("first_error_at_listing") is None:
-                                session_stats["first_error_at_listing"] = session_stats.get("attempted")
-                            session_stats["error_type"] = f"detail_fetch_error:{type(exc).__name__}"
-                        fail_row = {
-                            "source_site": "trade_a_plane",
-                            "source_id": source_id,
-                            "url": detail_url,
-                            "make": make,
-                            "error": str(exc),
-                            "at": datetime.now(timezone.utc).isoformat(),
-                            "listing": listing,
-                        }
-                        if failed_entries is not None:
-                            failed_entries.append(fail_row)
-                        log.warning("[%s] Detail fetch failed source_id=%s url=%s err=%s", make, source_id, detail_url, exc)
-            elif detail_url:
-                log.info("[%s] Skipping unchanged detail fetch for source_id=%s", make, source_id)
+            listing["listing_fingerprint"] = compute_listing_fingerprint(_fingerprint_seed(listing))
+            previous = str((existing_row or {}).get("listing_fingerprint") or "")
 
+            force_refresh = bool(force_detail_refresh)
+            if resume and should_skip_detail(existing_row, DETAIL_STALE_DAYS) and not force_refresh:
+                unchanged_ids.append(source_id)
+                continue
+            if not dry_run and previous and previous == listing["listing_fingerprint"] and not force_refresh:
+                unchanged_ids.append(source_id)
+                continue
+
+            detail_url = str(listing.get("url") or "")
+            if fetch_detail and detail_url:
+                detail, detail_blocked = await fetch_listing_detail(page, detail_url)
+                if detail_blocked:
+                    if limiter:
+                        limiter.on_challenge_or_429()
+                    log.warning("[%s] Detail blocked for %s. Sleeping %ss and retrying once", category_name, source_id, block_retry_seconds)
+                    await asyncio.sleep(block_retry_seconds)
+                    detail, detail_blocked = await fetch_listing_detail(page, detail_url)
+                    if detail_blocked:
+                        consecutive_blocks += 1
+                        if consecutive_blocks >= max_block_streak:
+                            log.error(_block_message())
+                            raise AntiBotThresholdReached(_block_message())
+                        continue
+                consecutive_blocks = 0
+                listing.update(detail)
+
+            listing["description_intelligence"] = parse_description(str(listing.get("description_raw") or ""))
             listings.append(listing)
-            page_new_listings.append(listing)
-            new_cards_on_page += 1
-            if session_stats is not None:
-                session_stats["succeeded"] = int(session_stats.get("succeeded", 0)) + 1
-            log.info(
-                "[%s] Parsed: make=%s model=%s year=%s price=%s ttaf=%s smoh=%s",
-                make,
-                listing.get("make"),
-                listing.get("model"),
-                listing.get("year"),
-                listing.get("price_asking"),
-                listing.get("total_time_airframe"),
-                listing.get("engine_time_since_overhaul"),
-            )
 
+            if fetch_detail:
+                if limiter:
+                    _ = await asyncio.to_thread(limiter.wait)
+                await asyncio.sleep(random.uniform(2.5, 5.0))
             if limit is not None and len(listings) >= limit:
-                if on_page_complete and page_new_listings:
-                    on_page_complete(page_num, page_new_listings)
-                log.info("[%s] Limit reached (%s).", make, limit)
-                return listings
+                break
 
-            if limiter:
-                effective_delay = limiter.wait()
-                if session_stats is not None:
-                    delay_samples = session_stats.setdefault("delay_samples", [])
-                    if isinstance(delay_samples, list):
-                        delay_samples.append(int(effective_delay * 1000))
-                if limiter.should_pause():
-                    pause_seconds = limiter.pause_duration_seconds()
-                    log.info("[%s] Adaptive pause for %ss after batch.", make, pause_seconds)
-                    time.sleep(pause_seconds)
+        if unchanged_ids and supabase and not dry_run:
+            refresh_seen_for_unchanged(supabase, source_site="trade_a_plane", source_ids=unchanged_ids, logger=log)
 
-        if on_page_complete and page_new_listings:
-            on_page_complete(page_num, page_new_listings)
-
-        log.info("[%s] Page %s new cards: %s", make, page_num, new_cards_on_page)
-        if new_cards_on_page == 0:
-            log.info("[%s] No new cards found on page %s; stopping pagination.", make, page_num)
+        if limit is not None and len(listings) >= limit:
             break
-
-        next_page_url = _extract_next_page_url(soup, page_url, page_num)
-        if not next_page_url:
-            break
-        if next_page_url == page_url:
-            break
-
+        # Human-like pacing between result pages helps reduce anti-bot pressure.
+        if page_delay_max > 0:
+            delay = random.uniform(max(0.0, page_delay_min), max(page_delay_min, page_delay_max))
+            await asyncio.sleep(delay)
         page_num += 1
-        page_url = next_page_url
-        if limiter:
-            delay = limiter.wait()
-            log.info("[%s] Adaptive wait %.1fs before next page...", make, delay)
-        else:
-            delay = random.uniform(2.0, 4.5)
-            log.info("[%s] Waiting %.1fs before next page...", make, delay)
-            time.sleep(delay)
 
     return listings
 
 
-def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
-    """Upsert listings into aircraft_listings on (source_site, source_id)."""
+def upsert_listings(supabase: "Client", listings: list[dict[str, Any]]) -> int:
     if not listings:
         return 0
-
     today_iso = date.today().isoformat()
-    source_ids = [
-        str(listing.get("source_id"))
-        for listing in listings
-        if listing.get("source_id") is not None
-    ]
-    unique_source_ids = list(dict.fromkeys(source_ids))
-    existing_by_source_id: dict[str, dict] = {}
+    rows: list[dict[str, Any]] = []
 
-    for idx in range(0, len(unique_source_ids), 200):
-        chunk = unique_source_ids[idx : idx + 200]
-        if not chunk:
-            continue
-        existing = (
-            supabase.table("aircraft_listings")
-            .select("source_id,first_seen_date,price_asking,asking_price")
-            .eq("source_site", "trade_a_plane")
-            .in_("source_id", chunk)
-            .execute()
-        )
-        for row in existing.data or []:
-            sid = row.get("source_id")
-            if sid is not None:
-                existing_by_source_id[str(sid)] = row
-
-    def _as_int(value) -> Optional[int]:
-        try:
-            if value is None:
-                return None
-            if isinstance(value, bool):
-                return None
-            return int(float(value))
-        except (TypeError, ValueError):
-            return None
-
-    rows = []
-    observation_rows = []
     for listing in listings:
-        observed_share_price = _as_int(listing.get("price_asking"))
-        if observed_share_price is None:
-            observed_share_price = _as_int(listing.get("asking_price"))
-        parser_text = f"{listing.get('description') or ''} {listing.get('description_full') or ''}".strip()
-        if parser_text:
-            parsed_intel = parse_description(parser_text, observed_price=observed_share_price)
-            listing["description_intelligence"] = parsed_intel
-            pricing_context = parsed_intel.get("pricing_context") if isinstance(parsed_intel, dict) else None
-            if isinstance(pricing_context, dict):
-                normalized_full_price = _as_int(pricing_context.get("normalized_full_price"))
-                is_fractional = bool(pricing_context.get("is_fractional"))
-                share_numerator = _as_int(pricing_context.get("share_numerator"))
-                share_denominator = _as_int(pricing_context.get("share_denominator"))
-                share_price = _as_int(pricing_context.get("share_price"))
-                share_percent = pricing_context.get("share_percent")
-                try:
-                    share_percent = float(share_percent) if share_percent is not None else None
-                except (TypeError, ValueError):
-                    share_percent = None
-                review_needed = bool(pricing_context.get("review_needed"))
-                evidence = pricing_context.get("evidence") if isinstance(pricing_context.get("evidence"), list) else []
-                if is_fractional and normalized_full_price is not None and normalized_full_price > 0:
-                    if observed_share_price is not None and _as_int(pricing_context.get("share_price")) is None:
-                        pricing_context["share_price"] = observed_share_price
-                        share_price = observed_share_price
-                    listing["price_asking"] = normalized_full_price
-                    listing["asking_price"] = normalized_full_price
-                    listing["is_fractional_ownership"] = True
-                    listing["fractional_share_numerator"] = share_numerator
-                    listing["fractional_share_denominator"] = share_denominator
-                    listing["fractional_share_percent"] = share_percent
-                    listing["fractional_share_price"] = share_price
-                    listing["fractional_full_price_estimate"] = normalized_full_price
-                    listing["fractional_review_needed"] = review_needed
-                    listing["fractional_pricing_evidence"] = evidence[:5]
-                    log.info(
-                        "Fractional listing normalized source_id=%s share=%s full=%s evidence=%s",
-                        listing.get("source_id"),
-                        pricing_context.get("share_price"),
-                        normalized_full_price,
-                        ",".join(str(item) for item in (pricing_context.get("evidence") or [])[:2]),
-                    )
-                elif bool(pricing_context.get("review_needed")):
-                    listing["is_fractional_ownership"] = False
-                    listing["fractional_share_numerator"] = share_numerator
-                    listing["fractional_share_denominator"] = share_denominator
-                    listing["fractional_share_percent"] = share_percent
-                    listing["fractional_share_price"] = share_price
-                    listing["fractional_full_price_estimate"] = normalized_full_price
-                    listing["fractional_review_needed"] = True
-                    listing["fractional_pricing_evidence"] = evidence[:5]
-                    log.info(
-                        "Fractional-review flag source_id=%s evidence=%s",
-                        listing.get("source_id"),
-                        ",".join(str(item) for item in (pricing_context.get("evidence") or [])[:2]),
-                    )
-                else:
-                    # Keep explicit false/default state for downstream filters.
-                    listing["is_fractional_ownership"] = False
-                    listing["fractional_review_needed"] = False
-            parsed_engine_model = parsed_intel.get("engine", {}).get("model")
-            existing_engine_model = listing.get("engine_model")
-            existing_engine_model_text = str(existing_engine_model).strip() if existing_engine_model else ""
-            if isinstance(parsed_engine_model, str):
-                if not existing_engine_model_text or len(existing_engine_model_text) > 120:
-                    listing["engine_model"] = parsed_engine_model
-            parsed_smoh = parsed_intel.get("times", {}).get("engine_smoh")
-            if listing.get("engine_time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, int):
-                listing["engine_time_since_overhaul"] = parsed_smoh
-            parsed_tt = parsed_intel.get("times", {}).get("total_time")
-            if listing.get("total_time_airframe") in (None, "", 0) and isinstance(parsed_tt, int):
-                listing["total_time_airframe"] = parsed_tt
-
+        source_id = str(listing.get("source_id") or "")
+        if not source_id.startswith("tap_"):
+            continue
+        listing.pop("description_raw", None)
+        listing["description_intelligence"] = parse_description(
+            str(listing.get("description_raw") or listing.get("description") or "")
+        )
         row, warnings = validate_listing(listing)
         if warnings:
-            listing_id = listing.get("source_id") or listing.get("source_listing_id") or "unknown"
-            log.warning("Skipping invalid listing %s: %s", listing_id, "; ".join(warnings))
+            log.warning("Skipping invalid TAP row %s: %s", source_id, "; ".join(warnings))
             continue
-        source_id = row.get("source_id")
-        existing = existing_by_source_id.get(str(source_id)) if source_id is not None else None
-
+        row["source"] = "trade_a_plane"
         row["source_site"] = "trade_a_plane"
         row["listing_source"] = "trade_a_plane"
-        normalized_make = normalize_manufacturer(str(row.get("make") or ""))
-        if normalized_make:
-            row["make"] = normalized_make
-        manufacturer_tier = get_manufacturer_tier(row.get("make"))
-        if manufacturer_tier is not None:
-            row["manufacturer_tier"] = manufacturer_tier
-        if row.get("price_asking") is not None and row.get("asking_price") is None:
-            row["asking_price"] = row.get("price_asking")
-        if row.get("asking_price") is not None and row.get("price_asking") is None:
-            row["price_asking"] = row.get("asking_price")
+        row["source_id"] = source_id
         row["last_seen_date"] = today_iso
         row["is_active"] = True
         row["inactive_date"] = None
-        if existing is None:
-            row["first_seen_date"] = today_iso
-        else:
-            previous_price = _as_int(existing.get("price_asking"))
-            if previous_price is None:
-                previous_price = _as_int(existing.get("asking_price"))
-            current_price = _as_int(row.get("price_asking"))
-            if current_price is None:
-                current_price = _as_int(row.get("asking_price"))
-            if previous_price is not None and current_price is not None and current_price < previous_price:
-                row["price_reduced"] = True
-                row["price_reduced_date"] = today_iso
-                row["price_reduction_amount"] = previous_price - current_price
-
-        if "primary_image_url" in row:
-            row["primary_image_url"] = str(row["primary_image_url"])
-        if "image_urls" in row:
-            row["image_urls"] = row["image_urls"] if isinstance(row["image_urls"], list) else [str(row["image_urls"])]
-        if "logbook_urls" in row:
-            row["logbook_urls"] = row["logbook_urls"] if isinstance(row["logbook_urls"], list) else [str(row["logbook_urls"])]
+        normalized_make = normalize_manufacturer(row.get("make"))
+        if normalized_make:
+            row["make"] = normalized_make
+            tier = get_manufacturer_tier(normalized_make)
+            if tier is not None:
+                row["manufacturer_tier"] = tier
         rows.append(row)
-        observation_rows.append(
-            {
-                "source_site": "trade_a_plane",
-                "source_id": str(source_id),
-                "observed_on": today_iso,
-                "observed_at": f"{today_iso}T00:00:00Z",
-                "asking_price": row.get("price_asking") if row.get("price_asking") is not None else row.get("asking_price"),
-                "url": row.get("url"),
-                "title": row.get("title"),
-                "listing_fingerprint": row.get("listing_fingerprint"),
-                "is_active": True,
-            }
-        )
 
     if not rows:
         return 0
 
-    # PostgREST requires matching object keys for bulk upsert payloads.
-    if rows:
-        all_keys: set[str] = set()
-        for row in rows:
-            all_keys.update(row.keys())
-        for row in rows:
-            for key in all_keys:
-                row.setdefault(key, None)
-
-    try:
-        saved = safe_upsert_with_fallback(
-            supabase=supabase,
-            table="aircraft_listings",
-            rows=rows,
-            on_conflict="source_site,source_id",
-            fallback_match_keys=["source_site", "source_id"],
-            logger=log,
-        )
-    except Exception as exc:
-        log.error("Batch upsert failed: %s", exc)
-        saved = 0
-        for row in rows:
-            try:
-                supabase.table("aircraft_listings").upsert(row, on_conflict="source_site,source_id").execute()
-                saved += 1
-            except Exception as row_exc:
-                if "42P10" in str(row_exc):
-                    source_id = row.get("source_id")
-                    if source_id:
-                        try:
-                            existing = (
-                                supabase.table("aircraft_listings")
-                                .select("id")
-                                .eq("source_site", "trade_a_plane")
-                                .eq("source_id", source_id)
-                                .limit(1)
-                                .execute()
-                            )
-                            if existing.data:
-                                (
-                                    supabase.table("aircraft_listings")
-                                    .update(row)
-                                    .eq("source_site", "trade_a_plane")
-                                    .eq("source_id", source_id)
-                                    .execute()
-                                )
-                            else:
-                                supabase.table("aircraft_listings").insert(row).execute()
-                            saved += 1
-                            continue
-                        except Exception as fallback_exc:
-                            log.error(
-                                "Fallback upsert failed for source_id=%s: %s",
-                                row.get("source_id"),
-                                fallback_exc,
-                            )
-                log.error("Failed upsert for source_id=%s: %s", row.get("source_id"), row_exc)
-    if observation_rows:
+    existing = fetch_existing_state(
+        supabase,
+        source_site="trade_a_plane",
+        source_ids=[str(row.get("source_id")) for row in rows if row.get("source_id")],
+        select_columns="source_id",
+    )
+    saved = 0
+    for row in rows:
+        sid = str(row.get("source_id") or "")
+        if not sid:
+            continue
         try:
-            supabase.table("listing_observations").upsert(
-                observation_rows, on_conflict="source_site,source_id,observed_on"
-            ).execute()
-        except Exception as obs_exc:
-            log.error("Observation upsert failed: %s", obs_exc)
+            if sid in existing:
+                (
+                    supabase.table("aircraft_listings")
+                    .update(row)
+                    .eq("source_site", "trade_a_plane")
+                    .eq("source_id", sid)
+                    .execute()
+                )
+            else:
+                supabase.table("aircraft_listings").insert(row).execute()
+            saved += 1
+        except Exception as exc:
+            log.warning("Manual upsert failed for %s: %s", sid, exc)
     return saved
 
 
-def mark_inactive_listings(supabase: "Client", source_site: str) -> int:
-    """Mark listings inactive when they were not seen in today's run."""
-    today_iso = date.today().isoformat()
-    try:
-        response = (
-            supabase.table("aircraft_listings")
-            .update({"is_active": False, "inactive_date": today_iso})
-            .eq("source_site", source_site)
-            .lt("last_seen_date", today_iso)
-            .eq("is_active", True)
-            .execute()
-        )
-        count = len(response.data or [])
-        if count:
-            log.info("[%s] Marked %s stale listings as inactive.", source_site, count)
-        return count
-    except Exception as exc:
-        log.warning("[%s] Failed to mark stale listings inactive: %s", source_site, exc)
-        return 0
+def _print_listings(rows: list[dict[str, Any]]) -> None:
+    for row in rows:
+        print(json.dumps(row, indent=2, ensure_ascii=True))
 
 
-def _print_listings(listings: list[dict]) -> None:
-    for listing in listings:
-        print(json.dumps(listing, indent=2, ensure_ascii=True))
+def _probe_payload(detail: dict[str, Any]) -> dict[str, Any]:
+    keys = [
+        "engine_count",
+        "engines_raw",
+        "props_raw",
+        "time_since_overhaul",
+        "time_since_prop_overhaul",
+        "second_engine_time_since_overhaul",
+        "second_time_since_prop_overhaul",
+    ]
+    return {k: detail.get(k) for k in keys if k in detail}
 
 
-def run_media_refresh_mode(
+async def run_probe(
     *,
-    fetcher: "HtmlFetcher",
-    supabase: "Client",
-    source_ids_file: str | None,
-    limit: int | None,
+    page: Any,
+    probe_url: str,
+    probe_html: Optional[str],
     dry_run: bool,
-    ignore_detail_stale: bool,
+    probe_write: bool,
+    probe_source_id: Optional[str],
+    supabase: Optional["Client"],
+) -> bool:
+    detail: dict[str, Any] = {}
+    inferred_source_id = probe_source_id
+    if probe_html:
+        html_path = Path(probe_html)
+        if not html_path.exists():
+            log.error("Probe HTML file does not exist: %s", html_path)
+            return False
+        html = html_path.read_text(encoding="utf-8", errors="ignore")
+        soup = BeautifulSoup(html, "html.parser")
+        detail = extract_listing_detail_from_soup(soup)
+        if not inferred_source_id:
+            listing_id_match = re.search(r"\blisting_id=(\d{4,12})\b", html, flags=re.I)
+            if listing_id_match:
+                inferred_source_id = f"tap_{listing_id_match.group(1)}"
+        if not detail:
+            log.warning("Probe HTML parsed but no detail payload fields were extracted: %s", html_path)
+            return False
+    else:
+        detail, blocked = await fetch_listing_detail(page, probe_url)
+        if blocked:
+            log.error("Probe blocked for URL: %s", probe_url)
+            return False
+        if not detail:
+            log.warning("Probe returned no detail payload for URL: %s", probe_url)
+            return False
+
+    payload = _probe_payload(detail)
+    print(json.dumps(payload, indent=2, ensure_ascii=True))
+
+    if dry_run or not probe_write:
+        return bool(payload)
+    if not supabase:
+        log.warning("Probe write skipped: supabase client unavailable")
+        return bool(payload)
+
+    source_id = inferred_source_id or _source_id(probe_url)
+    if not source_id:
+        log.warning("Probe write skipped: could not infer source_id from URL")
+        return bool(payload)
+    existing = (
+        supabase.table("aircraft_listings")
+        .select("id,source_id")
+        .eq("source_site", "trade_a_plane")
+        .eq("source_id", source_id)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    if not existing:
+        log.warning("Probe write skipped: listing not found for %s", source_id)
+        return bool(payload)
+
+    if not payload:
+        log.warning("Probe write skipped: no multi-engine/prop fields extracted")
+        return False
+
+    (
+        supabase.table("aircraft_listings")
+        .update(payload)
+        .eq("source_site", "trade_a_plane")
+        .eq("source_id", source_id)
+        .execute()
+    )
+    log.info("Probe write updated %s fields for %s", len(payload), source_id)
+    return True
+
+
+async def run_probe_batch(
+    *,
+    page: Any,
+    probe_html_dir: str,
+    probe_html_glob: str,
+    probe_batch_limit: Optional[int],
+    dry_run: bool,
+    probe_write: bool,
+    supabase: Optional["Client"],
 ) -> None:
-    source_ids = load_source_ids_file(source_ids_file)
-    candidates = fetch_refresh_rows(
-        supabase,
-        source_site="trade_a_plane",
-        source_ids=source_ids,
-        limit=limit,
-    )
-    scanned = 0
-    updated = 0
-    for row in candidates:
-        source_id = str(row.get("source_id") or "").strip()
-        detail_url = str(row.get("url") or "").strip()
-        if not source_id or not detail_url:
+    base = Path(probe_html_dir)
+    if not base.exists():
+        log.error("Probe HTML dir does not exist: %s", base)
+        return
+    files = [p for p in sorted(base.glob(probe_html_glob)) if p.is_file()]
+    if probe_batch_limit is not None:
+        files = files[: max(0, int(probe_batch_limit))]
+    if not files:
+        log.warning("No probe HTML files found in %s matching %s", base, probe_html_glob)
+        return
+
+    extracted = 0
+    seen_source_ids: set[str] = set()
+    for path in files:
+        html_text = path.read_text(encoding="utf-8", errors="ignore")
+        listing_id_match = re.search(r"\blisting_id=(\d{4,12})\b", html_text, flags=re.I)
+        source_id = f"tap_{listing_id_match.group(1)}" if listing_id_match else None
+        if source_id and source_id in seen_source_ids:
+            log.info("Probe batch skipping duplicate listing: %s (%s)", source_id, path)
             continue
-        if not ignore_detail_stale and _seen_within_hours(row.get("last_seen_date"), 48):
-            continue
-        scanned += 1
-        try:
-            extra = fetch_listing_detail(fetcher, detail_url)
-        except Exception as exc:
-            log.warning("[media-refresh] source_id=%s failed: %s", source_id, exc)
-            continue
-        image_urls = extra.get("image_urls") if isinstance(extra.get("image_urls"), list) else []
-        primary_image_url = str(extra.get("primary_image_url") or "").strip() or (image_urls[0] if image_urls else None)
-        if not image_urls and not primary_image_url:
-            continue
-        if dry_run:
-            log.info(
-                "[media-refresh] dry-run source_id=%s gallery_count=%s primary=%s",
-                source_id,
-                len(image_urls),
-                bool(primary_image_url),
-            )
-            continue
-        apply_media_update(
-            supabase,
-            source_site="trade_a_plane",
-            source_id=source_id,
-            image_urls=image_urls,
-            primary_image_url=primary_image_url,
+        log.info("Probe batch parsing: %s", path)
+        ok = await run_probe(
+            page=page,
+            probe_url="",
+            probe_html=str(path),
+            dry_run=dry_run,
+            probe_write=probe_write,
+            probe_source_id=source_id,
+            supabase=supabase,
         )
-        updated += 1
-    log.info(
-        "[media-refresh] trade_a_plane complete candidates=%s scanned=%s updated=%s dry_run=%s",
-        len(candidates),
-        scanned,
-        updated,
-        dry_run,
-    )
+        if ok:
+            extracted += 1
+            if source_id:
+                seen_source_ids.add(source_id)
+    log.info("Probe batch complete: %s/%s files extracted payloads", extracted, len(files))
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Trade-A-Plane aircraft listing scraper (requests-first, Playwright fallback)"
-    )
-    parser.add_argument("--make", nargs="+", help="One or more makes to scrape")
-    parser.add_argument("--dry-run", action="store_true", help="Print listings and do not save to DB")
-    parser.add_argument("--limit", type=int, default=None, help="Max listings per make (default: no limit)")
-    parser.add_argument("--output", metavar="FILE", help="Write all scraped listings to JSON file")
-    parser.add_argument("--no-playwright-fallback", action="store_true", help="Disable Playwright fallback")
-    parser.add_argument("--resume", action="store_true", help="Resume from checkpoint file")
-    parser.add_argument("--max-listings", type=int, default=None, help="Max total listings for this session")
-    parser.add_argument("--session-budget-minutes", type=int, default=None, help="Stop run when time budget is reached")
-    parser.add_argument("--retry-failed", action="store_true", help="Retry URLs recorded in scraper/failed_urls_tap.json")
-    parser.add_argument(
-        "--tier",
-        nargs="+",
-        default=["all"],
-        help="Manufacturer tiers to scrape: 1, 2, 3, or all (default: all)",
-    )
-    parser.add_argument(
-        "--failed-file",
-        default=str(FAILED_URLS_FILE),
-        help=f"Failed URL file path (default: {FAILED_URLS_FILE})",
-    )
-    parser.add_argument(
-        "--checkpoint-file",
-        default=str(DEFAULT_CHECKPOINT_FILE),
-        help=f"Checkpoint file path (default: {DEFAULT_CHECKPOINT_FILE})",
-    )
-    parser.add_argument("--verbose", action="store_true", help="Enable DEBUG logging")
-    parser.add_argument("--media-refresh-only", action="store_true", help="Run targeted image refresh mode only")
-    parser.add_argument("--source-ids-file", default=None, help="Optional file with one source_id per line")
-    parser.add_argument(
-        "--ignore-detail-stale",
-        action="store_true",
-        help="Bypass 48h stale-detail guard in media refresh mode",
-    )
+async def main() -> None:
+    parser = argparse.ArgumentParser(description="Trade-A-Plane scraper")
+    parser.add_argument("--category", choices=sorted(TRADAPLANE_CATEGORIES.keys()), default=None)
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--no-detail", action="store_true", help="Skip detail pages for high-throughput inventory sweeps")
+    parser.add_argument("--no-cookies", action="store_true", help="Skip loading scraper/tap_cookies.json")
+    parser.add_argument("--block-retry-seconds", type=int, default=BLOCK_RETRY_SECONDS, help="Seconds to wait after block/challenge")
+    parser.add_argument("--max-block-streak", type=int, default=MAX_BLOCK_STREAK, help="Consecutive blocks before abort")
+    parser.add_argument("--start-page", type=int, default=1, help="Start scraping from this result page")
+    parser.add_argument("--max-pages", type=int, default=None, help="Maximum number of result pages to scrape")
+    parser.add_argument("--page-delay-min", type=float, default=2.0, help="Minimum seconds to wait between result pages")
+    parser.add_argument("--page-delay-max", type=float, default=5.0, help="Maximum seconds to wait between result pages")
+    parser.add_argument("--force-detail-refresh", action="store_true", help="Fetch and update detail fields even when listing fingerprint is unchanged")
+    parser.add_argument("--tap-login", action="store_true", help="Attempt TAP login before scraping (credentials via args or env)")
+    parser.add_argument("--tap-username", type=str, default=None, help="TAP username/email (or use TAP_USERNAME env var)")
+    parser.add_argument("--tap-password", type=str, default=None, help="TAP password (or use TAP_PASSWORD env var)")
+    parser.add_argument("--skip-human-warmup", action="store_true", help="Skip pre-scrape human-like browse warmup")
+    parser.add_argument("--probe-url", type=str, default=None, help="Run one-off detail probe for a single TAP listing URL")
+    parser.add_argument("--probe-html", type=str, default=None, help="Parse saved TAP detail HTML file for one-off probe")
+    parser.add_argument("--probe-html-dir", type=str, default=None, help="Directory with saved TAP detail HTML files for batch probe")
+    parser.add_argument("--probe-html-glob", type=str, default="*.html", help="Glob for batch probe files inside --probe-html-dir")
+    parser.add_argument("--probe-batch-limit", type=int, default=None, help="Max files to process in --probe-html-dir batch mode")
+    parser.add_argument("--probe-source-id", type=str, default=None, help="Optional source_id (e.g. tap_12345) to use for probe writes")
+    parser.add_argument("--probe-write", action="store_true", help="With --probe-url and non-dry-run, update only extracted multi-engine fields")
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
     global log
     log = setup_logging(args.verbose)
     env_check(required=[] if args.dry_run else None)
 
-    if args.make:
-        makes = args.make
+    if args.category:
+        categories = [args.category]
     else:
-        try:
-            makes = get_makes_for_tiers(args.tier)
-        except ValueError as exc:
-            raise SystemExit(str(exc)) from exc
-    if len(makes) > 1:
-        makes = list(makes)
-        random.shuffle(makes)
-    log.info("Makes to scrape: %s", makes)
-    checkpoint_file = Path(args.checkpoint_file)
-    failed_file = Path(args.failed_file)
-    checkpoint_data = load_checkpoint(checkpoint_file) if args.resume else None
-    if checkpoint_data and checkpoint_data.get("make") not in makes:
-        log.warning(
-            "Checkpoint make '%s' not in requested make list; ignoring checkpoint.",
-            checkpoint_data.get("make"),
-        )
-        checkpoint_data = None
-    if checkpoint_data:
-        log.info(
-            "Resume mode active from make=%s page=%s",
-            checkpoint_data.get("make"),
-            checkpoint_data.get("next_page", 1),
-        )
-    else:
-        clear_checkpoint(checkpoint_file)
-
-    fetcher = HtmlFetcher(use_playwright_fallback=not args.no_playwright_fallback)
+        categories = [name for name in TRADAPLANE_CATEGORIES.keys() if name != "All Aircraft"]
     supabase = None if args.dry_run else get_supabase()
-    limiter = None if args.dry_run or supabase is None else AdaptiveRateLimiter(supabase, "trade_a_plane", logger=log)
-    if limiter:
-        log.info("[trade_a_plane] Adaptive settings: %s", limiter.get_recommended_settings())
-    failed_entries: list[dict[str, Any]] = []
-    session_stats: dict[str, Any] = {
-        "attempted": 0,
-        "succeeded": 0,
-        "first_error_at_listing": None,
-        "error_type": None,
-        "delay_samples": [],
-    }
-    session_started = datetime.now(timezone.utc)
-    session_deadline_epoch = None
-    if args.session_budget_minutes and args.session_budget_minutes > 0:
-        session_deadline_epoch = time.time() + args.session_budget_minutes * 60
+    limiter = None if supabase is None else AdaptiveRateLimiter(supabase, "trade_a_plane", logger=log)
 
-    if args.retry_failed:
-        retry_items = load_failed_entries(failed_file)
-        if not retry_items:
-            log.info("No failed entries found in %s", failed_file)
-            return
-        retried_rows: list[dict[str, Any]] = []
-        still_failed: list[dict[str, Any]] = []
-        for item in retry_items:
-            listing = item.get("listing") if isinstance(item.get("listing"), dict) else {}
-            listing = dict(listing)
-            source_id = item.get("source_id") or listing.get("source_id")
-            detail_url = item.get("url") or listing.get("url")
-            if source_id:
-                listing.setdefault("source_id", source_id)
-            if detail_url:
-                listing.setdefault("url", detail_url)
-            if not listing.get("source_site"):
-                listing["source_site"] = "trade_a_plane"
-            if not listing.get("listing_source"):
-                listing["listing_source"] = "trade_a_plane"
-            if detail_url:
+    from playwright.async_api import async_playwright
+
+    all_rows: list[dict[str, Any]] = []
+    async with async_playwright() as playwright:
+        browser, context = await _create_browser_context(playwright, load_cookies=not args.no_cookies)
+        try:
+            page = await context.new_page()
+            if not args.skip_human_warmup:
+                await _human_warmup(page)
+
+            tap_username = args.tap_username or os.getenv("TAP_USERNAME")
+            tap_password = args.tap_password or os.getenv("TAP_PASSWORD")
+            if args.tap_login:
+                await maybe_login_tap(page, username=tap_username, password=tap_password)
+                if not args.skip_human_warmup:
+                    await _human_warmup(page)
+
+            if args.probe_html_dir:
+                await run_probe_batch(
+                    page=page,
+                    probe_html_dir=str(args.probe_html_dir).strip(),
+                    probe_html_glob=str(args.probe_html_glob).strip() or "*.html",
+                    probe_batch_limit=args.probe_batch_limit,
+                    dry_run=args.dry_run,
+                    probe_write=bool(args.probe_write),
+                    supabase=supabase,
+                )
+                return
+            if args.probe_url or args.probe_html:
+                await run_probe(
+                    page=page,
+                    probe_url=str(args.probe_url or "").strip(),
+                    probe_html=(str(args.probe_html).strip() if args.probe_html else None),
+                    dry_run=args.dry_run,
+                    probe_write=bool(args.probe_write),
+                    probe_source_id=(str(args.probe_source_id).strip() if args.probe_source_id else None),
+                    supabase=supabase,
+                )
+                return
+            for category_name in categories:
+                remaining = None
+                if args.limit is not None:
+                    remaining = max(0, args.limit - len(all_rows))
+                    if remaining <= 0:
+                        break
                 try:
-                    listing.update(fetch_listing_detail(fetcher, detail_url))
-                    retried_rows.append(listing)
-                except Exception as exc:
-                    item["error"] = str(exc)
-                    item["at"] = datetime.now(timezone.utc).isoformat()
-                    still_failed.append(item)
-            else:
-                item["error"] = "missing_url"
-                item["at"] = datetime.now(timezone.utc).isoformat()
-                still_failed.append(item)
+                    rows = await scrape_category(
+                        page=page,
+                        category_name=category_name,
+                        supabase=supabase,
+                        limiter=limiter,
+                        limit=remaining,
+                        dry_run=args.dry_run,
+                        resume=args.resume,
+                        fetch_detail=not args.no_detail,
+                        block_retry_seconds=max(1, args.block_retry_seconds),
+                        max_block_streak=max(1, args.max_block_streak),
+                        start_page=max(1, int(args.start_page)),
+                        max_pages=args.max_pages,
+                        page_delay_min=max(0.0, args.page_delay_min),
+                        page_delay_max=max(0.0, args.page_delay_max),
+                        force_detail_refresh=args.force_detail_refresh,
+                    )
+                    all_rows.extend(rows)
+                    log.info("[%s] Scraped %s listings", category_name, len(rows))
+                except AntiBotThresholdReached:
+                    log.error("[%s] %s", category_name, _block_message())
+                    continue
+        finally:
+            await context.close()
+            await browser.close()
 
-        if args.dry_run:
-            _print_listings(retried_rows)
-        elif retried_rows and supabase is not None:
-            saved = upsert_listings(supabase, retried_rows)
-            log.info("Retried failed URLs: saved=%s attempted=%s", saved, len(retried_rows))
-
-        save_failed_entries(failed_file, still_failed)
-        log.info("Retry-failed complete: recovered=%s remaining_failed=%s", len(retried_rows), len(still_failed))
-        return
-
-    if args.media_refresh_only:
-        if supabase is None:
-            supabase = get_supabase()
-        run_media_refresh_mode(
-            fetcher=fetcher,
-            supabase=supabase,
-            source_ids_file=args.source_ids_file,
-            limit=args.limit,
-            dry_run=args.dry_run,
-            ignore_detail_stale=args.ignore_detail_stale,
-        )
-        return
-
-    total_count = 0
-    per_make_counts: dict[str, int] = {}
-    collected: list[dict] = []
-
-    resume_idx = 0
-    resume_page = 1
-    if checkpoint_data:
-        resume_idx = makes.index(checkpoint_data["make"])
-        resume_page = max(1, int(checkpoint_data.get("next_page", 1)))
-
-    for idx, make in enumerate(makes):
-        if idx < resume_idx:
-            log.info("[%s] Skipping make due to resume checkpoint.", make)
-            continue
-        start_page = resume_page if idx == resume_idx else 1
-        make_limit = args.limit
-        if args.max_listings is not None:
-            remaining_total = args.max_listings - total_count
-            if remaining_total <= 0:
-                log.info("Session max listings reached (%s). Stopping.", args.max_listings)
-                break
-            make_limit = remaining_total if make_limit is None else min(make_limit, remaining_total)
-
-        def on_page_complete(page_num: int, page_listings: list[dict]) -> None:
-            if args.dry_run:
-                _print_listings(page_listings)
-            else:
-                saved = upsert_listings(supabase, page_listings)
-                log.info("[%s] Upserted %s/%s listings from page %s.", make, saved, len(page_listings), page_num)
-            save_checkpoint(
-                checkpoint_file,
-                {
-                    "source_site": "trade_a_plane",
-                    "make": make,
-                    "make_index": idx,
-                    "next_page": page_num + 1,
-                },
-            )
-
-        make_listings = scrape_make(
-            fetcher=fetcher,
-            make=make,
-            limit=make_limit,
-            start_page=start_page,
-            on_page_complete=on_page_complete,
-            supabase=supabase,
-            limiter=limiter,
-            session_deadline_epoch=session_deadline_epoch,
-            failed_entries=failed_entries,
-            session_stats=session_stats,
-        )
-        count = len(make_listings)
-        total_count += count
-        per_make_counts[make] = count
-        collected.extend(make_listings)
-        if session_deadline_epoch and time.time() >= session_deadline_epoch:
-            log.warning("Session budget exhausted after make=%s", make)
-            break
-        if args.max_listings is not None and total_count >= args.max_listings:
-            log.info("Session max listings reached (%s).", args.max_listings)
-            break
-
-        if idx < len(makes) - 1:
-            save_checkpoint(
-                checkpoint_file,
-                {
-                    "source_site": "trade_a_plane",
-                    "make": makes[idx + 1],
-                    "make_index": idx + 1,
-                    "next_page": 1,
-                },
-            )
-
-        if idx < len(makes) - 1:
-            if limiter:
-                between_delay = limiter.wait()
-                delay_samples = session_stats.setdefault("delay_samples", [])
-                if isinstance(delay_samples, list):
-                    delay_samples.append(int(between_delay * 1000))
-                log.info("Adaptive wait %.1fs before next make...", between_delay)
-            else:
-                between_delay = random.uniform(4.0, 8.0)
-                log.info("Waiting %.1fs before next make...", between_delay)
-                time.sleep(between_delay)
-
-    if args.output:
-        output_path = Path(args.output)
-        output_path.write_text(json.dumps(collected, indent=2, ensure_ascii=True), encoding="utf-8")
-        log.info("Wrote %s listings to %s", len(collected), output_path)
-
-    for make, count in per_make_counts.items():
-        log.info("Final count [%s]: %s", make, count)
-    log.info("Final total listings: %s", total_count)
-    if failed_entries:
-        save_failed_entries(failed_file, failed_entries)
-        log.warning(
-            "Session finished: %s succeeded, %s failed (see %s)",
-            session_stats.get("succeeded", 0),
-            len(failed_entries),
-            failed_file,
-        )
-    elif failed_file.exists() and not args.retry_failed:
-        save_failed_entries(failed_file, [])
-    if supabase and not args.make:
-        mark_inactive_listings(supabase, "trade_a_plane")
-    if supabase and not args.dry_run:
-        session_ended = datetime.now(timezone.utc)
-        delay_samples = session_stats.get("delay_samples", [])
-        avg_delay_ms = int(sum(delay_samples) / len(delay_samples)) if isinstance(delay_samples, list) and delay_samples else (
-            limiter.get_recommended_settings().get("safe_delay_ms", 2500) if limiter else 2500
-        )
-        batch_size = limiter.get_recommended_settings().get("safe_batch_size", 10) if limiter else 10
-        notes = (
-            f"max_listings={args.max_listings};budget_min={args.session_budget_minutes};"
-            f"retry_failed={args.retry_failed};failed_count={len(failed_entries)}"
-        )
-        log_scraper_session(
-            supabase,
-            site="trade_a_plane",
-            started_at=session_started,
-            ended_at=session_ended,
-            listings_attempted=int(session_stats.get("attempted", 0)),
-            listings_succeeded=int(session_stats.get("succeeded", 0)),
-            first_error_at_listing=session_stats.get("first_error_at_listing"),
-            error_type=session_stats.get("error_type"),
-            avg_delay_ms=avg_delay_ms,
-            batch_size=batch_size,
-            session_notes=notes,
-        )
-    clear_checkpoint(checkpoint_file)
+    if args.dry_run:
+        _print_listings(all_rows)
+    else:
+        saved = upsert_listings(supabase, all_rows)
+        log.info("Upserted %s/%s TAP listings", saved, len(all_rows))
+        mark_inactive_listings(supabase, source_site="trade_a_plane", logger=log)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

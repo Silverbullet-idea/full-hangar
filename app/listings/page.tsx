@@ -205,7 +205,7 @@ export default async function ListingsPage({
   const initialSortBy: SortOption =
     initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
 
-  const [initialPageData, optionRows] = await Promise.all([
+  const [pageResult, optionsResult] = await Promise.allSettled([
     getListingsPage({
       page: initialPage,
       pageSize: initialPageSize,
@@ -224,6 +224,24 @@ export default async function ListingsPage({
     }),
     getListingFilterOptions(),
   ])
+
+  const initialPageData =
+    pageResult.status === "fulfilled"
+      ? pageResult.value
+      : {
+          rows: [],
+          total: 0,
+          page: initialPage,
+          pageSize: initialPageSize,
+        }
+  const optionRows = optionsResult.status === "fulfilled" ? optionsResult.value : []
+
+  if (pageResult.status === "rejected") {
+    console.error("[listings] Failed to load initial listings page data", pageResult.reason)
+  }
+  if (optionsResult.status === "rejected") {
+    console.error("[listings] Failed to load listing filter options", optionsResult.reason)
+  }
 
   const itemListJsonLd = {
     "@context": "https://schema.org",

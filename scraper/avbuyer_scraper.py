@@ -114,6 +114,12 @@ _MONEY_RE = re.compile(
     r"(?P<amount>\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?",
     re.I,
 )
+US_STATE_CODES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
+    "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+    "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC",
+}
+CA_PROVINCE_CODES = {"AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"}
 
 
 # ─── Rate Limiter ─────────────────────────────────────────────────────────────
@@ -449,6 +455,7 @@ def parse_card(card, aircraft_type: str, category_path: str) -> Optional[dict]:
         "location_raw":        location_raw,
         "location_city":       location_city,
         "location_state":      location_state,
+        "state":               location_state,
         "seller_name":         seller_name,
         "seller_type":         seller_type,
         "primary_image_url":   photo_url,
@@ -520,8 +527,25 @@ def _classify_seller(text: str) -> str:
 
 
 def _extract_state(location: str) -> Optional[str]:
-    m = re.search(r'\b([A-Z]{2})\b', location)
-    return m.group(1) if m else None
+    text = re.sub(r"\s+", " ", location or "").strip()
+    if not text:
+        return None
+    upper = text.upper()
+    country_is_us_ca = any(token in upper for token in ("UNITED STATES", " USA", " U.S.", "CANADA"))
+
+    trailing = re.search(r",\s*([A-Z]{2})\s*$", upper)
+    if trailing:
+        code = trailing.group(1)
+        if code in US_STATE_CODES or code in CA_PROVINCE_CODES:
+            return code
+
+    if country_is_us_ca:
+        any_code = re.search(r"\b([A-Z]{2})\b", upper)
+        if any_code:
+            code = any_code.group(1)
+            if code in US_STATE_CODES or code in CA_PROVINCE_CODES:
+                return code
+    return None
 
 
 def _split_location(location: str | None) -> tuple[Optional[str], Optional[str]]:
@@ -779,6 +803,7 @@ def parse_detail(
             city, state = _split_location(loc)
             extra["location_city"] = city
             extra["location_state"] = state
+            extra["state"] = state
 
     # ── Description bullets ───────────────────────────────────────────────────
     desc_div = soup.find("div", class_=re.compile(r'\bexpanded\b'))
@@ -939,6 +964,7 @@ def _map_spec(label: str, value: str, target: dict):
         city, state = _split_location(value)
         target["location_city"] = city
         target["location_state"] = state
+        target["state"] = state
 
 
 # ─── Scrape one make ──────────────────────────────────────────────────────────

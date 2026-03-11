@@ -12,6 +12,7 @@ const ALLOWED_HOST_SUFFIXES = [
   '.barnstormers.com',
   '.globalair.com',
   '.avbuyer.com',
+  '.aso.com',
 ]
 
 const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="#141922"/><rect x="16" y="16" width="608" height="448" rx="12" ry="12" fill="#1a1a1a" stroke="#3A4454" stroke-width="2"/><text x="320" y="250" text-anchor="middle" fill="#B2B2B2" font-family="Arial, sans-serif" font-size="22">Image unavailable</text></svg>`

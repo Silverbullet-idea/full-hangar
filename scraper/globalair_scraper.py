@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import re
 import threading
@@ -11,7 +12,7 @@ import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -53,6 +54,7 @@ load_dotenv()
 SOURCE_SITE = "globalair"
 BASE_URL = "https://www.globalair.com"
 API_MODELS = f"{BASE_URL}/aircraft-for-sale/GetAllDistictAircraft"
+API_ADDITIONAL_DETAIL = f"{BASE_URL}/aircraft-for-sale/_AdditionalListingDetail"
 
 CATEGORY_MAP = {
     "singles": "single-engine-piston",
@@ -322,9 +324,14 @@ def manual_checkpoint_if_requested(pw_page: Any, args: argparse.Namespace) -> bo
     print("=== Manual checkpoint enabled ===")
     print(f"1) Browser opened to: {checkpoint_url}")
     print("2) If prompted, complete any CAPTCHA/challenge manually in that browser.")
-    print("3) After page appears normal, return here and press Enter.")
-    input("Press Enter to continue scraping...")
-    time.sleep(1.5)
+    wait_seconds = int(getattr(args, "manual_checkpoint_seconds", 0) or 0)
+    if wait_seconds > 0:
+        print(f"3) Waiting {wait_seconds}s before auto-continue...")
+        time.sleep(wait_seconds)
+    else:
+        print("3) After page appears normal, return here and press Enter.")
+        input("Press Enter to continue scraping...")
+        time.sleep(1.5)
     try:
         current_url = str(pw_page.url or "")
         html = pw_page.content()
@@ -384,16 +391,43 @@ def build_http_session_from_browser_context(context: Any) -> requests.Session:
         }
     )
     try:
-        for cookie in context.cookies(BASE_URL):
-            name = str(cookie.get("name") or "")
-            value = str(cookie.get("value") or "")
-            domain = str(cookie.get("domain") or ".globalair.com")
-            path = str(cookie.get("path") or "/")
-            if name and value:
-                session.cookies.set(name, value, domain=domain, path=path)
+        if context is not None:
+            for cookie in context.cookies(BASE_URL):
+                name = str(cookie.get("name") or "")
+                value = str(cookie.get("value") or "")
+                domain = str(cookie.get("domain") or ".globalair.com")
+                path = str(cookie.get("path") or "/")
+                if name and value:
+                    session.cookies.set(name, value, domain=domain, path=path)
     except Exception as exc:
         log.debug("Unable to load cookies from browser context for HTTP mode: %s", exc)
     return session
+
+
+def _apply_cookie_header(session: requests.Session, cookie_header: str | None) -> None:
+    if not cookie_header:
+        return
+    value = str(cookie_header).strip()
+    if not value:
+        return
+    session.headers["Cookie"] = value
+    log.info("Applied custom cookie header for HTTP mode (len=%s)", len(value))
+
+
+def _resolve_cookie_header(args: argparse.Namespace) -> str | None:
+    raw = str(getattr(args, "cookie_header", "") or "").strip()
+    if raw:
+        return raw
+    cookie_file = str(getattr(args, "cookie_header_file", "") or "").strip()
+    if cookie_file:
+        try:
+            data = Path(cookie_file).read_text(encoding="utf-8").strip()
+            if data:
+                return data
+        except Exception as exc:
+            log.warning("Unable to read --cookie-header-file '%s': %s", cookie_file, exc)
+    env_value = str(os.getenv("GLOBALAIR_COOKIE_HEADER") or "").strip()
+    return env_value or None
 
 
 def fetch_page_http(session: requests.Session, url: str, rl: RateLimiter, label: str = "") -> Optional[BeautifulSoup]:
@@ -418,6 +452,110 @@ def fetch_page_http(session: requests.Session, url: str, rl: RateLimiter, label:
         except requests.RequestException as exc:
             wait = _backoff(attempt)
             log.warning("HTTP mode fetch error: %s. Retry in %.1fs [%s]", exc, wait, label)
+            time.sleep(wait)
+    return None
+
+
+def _extract_adid(url: str) -> Optional[str]:
+    text = str(url or "").strip()
+    if not text:
+        return None
+    parsed = urlparse(text)
+    qs = parse_qs(parsed.query or "")
+    adid_value = (qs.get("adid") or [None])[0]
+    if isinstance(adid_value, str) and adid_value.isdigit():
+        return adid_value
+    match = re.search(r"/(\d+)$", parsed.path or "")
+    if match:
+        return match.group(1)
+    return None
+
+
+def _fetch_additional_detail_http(session: requests.Session, listing_url: str, rl: RateLimiter) -> Optional[BeautifulSoup]:
+    adid = _extract_adid(listing_url)
+    if not adid:
+        return None
+    endpoint = f"{API_ADDITIONAL_DETAIL}?adid={adid}"
+    request_headers = {
+        "Accept": "*/*",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": listing_url,
+    }
+    for attempt in range(max(1, RUNTIME_MAX_RETRIES)):
+        rl.wait()
+        try:
+            response = session.get(endpoint, headers=request_headers, timeout=35, allow_redirects=True)
+            html = response.text or ""
+            if response.status_code == 200 and html:
+                if _looks_like_challenge(str(response.url or endpoint), html):
+                    log.warning("Additional detail endpoint challenge for adid=%s", adid)
+                    return None
+                return BeautifulSoup(html, "html.parser")
+            if response.status_code in (403, 429, 503):
+                wait = _backoff(attempt)
+                log.warning(
+                    "Additional detail status %s for adid=%s. Waiting %.1fs",
+                    response.status_code,
+                    adid,
+                    wait,
+                )
+                time.sleep(wait)
+                continue
+            log.warning("Additional detail status %s for adid=%s", response.status_code, adid)
+            return None
+        except requests.RequestException as exc:
+            wait = _backoff(attempt)
+            log.warning("Additional detail fetch error for adid=%s: %s (retry %.1fs)", adid, exc, wait)
+            time.sleep(wait)
+    return None
+
+
+def _fetch_additional_detail_browser(pw_page: Any, listing_url: str, rl: RateLimiter) -> Optional[BeautifulSoup]:
+    adid = _extract_adid(listing_url)
+    if not adid:
+        return None
+    endpoint = f"{API_ADDITIONAL_DETAIL}?adid={adid}"
+    script = """
+        async ({ endpoint, referer }) => {
+            try {
+                const res = await fetch(endpoint, {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Accept": "*/*",
+                        "Referer": referer
+                    }
+                });
+                const text = await res.text();
+                return { status: res.status, url: String(res.url || endpoint), text };
+            } catch (error) {
+                return { status: 0, url: endpoint, text: "", error: String(error) };
+            }
+        }
+    """
+    for attempt in range(max(1, RUNTIME_MAX_RETRIES)):
+        rl.wait()
+        try:
+            result = pw_page.evaluate(script, {"endpoint": endpoint, "referer": listing_url})
+            status = int(result.get("status") or 0) if isinstance(result, dict) else 0
+            final_url = str((result or {}).get("url") or endpoint)
+            html = str((result or {}).get("text") or "")
+            if status == 200 and html:
+                if _looks_like_challenge(final_url, html):
+                    log.warning("Browser additional detail challenge for adid=%s", adid)
+                    return None
+                return BeautifulSoup(html, "html.parser")
+            if status in (403, 429, 503):
+                wait = _backoff(attempt)
+                log.warning("Browser additional detail status %s for adid=%s. Waiting %.1fs", status, adid, wait)
+                time.sleep(wait)
+                continue
+            log.warning("Browser additional detail status %s for adid=%s", status, adid)
+            return None
+        except Exception as exc:
+            wait = _backoff(attempt)
+            log.warning("Browser additional detail fetch error for adid=%s: %s (retry %.1fs)", adid, exc, wait)
             time.sleep(wait)
     return None
 
@@ -658,6 +796,345 @@ def _clean_text_block(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
 
 
+def _parse_hours_int(value: str | None) -> Optional[int]:
+    if not value:
+        return None
+    match = re.search(r"(\d[\d,]*)", str(value))
+    if not match:
+        return None
+    try:
+        return int(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def _parse_dual_hours(value1: str | None, value2: str | None = None) -> list[int]:
+    out: list[int] = []
+    parsed_one = _parse_hours_int(value1)
+    if parsed_one is not None:
+        out.append(parsed_one)
+    parsed_two = _parse_hours_int(value2)
+    if parsed_two is not None:
+        out.append(parsed_two)
+    return out
+
+
+def _infer_engine_count_hint(detail_url: str, page_text: str) -> Optional[int]:
+    merged = f"{detail_url or ''} {page_text or ''}".lower()
+    engines_match = re.search(r"\bengines?\s*[:\-]?\s*(\d+)\b", merged, re.I)
+    if engines_match:
+        try:
+            count = int(engines_match.group(1))
+            if count > 0:
+                return count
+        except ValueError:
+            pass
+    if any(token in merged for token in ("twin-piston", "twin-turbine", "twin engine", "multi-engine", "multi engine")):
+        return 2
+    if "single-engine" in merged or "single engine" in merged:
+        return 1
+    return None
+
+
+def _append_metric_records(
+    *,
+    target: list[dict[str, Any]],
+    hours: list[int],
+    metric_type: str,
+    source_text: str,
+) -> None:
+    for idx, value in enumerate(hours):
+        target.append(
+            {
+                "position": f"{'engine' if 'ENGINE' in metric_type else 'prop'}_{idx + 1}",
+                "metric_type": metric_type,
+                "metric_raw": source_text,
+                "metric_hours": int(value),
+            }
+        )
+
+
+def _extract_engine_prop_payload(detail_url: str, page_text: str, engine_notes: str, maintenance_notes: str) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    engines_raw: list[dict[str, Any]] = []
+    props_raw: list[dict[str, Any]] = []
+
+    # Prefer explicit engine section, then maintenance/page text fallbacks.
+    engine_text_sources = [engine_notes, maintenance_notes, page_text]
+    prop_text_sources = [engine_notes, maintenance_notes, page_text]
+
+    engine_overhaul_pattern = re.compile(
+        r"(?:SMOH|TSMOH|TSO|SOH|since\s+(?:major\s+)?o/?h|time\s+since\s+(?:major\s+)?overhaul)\s*[:\-]?\s*([\d,]+)(?:\s*/\s*([\d,]+))?",
+        re.I,
+    )
+    engine_total_pattern = re.compile(
+        r"(?:engine(?:\(s\))?\s*)?TT\s*[:\-]?\s*([\d,]+)(?:\s*/\s*([\d,]+))?",
+        re.I,
+    )
+    prop_overhaul_pattern = re.compile(
+        r"(?:SPOH|prop(?:eller)?\s*(?:SMOH|TSOH|TSO|since\s+overhaul|time\s+since\s+overhaul))\s*[:\-]?\s*([\d,]+)(?:\s*/\s*([\d,]+))?",
+        re.I,
+    )
+
+    for text in engine_text_sources:
+        if not text:
+            continue
+        for match in engine_overhaul_pattern.finditer(text):
+            values = _parse_dual_hours(match.group(1), match.group(2))
+            if values:
+                _append_metric_records(
+                    target=engines_raw,
+                    hours=values,
+                    metric_type="ENGINE_OVERHAUL",
+                    source_text=match.group(0),
+                )
+        for match in engine_total_pattern.finditer(text):
+            values = _parse_dual_hours(match.group(1), match.group(2))
+            if values:
+                _append_metric_records(
+                    target=engines_raw,
+                    hours=values,
+                    metric_type="ENGINE_TOTAL_TIME",
+                    source_text=match.group(0),
+                )
+
+    for text in prop_text_sources:
+        if not text:
+            continue
+        for match in prop_overhaul_pattern.finditer(text):
+            values = _parse_dual_hours(match.group(1), match.group(2))
+            if values:
+                _append_metric_records(
+                    target=props_raw,
+                    hours=values,
+                    metric_type="PROP_OVERHAUL",
+                    source_text=match.group(0),
+                )
+
+    # De-duplicate while preserving insertion order.
+    dedupe_engine: set[tuple[str, str, int]] = set()
+    compact_engines: list[dict[str, Any]] = []
+    for row in engines_raw:
+        metric_type = str(row.get("metric_type") or "")
+        position = str(row.get("position") or "")
+        hours = int(row.get("metric_hours") or 0)
+        key = (metric_type, position, hours)
+        if key in dedupe_engine:
+            continue
+        dedupe_engine.add(key)
+        compact_engines.append(row)
+
+    dedupe_prop: set[tuple[str, str, int]] = set()
+    compact_props: list[dict[str, Any]] = []
+    for row in props_raw:
+        metric_type = str(row.get("metric_type") or "")
+        position = str(row.get("position") or "")
+        hours = int(row.get("metric_hours") or 0)
+        key = (metric_type, position, hours)
+        if key in dedupe_prop:
+            continue
+        dedupe_prop.add(key)
+        compact_props.append(row)
+
+    if compact_engines:
+        payload["engines_raw"] = compact_engines
+    if compact_props:
+        payload["props_raw"] = compact_props
+
+    overhaul_hours = [
+        int(row["metric_hours"])
+        for row in compact_engines
+        if str(row.get("metric_type") or "").upper() == "ENGINE_OVERHAUL" and isinstance(row.get("metric_hours"), int)
+    ]
+    if overhaul_hours:
+        payload["engine_time_since_overhaul"] = overhaul_hours[0]
+        payload["time_since_overhaul"] = overhaul_hours[0]
+        if len(overhaul_hours) >= 2:
+            payload["second_engine_time_since_overhaul"] = overhaul_hours[1]
+
+    prop_overhaul_hours = [
+        int(row["metric_hours"])
+        for row in compact_props
+        if str(row.get("metric_type") or "").upper() == "PROP_OVERHAUL" and isinstance(row.get("metric_hours"), int)
+    ]
+    if prop_overhaul_hours:
+        payload["time_since_prop_overhaul"] = prop_overhaul_hours[0]
+        if len(prop_overhaul_hours) >= 2:
+            payload["second_time_since_prop_overhaul"] = prop_overhaul_hours[1]
+
+    engine_count_hint = _infer_engine_count_hint(detail_url, page_text)
+    if compact_engines:
+        payload["engine_count"] = max(
+            engine_count_hint or 1,
+            max(
+                (
+                    int(match.group(1))
+                    for match in (
+                        re.search(r"_(\d+)$", str(row.get("position") or ""))
+                        for row in compact_engines
+                    )
+                    if match
+                ),
+                default=1,
+            ),
+        )
+    elif engine_count_hint is not None:
+        payload["engine_count"] = engine_count_hint
+
+    return payload
+
+
+def _parse_detail_soup(soup: BeautifulSoup, detail_url: str) -> dict[str, Any]:
+    extra: dict[str, Any] = {}
+
+    price_el = soup.find("span", id="convertedPrice")
+    if price_el:
+        digits = re.sub(r"[^\d]", "", price_el.get_text())
+        if digits:
+            extra["asking_price"] = int(digits)
+            extra["price_asking"] = int(digits)
+
+    for row in soup.find_all("div", class_="row"):
+        cols = row.find_all("div", class_="col", recursive=False)
+        if len(cols) != 2:
+            continue
+        label = cols[0].get_text(strip=True).lower().rstrip(":")
+        value = cols[1].get_text(strip=True)
+        if not label or not value:
+            continue
+
+        if label == "year":
+            try:
+                extra["year"] = int(value)
+            except ValueError:
+                pass
+        elif "location" in label:
+            extra["location_raw"] = value
+            city, state = _split_location(value)
+            extra["location_city"] = city
+            extra["location_state"] = state
+            extra["state"] = state
+        elif "serial" in label:
+            extra["serial_number"] = value
+        elif "registration" in label:
+            extra["n_number"] = value
+        elif "total time" in label or label == "tt":
+            digits = re.sub(r"[^\d]", "", value)
+            if digits:
+                extra["total_time_airframe"] = int(digits)
+        elif "manufacturer" in label:
+            extra["make"] = value
+        elif "engine tbo" in label:
+            tbo = _parse_hours_int(value)
+            if tbo is not None:
+                extra["engine_tbo_hours"] = tbo
+        elif "time since new engine" in label or label in {"tsnew", "snew"}:
+            tsnew = _parse_hours_int(value)
+            if tsnew is not None:
+                extra["time_since_new_engine"] = tsnew
+        elif "prop" in label and ("overhaul" in label or label in {"spoh", "prop smoh", "prop tbo"}):
+            prop = _parse_hours_int(value)
+            if prop is not None:
+                extra["time_since_prop_overhaul"] = prop
+
+    summary_candidates: list[str] = []
+    for div in soup.find_all("div", class_=re.compile(r"^(col|row|mb|mt|pt|pb)[-\d]", re.I)):
+        text = _clean_text_block(div.get_text(strip=True))
+        if 50 < len(text) < 2500 and not div.find("h4") and not _is_marketing_noise_text(text):
+            summary_candidates.append(text)
+
+    section_map = {
+        "aircraft summary": "description_full",
+        "summary": "description_full",
+        "avionics": "avionics_notes",
+        "airframe": "airframe_notes",
+        "engine": "engine_notes",
+        "maintenance": "maintenance_notes",
+        "features/options": "maintenance_notes",
+        "exterior": "interior_notes",
+        "interior": "interior_notes",
+    }
+    for section_div in soup.find_all("div", class_=lambda cls: bool(cls) and "mobileLHDtl" in cls):
+        heading = section_div.find("h4", class_=re.compile(r"text-darkblue", re.I))
+        if not heading:
+            continue
+        header = heading.get_text(strip=True).lower()
+        content = section_div.get_text(separator="\n", strip=True).replace(heading.get_text(strip=True), "", 1).strip()[:3000]
+        if _is_marketing_noise_text(content):
+            continue
+        for key, field in section_map.items():
+            if key in header:
+                if field == "description_full":
+                    cleaned = _clean_text_block(content)
+                    if cleaned:
+                        extra["description_full"] = cleaned[:3500]
+                        extra["description"] = cleaned[:3500]
+                else:
+                    existing = str(extra.get(field) or "").strip()
+                    extra[field] = f"{existing}\n{content}".strip() if existing else content
+                break
+
+    if not extra.get("description_full") and summary_candidates:
+        summary = max(summary_candidates, key=len)[:3500]
+        extra["description"] = summary
+        extra["description_full"] = summary
+
+    full_text = soup.get_text(" ").upper()
+    smoh = re.search(r"(?:SMOH|TSMOH|TSO|SOH|SINCE\s+(?:MAJOR\s+)?O/?H)\s*[:\-]?\s*([\d,]+)", full_text)
+    if smoh:
+        try:
+            tso_value = int(smoh.group(1).replace(",", ""))
+            extra["time_since_overhaul"] = tso_value
+            extra["engine_time_since_overhaul"] = tso_value
+        except ValueError:
+            pass
+
+    if not extra.get("avionics_notes"):
+        avionics_terms = [
+            "G1000",
+            "G500",
+            "G700",
+            "GTN750",
+            "GTN650",
+            "WAAS",
+            "ADS-B",
+            "GARMIN",
+            "ASPEN",
+            "DYNON",
+            "AVIDYNE",
+            "AUTOPILOT",
+            "GLASS PANEL",
+            "G3X",
+        ]
+        found = [kw for kw in avionics_terms if kw in full_text]
+        if found:
+            extra["avionics_notes"] = ", ".join(found[:12])
+
+    # Parse richer engine/prop detail payload, including multi-engine rows where present.
+    extra.update(
+        _extract_engine_prop_payload(
+            detail_url=detail_url,
+            page_text=soup.get_text(" ", strip=True),
+            engine_notes=str(extra.get("engine_notes") or ""),
+            maintenance_notes=str(extra.get("maintenance_notes") or ""),
+        )
+    )
+
+    if not extra.get("state"):
+        location_raw = str(extra.get("location_raw") or "")
+        _, inferred_state = _split_location(location_raw)
+        if inferred_state:
+            extra["state"] = inferred_state
+            extra["location_state"] = inferred_state
+
+    gallery_urls = _extract_gallery_urls(soup)
+    if gallery_urls:
+        extra["image_urls"] = gallery_urls
+        extra["primary_image_url"] = gallery_urls[0]
+
+    return extra
+
+
 def parse_card(card: Any, aircraft_type: str, model_name: str) -> Optional[dict[str, Any]]:
     listing_id = _get_listing_id(card)
     if not listing_id:
@@ -722,6 +1199,7 @@ def parse_card(card: Any, aircraft_type: str, model_name: str) -> Optional[dict[
         "location_raw": location_raw,
         "location_city": location_city,
         "location_state": location_state,
+        "state": location_state,
         "primary_image_url": image_url,
         "image_urls": [image_url] if image_url else None,
         "condition": "used",
@@ -782,213 +1260,17 @@ def scrape_detail(pw_page: Any, url: str, rl: RateLimiter) -> dict[str, Any]:
     soup = fetch_page(pw_page, url, rl, label="detail")
     if not soup:
         return {}
-
-    extra: dict[str, Any] = {}
-
-    price_el = soup.find("span", id="convertedPrice")
-    if price_el:
-        digits = re.sub(r"[^\d]", "", price_el.get_text())
-        if digits:
-            extra["asking_price"] = int(digits)
-            extra["price_asking"] = int(digits)
-
-    for row in soup.find_all("div", class_="row"):
-        cols = row.find_all("div", class_="col", recursive=False)
-        if len(cols) != 2:
-            continue
-        label = cols[0].get_text(strip=True).lower().rstrip(":")
-        value = cols[1].get_text(strip=True)
-        if not label or not value:
-            continue
-
-        if label == "year":
-            try:
-                extra["year"] = int(value)
-            except ValueError:
-                pass
-        elif "location" in label:
-            extra["location_raw"] = value
-            city, state = _split_location(value)
-            extra["location_city"] = city
-            extra["location_state"] = state
-        elif "serial" in label:
-            extra["serial_number"] = value
-        elif "registration" in label:
-            extra["n_number"] = value
-        elif "total time" in label or label == "tt":
-            digits = re.sub(r"[^\d]", "", value)
-            if digits:
-                extra["total_time_airframe"] = int(digits)
-        elif "manufacturer" in label:
-            extra["make"] = value
-
-    summary_candidates: list[str] = []
-    for div in soup.find_all("div", class_=re.compile(r"^(col|row|mb|mt|pt|pb)[-\d]", re.I)):
-        text = _clean_text_block(div.get_text(strip=True))
-        if 50 < len(text) < 2500 and not div.find("h4") and not _is_marketing_noise_text(text):
-            summary_candidates.append(text)
-
-    section_map = {
-        "aircraft summary": "description_full",
-        "summary": "description_full",
-        "avionics": "avionics_notes",
-        "airframe": "airframe_notes",
-        "engine": "engine_notes",
-        "maintenance": "maintenance_notes",
-        "exterior": "interior_notes",
-        "interior": "interior_notes",
-    }
-    for section_div in soup.find_all("div", class_=lambda cls: bool(cls) and "mobileLHDtl" in cls):
-        heading = section_div.find("h4", class_=re.compile(r"text-darkblue", re.I))
-        if not heading:
-            continue
-        header = heading.get_text(strip=True).lower()
-        content = section_div.get_text(separator="\n", strip=True).replace(heading.get_text(strip=True), "", 1).strip()[:3000]
-        if _is_marketing_noise_text(content):
-            continue
-        for key, field in section_map.items():
-            if key in header:
-                if field == "description_full":
-                    cleaned = _clean_text_block(content)
-                    if cleaned:
-                        extra["description_full"] = cleaned[:3500]
-                        extra["description"] = cleaned[:3500]
-                else:
-                    extra[field] = content
-                break
-
-    if not extra.get("description_full") and summary_candidates:
-        summary = max(summary_candidates, key=len)[:3500]
-        extra["description"] = summary
-        extra["description_full"] = summary
-
-    full_text = soup.get_text(" ").upper()
-    smoh = re.search(r"(?:SMOH|TSMOH|TSO|SOH|SINCE\s+(?:MAJOR\s+)?O/?H)\s*[:\-]?\s*([\d,]+)", full_text)
-    if smoh:
-        try:
-            tso_value = int(smoh.group(1).replace(",", ""))
-            extra["time_since_overhaul"] = tso_value
-            extra["engine_time_since_overhaul"] = tso_value
-        except ValueError:
-            pass
-
-    if not extra.get("avionics_notes"):
-        avionics_terms = [
-            "G1000",
-            "G500",
-            "G700",
-            "GTN750",
-            "GTN650",
-            "WAAS",
-            "ADS-B",
-            "GARMIN",
-            "ASPEN",
-            "DYNON",
-            "AVIDYNE",
-            "AUTOPILOT",
-            "GLASS PANEL",
-            "G3X",
-        ]
-        found = [kw for kw in avionics_terms if kw in full_text]
-        if found:
-            extra["avionics_notes"] = ", ".join(found[:12])
-
-    gallery_urls = _extract_gallery_urls(soup)
-    if gallery_urls:
-        extra["image_urls"] = gallery_urls
-        extra["primary_image_url"] = gallery_urls[0]
-
-    return extra
+    return _parse_detail_soup(soup, url)
 
 
 def scrape_detail_http(session: requests.Session, url: str, rl: RateLimiter) -> dict[str, Any]:
+    soup = _fetch_additional_detail_http(session, url, rl)
+    if soup:
+        return _parse_detail_soup(soup, url)
     soup = fetch_page_http(session, url, rl, label="http:detail")
     if not soup:
         return {}
-    extra: dict[str, Any] = {}
-
-    price_el = soup.find("span", id="convertedPrice")
-    if price_el:
-        digits = re.sub(r"[^\d]", "", price_el.get_text())
-        if digits:
-            extra["asking_price"] = int(digits)
-            extra["price_asking"] = int(digits)
-
-    for row in soup.find_all("div", class_="row"):
-        cols = row.find_all("div", class_="col", recursive=False)
-        if len(cols) != 2:
-            continue
-        label = cols[0].get_text(strip=True).lower().rstrip(":")
-        value = cols[1].get_text(strip=True)
-        if not label or not value:
-            continue
-        if label == "year":
-            try:
-                extra["year"] = int(value)
-            except ValueError:
-                pass
-        elif "location" in label:
-            extra["location_raw"] = value
-            city, state = _split_location(value)
-            extra["location_city"] = city
-            extra["location_state"] = state
-        elif "serial" in label:
-            extra["serial_number"] = value
-        elif "registration" in label:
-            extra["n_number"] = value
-        elif "total time" in label or label == "tt":
-            digits = re.sub(r"[^\d]", "", value)
-            if digits:
-                extra["total_time_airframe"] = int(digits)
-        elif "manufacturer" in label:
-            extra["make"] = value
-
-    summary_candidates: list[str] = []
-    for div in soup.find_all("div", class_=re.compile(r"^(col|row|mb|mt|pt|pb)[-\d]", re.I)):
-        text = _clean_text_block(div.get_text(strip=True))
-        if 50 < len(text) < 2500 and not div.find("h4") and not _is_marketing_noise_text(text):
-            summary_candidates.append(text)
-
-    section_map = {
-        "aircraft summary": "description_full",
-        "summary": "description_full",
-        "avionics": "avionics_notes",
-        "airframe": "airframe_notes",
-        "engine": "engine_notes",
-        "maintenance": "maintenance_notes",
-        "exterior": "interior_notes",
-        "interior": "interior_notes",
-    }
-    for section_div in soup.find_all("div", class_=lambda cls: bool(cls) and "mobileLHDtl" in cls):
-        heading = section_div.find("h4", class_=re.compile(r"text-darkblue", re.I))
-        if not heading:
-            continue
-        header = heading.get_text(strip=True).lower()
-        content = section_div.get_text(separator="\n", strip=True).replace(heading.get_text(strip=True), "", 1).strip()[:3000]
-        if _is_marketing_noise_text(content):
-            continue
-        for key, field in section_map.items():
-            if key in header:
-                if field == "description_full":
-                    cleaned = _clean_text_block(content)
-                    if cleaned:
-                        extra["description_full"] = cleaned[:3500]
-                        extra["description"] = cleaned[:3500]
-                else:
-                    extra[field] = content
-                break
-
-    if not extra.get("description_full") and summary_candidates:
-        summary = max(summary_candidates, key=len)[:3500]
-        extra["description"] = summary
-        extra["description_full"] = summary
-
-    gallery_urls = _extract_gallery_urls(soup)
-    if gallery_urls:
-        extra["image_urls"] = gallery_urls
-        extra["primary_image_url"] = gallery_urls[0]
-
-    return extra
+    return _parse_detail_soup(soup, url)
 
 
 def _extract_gallery_urls(soup: BeautifulSoup) -> list[str]:
@@ -1187,6 +1469,100 @@ def _get_existing_ids(supabase: Any) -> set[str]:
     return {str(row.get("source_id")) for row in (result.data or []) if row.get("source_id")}
 
 
+def _fetch_existing_detail_targets(supabase: Any, *, limit: int, multi_engine_only: bool) -> list[dict[str, Any]]:
+    page_size = max(200, min(3000, limit * 4))
+    result = (
+        supabase.table("aircraft_listings")
+        .select(
+            "source_id,source_listing_id,source_site,listing_source,url,title,year,make,model,aircraft_type,"
+            "asking_price,price_asking,n_number,serial_number,total_time_airframe,seller_name,seller_type,"
+            "location_raw,location_city,location_state,state,primary_image_url,image_urls,description,description_full"
+        )
+        .eq("source_site", SOURCE_SITE)
+        .eq("is_active", True)
+        .range(0, page_size - 1)
+        .execute()
+    )
+    rows = [row for row in (result.data or []) if row.get("url")]
+    if multi_engine_only:
+        filtered: list[dict[str, Any]] = []
+        for row in rows:
+            merged = " ".join(
+                [
+                    str(row.get("aircraft_type") or ""),
+                    str(row.get("title") or ""),
+                    str(row.get("model") or ""),
+                    str(row.get("url") or ""),
+                ]
+            ).lower()
+            if any(token in merged for token in ("twin", "multi-engine", "multi engine", "engine(s): 2", "engines: 2")):
+                filtered.append(row)
+        rows = filtered
+    rows.sort(key=lambda item: str(item.get("source_id") or ""))
+    return rows[: max(1, limit)]
+
+
+def _run_refresh_existing_details(
+    args: argparse.Namespace,
+    supabase: Any,
+    rl: RateLimiter,
+    *,
+    session_context: Any = None,
+    browser_page: Any = None,
+) -> None:
+    targets = _fetch_existing_detail_targets(
+        supabase,
+        limit=max(1, int(args.refresh_limit)),
+        multi_engine_only=bool(args.refresh_multi_engine_only),
+    )
+    if not targets:
+        log.warning("No existing GlobalAir listings matched refresh criteria.")
+        return
+
+    log.info(
+        "Refreshing details for %s existing GlobalAir listings (multi_engine_only=%s)",
+        len(targets),
+        bool(args.refresh_multi_engine_only),
+    )
+    session = build_http_session_from_browser_context(session_context)
+    _apply_cookie_header(session, _resolve_cookie_header(args))
+    to_upsert: list[dict[str, Any]] = []
+    for idx, base in enumerate(targets, 1):
+        detail_url = str(base.get("url") or "")
+        if not detail_url:
+            continue
+        log.info("  [%s/%s] %s", idx, len(targets), detail_url)
+        if args.refresh_fetch_via_browser and browser_page is not None:
+            soup = _fetch_additional_detail_browser(browser_page, detail_url, rl)
+            detail = _parse_detail_soup(soup, detail_url) if soup else {}
+            if not detail:
+                detail = scrape_detail_http(session, detail_url, rl)
+        else:
+            detail = scrape_detail_http(session, detail_url, rl)
+        if not detail:
+            continue
+        row = dict(base)
+        row.update(detail)
+        row["source_site"] = SOURCE_SITE
+        row["listing_source"] = SOURCE_SITE
+        row["source_listing_id"] = row.get("source_listing_id") or row.get("source_id")
+        row["scraped_at"] = datetime.now(timezone.utc).isoformat()
+        to_upsert.append(row)
+
+    if args.dry_run:
+        output_path = Path(args.output or "globalair_dry_run.json")
+        output_path.write_text(json.dumps(to_upsert, indent=2, default=str), encoding="utf-8")
+        log.info("Refresh dry run complete: %s enriched rows written to %s", len(to_upsert), output_path)
+        return
+
+    if not to_upsert:
+        log.warning("Refresh run did not produce any detail enrichments.")
+        return
+
+    saved = _upsert_listings(supabase, to_upsert, skip_unchanged_writes=False)
+    log.info("Refresh run complete. enriched=%s upserted=%s", len(to_upsert), saved)
+
+
 def run(args: argparse.Namespace) -> None:
     from playwright.sync_api import sync_playwright
 
@@ -1198,6 +1574,42 @@ def run(args: argparse.Namespace) -> None:
     rl = RateLimiter(min_delay_seconds=args.min_delay, jitter_seconds=args.delay_jitter)
 
     supabase = None if args.dry_run else get_supabase()
+    if args.refresh_existing_details:
+        if supabase is None and not args.dry_run:
+            log.error("Refresh mode requires database connectivity.")
+            return
+        if supabase is None and args.dry_run:
+            supabase = get_supabase()
+
+        if args.refresh_use_browser_session:
+            headless = args.headless.lower() not in ("false", "0", "no")
+            with sync_playwright() as playwright:
+                if args.cdp_url:
+                    browser, context, pw_page, managed_session = _create_cdp_session(playwright, args.cdp_url)
+                else:
+                    browser, context, pw_page, managed_session = _create_launch_session(playwright, headless=headless)
+                try:
+                    warm_browser_session(pw_page, rounds=max(1, args.warmup_rounds))
+                    checkpoint_ok = manual_checkpoint_if_requested(pw_page, args)
+                    if not checkpoint_ok:
+                        log.error("Stopping refresh run: manual checkpoint did not clear challenge.")
+                        return
+                    _run_refresh_existing_details(
+                        args,
+                        supabase,
+                        rl,
+                        session_context=context,
+                        browser_page=pw_page,
+                    )
+                finally:
+                    if managed_session:
+                        pw_page.close()
+                        context.close()
+                        browser.close()
+        else:
+            _run_refresh_existing_details(args, supabase, rl, session_context=None)
+        return
+
     existing_ids: set[str] = set()
     if supabase and args.resume:
         existing_ids = _get_existing_ids(supabase)
@@ -1300,6 +1712,7 @@ def run(args: argparse.Namespace) -> None:
             http_session: Optional[requests.Session] = None
             if args.http_only:
                 http_session = build_http_session_from_browser_context(context)
+                _apply_cookie_header(http_session, _resolve_cookie_header(args))
                 log.info("HTTP-only mode enabled: using browser cookies + requests for listing/detail fetches.")
 
             for idx, target in enumerate(targets, 1):
@@ -1325,7 +1738,7 @@ def run(args: argparse.Namespace) -> None:
                             continue
                         if args.resume and source_id in existing_ids:
                             continue
-                        if _should_skip_detail(existing_map.get(source_id), args.detail_stale_days):
+                        if not args.force_details and _should_skip_detail(existing_map.get(source_id), args.detail_stale_days):
                             continue
                         log.debug("  Detail %s/%s: %s", item_idx + 1, len(listings), source_id)
                         if args.http_only and http_session is not None:
@@ -1380,9 +1793,46 @@ def main() -> None:
         help="Mark inactive only after missing for N runs/days (default: 3).",
     )
     parser.add_argument("--resume", action="store_true", help="Skip listings that already exist in database")
+    parser.add_argument("--force-details", action="store_true", help="Always fetch detail pages, ignoring stale-day skip.")
+    parser.add_argument(
+        "--refresh-existing-details",
+        action="store_true",
+        help="Refresh detail fields for existing GlobalAir DB rows without listing-page discovery.",
+    )
+    parser.add_argument(
+        "--refresh-limit",
+        type=int,
+        default=200,
+        help="Max existing listings to refresh when --refresh-existing-details is enabled.",
+    )
+    parser.add_argument(
+        "--refresh-multi-engine-only",
+        action="store_true",
+        help="Limit --refresh-existing-details to likely multi-engine listings.",
+    )
+    parser.add_argument(
+        "--refresh-use-browser-session",
+        action="store_true",
+        help="Use a warmed browser session for cookie-backed HTTP requests in refresh mode.",
+    )
+    parser.add_argument(
+        "--refresh-fetch-via-browser",
+        action="store_true",
+        help="In refresh mode, call _AdditionalListingDetail via in-browser fetch() before HTTP fallback.",
+    )
     parser.add_argument("--headless", default="true", help="Set to false to see browser")
     parser.add_argument("--cdp-url", default="", help="Attach to existing browser via CDP (e.g. http://localhost:9222)")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--cookie-header",
+        default="",
+        help="Optional raw Cookie header for GlobalAir HTTP requests (used for challenge-bypass sessions).",
+    )
+    parser.add_argument(
+        "--cookie-header-file",
+        default="",
+        help="Path to file containing raw Cookie header (alternative to --cookie-header).",
+    )
     parser.add_argument("--output", default="", help="Output JSON path for dry-run mode")
     parser.add_argument("--limit", type=int, default=0, help="Max model pages to process")
     parser.add_argument("--max-retries", type=int, default=MAX_RETRIES, help="HTTP retry attempts per page")
@@ -1416,6 +1866,12 @@ def main() -> None:
         "--checkpoint-url",
         default=f"{BASE_URL}/aircraft-for-sale",
         help="URL used during manual checkpoint validation (can be a listing detail URL)",
+    )
+    parser.add_argument(
+        "--manual-checkpoint-seconds",
+        type=int,
+        default=0,
+        help="If >0, wait this many seconds during manual checkpoint instead of prompting for Enter.",
     )
     args = parser.parse_args()
 

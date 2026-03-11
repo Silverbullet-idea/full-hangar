@@ -77,9 +77,14 @@ export type AircraftListing = {
   description: string | null
   description_full: string | null
   total_time_airframe: number | null
+  engine_count: number | null
   engine_time_since_overhaul: number | null
   time_since_overhaul: number | null
+  second_engine_time_since_overhaul: number | null
   engine_tbo_hours: number | null
   time_since_new_engine: number | null
   time_since_prop_overhaul: number | null
+  second_time_since_prop_overhaul: number | null
+  engines_raw: Array<Record<string, unknown>> | null
+  props_raw: Array<Record<string, unknown>> | null
 }
