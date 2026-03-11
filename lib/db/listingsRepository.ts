@@ -178,6 +178,14 @@ function toNumericOrNull(value: unknown): number | null {
   return null;
 }
 
+function toRecordRows(data: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(data)) return [];
+  return data.filter(
+    (row): row is Record<string, unknown> =>
+      typeof row === "object" && row !== null && !Array.isArray(row)
+  );
+}
+
 function parseFractionalFromDescriptionIntelligence(value: unknown): FractionalFields {
   let parsed = value;
   if (typeof parsed === "string") {
@@ -509,7 +517,7 @@ async function runSimpleSearchListingsPage(
   if (result.error) throw new Error(result.error.message);
   const enrichedRows = await attachFractionalFields(
     supabase,
-    (result.data ?? []) as Record<string, unknown>[]
+    toRecordRows(result.data)
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
@@ -551,7 +559,7 @@ async function runDefaultCuratedListingsPage(
 
   const enrichedRows = await attachFractionalFields(
     supabase,
-    (result.data ?? []) as Record<string, unknown>[]
+    toRecordRows(result.data)
   );
   const ownershipFilteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const curatedRows = ownershipFilteredRows.filter(shouldIncludeInDefaultListings);
@@ -746,7 +754,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
         if (!tableResult.error) {
           const enrichedTableRows = await attachFractionalFields(
             supabase,
-            (tableResult.data ?? []) as Record<string, unknown>[]
+            toRecordRows(tableResult.data)
           );
           const filteredTableRows = applyOwnershipFilterToRows(enrichedTableRows, ownershipType);
           const orderedTableRows = applyDealTierPreference(filteredTableRows, preferDealTier);
@@ -805,7 +813,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 
   const enrichedRows = await attachFractionalFields(
     supabase,
-    (result.data ?? []) as Record<string, unknown>[]
+    toRecordRows(result.data)
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
