@@ -121,6 +121,16 @@ export default function BetaJoinPage() {
       <div className="w-full max-w-md rounded border border-brand-dark bg-card-bg p-6 text-center">
         <h1 className="text-2xl font-semibold">You've been invited to Full Hangar Beta</h1>
         <p className="mt-2 text-sm text-brand-muted">Aircraft market intelligence for serious buyers.</p>
+        <div className="mt-3 rounded border border-brand-dark bg-[#151515] px-3 py-2 text-left text-xs text-brand-muted">
+          Need internal research tools?{" "}
+          <a
+            className="font-semibold text-brand-orange hover:text-brand-burn"
+            href="/internal/admin/buyer-intelligence"
+          >
+            Open Buyer Intelligence
+          </a>
+          .
+        </div>
         <form className="mt-4 space-y-2" onSubmit={onSubmit}>
           <div className="mb-2">
             <div id="google-beta-login" />
