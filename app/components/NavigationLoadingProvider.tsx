@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react"
 
 const FAILSAFE_HIDE_MS = 15000
+const IMAGE_READY_TIMEOUT_MS = 10000
 const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start"
 const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end"
 
@@ -33,6 +34,10 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   const hideTimerRef = useRef<number | null>(null)
   const loadingLocksRef = useRef(0)
   const pendingListingsNavigationRef = useRef(false)
+  const hasRouteCommittedRef = useRef(false)
+  const pendingNetworkRequestsRef = useRef(0)
+  const pendingImageLoadsRef = useRef(0)
+  const navigationIdRef = useRef(0)
 
   const clearHideTimer = () => {
     if (hideTimerRef.current) {
@@ -51,12 +56,17 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   }
 
   const startOverlay = () => {
+    navigationIdRef.current += 1
+    hasRouteCommittedRef.current = false
     setIsNavigating(true)
     scheduleFailsafeHide()
   }
 
   const endOverlay = () => {
     if (loadingLocksRef.current > 0) return
+    if (!hasRouteCommittedRef.current) return
+    if (pendingNetworkRequestsRef.current > 0) return
+    if (pendingImageLoadsRef.current > 0) return
     clearHideTimer()
     setIsNavigating(false)
   }
@@ -104,20 +114,72 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   }, [])
 
   useEffect(() => {
+    const originalFetch = window.fetch.bind(window)
+    window.fetch = async (...args) => {
+      const trackThisRequest = isNavigating && hasRouteCommittedRef.current
+      if (trackThisRequest) {
+        pendingNetworkRequestsRef.current += 1
+      }
+      try {
+        return await originalFetch(...args)
+      } finally {
+        if (trackThisRequest) {
+          pendingNetworkRequestsRef.current = Math.max(0, pendingNetworkRequestsRef.current - 1)
+          endOverlay()
+        }
+      }
+    }
+
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [isNavigating])
+
+  useEffect(() => {
     if (!isNavigating) return
-    if (pendingListingsNavigationRef.current) {
-      // Keep overlay visible through listing transitions.
-      if (pathname !== "/listings") return
-      if (loadingLocksRef.current > 0) return
+    const navId = navigationIdRef.current
+    hasRouteCommittedRef.current = true
+
+    if (pendingListingsNavigationRef.current && pathname === "/listings") {
+      // Listings uses explicit start/end events while data payload mounts.
       pendingListingsNavigationRef.current = false
+    }
+
+    const pendingImages = Array.from(document.images).filter((img) => !img.complete).length
+    if (pendingImages === 0) {
+      pendingImageLoadsRef.current = 0
       endOverlay()
       return
     }
-    if (loadingLocksRef.current > 0) return
-    const rafId = window.requestAnimationFrame(() => {
+
+    pendingImageLoadsRef.current = pendingImages
+    const trackedImages = Array.from(document.images).filter((img) => !img.complete)
+    const releaseOne = () => {
+      pendingImageLoadsRef.current = Math.max(0, pendingImageLoadsRef.current - 1)
+      if (navigationIdRef.current !== navId) return
       endOverlay()
-    })
-    return () => window.cancelAnimationFrame(rafId)
+    }
+    const cleanupFns: Array<() => void> = []
+    for (const img of trackedImages) {
+      const onDone = () => releaseOne()
+      img.addEventListener("load", onDone, { once: true })
+      img.addEventListener("error", onDone, { once: true })
+      cleanupFns.push(() => {
+        img.removeEventListener("load", onDone)
+        img.removeEventListener("error", onDone)
+      })
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (navigationIdRef.current !== navId) return
+      pendingImageLoadsRef.current = 0
+      endOverlay()
+    }, IMAGE_READY_TIMEOUT_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      for (const cleanup of cleanupFns) cleanup()
+    }
   }, [pathname, searchParams, isNavigating])
 
   useEffect(
