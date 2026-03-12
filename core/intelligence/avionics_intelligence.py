@@ -19,7 +19,7 @@ AVIONICS_MARKET_VALUE = {
     "garmin g500": 18000,
     "garmin g600": 22000,
     "garmin g700": 28000,
-    "garmin g2000 suite": 10000,
+    "garmin g2000 suite": 60000,
     "avidyne entegra": 12000,
     "aspen evolution": 8000,
     "dynon skyview": 6000,

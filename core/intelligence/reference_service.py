@@ -127,6 +127,28 @@ def get_engine_reference(engine_model: str, aircraft_type: str | None = None) ->
     }
 
 
+def lookup_engine_tbo_from_model(engine_model: str | None) -> dict[str, Any]:
+    """
+    Compatibility wrapper used by aircraft_intelligence.
+    Returns a stable shape with `found` boolean and resolved defaults.
+    """
+    if not engine_model:
+        return {
+            "found": False,
+            "tbo_hours": DEFAULT_ENGINE_TBO_HOURS,
+            "calendar_years": DEFAULT_ENGINE_CALENDAR_YEARS,
+        }
+    ref = get_engine_reference(engine_model)
+    tbo_hours = ref.get("tbo_hours")
+    calendar_years = ref.get("calendar_years")
+    found = bool(tbo_hours)
+    return {
+        "found": found,
+        "tbo_hours": int(tbo_hours) if tbo_hours is not None else DEFAULT_ENGINE_TBO_HOURS,
+        "calendar_years": calendar_years,
+    }
+
+
 def get_prop_reference(prop_model: str, raw_text: str | None = None) -> dict:
     """
     Query Supabase propeller_tbo_reference; fallback to in-code reference.

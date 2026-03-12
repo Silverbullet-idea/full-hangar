@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#1f2937"/>
+  <path d="M20 74h88l-10 10H30z" fill="#f59e0b"/>
+  <path d="M36 60h56l10 10H26z" fill="#fbbf24"/>
+  <circle cx="36" cy="92" r="8" fill="#e5e7eb"/>
+  <circle cx="92" cy="92" r="8" fill="#e5e7eb"/>
+  <text x="64" y="42" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">C</text>
+</svg>

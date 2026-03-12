@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+  <title>Full Hangar Harvester</title>
+</head>
+<body>
+  <div class="header">
+    <div class="title">FullHangar</div>
+    <div class="subtitle">Controller Harvester</div>
+  </div>
+  <div class="status"><span id="bridge-dot" class="dot"></span><span id="bridge-label">Checking bridge...</span></div>
+  <div class="stats">
+    <div><strong id="extracted">0</strong><span>Extracted</span></div>
+    <div><strong id="upserted">0</strong><span>Saved</span></div>
+    <div><strong id="failed">0</strong><span>Failed</span></div>
+  </div>
+  <textarea id="makes" placeholder="One make per line (optional)"></textarea>
+  <div class="actions">
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+body { width: 320px; margin: 0; padding: 12px; font-family: Segoe UI, Arial, sans-serif; background: #1b1b1b; color: #eee; }
+.header { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+.title { font-weight: 700; color: #ff9900; }
+.subtitle { font-size: 12px; color: #aaa; }
+.status { display: flex; gap: 8px; align-items: center; margin: 8px 0; font-size: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #666; display: inline-block; }
+.dot.alive { background: #3bb44a; }
+.dot.dead { background: #d45050; }
+.stats { display: flex; justify-content: space-between; margin: 10px 0; }
+.stats div { text-align: center; font-size: 11px; color: #aaa; }
+.stats strong { display: block; font-size: 20px; color: #ff9900; }
+textarea { width: 100%; min-height: 70px; background: #2b2b2b; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 6px; }
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+button { flex: 1; padding: 8px; border: 0; border-radius: 4px; cursor: pointer; }
+#start { background: #356e35; color: #fff; }
+#stop { background: #7b3535; color: #fff; }

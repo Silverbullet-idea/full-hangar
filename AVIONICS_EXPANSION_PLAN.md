@@ -289,5 +289,8 @@ Broaden categories after Wave 1 and 2 quality thresholds are met.
 
 - Final authoritative source for OEM/MSRP normalization fields per manufacturer
 - Unit identity strategy for families where model naming changes by generation
+  - Decision (2026-03-11): keep generation-suffixed canonicals as distinct units when the market treats them separately (e.g., `GTN 650` vs `GTN 650Xi`), but map high-frequency non-specific tokens as aliases to the closest common family anchor.
+  - Decision (2026-03-11): unresolved maintenance/LRU tokens that appear frequently (`GIA63`, `GDC74`) are promoted to canonical units with direct aliases rather than forced onto panel-level navigator units.
+- Alias strategy update: shorthand unresolved queue tokens (`KAP150`, `STEC50`, `PMA7/8k`) are normalized via explicit aliases (`KAP150`, `STEC50`, `PMA7`, `PMA8K`) and attached to either a new canonical or the most specific existing canonical.
 - Whether to persist one global value per unit or per aircraft segment/version
 

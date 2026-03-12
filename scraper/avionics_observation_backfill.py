@@ -149,15 +149,40 @@ def main() -> int:
                 unresolved_rows += 1
 
         if obs_rows:
+            deduped: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+            for item in obs_rows:
+                dedupe_key = (
+                    str(item.get("listing_id") or ""),
+                    str(item.get("normalized_token") or ""),
+                    str(item.get("source_field") or ""),
+                    str(item.get("match_type") or ""),
+                )
+                existing = deduped.get(dedupe_key)
+                if existing is None:
+                    deduped[dedupe_key] = item
+                    continue
+                # Keep strongest signal when duplicate conflict keys occur in same batch.
+                existing["quantity"] = max(int(existing.get("quantity") or 1), int(item.get("quantity") or 1))
+                existing_conf = float(existing.get("match_confidence") or 0.0)
+                item_conf = float(item.get("match_confidence") or 0.0)
+                if item_conf > existing_conf:
+                    existing["match_confidence"] = item_conf
+                    if item.get("canonical_name"):
+                        existing["canonical_name"] = item.get("canonical_name")
+                        existing["unit_id"] = item.get("unit_id")
+                    if item.get("raw_token"):
+                        existing["raw_token"] = item.get("raw_token")
+
+            upsert_rows = list(deduped.values())
             if apply_mode:
                 supabase.table("avionics_listing_observations").upsert(
-                    obs_rows,
+                    upsert_rows,
                     on_conflict="listing_id,normalized_token,source_field,match_type",
                 ).execute()
-                inserted += len(obs_rows)
+                inserted += len(upsert_rows)
             else:
-                inserted += len(obs_rows)
-                preview = obs_rows[:3]
+                inserted += len(upsert_rows)
+                preview = upsert_rows[:3]
                 for item in preview:
                     log.info(
                         "[dry-run] listing_id=%s match_type=%s token=%s canonical=%s qty=%s",

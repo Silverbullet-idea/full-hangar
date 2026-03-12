@@ -51,7 +51,74 @@ from compute_market_comps import (
     fetch_transfer_rows,
     upsert_market_comps,
 )
-from controller_scraper import _STATE_ABBREV, _normalize_state
+try:
+    from controller_scraper import _STATE_ABBREV, _normalize_state
+except Exception:
+    # Compatibility fallback for environments where controller_scraper
+    # cannot be imported as a module dependency.
+    _STATE_ABBREV = {
+        "alabama": "AL",
+        "alaska": "AK",
+        "arizona": "AZ",
+        "arkansas": "AR",
+        "california": "CA",
+        "colorado": "CO",
+        "connecticut": "CT",
+        "delaware": "DE",
+        "florida": "FL",
+        "georgia": "GA",
+        "hawaii": "HI",
+        "idaho": "ID",
+        "illinois": "IL",
+        "indiana": "IN",
+        "iowa": "IA",
+        "kansas": "KS",
+        "kentucky": "KY",
+        "louisiana": "LA",
+        "maine": "ME",
+        "maryland": "MD",
+        "massachusetts": "MA",
+        "michigan": "MI",
+        "minnesota": "MN",
+        "mississippi": "MS",
+        "missouri": "MO",
+        "montana": "MT",
+        "nebraska": "NE",
+        "nevada": "NV",
+        "new hampshire": "NH",
+        "new jersey": "NJ",
+        "new mexico": "NM",
+        "new york": "NY",
+        "north carolina": "NC",
+        "north dakota": "ND",
+        "ohio": "OH",
+        "oklahoma": "OK",
+        "oregon": "OR",
+        "pennsylvania": "PA",
+        "rhode island": "RI",
+        "south carolina": "SC",
+        "south dakota": "SD",
+        "tennessee": "TN",
+        "texas": "TX",
+        "utah": "UT",
+        "vermont": "VT",
+        "virginia": "VA",
+        "washington": "WA",
+        "west virginia": "WV",
+        "wisconsin": "WI",
+        "wyoming": "WY",
+        "district of columbia": "DC",
+    }
+
+    def _normalize_state(value: str | None) -> str | None:
+        if not value:
+            return None
+        text = str(value).strip()
+        if not text:
+            return None
+        if len(text) == 2 and text.isalpha():
+            return text.upper()
+        return _STATE_ABBREV.get(text.lower())
 from description_parser import parse_description, sanitize_engine_model
 from supabase.lib.client_options import ClientOptions
 
@@ -378,11 +445,16 @@ def get_supabase():
     key = os.environ.get("SUPABASE_SERVICE_KEY")
     if not url or not key:
         raise EnvironmentError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in .env")
-    options = ClientOptions(
-        postgrest_client_timeout=POSTGREST_TIMEOUT_SECONDS,
-        storage_client_timeout=STORAGE_TIMEOUT_SECONDS,
-    )
-    return create_client(url, key, options=options)
+    try:
+        options = ClientOptions(
+            postgrest_client_timeout=POSTGREST_TIMEOUT_SECONDS,
+            storage_client_timeout=STORAGE_TIMEOUT_SECONDS,
+        )
+        return create_client(url, key, options=options)
+    except Exception:
+        # Compatibility fallback for supabase client variants that don't expose
+        # the expected ClientOptions shape.
+        return create_client(url, key)
 
 
 def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:

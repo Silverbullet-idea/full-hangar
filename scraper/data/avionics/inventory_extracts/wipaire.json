@@ -1,0 +1,41 @@
+[
+  {
+    "manufacturer": "Wipaire",
+    "model": null,
+    "part_number": null,
+    "condition": "used",
+    "price": null,
+    "currency": "USD",
+    "title": "Avionics",
+    "description": null,
+    "listing_url": "https://www.wipaire.com/aircraft-services-by-wipaire/avionics-sales-service-repair/",
+    "source": "wipaire",
+    "scraped_at": "2026-03-11T23:42:34Z"
+  },
+  {
+    "manufacturer": "Wipaire",
+    "model": null,
+    "part_number": null,
+    "condition": "used",
+    "price": null,
+    "currency": "USD",
+    "title": "About Our Avionics Services",
+    "description": null,
+    "listing_url": "https://www.wipaire.com/aircraft-services-by-wipaire/avionics-sales-service-repair/#about-avionics",
+    "source": "wipaire",
+    "scraped_at": "2026-03-11T23:42:34Z"
+  },
+  {
+    "manufacturer": "Wipaire",
+    "model": null,
+    "part_number": null,
+    "condition": "used",
+    "price": null,
+    "currency": "USD",
+    "title": "Avionics Gallery",
+    "description": null,
+    "listing_url": "https://www.wipaire.com/aircraft-services-by-wipaire/avionics-sales-service-repair/#gallery",
+    "source": "wipaire",
+    "scraped_at": "2026-03-11T23:42:34Z"
+  }
+]

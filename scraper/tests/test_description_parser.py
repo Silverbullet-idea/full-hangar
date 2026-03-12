@@ -79,12 +79,49 @@ def test_extract_avionics_new_alias_expansion() -> None:
     assert "Avidyne IFD 550" in result
 
 
+def test_extract_avionics_additional_alias_expansion() -> None:
+    text = "Panel: IFD440, IFD540, GFC500 autopilot, and GI275 backup."
+    result = extract_avionics(text)
+    assert "Avidyne IFD 440" in result
+    assert "Avidyne IFD 540" in result
+    assert "Garmin GFC 500 Autopilot" in result
+    assert "Garmin GI 275" in result
+
+
 def test_extract_avionics_dense_multi_aliases() -> None:
     text = "Avionics: GTN750, GTX345R remote transponder, and dual G5."
     result = extract_avionics(text)
     assert "Garmin GTN 750" in result
     assert "Garmin GTX 345" in result
     assert "Garmin G5 EFIS" in result
+
+
+def test_extract_avionics_combo_shorthand_maps_both_units() -> None:
+    text = "Updated panel with Garmin 650/750 stack and GTX345."
+    detailed = extract_avionics_detailed(text)
+    indexed = {item["canonical_name"]: item for item in detailed}
+    assert "Garmin GTN 650" in indexed
+    assert "Garmin GTN 750" in indexed
+
+
+def test_extract_avionics_high_frequency_unresolved_aliases() -> None:
+    text = "Suite includes KX155, GFC600, IFD440, GNX375, GTX335R, and KFC150."
+    result = extract_avionics(text)
+    assert "Bendix/King KX 155" in result
+    assert "Garmin GFC 600 Autopilot" in result
+    assert "Avidyne IFD 440" in result
+    assert "Garmin GNX 375" in result
+    assert "Garmin GTX 335" in result
+    assert "Bendix/King KFC 150" in result
+
+
+def test_extract_avionics_legacy_king_and_stec_variants() -> None:
+    text = "Panel has KX170B, KX165, KFC200 and S-TEC30 autopilot."
+    result = extract_avionics(text)
+    assert "Bendix/King KX 170B" in result
+    assert "Bendix/King KX 165" in result
+    assert "Bendix/King KFC 200" in result
+    assert "S-TEC 30 Autopilot" in result
 
 
 def test_extract_avionics_compact_variants_and_adsb() -> None:
@@ -144,7 +181,7 @@ def test_parse_description_example_payload() -> None:
     assert "Turbo Normalizing" in parsed["mods"]
     assert "Tip Tanks" in parsed["mods"]
     assert "Garmin GTN 750" in parsed["avionics"]
-    assert parsed["avionics_parser_version"] == "2.0.3"
+    assert parsed["avionics_parser_version"] == "2.0.6"
     assert any(item["canonical_name"] == "Garmin GTN 750" for item in parsed["avionics_detailed"])
     assert parsed["useful_load_lbs"] == 1546
     assert parsed["confidence"] >= 0.7

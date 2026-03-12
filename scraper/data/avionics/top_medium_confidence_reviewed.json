@@ -1,0 +1,77 @@
+[
+  {
+    "unit_id": 113,
+    "canonical_name": "Garmin GPS 400W 500W GNX 375",
+    "alias_candidate": "190-00356-30 Rev. L Garmin 400W-500W Series Pilot\u2019s Guide Addendum (2014)",
+    "alias_norm": "190-00356-30 REV. L GARMIN 400W-500W SERIES PILOT\u2019S GUIDE ADDENDUM (2014)",
+    "observations": 2,
+    "source_counts": {
+      "bas_part_sales": 2
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "reviewer_action": "reject_non_unit",
+    "reviewer_notes": "Auto-rejected accessory/documentation candidate.",
+    "updated_at": "2026-03-12T14:53:16Z"
+  },
+  {
+    "unit_id": 60,
+    "canonical_name": "BendixKing KX 170B",
+    "alias_candidate": "MX-170B NAV/COMM",
+    "alias_norm": "MX-170B NAV/COMM",
+    "observations": 1,
+    "source_counts": {
+      "bennett_avionics": 1
+    },
+    "suggested_action": "approve_alias",
+    "action_reason": "likely canonical token/variant alias",
+    "reviewer_action": "approve_alias",
+    "reviewer_notes": "Auto-approved from suggested_action.",
+    "updated_at": "2026-03-12T14:53:26Z"
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "G5 Installation Kit with LPM",
+    "alias_norm": "G5 INSTALLATION KIT WITH LPM",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "reviewer_action": "reject_non_unit",
+    "reviewer_notes": "Auto-rejected accessory/documentation candidate.",
+    "updated_at": "2026-03-12T14:53:16Z"
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "G5 Battery Pack, Ver. 3",
+    "alias_norm": "G5 BATTERY PACK, VER. 3",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "reviewer_action": "reject_non_unit",
+    "reviewer_notes": "Auto-rejected accessory/documentation candidate.",
+    "updated_at": "2026-03-12T14:53:16Z"
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "Garmin Dual G5 PFD/HSI w/ GAD 13 Bundle",
+    "alias_norm": "GARMIN DUAL G5 PFD/HSI W/ GAD 13 BUNDLE",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "reviewer_action": "reject_non_unit",
+    "reviewer_notes": "Auto-rejected accessory/documentation candidate.",
+    "updated_at": "2026-03-12T14:53:16Z"
+  }
+]

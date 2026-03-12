@@ -1,0 +1,704 @@
+[
+  {
+    "manufacturer": "Chattanooga",
+    "model": "TN 37421",
+    "part_number": null,
+    "description": "Chattanooga, TN 37421",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "2.",
+    "model": "F100",
+    "part_number": "WSA-F100",
+    "description": "2. An example of the Self Evaluation Form can be found in section 3 of",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "4.",
+    "model": "F100",
+    "part_number": "WSA-F100",
+    "description": "4. Each article in the list must have a self-evaluation form completed by",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "6.",
+    "model": "F100",
+    "part_number": "WSA-F100",
+    "description": "6. The self evaluation forms will be kept in an electronic version available",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "1.",
+    "model": "F026",
+    "part_number": "WSA-F026",
+    "description": "1. Nonconformance write-up and corrective action form will be filled out",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "D.",
+    "model": "F100",
+    "part_number": "WSA-F100",
+    "description": "D. Procedures for completing the Self Evaluation Form (on page 15 of this",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "HS-125-700A",
+    "model": "HS-125-700A",
+    "part_number": "HS-125-700A",
+    "description": "& -700B",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "BD-100-1A10",
+    "model": "BD-100-1A10",
+    "part_number": "BD-100-1A10",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "CL-600",
+    "model": "CL-600",
+    "part_number": "CL-600",
+    "description": "Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Bombardier",
+    "model": "BD-700-1A10",
+    "part_number": "BD-700-1A10",
+    "description": "Bombardier Global",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "BD-700-1A11",
+    "model": "BD-700-1A11",
+    "part_number": "BD-700-1A11",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-500",
+    "model": "EMB-500",
+    "part_number": "EMB-500",
+    "description": "(Phenom 100)",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-505",
+    "model": "EMB-505",
+    "part_number": "EMB-505",
+    "description": "(Phenom 300)",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-545",
+    "model": "EMB-545",
+    "part_number": "EMB-545",
+    "description": "(Praetor 500)",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-550",
+    "model": "EMB-550",
+    "part_number": "EMB-550",
+    "description": "(Praetor 600)",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-190-100",
+    "model": "EMB-190-100",
+    "part_number": "EMB-190-100",
+    "description": "ECJ",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-135BJ",
+    "model": "EMB-135BJ",
+    "part_number": "EMB-135BJ",
+    "description": "(Legacy",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-135",
+    "model": "EMB-135",
+    "part_number": "EMB-135",
+    "description": "Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "EMB-145",
+    "model": "EMB-145",
+    "part_number": "EMB-145",
+    "description": "Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "FJ44-3A-24",
+    "model": "FJ44-3A-24",
+    "part_number": "FJ44-3A-24",
+    "description": "",
+    "ata_chapter": "24",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-4R",
+    "model": "TFE731-4R",
+    "part_number": "TFE731-4R",
+    "description": "Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-5BR",
+    "model": "TFE731-5BR",
+    "part_number": "TFE731-5BR",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-20AR",
+    "model": "TFE731-20AR",
+    "part_number": "TFE731-20AR",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-20BR",
+    "model": "TFE731-20BR",
+    "part_number": "TFE731-20BR",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-40R-200G",
+    "model": "TFE731-40R-200G",
+    "part_number": "TFE731-40R-200G",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-40AR-200G",
+    "model": "TFE731-40AR-200G",
+    "part_number": "TFE731-40AR-200G",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TFE731-60-1C",
+    "model": "TFE731-60-1C",
+    "part_number": "TFE731-60-1C",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "TPE-331",
+    "model": "TPE-331",
+    "part_number": "TPE-331",
+    "description": "Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "AS907-1",
+    "model": "AS907-1",
+    "part_number": null,
+    "description": "AS907-1 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "AS907-2",
+    "model": "AS907-2",
+    "part_number": null,
+    "description": "AS907-2 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "GTCP-36-100",
+    "model": "GTCP-36-100",
+    "part_number": "GTCP-36-100",
+    "description": "Series",
+    "ata_chapter": "36",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "GTCP-36-150",
+    "model": "GTCP-36-150",
+    "part_number": "GTCP-36-150",
+    "description": "",
+    "ata_chapter": "36",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "HTF",
+    "model": "HTF 7000",
+    "part_number": null,
+    "description": "HTF 7000 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "JT15D-1",
+    "model": "JT15D-1",
+    "part_number": null,
+    "description": "JT15D-1, -1A, -1B",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "JT15D-5",
+    "model": "JT15D-5",
+    "part_number": null,
+    "description": "JT15D-5, 5A,5B,5D,5R,5F",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PT-6",
+    "model": "PT-6",
+    "part_number": null,
+    "description": "PT-6 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PW305",
+    "model": "PW305",
+    "part_number": null,
+    "description": "PW305 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PW500",
+    "model": "PW500",
+    "part_number": null,
+    "description": "PW500 Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PW545A,B,C",
+    "model": "PW545A",
+    "part_number": null,
+    "description": "PW545A,B,C",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "CF-34-1",
+    "model": "CF-34-1",
+    "part_number": "CF-34-1",
+    "description": "and 3 Series",
+    "ata_chapter": "34",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "AE3007C",
+    "model": "AE3007C",
+    "part_number": null,
+    "description": "AE3007C Series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "BR700-725A1-12",
+    "model": "BR700-725A1-12",
+    "part_number": "BR700-725A1-12",
+    "description": "",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "T-62T-20G-10C3/4",
+    "model": "T-62T-20G-10C3/4",
+    "part_number": "62T-20G-10C3",
+    "description": "T-/4",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "MST-67A",
+    "part_number": "MST-67A",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "XS-850A",
+    "part_number": "XS-850A",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "XS-852",
+    "part_number": "XS-852",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "XS-857A",
+    "part_number": "XS-857A",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "XS-858B",
+    "part_number": "XS-858B",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Rockwell",
+    "model": "TDR-90",
+    "part_number": "TDR-90",
+    "description": "Rockwell Collins",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Rockwell",
+    "model": "TDR-94",
+    "part_number": "TDR-94",
+    "description": "Rockwell Collins",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-33",
+    "part_number": "GTX-33",
+    "description": "Garmin",
+    "ata_chapter": "33",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-33D",
+    "part_number": "GTX-33D",
+    "description": "Garmin",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX-3000",
+    "part_number": "GTX-3000",
+    "description": "Garmin",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Bendix",
+    "model": "KT 76A",
+    "part_number": null,
+    "description": "Bendix King KT 76A",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "KT-74",
+    "part_number": "KT-74",
+    "description": "Honeywell",
+    "ata_chapter": "74",
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "AZ-242",
+    "part_number": "AZ-242",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "AZ-800",
+    "part_number": "AZ-800",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "AZ850",
+    "part_number": null,
+    "description": "Honeywell AZ850",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "AZ-950",
+    "part_number": "AZ-950",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "AZ-960",
+    "part_number": "AZ-960",
+    "description": "Honeywell",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Bendix",
+    "model": "KDC-481",
+    "part_number": "KDC-481",
+    "description": "Bendix King",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC-74A",
+    "part_number": "GDC-74A",
+    "description": "Garmin",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC-74B",
+    "part_number": "GDC-74B",
+    "description": "Garmin",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Rockwell",
+    "model": "ALI-80A",
+    "part_number": "ALI-80A",
+    "description": "Rockwell Collins",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G1000",
+    "part_number": null,
+    "description": "Garmin G1000",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G3000",
+    "part_number": null,
+    "description": "Garmin G3000",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 5011740",
+    "part_number": null,
+    "description": "PN 5011740",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 3-1341-1",
+    "part_number": null,
+    "description": "PN 3-1341-1",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7639",
+    "part_number": null,
+    "description": "PN 7639 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7025",
+    "part_number": null,
+    "description": "PN 7025 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7035",
+    "part_number": null,
+    "description": "PN 7035 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7242",
+    "part_number": null,
+    "description": "PN 7242 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7243",
+    "part_number": null,
+    "description": "PN 7243 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7246",
+    "part_number": null,
+    "description": "PN 7246 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7407",
+    "part_number": null,
+    "description": "PN 7407 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7649",
+    "part_number": null,
+    "description": "PN 7649 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "PN",
+    "model": "PN 7638",
+    "part_number": null,
+    "description": "PN 7638 series",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  },
+  {
+    "manufacturer": "Self",
+    "model": "F100",
+    "part_number": "WSA-F100",
+    "description": "Self Evaluation Form",
+    "ata_chapter": null,
+    "source": "weststar_capabilities",
+    "source_url": "https://www.weststaraviation.com/wp-content/uploads/2021/03/CHA-Capabilities-List-Rev-34.pdf"
+  }
+]

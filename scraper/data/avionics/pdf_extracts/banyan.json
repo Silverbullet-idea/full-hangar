@@ -1,0 +1,317 @@
+[
+  {
+    "manufacturer": "FAA",
+    "model": "SD4R514M",
+    "part_number": null,
+    "description": "FAA CRS# SD4R514M",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "5360",
+    "model": "FL 33309",
+    "part_number": null,
+    "description": "5360 NW 20th Terrace; Ft. Lauderdale FL 33309",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "REVISION",
+    "model": "DATE 10/11/10",
+    "part_number": "10/11/10",
+    "description": "REVISION 1 DATE",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "11-OCT-10",
+    "model": "OCT-10",
+    "part_number": "11-OCT-10",
+    "description": "Update of Components within Capabilities",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "KMA-24-65/66",
+    "model": "KMA-24-65/66",
+    "part_number": "KMA-24-65",
+    "description": "/66",
+    "ata_chapter": "24",
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "KMA-24-70/71",
+    "model": "KMA-24-70/71",
+    "part_number": "KMA-24-70",
+    "description": "/71",
+    "ata_chapter": "24",
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "AA-80/82/83",
+    "model": "AA-80/82/83",
+    "part_number": "AA-80",
+    "description": "/82/83",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "PMA7000S/7000SM",
+    "model": "PMA7000S/7000SM",
+    "part_number": null,
+    "description": "PMA7000S/7000SM",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "PMA8000B/SR",
+    "model": "PMA8000B/SR",
+    "part_number": null,
+    "description": "PMA8000B/SR",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "KI-202/6/7",
+    "model": "KI-202/6/7",
+    "part_number": "KI-202",
+    "description": "/6/7",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "6",
+    "model": "IN 1CONT",
+    "part_number": null,
+    "description": "6 IN 1CONT PANEL",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "066-01175-X101",
+    "model": "X101",
+    "part_number": "066-01175-X101",
+    "description": "MULTIHAZARD AWARNESS",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "066-01178-X101",
+    "model": "X101",
+    "part_number": "066-01178-X101",
+    "description": "MULTIHAZARD AWARNESS",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "EPU28-24XXX",
+    "model": "EPU28-24XXX",
+    "part_number": "EPU28-24XXX",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC-200",
+    "part_number": "KFC-200",
+    "description": "KING",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "065-00178-XX00",
+    "model": "XX00",
+    "part_number": "065-00178-XX00",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "065-00179-XX00",
+    "model": "XX00",
+    "part_number": "065-00179-XX00",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "065-00180-XX00",
+    "model": "XX00",
+    "part_number": "065-00180-XX00",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KAP100/KAP150/KFC-150",
+    "part_number": "KAP100/KAP150",
+    "description": "KING /KFC-150",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC-250",
+    "part_number": "KFC-250",
+    "description": "KING",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC-250-CONT",
+    "part_number": "KFC-250-CONT",
+    "description": "KING",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "KSA-373(",
+    "model": "KSA-373",
+    "part_number": "KSA-373",
+    "description": "( )",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "AP-106/107",
+    "model": "AP-106/107",
+    "part_number": "AP-106",
+    "description": "/107",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC-300",
+    "part_number": "KFC-300",
+    "description": "KING",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "FLIGHTLINE",
+    "model": "TO 91",
+    "part_number": null,
+    "description": "FLIGHTLINE, REPAIR, OVERHAUL, & CERTIFY TO 91.413",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "DP-120-P2T",
+    "model": "DP-120-P2T",
+    "part_number": "DP-120-P2T",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "AM-250/275(X)",
+    "model": "AM-250/275",
+    "part_number": "AM-250",
+    "description": "/275(X)",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "AN-8000",
+    "model": "AN-8000",
+    "part_number": "AN-8000",
+    "description": "series",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "KEA-129/130/A",
+    "model": "KEA-129/130/A",
+    "part_number": "KEA-129",
+    "description": "/130/A",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "Certify",
+    "model": "FAR 91",
+    "part_number": null,
+    "description": "Certify to FAR 91.411",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "011-01271-X0",
+    "model": "X0",
+    "part_number": "011-01271-X0",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "011-01465-X0",
+    "model": "X0",
+    "part_number": "011-01465-X0",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "011-01466-X0",
+    "model": "X0",
+    "part_number": "011-01466-X0",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "011-01467-X0",
+    "model": "X0",
+    "part_number": "011-01467-X0",
+    "description": "",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  },
+  {
+    "manufacturer": "GMX-200",
+    "model": "GMX-200",
+    "part_number": "GMX-200",
+    "description": "w TRAFFIC/RADAR",
+    "ata_chapter": null,
+    "source": "banyan_capabilities",
+    "source_url": "https://www.banyanair.com/pdf/FAA_Capabilities_List.pdf"
+  }
+]

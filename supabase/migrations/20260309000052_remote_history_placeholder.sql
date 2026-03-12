@@ -1,0 +1,3 @@
+-- Placeholder migration to align local history with remote project.
+-- Remote migration version 20260309000052 exists in Supabase history.
+-- Intentionally no-op locally; SQL for that migration was already applied remotely.

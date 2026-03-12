@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-03-12T14:55:53Z",
+  "queue_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_candidates.json",
+  "review_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_reviewed.json",
+  "catalog_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\avionics_master_catalog.json",
+  "auto_approved": 0,
+  "stats": {
+    "applied": 0,
+    "rejected": 4,
+    "skipped": 0
+  },
+  "details": [
+    {
+      "canonical_name": "Garmin GPS 400W 500W GNX 375",
+      "alias_candidate": "190-00356-30 Rev. L Garmin 400W-500W Series Pilot\u2019s Guide Addendum (2014)",
+      "result": "rejected"
+    },
+    {
+      "canonical_name": "BendixKing KX 170B",
+      "alias_candidate": "MX-170B NAV/COMM",
+      "result": "already_present"
+    },
+    {
+      "canonical_name": "Garmin G5",
+      "alias_candidate": "G5 Installation Kit with LPM",
+      "result": "rejected"
+    },
+    {
+      "canonical_name": "Garmin G5",
+      "alias_candidate": "G5 Battery Pack, Ver. 3",
+      "result": "rejected"
+    },
+    {
+      "canonical_name": "Garmin G5",
+      "alias_candidate": "Garmin Dual G5 PFD/HSI w/ GAD 13 Bundle",
+      "result": "rejected"
+    }
+  ]
+}

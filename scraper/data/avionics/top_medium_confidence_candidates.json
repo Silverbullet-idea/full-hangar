@@ -1,0 +1,87 @@
+[
+  {
+    "unit_id": 113,
+    "canonical_name": "Garmin GPS 400W 500W GNX 375",
+    "alias_candidate": "190-00356-30 Rev. L Garmin 400W-500W Series Pilot\u2019s Guide Addendum (2014)",
+    "alias_norm": "190-00356-30 REV. L GARMIN 400W-500W SERIES PILOT\u2019S GUIDE ADDENDUM (2014)",
+    "observations": 2,
+    "source_counts": {
+      "bas_part_sales": 2
+    },
+    "match_reasons": {
+      "title_alias_scan": 2
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "sample_titles": [
+      "190-00356-30 Rev. L Garmin 400W-500W Series Pilot\u2019s Guide Addendum (2014)"
+    ],
+    "sample_prices": [
+      35.0,
+      35.0
+    ]
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "G5 Installation Kit with LPM",
+    "alias_norm": "G5 INSTALLATION KIT WITH LPM",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "match_reasons": {
+      "title_alias_scan": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "sample_titles": [
+      "G5 Installation Kit with LPM"
+    ],
+    "sample_prices": [
+      119.0
+    ]
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "G5 Battery Pack, Ver. 3",
+    "alias_norm": "G5 BATTERY PACK, VER. 3",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "match_reasons": {
+      "title_alias_scan": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "sample_titles": [
+      "G5 Battery Pack, Ver. 3"
+    ],
+    "sample_prices": [
+      276.0
+    ]
+  },
+  {
+    "unit_id": 76,
+    "canonical_name": "Garmin G5",
+    "alias_candidate": "Garmin Dual G5 PFD/HSI w/ GAD 13 Bundle",
+    "alias_norm": "GARMIN DUAL G5 PFD/HSI W/ GAD 13 BUNDLE",
+    "observations": 1,
+    "source_counts": {
+      "pacific_coast_avionics": 1
+    },
+    "match_reasons": {
+      "title_alias_scan": 1
+    },
+    "suggested_action": "reject_non_unit",
+    "action_reason": "looks like accessory/documentation rather than avionics unit",
+    "sample_titles": [
+      "Garmin Dual G5 PFD/HSI w/ GAD 13 Bundle"
+    ],
+    "sample_prices": [
+      6662.95
+    ]
+  }
+]

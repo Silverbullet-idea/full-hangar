@@ -76,6 +76,11 @@ export type AircraftListing = {
   has_accident_history: boolean | null
   description: string | null
   description_full: string | null
+  avionics_notes: string | null
+  airframe_notes: string | null
+  engine_notes: string | null
+  maintenance_notes: string | null
+  interior_notes: string | null
   total_time_airframe: number | null
   engine_time_since_overhaul: number | null
   time_since_overhaul: number | null

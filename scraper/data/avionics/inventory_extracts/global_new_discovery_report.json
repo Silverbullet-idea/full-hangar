@@ -1,0 +1,10 @@
+{
+  "status": "ok",
+  "run_at": "2026-03-12T05:41:16Z",
+  "api_key_found": true,
+  "raw_items": 330,
+  "parsed_records": 301,
+  "known_baseline_records": 301,
+  "new_candidates": 5,
+  "output_candidates_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\inventory_extracts\\global_new_candidates.json"
+}
