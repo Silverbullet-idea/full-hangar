@@ -26,6 +26,14 @@ export type ListingsPageQuery = {
   ownershipType?: "all" | "full" | "fractional";
 };
 
+function createReadServerClient() {
+  try {
+    return createPrivilegedServerClient();
+  } catch {
+    return createServerClient();
+  }
+}
+
 export async function getAircraftListingsCount() {
   const supabase = createPrivilegedServerClient();
   const result = await supabase
@@ -106,7 +114,7 @@ function shouldIncludeInDefaultListings(row: Record<string, unknown>): boolean {
 }
 
 export async function getListings(filters: ListingFilters = {}) {
-  const supabase = createServerClient();
+  const supabase = createReadServerClient();
   const {
     minDealRating = 0,
     maxPrice,
@@ -599,10 +607,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       ? "aircraft_listings"
       : "public_listings";
   const listBaseColumns = columnsForListingsTable(listBaseTable);
-  const supabase =
-    listBaseTable === "aircraft_listings"
-      ? createPrivilegedServerClient()
-      : createServerClient();
+  const supabase = createReadServerClient();
 
   if (isDefaultListingsLandingQuery(query)) {
     return runDefaultCuratedListingsPage(supabase, {
@@ -829,7 +834,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 }
 
 export async function getListingFilterOptions(): Promise<ListingFilterOption[]> {
-  const supabase = createServerClient();
+  const supabase = createReadServerClient();
   const limits = [5000, 2500, 1000, 500];
   let lastError: Error | null = null;
 

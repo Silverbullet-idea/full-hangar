@@ -48,6 +48,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Theme system shipped with persistent dark/light mode, dual logos, and tokenized styling parity.
 - Global header/search improvements shipped, including listings search entry and inventory-aware UX updates.
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
+- Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
@@ -115,6 +116,7 @@ Each item should stay one-line actionable with clear completion criteria.
 - **BAS maintenance (biweekly):** stop continuous BAS crawling; run `npm run pipeline:avionics:bas:biweekly` once every other week and review only net-new candidates before catalog promotion.
 - **Global collection focus (active):** prioritize `search-results-page?collection=avionics` via `npm run pipeline:avionics:global:collection` and keep matching/ingest stable as primary avionics-source workflow.
 - **Source field fix queue execution (active):** run through `scraper/SOURCE_FIELD_FIX_QUEUE.md` source-by-source (Controller → ASO → TAP → AvBuyer → AeroTrader → GlobalAir → Barnstormers), with controlled smoke runs and DB delta checks after each source.
+- **Wave 2/3 rollout activation (new focus):** execute segment rollout beyond Wave 1 by establishing `piston_multi` audit baseline first, then turboprop/rotorcraft/jet shadow lanes with segment-level quality gates before score-impacting cutover.
 - **Avionics quality loop:** reduce top unresolved tokens from latest audit (`KX155`, `GFC500`, `GFC600`, `IFD440`, `GNX375`) and raise scoped extraction coverage for low-coverage sources (notably `aso` and `trade_a_plane`).
 - **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
 - **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.

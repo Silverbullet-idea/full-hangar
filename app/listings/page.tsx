@@ -205,25 +205,32 @@ export default async function ListingsPage({
   const initialSortBy: SortOption =
     initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
 
-  const [initialPageData, optionRows] = await Promise.all([
-    getListingsPage({
-      page: initialPage,
-      pageSize: initialPageSize,
-      sortBy: initialSortBy,
-      q: initialSearchTerm,
-      make: initialMakeFilter,
-      modelFamily: initialModelFamilyFilter,
-      subModel: initialSubModelFilter,
-      source: initialSourceFilter,
-      state: initialStateFilter,
-      risk: initialRiskFilter,
-      minValueScore: initialMinimumScore,
-      maxPrice: initialMaxPrice,
-      category: initialCategoryFilter ?? '',
-      dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-    }),
-    getListingFilterOptions(),
-  ])
+  let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
+  let optionRows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }> = []
+
+  try {
+    ;[initialPageData, optionRows] = await Promise.all([
+      getListingsPage({
+        page: initialPage,
+        pageSize: initialPageSize,
+        sortBy: initialSortBy,
+        q: initialSearchTerm,
+        make: initialMakeFilter,
+        modelFamily: initialModelFamilyFilter,
+        subModel: initialSubModelFilter,
+        source: initialSourceFilter,
+        state: initialStateFilter,
+        risk: initialRiskFilter,
+        minValueScore: initialMinimumScore,
+        maxPrice: initialMaxPrice,
+        category: initialCategoryFilter ?? '',
+        dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
+      }),
+      getListingFilterOptions(),
+    ])
+  } catch (error) {
+    console.error("[listings/page] failed to load initial data", error)
+  }
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
