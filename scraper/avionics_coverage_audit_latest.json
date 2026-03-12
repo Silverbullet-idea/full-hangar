@@ -2,27 +2,20 @@
   "lookback_days": 90,
   "cutoff_date": "2025-12-12",
   "listings_scanned": 8319,
-  "listings_with_text": 6540,
-  "listings_with_avionics_text": 3096,
-  "listings_with_observations": 2487,
-  "listings_with_observations_in_avionics_text": 2362,
-  "listings_with_unresolved": 31,
-  "observation_rows_total": 8399,
-  "matched_rows": 8363,
-  "unresolved_rows": 36,
+  "listings_with_text": 6539,
+  "listings_with_avionics_text": 3095,
+  "listings_with_observations": 2481,
+  "listings_with_observations_in_avionics_text": 2359,
+  "listings_with_unresolved": 22,
+  "observation_rows_total": 8458,
+  "matched_rows": 8434,
+  "unresolved_rows": 24,
   "avg_match_confidence": 0.95,
-  "matched_rate_pct": 99.57,
-  "unresolved_rate_pct": 0.43,
-  "extraction_coverage_pct": 76.29,
+  "segment": "all",
+  "matched_rate_pct": 99.72,
+  "unresolved_rate_pct": 0.28,
+  "extraction_coverage_pct": 76.22,
   "top_unresolved_tokens": [
-    {
-      "token": "kx170b",
-      "count": 2
-    },
-    {
-      "token": "gia63",
-      "count": 2
-    },
     {
       "token": "gdu25",
       "count": 2
@@ -36,35 +29,19 @@
       "count": 2
     },
     {
-      "token": "kx175b",
+      "token": "kx64",
       "count": 1
     },
     {
-      "token": "gtn345",
+      "token": "ngt9000",
+      "count": 1
+    },
+    {
+      "token": "kx170b",
       "count": 1
     },
     {
       "token": "pma6000",
-      "count": 1
-    },
-    {
-      "token": "gdc74",
-      "count": 1
-    },
-    {
-      "token": "gtx435",
-      "count": 1
-    },
-    {
-      "token": "kln90a",
-      "count": 1
-    },
-    {
-      "token": "pma150",
-      "count": 1
-    },
-    {
-      "token": "gtx345rw",
       "count": 1
     },
     {
@@ -73,6 +50,14 @@
     },
     {
       "token": "gtx245",
+      "count": 1
+    },
+    {
+      "token": "pma150",
+      "count": 1
+    },
+    {
+      "token": "gtx345rw",
       "count": 1
     },
     {
@@ -96,31 +81,7 @@
       "count": 1
     },
     {
-      "token": "gns400",
-      "count": 1
-    },
-    {
-      "token": "gdc72b",
-      "count": 1
-    },
-    {
-      "token": "gtc580",
-      "count": 1
-    },
-    {
-      "token": "gcu475",
-      "count": 1
-    },
-    {
-      "token": "gtx354r",
-      "count": 1
-    },
-    {
       "token": "gtn625xi",
-      "count": 1
-    },
-    {
-      "token": "kln89",
       "count": 1
     },
     {
@@ -141,43 +102,42 @@
     }
   ],
   "parser_version_breakdown": {
-    "2.1.3": 6207,
-    "2.0.3": 641,
-    "2.1.2": 253,
-    "2.1.1": 34,
-    "2.0.6": 24,
-    "2.1.0": 17,
-    "2.0.9": 15,
-    "2.0.5": 15,
-    "2.0.7": 6,
-    "2.0.8": 4
+    "2.1.3": 6494,
+    "2.0.3": 637,
+    "2.1.2": 37,
+    "2.0.6": 26,
+    "2.1.0": 8,
+    "2.1.1": 6,
+    "2.0.5": 6,
+    "2.0.7": 2,
+    "2.0.8": 1
   },
   "source_breakdown": [
     {
       "source_site": "trade_a_plane",
-      "listings_scanned": 3347,
-      "listings_with_avionics_text": 1508,
-      "listings_with_observations": 1246,
-      "listings_with_observations_in_avionics_text": 1197,
-      "listings_with_unresolved": 19,
-      "matched_rows": 4756,
-      "unresolved_rows": 19,
-      "observation_rows_total": 4775,
-      "matched_rate_pct": 99.6,
-      "extraction_coverage_pct": 79.38
+      "listings_scanned": 3349,
+      "listings_with_avionics_text": 1495,
+      "listings_with_observations": 1231,
+      "listings_with_observations_in_avionics_text": 1182,
+      "listings_with_unresolved": 18,
+      "matched_rows": 4729,
+      "unresolved_rows": 18,
+      "observation_rows_total": 4747,
+      "matched_rate_pct": 99.62,
+      "extraction_coverage_pct": 79.06
     },
     {
       "source_site": "controller",
-      "listings_scanned": 1703,
-      "listings_with_avionics_text": 639,
-      "listings_with_observations": 567,
-      "listings_with_observations_in_avionics_text": 554,
-      "listings_with_unresolved": 12,
-      "matched_rows": 2359,
-      "unresolved_rows": 17,
-      "observation_rows_total": 2376,
-      "matched_rate_pct": 99.28,
-      "extraction_coverage_pct": 86.7
+      "listings_scanned": 1701,
+      "listings_with_avionics_text": 651,
+      "listings_with_observations": 576,
+      "listings_with_observations_in_avionics_text": 566,
+      "listings_with_unresolved": 4,
+      "matched_rows": 2457,
+      "unresolved_rows": 6,
+      "observation_rows_total": 2463,
+      "matched_rate_pct": 99.76,
+      "extraction_coverage_pct": 86.94
     },
     {
       "source_site": "globalair",
@@ -256,6 +216,73 @@
       "observation_rows_total": 0,
       "matched_rate_pct": 0.0,
       "extraction_coverage_pct": 0.0
+    }
+  ],
+  "segment_breakdown": [
+    {
+      "segment": "piston_single",
+      "listings_scanned": 5564,
+      "listings_with_avionics_text": 2326,
+      "listings_with_observations": 1976,
+      "listings_with_observations_in_avionics_text": 1885,
+      "listings_with_unresolved": 21,
+      "matched_rows": 7447,
+      "unresolved_rows": 23,
+      "observation_rows_total": 7470,
+      "matched_rate_pct": 99.69,
+      "extraction_coverage_pct": 81.04
+    },
+    {
+      "segment": "piston_multi",
+      "listings_scanned": 730,
+      "listings_with_avionics_text": 282,
+      "listings_with_observations": 209,
+      "listings_with_observations_in_avionics_text": 197,
+      "listings_with_unresolved": 1,
+      "matched_rows": 540,
+      "unresolved_rows": 1,
+      "observation_rows_total": 541,
+      "matched_rate_pct": 99.82,
+      "extraction_coverage_pct": 69.86
+    },
+    {
+      "segment": "jet",
+      "listings_scanned": 1243,
+      "listings_with_avionics_text": 354,
+      "listings_with_observations": 207,
+      "listings_with_observations_in_avionics_text": 197,
+      "listings_with_unresolved": 0,
+      "matched_rows": 265,
+      "unresolved_rows": 0,
+      "observation_rows_total": 265,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 55.65
+    },
+    {
+      "segment": "turboprop",
+      "listings_scanned": 419,
+      "listings_with_avionics_text": 92,
+      "listings_with_observations": 71,
+      "listings_with_observations_in_avionics_text": 66,
+      "listings_with_unresolved": 0,
+      "matched_rows": 160,
+      "unresolved_rows": 0,
+      "observation_rows_total": 160,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 71.74
+    },
+    {
+      "segment": "rotorcraft",
+      "listings_scanned": 363,
+      "listings_with_avionics_text": 41,
+      "listings_with_observations": 18,
+      "listings_with_observations_in_avionics_text": 14,
+      "listings_with_unresolved": 0,
+      "matched_rows": 22,
+      "unresolved_rows": 0,
+      "observation_rows_total": 22,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 34.15
     }
   ]
 }

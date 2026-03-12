@@ -60,6 +60,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top", type=int, default=20, help="Number of top unresolved tokens to emit")
     parser.add_argument("--batch-size", type=int, default=500, help="Supabase page size")
     parser.add_argument("--limit", type=int, default=0, help="Optional max listings to scan (0=all)")
+    parser.add_argument(
+        "--segment",
+        default="all",
+        choices=["all", "piston_single", "piston_multi", "turboprop", "rotorcraft", "jet"],
+        help="Optional segment filter inferred from listing aircraft_type/model",
+    )
     parser.add_argument("--output-json", default="", help="Optional JSON output path")
     parser.add_argument("--output-md", default="", help="Optional markdown output path")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
@@ -95,6 +101,28 @@ def _write_text(path: str, content: str) -> None:
     target.write_text(content, encoding="utf-8")
 
 
+def _infer_segment(aircraft_type: str | None, model: str | None) -> str:
+    aircraft_type_l = str(aircraft_type or "").lower()
+    model_l = str(model or "").lower()
+    if any(token in aircraft_type_l for token in ("multi", "twin")) or any(
+        token in model_l for token in ("twin", "seneca", "baron", "duchess")
+    ):
+        return "piston_multi"
+    if "turboprop" in aircraft_type_l or any(
+        token in model_l for token in ("tbm", "pc-12", "king air", "pilatus", "caravan", "meridian")
+    ):
+        return "turboprop"
+    if "rotor" in aircraft_type_l or "helicopter" in aircraft_type_l or any(
+        token in model_l for token in ("r44", "r66", "bell", "ec135", "h125")
+    ):
+        return "rotorcraft"
+    if "jet" in aircraft_type_l or any(
+        token in model_l for token in ("citation", "learjet", "phenom", "challenger", "falcon", "gulfstream")
+    ):
+        return "jet"
+    return "piston_single"
+
+
 def main() -> int:
     args = parse_args()
     log = setup_logging(args.verbose)
@@ -106,11 +134,13 @@ def main() -> int:
     batch_size = max(50, int(args.batch_size))
     scan_limit = max(0, int(args.limit))
     top_n = max(1, int(args.top))
+    segment_filter = str(args.segment or "all").strip().lower()
 
     log.info(
-        "Running avionics coverage audit: cutoff=%s days=%s batch_size=%s limit=%s",
+        "Running avionics coverage audit: cutoff=%s days=%s segment=%s batch_size=%s limit=%s",
         cutoff_date,
         lookback_days,
+        segment_filter,
         batch_size,
         scan_limit or "all",
     )
@@ -128,6 +158,7 @@ def main() -> int:
         "matched_rows": 0,
         "unresolved_rows": 0,
         "avg_match_confidence": 0.0,
+        "segment": segment_filter,
     }
 
     confidence_sum = 0.0
@@ -135,6 +166,17 @@ def main() -> int:
     unresolved_counts: Counter[str] = Counter()
     parser_versions: Counter[str] = Counter()
     source_metrics: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "listings_scanned": 0,
+            "listings_with_avionics_text": 0,
+            "listings_with_observations": 0,
+            "listings_with_observations_in_avionics_text": 0,
+            "listings_with_unresolved": 0,
+            "matched_rows": 0,
+            "unresolved_rows": 0,
+        }
+    )
+    segment_metrics: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
             "listings_scanned": 0,
             "listings_with_avionics_text": 0,
@@ -158,7 +200,9 @@ def main() -> int:
 
         response = (
             supabase.table("aircraft_listings")
-            .select("id,source_site,last_seen_date,description,avionics_description,description_full,description_intelligence")
+            .select(
+                "id,source_site,last_seen_date,aircraft_type,model,description,avionics_description,description_full,description_intelligence"
+            )
             .gte("last_seen_date", cutoff_date)
             .order("last_seen_date", desc=True)
             .range(offset, offset + page_size - 1)
@@ -169,8 +213,13 @@ def main() -> int:
             break
 
         for row in rows:
+            listing_segment = _infer_segment(row.get("aircraft_type"), row.get("model"))
+            if segment_filter != "all" and listing_segment != segment_filter:
+                continue
+
             source = str(row.get("source_site") or "unknown").strip() or "unknown"
             source_metrics[source]["listings_scanned"] += 1
+            segment_metrics[listing_segment]["listings_scanned"] += 1
             totals["listings_scanned"] += 1
 
             text = " ".join(
@@ -187,6 +236,7 @@ def main() -> int:
             if has_avionics_text:
                 totals["listings_with_avionics_text"] += 1
                 source_metrics[source]["listings_with_avionics_text"] += 1
+                segment_metrics[listing_segment]["listings_with_avionics_text"] += 1
 
             parsed = _json_parse(row.get("description_intelligence"))
             parser_version = str(parsed.get("avionics_parser_version") or "").strip()
@@ -229,18 +279,23 @@ def main() -> int:
             if has_observations:
                 totals["listings_with_observations"] += 1
                 source_metrics[source]["listings_with_observations"] += 1
+                segment_metrics[listing_segment]["listings_with_observations"] += 1
                 if has_avionics_text:
                     totals["listings_with_observations_in_avionics_text"] += 1
                     source_metrics[source]["listings_with_observations_in_avionics_text"] += 1
+                    segment_metrics[listing_segment]["listings_with_observations_in_avionics_text"] += 1
             if unresolved_rows > 0:
                 totals["listings_with_unresolved"] += 1
                 source_metrics[source]["listings_with_unresolved"] += 1
+                segment_metrics[listing_segment]["listings_with_unresolved"] += 1
 
             totals["matched_rows"] += matched_rows
             totals["unresolved_rows"] += unresolved_rows
             totals["observation_rows_total"] += row_observation_total
             source_metrics[source]["matched_rows"] += matched_rows
             source_metrics[source]["unresolved_rows"] += unresolved_rows
+            segment_metrics[listing_segment]["matched_rows"] += matched_rows
+            segment_metrics[listing_segment]["unresolved_rows"] += unresolved_rows
 
         offset += len(rows)
         if len(rows) < page_size:
@@ -292,6 +347,33 @@ def main() -> int:
             }
         )
 
+    segment_rows: list[dict[str, Any]] = []
+    for seg, stats in sorted(
+        segment_metrics.items(),
+        key=lambda item: item[1]["matched_rows"] + item[1]["unresolved_rows"],
+        reverse=True,
+    ):
+        seg_obs_total = int(stats["matched_rows"]) + int(stats["unresolved_rows"])
+        seg_matched_pct = round((int(stats["matched_rows"]) / seg_obs_total) * 100.0, 2) if seg_obs_total else 0.0
+        seg_extract_cov_scoped = (
+            round(
+                (int(stats["listings_with_observations_in_avionics_text"]) / int(stats["listings_with_avionics_text"]))
+                * 100.0,
+                2,
+            )
+            if int(stats["listings_with_avionics_text"]) > 0
+            else 0.0
+        )
+        segment_rows.append(
+            {
+                "segment": seg,
+                **stats,
+                "observation_rows_total": seg_obs_total,
+                "matched_rate_pct": seg_matched_pct,
+                "extraction_coverage_pct": seg_extract_cov_scoped,
+            }
+        )
+
     result = {
         **totals,
         "matched_rate_pct": matched_rate_pct,
@@ -301,6 +383,7 @@ def main() -> int:
         "top_unresolved_tokens": top_unresolved,
         "parser_version_breakdown": parser_version_breakdown,
         "source_breakdown": source_rows,
+        "segment_breakdown": segment_rows,
     }
 
     markdown_lines = [
@@ -308,6 +391,7 @@ def main() -> int:
         "",
         f"- Window: last `{lookback_days}` days",
         f"- Cutoff date: `{cutoff_date}`",
+        f"- Segment filter: `{segment_filter}`",
         f"- Listings scanned: `{result['listings_scanned']}`",
         f"- Listings with text: `{result['listings_with_text']}`",
         f"- Listings with avionics text: `{result['listings_with_avionics_text']}`",
@@ -344,6 +428,21 @@ def main() -> int:
             markdown_lines.append(
                 "- "
                 f"`{row['source_site']}`: scanned={row['listings_scanned']}, "
+                f"avionics_text={row['listings_with_avionics_text']}, "
+                f"observations={row['listings_with_observations']}, "
+                f"coverage={row['extraction_coverage_pct']}%, "
+                f"matched={row['matched_rows']}, unresolved={row['unresolved_rows']}, "
+                f"match_rate={row['matched_rate_pct']}%"
+            )
+    else:
+        markdown_lines.append("- None")
+
+    markdown_lines.extend(["", "## Segment Breakdown", ""])
+    if segment_rows:
+        for row in segment_rows:
+            markdown_lines.append(
+                "- "
+                f"`{row['segment']}`: scanned={row['listings_scanned']}, "
                 f"avionics_text={row['listings_with_avionics_text']}, "
                 f"observations={row['listings_with_observations']}, "
                 f"coverage={row['extraction_coverage_pct']}%, "

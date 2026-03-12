@@ -49,6 +49,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Global header/search improvements shipped, including listings search entry and inventory-aware UX updates.
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
+- Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
@@ -103,6 +104,9 @@ This is the short, operational board for current work. Permanent standards stay 
 - Parser `v2.1.3` propagation rerun completed to align parser-version lineage and sweep additional stale rows: latest 90-day audit now reports `99.51%` matched-row rate, `0.49%` unresolved-row rate (`unresolved_rows=41`), and `75.96%` scoped extraction coverage, with `v2.1.3` now dominant (`5314` listings).
 - Parser `v2.1.3` residual cleanup rerun completed after final edge-case mapping adjustments; latest 90-day audit now reports `99.57%` matched-row rate, `0.43%` unresolved-row rate (`unresolved_rows=36`), and `76.29%` scoped extraction coverage with `v2.1.3` dominant (`6207` listings).
 - Internal admin telemetry expanded with a new **Avionics Intelligence** section on `/internal/admin` and supporting API route `/api/internal/admin/avionics-intelligence`, surfacing catalog size, parser adoption, coverage/match KPIs, and unresolved-token leaderboard for operational visibility.
+- Wave 2 rollout activation pass completed for `piston_multi`: catalog seed applied (`units=10`, `aliases=40`, `certs=10`), segment market ingest refreshed (`rows=10`; valuation basis `oem_msrp=8`, `market_insufficient=2`), and latest 90-day audit moved to `99.62%` matched-row rate with `32` unresolved rows and `76.24%` scoped extraction coverage.
+- Wave 3 shadow lane is now active for `turboprop`: seeded catalog segment (`units=9`, `aliases=28`, `certs=9`), applied turboprop market snapshots (`rows=9`), added segment-aware audit support (`--segment` + `segment_breakdown`), and captured a dedicated turboprop 90-day baseline (`listings_scanned=420`, `matched_rate=100%`, `unresolved_rows=0`, `coverage=73.47%`).
+- Wave 3 shadow baselines completed for `rotorcraft` and `jet`: seeded catalog segments (`rotorcraft units=8`, `jet units=9`), applied market snapshots (`rotorcraft rows=8`, `jet rows=9`, all currently OEM-anchored), and published dedicated 90-day audits/queues with unresolved rows at `0` for both segments.
 
 ---
 
@@ -116,7 +120,7 @@ Each item should stay one-line actionable with clear completion criteria.
 - **BAS maintenance (biweekly):** stop continuous BAS crawling; run `npm run pipeline:avionics:bas:biweekly` once every other week and review only net-new candidates before catalog promotion.
 - **Global collection focus (active):** prioritize `search-results-page?collection=avionics` via `npm run pipeline:avionics:global:collection` and keep matching/ingest stable as primary avionics-source workflow.
 - **Source field fix queue execution (active):** run through `scraper/SOURCE_FIELD_FIX_QUEUE.md` source-by-source (Controller → ASO → TAP → AvBuyer → AeroTrader → GlobalAir → Barnstormers), with controlled smoke runs and DB delta checks after each source.
-- **Wave 2/3 rollout activation (new focus):** execute segment rollout beyond Wave 1 by establishing `piston_multi` audit baseline first, then turboprop/rotorcraft/jet shadow lanes with segment-level quality gates before score-impacting cutover.
+- **Wave 2/3 rollout activation (active):** baseline coverage now exists for `piston_multi`, `turboprop`, `rotorcraft`, and `jet`; next step is segment-level threshold tuning and coverage uplift (especially low extraction coverage in rotorcraft/jet) before any score-impacting cutover.
 - **Avionics quality loop:** reduce top unresolved tokens from latest audit (`KX155`, `GFC500`, `GFC600`, `IFD440`, `GNX375`) and raise scoped extraction coverage for low-coverage sources (notably `aso` and `trade_a_plane`).
 - **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
 - **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.

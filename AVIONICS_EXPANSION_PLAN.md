@@ -212,11 +212,73 @@ Prioritize:
 
 ## Wave 2: Multi-Piston
 
-Extend coverage with higher-end autopilot and surveillance combinations.
+Objective: graduate from piston-single bias into twin/multi mission stacks while keeping conservative value policy.
+
+Coverage priorities:
+
+- Garmin: GTN 650/750 (+Xi), G500/G600 TXi, GFC 600, GTX remote transponders
+- Avidyne: IFD 440/540/550 multi-piston install variants
+- BendixKing/Honeywell legacy: KFC/KAP/KAS family seen in Baron/Seneca/310 cohorts
+- L3Harris surveillance: Lynx/NGT family variants common in retrofit twins
+- High-frequency LRU companions (example: GIA/GDC/GMU class tokens) when they are repeatedly observed in multi-piston listings
+
+Data/valuation policy for Wave 2:
+
+- Keep per-unit values segment-scoped (`aircraft_segment='piston_multi'`) with fallback to `piston_single` only when multi-piston sample floor is not met.
+- Preserve condition-aware valuation (`new`, `used`, `core`) and do not blend core inventory into primary market estimates.
+- Require conservative confidence gating for ingest (`high` auto-ingest, `medium` review queue).
+
+Wave 2 quality gates (must pass before Wave 3 default rollout):
+
+- Multi-piston unresolved token rate <= 8% on 90-day cohort.
+- Multi-piston matched-row rate >= 94%.
+- At least 80% of top 50 multi-piston unresolved tokens closed or intentionally classified as non-avionics noise.
+- No upward valuation drift > 15% p50 in shadow comparison without attributable source expansion.
 
 ## Wave 3: Turboprop, Rotorcraft, Jet
 
-Broaden categories after Wave 1 and 2 quality thresholds are met.
+Objective: expand to higher-complexity platforms without destabilizing scoring reliability.
+
+Rollout order:
+
+1. Turboprop
+2. Rotorcraft
+3. Jet
+
+Reasoning: turboprop inventory has the best overlap with existing GA avionics families and gives the safest bridge from Wave 2.
+
+Coverage priorities by segment:
+
+- Turboprop: integrated flight deck units, advanced autopilot controllers, weather/traffic modules, pressurization-adjacent panel components that frequently co-occur in listings.
+- Rotorcraft: mission-specific navigation/communication combinations and legacy-to-modern retrofit pairs.
+- Jet: Part 25 / transport-oriented avionics families and controller/display/LRU ecosystems, with explicit noise filtering for non-retail parts mentions.
+
+Wave 3 controls:
+
+- Segment-specific alias packs; no cross-segment alias promotion without evidence.
+- Stronger ambiguity penalties for short tokens in jet/rotor listings.
+- Segment-level shadow runs required before enabling score-impacting cutover.
+
+Wave 3 quality gates (per segment):
+
+- Matched-row rate >= 92%.
+- Unresolved rate <= 10%.
+- Price observation sample floor met for at least 60% of top recurring units before market value source is allowed to influence scoring.
+- Manual review burn-down complete for medium-confidence queue generated during first full-pass ingest.
+
+## Beyond Wave 1 Execution Sprint (Recommended Next 2 Weeks)
+
+1. Seed/normalize missing multi-piston canonicals and aliases from current unresolved leaderboard.
+2. Run segment-scoped backfill + observation refresh for `piston_multi`.
+3. Recompute market values for `piston_multi` and validate condition-bucket distributions.
+4. Publish a multi-piston audit snapshot and unresolved work queue.
+5. Open turboprop shadow lane using same pipeline with ingest still gated by confidence threshold.
+
+Definition of done for this sprint:
+
+- `piston_multi` has its own stable audit baseline and work queue.
+- Admin telemetry can report segment-level avionics metrics (not only global/piston-single blended views).
+- Turboprop shadow data is collected and ready for threshold tuning, without production scoring cutover yet.
 
 ## Implementation Sequence
 

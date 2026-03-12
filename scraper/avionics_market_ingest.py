@@ -75,6 +75,35 @@ OEM_MSRP_SEED: dict[str, float] = {
     "avidyne ifd 540 mp": 17999.0,
     "avidyne ifd 550 mp": 21999.0,
     "l3harris lynx ngt 9000 plus": 6995.0,
+    # Turboprop anchors (shadow-lane conservative references).
+    "garmin g1000 nxi": 45000.0,
+    "garmin g3000 turboprop": 70000.0,
+    "garmin gfc 700 turboprop": 18000.0,
+    "garmin gts 8000": 32000.0,
+    "garmin gwx 75": 13995.0,
+    "collins pro line 21": 65000.0,
+    "honeywell primus apex": 68000.0,
+    "bendixking kfc 325": 18000.0,
+    "l3harris lynx ngt 2000": 6500.0,
+    # Rotorcraft anchors (shadow-lane conservative references).
+    "garmin g500h txi": 42000.0,
+    "garmin gra 55": 9500.0,
+    "garmin gtn 750h xi": 19995.0,
+    "garmin gtn 650h xi": 12995.0,
+    "genesys helisas": 48000.0,
+    "honeywell kra 405b": 8500.0,
+    "avidyne ifd 550 rotor": 21999.0,
+    "garmin gts 855h": 28000.0,
+    # Jet anchors (shadow-lane conservative references).
+    "collins pro line fusion": 125000.0,
+    "garmin g5000": 140000.0,
+    "honeywell primus elite": 115000.0,
+    "universal uns 1ew": 55000.0,
+    "collins tcas 4000": 65000.0,
+    "honeywell kra 405b jet": 9000.0,
+    "garmin gwx 8000": 45000.0,
+    "l3harris lynx ngt 2000 jet": 8000.0,
+    "garmin gsr 56 satcom": 18000.0,
 }
 
 
