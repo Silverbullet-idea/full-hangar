@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { computeBuyerIntelligence, computeDataQuality, computePlatformStats, listInvitesWithSessions } from "@/lib/admin/analytics";
+import {
+  computeAvionicsIntelligence,
+  computeBuyerIntelligence,
+  computeDataQuality,
+  computePlatformStats,
+  listInvitesWithSessions,
+} from "@/lib/admin/analytics";
 import { SourceQualitySection } from "./components/SourceQualitySection";
 
 export const dynamic = "force-dynamic";
@@ -60,12 +66,36 @@ const EMPTY_INVITES = {
   },
 };
 
+const EMPTY_AVIONICS = {
+  catalog: {
+    units_active: 0,
+    aliases_total: 0,
+    market_values_total: 0,
+    price_observations_total: 0,
+  },
+  listings_scanned: 0,
+  listings_with_avionics_text: 0,
+  listings_with_observations: 0,
+  listings_with_observations_in_avionics_text: 0,
+  observation_rows_total: 0,
+  matched_rows: 0,
+  unresolved_rows: 0,
+  matched_rate_pct: 0,
+  unresolved_rate_pct: 0,
+  extraction_coverage_pct: 0,
+  avg_match_confidence: 0,
+  leading_parser_version: "n/a",
+  parser_version_breakdown: {} as Record<string, number>,
+  top_unresolved_tokens: [] as Array<{ token: string; count: number }>,
+};
+
 export default async function InternalAdminPage() {
-  const [platformResult, qualityResult, buyerResult, invitesResult] = await Promise.allSettled([
+  const [platformResult, qualityResult, buyerResult, invitesResult, avionicsResult] = await Promise.allSettled([
     computePlatformStats(),
     computeDataQuality(),
     computeBuyerIntelligence(),
     listInvitesWithSessions(),
+    computeAvionicsIntelligence({ days: 90, top: 30 }),
   ]);
 
   if (platformResult.status === "rejected") {
@@ -80,11 +110,15 @@ export default async function InternalAdminPage() {
   if (invitesResult.status === "rejected") {
     console.error("[admin] listInvitesWithSessions failed", invitesResult.reason);
   }
+  if (avionicsResult.status === "rejected") {
+    console.error("[admin] computeAvionicsIntelligence failed", avionicsResult.reason);
+  }
 
   const platform = platformResult.status === "fulfilled" ? platformResult.value : EMPTY_PLATFORM;
   const dataQuality = qualityResult.status === "fulfilled" ? qualityResult.value : EMPTY_DATA_QUALITY;
   const buyer = buyerResult.status === "fulfilled" ? buyerResult.value : EMPTY_BUYER;
   const invites = invitesResult.status === "fulfilled" ? invitesResult.value : EMPTY_INVITES;
+  const avionics = avionicsResult.status === "fulfilled" ? avionicsResult.value : EMPTY_AVIONICS;
   const inviteRows = invites.invites as Array<Record<string, unknown>>;
 
   const avgValueScore = platform.listings.total_active
@@ -182,6 +216,62 @@ export default async function InternalAdminPage() {
 
       <section>
         <SourceQualitySection />
+      </section>
+
+      <section className="rounded border border-brand-dark bg-card-bg p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Avionics Intelligence</h2>
+          <span className="text-xs text-brand-muted">90-day window</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+          {[
+            { label: "Catalog Units", value: avionics.catalog.units_active },
+            { label: "Aliases", value: avionics.catalog.aliases_total },
+            { label: "Price Observations", value: avionics.catalog.price_observations_total },
+            { label: "Match Rate", value: `${avionics.matched_rate_pct}%` },
+            { label: "Unresolved Rows", value: avionics.unresolved_rows },
+            { label: "Coverage", value: `${avionics.extraction_coverage_pct}%` },
+          ].map((stat) => (
+            <article key={stat.label} className="rounded border border-brand-dark bg-[#101010] p-3">
+              <p className="text-xs uppercase tracking-wide text-brand-muted">{stat.label}</p>
+              <p className="mt-1 text-xl font-semibold text-brand-orange">{statValue(stat.value)}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="rounded border border-brand-dark p-3">
+            <h3 className="text-sm font-semibold">Parser Adoption</h3>
+            <p className="mt-1 text-xs text-brand-muted">Leading parser: {avionics.leading_parser_version}</p>
+            <div className="mt-2 space-y-1 text-xs">
+              {Object.entries(avionics.parser_version_breakdown)
+                .slice(0, 8)
+                .map(([version, count]) => (
+                  <div key={version} className="flex items-center justify-between rounded border border-brand-dark px-2 py-1">
+                    <span>{version}</span>
+                    <span className="font-semibold text-brand-orange">{count.toLocaleString()}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <div className="rounded border border-brand-dark p-3">
+            <h3 className="text-sm font-semibold">Top Unresolved Tokens</h3>
+            <p className="mt-1 text-xs text-brand-muted">
+              Remaining unresolved rows: {avionics.unresolved_rows.toLocaleString()} ({avionics.unresolved_rate_pct}%)
+            </p>
+            <div className="mt-2 max-h-64 space-y-1 overflow-auto text-xs">
+              {avionics.top_unresolved_tokens.slice(0, 20).map((row) => (
+                <div key={row.token} className="flex items-center justify-between rounded border border-brand-dark px-2 py-1">
+                  <span>{row.token}</span>
+                  <span className="font-semibold text-brand-orange">{row.count}</span>
+                </div>
+              ))}
+              {avionics.top_unresolved_tokens.length === 0 ? <p className="text-brand-muted">No unresolved tokens.</p> : null}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

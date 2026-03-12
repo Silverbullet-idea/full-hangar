@@ -3,7 +3,16 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PARSER_VERSION = "2.0.3"
+PARSER_VERSION = "2.1.3"
+
+TOKEN_CANDIDATE_RE = re.compile(
+    r"\b(?:GTN[\- ]?\d{3}(?:XI)?|GNS[\- ]?\d{3}W?|IFD[\- ]?\d{3}|GNX[\- ]?\d{3}|GPS[\- ]?\d{3}|"
+    r"GFC[\- ]?\d{3}|GTX[\- ]?\d{2,4}[A-Z]{0,2}|GMA[\- ]?\d{2,4}|GTC[\- ]?\d{2,4}|GTS[\- ]?\d{2,4}|"
+    r"GIA[\- ]?\d{2,4}[A-Z]?|GDU[\- ]?\d{2,4}|GEA[\- ]?\d{2,4}|GRS[\- ]?\d{2,4}|GSR[\- ]?\d{2,4}|"
+    r"GDL[\- ]?\d{2,4}[A-Z]?|GMU[\- ]?\d{2,4}|GDC[\- ]?\d{2,4}[A-Z]?|GCU[\- ]?\d{2,4}|GMC[\- ]?\d{2,4}|"
+    r"KAP[\- ]?\d{2,4}|KFC[\- ]?\d{2,4}|KX[\- ]?\d{2,4}[A-Z]?|KLN[\- ]?\d{2,4}[A-Z]?|KGX[\- ]?\d{2,4}|"
+    r"STEC[\- ]?\d{2,4}[A-Z]?|S[\- ]?TEC[\- ]?\d{2,4}[A-Z]?|PMA[\- ]?\d{2,4}[A-Z]?|NGT[\- ]?\d{2,4})\b"
+)
 
 
 AVIONICS_MAP: dict[str, str] = {
@@ -12,6 +21,9 @@ AVIONICS_MAP: dict[str, str] = {
     r"\bGTN[\s\-]?750(?:\s*XI|XI)?\b": "Garmin GTN 750",
     r"\bGarmin[\s\-]?(GTN[\s\-]?750|750)\b": "Garmin GTN 750",
     r"\bGTN[\s\-]?650(?:\s*XI|XI)?\b": "Garmin GTN 650",
+    r"\bGTN[\s\-]?625\b": "Garmin GTN 625",
+    r"\bGNS[\s\-]?650W\b": "Garmin GTN 650",
+    r"\bGNS[\s\-]?650\b": "Garmin GTN 650",
     r"\bGarmin[\s\-]?(GTN[\s\-]?650|650)\b": "Garmin GTN 650",
     r"\bGNS[\s\-]?430W\b": "Garmin GNS 430W",
     r"\bGNS[\s\-]?430\b": "Garmin GNS 430",
@@ -26,33 +38,222 @@ AVIONICS_MAP: dict[str, str] = {
     r"\bG[\s\-]?5s?\b": "Garmin G5 EFIS",
     r"\bS[\s\-]?TEC[\s\-]?3100\b": "S-TEC 3100 DFCS",
     r"\bIFD[\s\-]?550\b": "Avidyne IFD 550",
+    r"\bIFD[\s\-]?540\b": "Avidyne IFD 540",
+    r"\bIFD[\s\-]?440\b": "Avidyne IFD 440",
     r"\bGMA[\s\-]?3[56]\b": "Garmin GMA 36/35 Audio Panel",
     r"\bGMA[\s\-]?350\b": "Garmin GMA 350 Audio Panel",
     r"\bGMA[\s\-]?340\b": "Garmin GMA 340 Audio Panel",
+    r"\bGMA[\s\-]?345\b": "Garmin GMA 345 Audio Panel",
+    r"\bGMA[\s\-]?347\b": "Garmin GMA 347 Audio Panel",
+    r"\bGMA[\s\-]?342\b": "Garmin GMA 342 Audio Panel",
+    r"\bGMA[\s\-]?1360\b": "Garmin GMA 1360 Audio Panel",
+    r"\bGMA[\s\-]?1347\b": "Garmin GMA 1347 Audio Panel",
     r"\bGTC[\s\-]?570\b": "Garmin GTC 570 Controller",
     r"\bGTX[\s\-]?345R\b": "Garmin GTX 345",
     r"\bGTX[\s\-]?345\b": "Garmin GTX 345",
+    r"\bGTX[\s\-]?335R\b": "Garmin GTX 335",
     r"\bGTX[\s\-]?335\b": "Garmin GTX 335",
+    r"\bGTX[\s\-]?33\b": "Garmin GTX 33",
     r"\bGTX[\s\-]?330\b": "Garmin GTX 330",
     r"\bGTX[\s\-]?327\b": "Garmin GTX 327",
     r"\bGTX[\s\-]?3000\b": "Garmin GTX 3000",
     r"\bGTX[\s\-]?33ES\b": "Garmin GTX 33ES Transponder",
     r"\bGTX[\s\-]?330ES\b": "Garmin GTX 330ES Transponder",
+    r"\bGTX[\s\-]?320A\b": "Garmin GTX 320A",
+    r"\bGTX[\s\-]?320\b": "Garmin GTX 320",
+    r"\bGTX[\s\-]?32\b": "Garmin GTX 320",
+    r"\bGTX[\s\-]?325\b": "Garmin GTX 325",
+    r"\bGTX[\s\-]?328\b": "Garmin GTX 328",
+    r"\bGTX[\s\-]?337\b": "Garmin GTX 337",
+    r"\bGTX[\s\-]?340\b": "Garmin GTX 340",
+    r"\bGTX[\s\-]?33D\b": "Garmin GTX 33D",
+    r"\bGTX[\s\-]?33R\b": "Garmin GTX 33R",
+    r"\bGTX[\s\-]?33X\b": "Garmin GTX 33X",
+    r"\bGTX[\s\-]?330D\b": "Garmin GTX 330D",
+    r"\bGTX[\s\-]?345DR\b": "Garmin GTX 345DR",
+    r"\bGTX[\s\-]?345D\b": "Garmin GTX 345D",
+    r"\bGTX[\s\-]?355\b": "Garmin GTX 355",
+    r"\bGTX[\s\-]?435\b": "Garmin GTX 435",
+    r"\bGTX[\s\-]?354R\b": "Garmin GTX 354R",
+    r"\bGTX[\s\-]?35R\b": "Garmin GTX 35R",
+    r"\bGTX[\s\-]?300\b": "Garmin GTX 300",
+    r"\bGTX[\s\-]?200\b": "Garmin GTX 200",
+    r"\bGTX[\s\-]?800\b": "Garmin GTX 800",
+    r"\bGTX[\s\-]?750\b": "Garmin GTX 750",
+    r"\bGTX[\s\-]?245R\b": "Garmin GTX 245R",
     r"\bGTS[\s\-]?800\b": "Garmin GTS 800 Traffic",
+    r"\bGTS[\s\-]?820\b": "Garmin GTS 820 Traffic",
+    r"\bGTS[\s\-]?825\b": "Garmin GTS 825 Traffic",
+    r"\bGTS[\s\-]?855\b": "Garmin GTS 855 Traffic",
+    r"\bGTS[\s\-]?600\b": "Garmin GTS 600 Traffic",
+    r"\bGTS[\s\-]?8000\b": "Garmin GTS 8000 Traffic",
+    r"\bGTX[\s\-]?375\b": "Garmin GTX 375",
     r"\bGIA[\s\-]?63W\b": "Garmin GIA 63W NAV/COM/GPS",
+    r"\bGIA[\s\-]?63\b": "Garmin GIA 63 NAV/COM/GPS",
+    r"\bGIA[\s\-]?64W\b": "Garmin GIA 64W NAV/COM/GPS",
+    r"\bGIA[\s\-]?64\b": "Garmin GIA 64 NAV/COM/GPS",
     r"\bGSR[\s\-]?56\b": "Garmin GSR 56 Iridium",
     r"\bGDU[\s\-]?1400\b": "Garmin GDU 1400 Display",
+    r"\bGDU[\s\-]?1040\b": "Garmin GDU 1040 Display",
+    r"\bGDU[\s\-]?1044\b": "Garmin GDU 1044 Display",
+    r"\bGDU[\s\-]?1045\b": "Garmin GDU 1045 Display",
+    r"\bGDU[\s\-]?1050\b": "Garmin GDU 1050 Display",
+    r"\bGDU[\s\-]?1060\b": "Garmin GDU 1060 Display",
+    r"\bGDU[\s\-]?460\b": "Garmin GDU 460 Display",
+    r"\bGDU[\s\-]?465\b": "Garmin GDU 465 Display",
+    r"\bGDU[\s\-]?470\b": "Garmin GDU 470 Display",
+    r"\bGDU[\s\-]?620\b": "Garmin GDU 620 Display",
+    r"\bGDU[\s\-]?1042\b": "Garmin GDU 1042 Display",
+    r"\bGDU[\s\-]?1500\b": "Garmin GDU 1500 Display",
+    r"\bGDU[\s\-]?1550\b": "Garmin GDU 1550 Display",
+    r"\bGDU[\s\-]?10\b": "Garmin GDU 10 Display",
     r"\bGEA[\s\-]?71\b": "Garmin GEA 71 Engine/Airframe",
+    r"\bGEA[\s\-]?110\b": "Garmin GEA 110 Engine/Airframe",
+    r"\bGEA[\s\-]?24\b": "Garmin GEA 24 Engine/Airframe",
     r"\bGRS[\s\-]?77\b": "Garmin GRS 77 AHRS",
+    r"\bGRS[\s\-]?79\b": "Garmin GRS 79 AHRS",
     r"\bGDC[\s\-]?74A\b": "Garmin GDC 74A Air Data Computer",
+    r"\bGDC[\s\-]?74\b": "Garmin GDC 74 Air Data Computer",
+    r"\bGDC[\s\-]?74B\b": "Garmin GDC 74B Air Data Computer",
+    r"\bGDC[\s\-]?7400\b": "Garmin GDC 7400 Air Data Computer",
+    r"\bGDC[\s\-]?72\b": "Garmin GDC 72 Air Data Computer",
+    r"\bGDC[\s\-]?72A\b": "Garmin GDC 72A Air Data Computer",
+    r"\bGDC[\s\-]?72B\b": "Garmin GDC 72B Air Data Computer",
     r"\bGMU[\s\-]?44\b": "Garmin GMU 44 Magnetometer",
+    r"\bGMU[\s\-]?11\b": "Garmin GMU 11 Magnetometer",
     r"\bGCU[\s\-]?275\b": "Garmin GCU 275 Controller",
+    r"\bGCU[\s\-]?476\b": "Garmin GCU 476 Controller",
+    r"\bGCU[\s\-]?477\b": "Garmin GCU 477 Controller",
+    r"\bGCU[\s\-]?485\b": "Garmin GCU 485 Controller",
+    r"\bGCU[\s\-]?475\b": "Garmin GCU 475 Controller",
     r"\bGFC[\s\-]?700\b": "Garmin GFC 700 Autopilot",
+    r"\bGFC[\s\-]?600\b": "Garmin GFC 600 Autopilot",
+    r"\bGFC[\s\-]?500\b": "Garmin GFC 500 Autopilot",
     r"\bGMC[\s\-]?720\b": "Garmin GMC 720 AFCS Controller",
+    r"\bGMC[\s\-]?507\b": "Garmin GMC 507 AFCS Controller",
+    r"\bGMC[\s\-]?710\b": "Garmin GMC 710 AFCS Controller",
+    r"\bGMC[\s\-]?707\b": "Garmin GMC 707 AFCS Controller",
+    r"\bGMC[\s\-]?350\b": "Garmin GMC 350 AFCS Controller",
+    r"\bGMC[\s\-]?307\b": "Garmin GMC 307 AFCS Controller",
+    r"\bGI[\s\-]?275\b": "Garmin GI 275",
+    r"\bGNX[\s\-]?375\b": "Garmin GNX 375",
+    r"\bGNX[\s\-]?750\b": "Garmin GNX 750",
+    r"\bGPS[\s\-]?175\b": "Garmin GPS 175",
+    r"\bG500[\s\-]?TXI\b|\bG500TXI\b": "Garmin G500 TXi",
+    r"\bG600[\s\-]?TXI\b|\bG600TXI\b": "Garmin G600 TXi",
     r"\bGDL[\s\-]?69A\b": "Garmin GDL 69A Datalink",
+    r"\bGDL[\s\-]?69\b": "Garmin GDL 69 Datalink",
+    r"\bGDL[\s\-]?49\b": "Garmin GDL 49 Datalink",
+    r"\bGDL[\s\-]?50R\b": "Garmin GDL 50R",
+    r"\bGDL[\s\-]?50\b": "Garmin GDL 50",
+    r"\bGDL[\s\-]?51R\b": "Garmin GDL 51R",
+    r"\bGDL[\s\-]?51\b": "Garmin GDL 51",
+    r"\bGDL[\s\-]?52\b": "Garmin GDL 52",
+    r"\bGDL[\s\-]?39R\b": "Garmin GDL 39R",
+    r"\bGDL[\s\-]?393D\b": "Garmin GDL 393D",
+    r"\bGDL[\s\-]?60\b": "Garmin GDL 60 Datalink",
+    r"\bGDL[\s\-]?39\b": "Garmin GDL 39",
+    r"\bGDL[\s\-]?88\b": "Garmin GDL 88",
+    r"\bGDL[\s\-]?82\b": "Garmin GDL 82",
     r"\bTAWS[\s\-]?B\b": "TAWS-B",
     r"\bSVT\b": "Synthetic Vision (SVT)",
     r"\bESP\b": "Electronic Stability Protection (ESP)",
+    r"\bKX[\s\-]?155A?\b": "Bendix/King KX 155",
+    r"\bKX[\s\-]?155S\b": "Bendix/King KX 155S",
+    r"\bKX[\s\-]?155B\b": "Bendix/King KX 155B",
+    r"\bKX[\s\-]?165A\b": "Bendix/King KX 165A",
+    r"\bKX[\s\-]?125\b": "Bendix/King KX 125",
+    r"\bKLN[\s\-]?94\b": "Bendix/King KLN 94",
+    r"\bKLN[\s\-]?94B\b": "Bendix/King KLN 94B",
+    r"\bKLN[\s\-]?90B\b": "Bendix/King KLN 90B",
+    r"\bKLN[\s\-]?90A\b": "Bendix/King KLN 90A",
+    r"\bKLN[\s\-]?90\b": "Bendix/King KLN 90",
+    r"\bKLN[\s\-]?89B\b": "Bendix/King KLN 89B",
+    r"\bKLN[\s\-]?89\b": "Bendix/King KLN 89",
+    r"\bKLN[\s\-]?35A\b": "Bendix/King KLN 35A",
+    r"\bKLN[\s\-]?62A\b": "Bendix/King KLN 62A",
+    r"\bKLN[\s\-]?900\b": "Bendix/King KLN 900",
+    r"\bKAP[\s\-]?150\b": "Bendix/King KAP 150",
+    r"\bKX[\s\-]?170\s*B\b": "Bendix/King KX 170B",
+    r"\bKX[\s\-]?170\b": "Bendix/King KX 170",
+    r"\bKX[\s\-]?175\s*B\b": "Bendix/King KX 175B",
+    r"\bKX[\s\-]?165\b": "Bendix/King KX 165",
+    r"\bKX[\s\-]?76A\b": "Bendix/King KX 76A",
+    r"\bKFC[\s\-]?225\b": "Bendix/King KFC 225",
+    r"\bKFC[\s\-]?150\b": "Bendix/King KFC 150",
+    r"\bKFC[\s\-]?200\b": "Bendix/King KFC 200",
+    r"\bKFC[\s\-]?325\b": "Bendix/King KFC 325",
+    r"\bGNS[\s\-]?480\b": "Garmin GNS 480",
+    r"\bKAS[\s\-]?297B\b": "Honeywell KAS 297B",
+    r"\bSTEC[\s\-]?30\b|\bS[\s\-]?TEC[\s\-]?30\b": "S-TEC 30 Autopilot",
+    r"\bSTEC[\s\-]?20\b|\bS[\s\-]?TEC[\s\-]?20\b": "S-TEC 20 Autopilot",
+    r"\bSTEC[\s\-]?30A\b|\bS[\s\-]?TEC[\s\-]?30A\b": "S-TEC 30A Autopilot",
+    r"\bSTEC[\s\-]?36\b|\bS[\s\-]?TEC[\s\-]?36\b": "S-TEC 36 Autopilot",
+    r"\bSTEC[\s\-]?50\b|\bS[\s\-]?TEC[\s\-]?50\b": "S-TEC 50 Autopilot",
+    r"\bSTEC[\s\-]?55X?\b|\bS[\s\-]?TEC[\s\-]?55X?\b": "S-TEC 55 Autopilot",
+    r"\bSTEC[\s\-]?40\b|\bS[\s\-]?TEC[\s\-]?40\b": "S-TEC 40 Autopilot",
+    r"\bSTEC[\s\-]?60(?:-?2)?\b|\bS[\s\-]?TEC[\s\-]?60(?:-?2)?\b": "S-TEC 60-2 Autopilot",
+    r"\bSTEC[\s\-]?2100\b|\bS[\s\-]?TEC[\s\-]?2100\b": "S-TEC 2100 Autopilot",
+    r"\bSTEC[\s\-]?65W\b|\bS[\s\-]?TEC[\s\-]?65W\b": "S-TEC 65W Autopilot",
+    r"\bSTEC[\s\-]?65\b|\bS[\s\-]?TEC[\s\-]?65\b": "S-TEC 65 Autopilot",
+    r"\bSTEC[\s\-]?180\b|\bS[\s\-]?TEC[\s\-]?180\b": "S-TEC 180 Autopilot",
+    r"\bSTEC[\s\-]?1972\b|\bS[\s\-]?TEC[\s\-]?1972\b": "S-TEC 1972 Autopilot",
+    r"\bSTEC[\s\-]?1977\b|\bS[\s\-]?TEC[\s\-]?1977\b": "S-TEC 1977 Autopilot",
+    r"\bSTEC[\s\-]?1979\b|\bS[\s\-]?TEC[\s\-]?1979\b": "S-TEC 1979 Autopilot",
+    r"\bSTEC[\s\-]?1981\b|\bS[\s\-]?TEC[\s\-]?1981\b": "S-TEC 1981 Autopilot",
+    r"\bSTEC[\s\-]?360\b|\bS[\s\-]?TEC[\s\-]?360\b": "S-TEC 360 Autopilot",
+    r"\bSTEC[\s\-]?361\b|\bS[\s\-]?TEC[\s\-]?361\b": "S-TEC 361 Autopilot",
+    r"\bNGT[\s\-]?9000\b": "L3Harris NGT-9000 ADS-B",
+    r"\bNGT[\s\-]?900\b": "L3Harris NGT-900 ADS-B",
+    r"\bGPS[\s\-]?496\b": "Garmin GPS 496",
+    r"\bGPS[\s\-]?150\b": "Garmin GPS 150",
+    r"\bGPS[\s\-]?215\b": "Garmin GPS 215",
+    r"\bGPS[\s\-]?396\b": "Garmin GPS 396",
+    r"\bGPS[\s\-]?430\b": "Garmin GPS 430",
+    r"\bGPS[\s\-]?500\b": "Garmin GPS 500",
+    r"\bGPS[\s\-]?660\b": "Garmin GPS 660",
+    r"\bGPS[\s\-]?695\b": "Garmin GPS 695",
+    r"\bGPS[\s\-]?696\b": "Garmin GPS 696",
+    r"\bGPS[\s\-]?796\b": "Garmin GPS 796",
+    r"\bPMA[\s\-]?7000B\b": "PS Engineering PMA7000B",
+    r"\bPMA[\s\-]?8000G\b": "PS Engineering PMA8000G",
+    r"\bPMA[\s\-]?8000B\b": "PS Engineering PMA8000B",
+    r"\bPMA[\s\-]?8000\b": "PS Engineering PMA8000",
+    r"\bPMA[\s\-]?8000C\b": "PS Engineering PMA8000C",
+    r"\bPMA[\s\-]?7000\b": "PS Engineering PMA7000",
+    r"\bPMA[\s\-]?700B\b": "PS Engineering PMA700B",
+    r"\bPMA[\s\-]?6000M\b": "PS Engineering PMA6000M",
+    r"\bPMA[\s\-]?7000M\b": "PS Engineering PMA7000M",
+    r"\bPMA[\s\-]?6000B\b": "PS Engineering PMA6000B",
+    r"\bPMA[\s\-]?600B\b": "PS Engineering PMA600B",
+    r"\bPMA[\s\-]?6000\b": "PS Engineering PMA6000",
+    r"\bPMA[\s\-]?340\b": "PS Engineering PMA340",
+    r"\bPMA[\s\-]?1000\b": "PS Engineering PMA1000",
+    r"\bPMA[\s\-]?7000H\b": "PS Engineering PMA7000H",
+    r"\bPMA[\s\-]?8000M\b": "PS Engineering PMA8000M",
+    r"\bPMA[\s\-]?459B\b": "PS Engineering PMA459B",
+    r"\bPMA[\s\-]?450C\b": "PS Engineering PMA450C",
+    r"\bPMA[\s\-]?450A\b": "PS Engineering PMA450A",
+    r"\bPMA[\s\-]?450B?\b": "PS Engineering PMA 450B",
+    r"\bGTC[\s\-]?345\b": "Garmin GTC 345 Controller",
+    r"\bGTC[\s\-]?575\b": "Garmin GTC 575 Controller",
+    r"\bGMA[\s\-]?245\b": "Garmin GMA 245 Audio Panel",
+    r"\bGMA[\s\-]?3659\b": "Garmin GMA 3659 Audio Panel",
+    r"\bGRS[\s\-]?56\b": "Garmin GRS 56 AHRS",
+    r"\bGRS[\s\-]?72\b": "Garmin GRS 72 AHRS",
+    r"\bGMU[\s\-]?22\b": "Garmin GMU 22 Magnetometer",
+    r"\bGNS[\s\-]?420\b": "Garmin GNS 420",
+    r"\bGNS[\s\-]?500\b": "Garmin GNS 500",
+    r"\bGNS[\s\-]?625\b": "Garmin GNS 625",
+    r"\bGNS[\s\-]?400\b": "Garmin GNS 400",
+    r"\bGNS[\s\-]?750\b": "Garmin GTN 750",
+    r"\bGTN[\s\-]?430\b": "Garmin GNS 430",
+    r"\bGTN[\s\-]?327\b": "Garmin GTN 327",
+    r"\bGTN[\s\-]?725\b": "Garmin GTN 725",
+    r"\bGTN[\s\-]?740(?:\s*XI|XI)\b": "Garmin GTN 740Xi",
+    r"\bGTC[\s\-]?580\b": "Garmin GTC 580 Controller",
+    r"\bGDC[\s\-]?31\b": "Garmin GDC 31 Air Data Computer",
+    r"\bGDL[\s\-]?52R\b": "Garmin GDL 52R",
 }
 
 MODS_MAP: dict[str, str] = {
@@ -270,6 +471,8 @@ def _infer_quantity(window_text: str) -> int:
     mult = re.search(r"\b([2-4])\s*[xX]\b", window)
     if mult:
         return int(mult.group(1))
+    if re.search(r"\bpair\b", window):
+        return 2
     if re.search(r"\bdual\b|\btwo\b", window):
         return 2
     if re.search(r"\btriple\b|\bthree\b", window):
@@ -285,27 +488,39 @@ def extract_avionics_detailed(text: str) -> list[dict[str, Any]]:
         return []
 
     aggregated: dict[str, dict[str, Any]] = {}
+
+    def _record_match(canonical_name: str, matched_text: str, context_text: str) -> None:
+        quantity = _infer_quantity(context_text)
+        entry = aggregated.setdefault(
+            canonical_name,
+            {
+                "canonical_name": canonical_name,
+                "quantity": 1,
+                "confidence": 0.95,
+                "match_type": "regex_alias",
+                "matched_texts": [],
+            },
+        )
+        entry["quantity"] = max(int(entry.get("quantity") or 1), quantity)
+        texts = entry["matched_texts"]
+        if len(texts) < 5:
+            texts.append(matched_text)
+
+    # Handle common combo shorthand so both units are counted.
+    combo_pattern = r"\b(?:garmin\s*)?(?:gtn\s*)?(650\s*/\s*750|750\s*/\s*650)\b"
+    for combo in re.finditer(combo_pattern, src, flags=re.IGNORECASE):
+        start = max(0, combo.start() - 18)
+        end = min(len(src), combo.end() + 18)
+        context = src[start:end]
+        _record_match("Garmin GTN 650", combo.group(0), context)
+        _record_match("Garmin GTN 750", combo.group(0), context)
+
     for pattern, canonical_name in AVIONICS_MAP.items():
         for match in re.finditer(pattern, src, flags=re.IGNORECASE):
             start = max(0, match.start() - 18)
             end = min(len(src), match.end() + 18)
             context = src[start:end]
-            quantity = _infer_quantity(context)
-
-            entry = aggregated.setdefault(
-                canonical_name,
-                {
-                    "canonical_name": canonical_name,
-                    "quantity": 1,
-                    "confidence": 0.95,
-                    "match_type": "regex_alias",
-                    "matched_texts": [],
-                },
-            )
-            entry["quantity"] = max(int(entry.get("quantity") or 1), quantity)
-            texts = entry["matched_texts"]
-            if len(texts) < 5:
-                texts.append(match.group(0))
+            _record_match(canonical_name, match.group(0), context)
 
     return sorted(aggregated.values(), key=lambda row: str(row.get("canonical_name") or ""))
 
@@ -315,21 +530,46 @@ def extract_avionics_unresolved(text: str, matched: list[dict[str, Any]] | None 
     if not src:
         return []
 
+    def _compact(value: str) -> str:
+        return re.sub(r"[^A-Za-z0-9]+", "", str(value or "").upper())
+
+    def _resolved_token_variants(value: str) -> set[str]:
+        compact = _compact(value)
+        if not compact:
+            return set()
+        variants = {compact}
+        for token in TOKEN_CANDIDATE_RE.findall(str(value or "").upper()):
+            tok_compact = _compact(token)
+            if tok_compact:
+                variants.add(tok_compact)
+        if compact.endswith("XI") and len(compact) > 6:
+            variants.add(compact[:-2])
+        if compact.endswith(("A", "B", "C", "D", "G", "M", "R", "W")) and len(compact) > 5:
+            variants.add(compact[:-1])
+        if compact.startswith("STEC60"):
+            variants.add("STEC60")
+        if compact.startswith("GTN650"):
+            variants.add("GTN650")
+        if compact.startswith("KX165"):
+            variants.add("KX165")
+        if compact.startswith("KX155"):
+            variants.add("KX155")
+        if compact.startswith("PMA450"):
+            variants.add("PMA450")
+            variants.add("PMA450B")
+        return {token for token in variants if token}
+
     matched = matched or []
     resolved_tokens: set[str] = set()
     for item in matched:
+        canonical_name = str(item.get("canonical_name") or "")
+        for token in _resolved_token_variants(canonical_name):
+            resolved_tokens.add(token)
         for token in item.get("matched_texts", []):
-            resolved_tokens.add(re.sub(r"[^A-Za-z0-9]+", "", str(token).upper()))
+            for variant in _resolved_token_variants(str(token)):
+                resolved_tokens.add(variant)
 
-    candidates = re.findall(
-        r"\b(?:GTN[\- ]?\d{3}(?:XI)?|GNS[\- ]?\d{3}W?|IFD[\- ]?\d{3}|GNX[\- ]?\d{3}|GPS[\- ]?\d{3}|"
-        r"GFC[\- ]?\d{3}|GTX[\- ]?\d{2,4}[A-Z]{0,2}|GMA[\- ]?\d{2,4}|GTC[\- ]?\d{2,4}|GTS[\- ]?\d{2,4}|"
-        r"GIA[\- ]?\d{2,4}[A-Z]?|GDU[\- ]?\d{2,4}|GEA[\- ]?\d{2,4}|GRS[\- ]?\d{2,4}|GSR[\- ]?\d{2,4}|"
-        r"GDL[\- ]?\d{2,4}[A-Z]?|GMU[\- ]?\d{2,4}|GDC[\- ]?\d{2,4}[A-Z]?|GCU[\- ]?\d{2,4}|GMC[\- ]?\d{2,4}|"
-        r"KAP[\- ]?\d{2,4}|KFC[\- ]?\d{2,4}|KX[\- ]?\d{2,4}[A-Z]?|KLN[\- ]?\d{2,4}[A-Z]?|KGX[\- ]?\d{2,4}|"
-        r"STEC[\- ]?\d{2,4}[A-Z]?|S[\- ]?TEC[\- ]?\d{2,4}[A-Z]?|PMA[\- ]?\d{2,4}[A-Z]?|NGT[\- ]?\d{2,4})\b",
-        src.upper(),
-    )
+    candidates = TOKEN_CANDIDATE_RE.findall(src.upper())
     deny = {
         "TT",
         "TTAF",
@@ -347,10 +587,14 @@ def extract_avionics_unresolved(text: str, matched: list[dict[str, Any]] | None 
     }
     unresolved: set[str] = set()
     for raw in candidates:
-        compact = re.sub(r"[^A-Za-z0-9]+", "", raw.upper())
+        compact = _compact(raw)
         if not compact or compact in deny:
             continue
         if compact in resolved_tokens:
+            continue
+        if len(compact) >= 5 and any(
+            token.startswith(compact) or compact.startswith(token) for token in resolved_tokens
+        ):
             continue
         # Ignore short numeric fragments that slip through.
         if compact.isdigit() or len(compact) < 4:

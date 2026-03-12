@@ -1254,11 +1254,11 @@
       "TSO-C38d"
     ],
     "aliases": [
-      "KX 155",
+      "155",
       "BendixKing KX 155",
-      "KX155",
+      "KX 155",
       "KX-155",
-      "155"
+      "KX155"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "legacy",
@@ -1303,11 +1303,11 @@
       "TSO-C38d"
     ],
     "aliases": [
-      "KX 165",
+      "165",
       "BendixKing KX 165",
-      "KX165",
+      "KX 165",
       "KX-165",
-      "165"
+      "KX165"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "legacy",
@@ -1352,12 +1352,13 @@
       "TSO-C38d"
     ],
     "aliases": [
-      "KX 170B",
+      "170B",
       "BendixKing KX 170B",
-      "KX170B",
-      "KX-170B",
       "KX 170 B",
-      "170B"
+      "KX 170B",
+      "KX-170B",
+      "KX170B",
+      "MX-170B NAV/COMM"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "legacy",
@@ -1377,12 +1378,12 @@
       "TSO-C38d"
     ],
     "aliases": [
-      "KX 175B",
+      "175B",
       "BendixKing KX 175B",
-      "KX175B",
-      "KX-175B",
       "KX 175 B",
-      "175B"
+      "KX 175B",
+      "KX-175B",
+      "KX175B"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "legacy",
@@ -1737,9 +1738,12 @@
       "STC"
     ],
     "aliases": [
-      "Garmin G5",
       "G 5",
-      "G5"
+      "G5",
+      "G5 EFIS",
+      "G5 EFIS Experimental",
+      "G5 EFIS Experimental Aircraft",
+      "Garmin G5"
     ],
     "oem_msrp_usd": 2495,
     "msrp_source": "garmin.com 2025",
@@ -2031,11 +2035,11 @@
       "AML-STC"
     ],
     "aliases": [
+      "500",
       "GFC 500",
-      "Garmin GFC 500",
-      "GFC500",
       "GFC-500",
-      "500"
+      "GFC500",
+      "Garmin GFC 500"
     ],
     "oem_msrp_usd": 8995,
     "msrp_source": "garmin.com 2025",
@@ -2054,11 +2058,11 @@
       "AML-STC"
     ],
     "aliases": [
+      "600",
       "GFC 600",
-      "Garmin GFC 600",
-      "GFC600",
       "GFC-600",
-      "600"
+      "GFC600",
+      "Garmin GFC 600"
     ],
     "oem_msrp_usd": 19995,
     "msrp_source": "garmin.com 2025",
@@ -2443,11 +2447,11 @@
       "TSO-C146e"
     ],
     "aliases": [
+      "480",
       "GNS 480",
-      "Garmin GNS 480",
-      "GNS480",
       "GNS-480",
-      "480"
+      "GNS480",
+      "Garmin GNS 480"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "discontinued",
@@ -2706,11 +2710,14 @@
       "TSO-C146e"
     ],
     "aliases": [
+      "650",
+      "GNS 650W",
+      "GNS-650W",
+      "GNS650W",
       "GTN 650",
-      "Garmin GTN 650",
-      "GTN650",
       "GTN-650",
-      "650"
+      "GTN650",
+      "Garmin GTN 650"
     ],
     "oem_msrp_usd": 11995,
     "msrp_source": "garmin.com 2025",
@@ -2753,11 +2760,11 @@
       "TSO-C146e"
     ],
     "aliases": [
+      "725",
       "GTN 725",
-      "Garmin GTN 725",
-      "GTN725",
       "GTN-725",
-      "725"
+      "GTN725",
+      "Garmin GTN 725"
     ],
     "oem_msrp_usd": 14995,
     "msrp_source": "garmin.com 2025",
@@ -3547,7 +3554,9 @@
       "System 50",
       "S-TEC System 50",
       "System50",
-      "System-50"
+      "System-50",
+      "STEC50",
+      "S-TEC50"
     ],
     "oem_msrp_usd": null,
     "msrp_source": "legacy/discontinued",
@@ -3841,5 +3850,3245 @@
     "legacy_vs_glass": "hybrid",
     "priority_family": "piston_single",
     "notes": "1090ES solution"
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KAP 150",
+    "canonical_name": "BendixKing KAP 150",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "TSO-C9c"
+    ],
+    "aliases": [
+      "KAP 150",
+      "BendixKing KAP 150",
+      "KAP150",
+      "KAP-150",
+      "150"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "legacy/discontinued",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token expansion queue."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GIA 63",
+    "canonical_name": "Garmin GIA 63",
+    "function_category": "Integrated Avionics Unit",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GIA 63",
+      "Garmin GIA 63",
+      "GIA63",
+      "GIA-63",
+      "GIA 63W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "program specific",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token expansion queue."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 74",
+    "canonical_name": "Garmin GDC 74",
+    "function_category": "Air Data Computer",
+    "tso_refs": [
+      "AML-STC"
+    ],
+    "aliases": [
+      "GDC 74",
+      "Garmin GDC 74",
+      "GDC74",
+      "GDC-74",
+      "GDC 74A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "program specific",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token expansion queue."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA8000",
+    "canonical_name": "PS Engineering PMA8000",
+    "function_category": "Audio Panel",
+    "tso_refs": [
+      "TSO-C50c"
+    ],
+    "aliases": [
+      "PMA 7/8K",
+      "PMA 8000",
+      "PMA 8000B",
+      "PMA 8000G",
+      "PMA-8000B",
+      "PMA-8000G",
+      "PMA7",
+      "PMA8000",
+      "PMA8000B",
+      "PMA8000G",
+      "PMA8K",
+      "PS Engineering PMA8000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "program specific",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token expansion queue."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KY 197A",
+    "canonical_name": "BendixKing KY 197A",
+    "function_category": "COM Radio",
+    "tso_refs": [],
+    "aliases": [
+      "KY-197A",
+      "KY197A",
+      "Bendix King KY-197A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KY 196A",
+    "canonical_name": "BendixKing KY 196A",
+    "function_category": "COM Radio",
+    "tso_refs": [],
+    "aliases": [
+      "KY-196A",
+      "KY196A",
+      "Bendix King KY-196A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 79",
+    "canonical_name": "BendixKing KT 79",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "KT-79",
+      "KT79",
+      "Bendix King KT-79"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 950,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KT 70",
+    "canonical_name": "BendixKing KT 70",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "KT-70",
+      "KT70",
+      "Bendix King KT-70"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KMA 20",
+    "canonical_name": "BendixKing KMA 20",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "KMA-20",
+      "KMA20",
+      "King KMA-20"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KAS 297",
+    "canonical_name": "BendixKing KAS 297",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "KAS-297",
+      "KAS297",
+      "King KAS-297"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 54",
+    "canonical_name": "BendixKing KA 54",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA-54",
+      "KA54",
+      "King KA-54"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 250,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KC 192",
+    "canonical_name": "BendixKing KC 192",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "KC-192",
+      "KC192",
+      "King KC-192"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KC 225",
+    "canonical_name": "BendixKing KC 225",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "KC-225",
+      "KC225",
+      "King KC-225"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA7000H",
+    "canonical_name": "PS Engineering PMA7000H",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA 7000H",
+      "PMA-7000H",
+      "PMA7000 H",
+      "PMA7000H"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Aspen Avionics",
+    "model": "EFD1000",
+    "canonical_name": "Aspen Avionics EFD1000",
+    "function_category": "PFD/MFD",
+    "tso_refs": [],
+    "aliases": [
+      "EFD 1000",
+      "EFD-1000",
+      "Aspen EFD1000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GI 106A",
+    "canonical_name": "Garmin GI 106A",
+    "function_category": "CDI/Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "GI-106A",
+      "GI106A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 710",
+    "canonical_name": "Garmin GMC 710",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC-710",
+      "GMC710"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 32",
+    "canonical_name": "Garmin GTX 32",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX-32",
+      "GTX32"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 33",
+    "canonical_name": "Garmin GTX 33",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX-33",
+      "GTX33"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 100",
+    "canonical_name": "Garmin GPS 100",
+    "function_category": "GPS IFR",
+    "tso_refs": [],
+    "aliases": [
+      "GPS-100",
+      "GPS100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 650,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Artex",
+    "model": "ME406",
+    "canonical_name": "Artex ME406",
+    "function_category": "ELT",
+    "tso_refs": [],
+    "aliases": [
+      "ME 406",
+      "ME-406"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Artex",
+    "model": "C406",
+    "canonical_name": "Artex C406",
+    "function_category": "ELT",
+    "tso_refs": [],
+    "aliases": [
+      "C 406",
+      "C-406",
+      "C406-2"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Electronics International",
+    "model": "MVP 50P",
+    "canonical_name": "Electronics International MVP 50P",
+    "function_category": "Engine Monitor",
+    "tso_refs": [],
+    "aliases": [
+      "MVP-50P",
+      "MVP50P"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 30",
+    "canonical_name": "S-TEC STEC 30",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S-TEC-30",
+      "S-TEC 30",
+      "STEC-30",
+      "STEC30"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Allied Signal",
+    "model": "GNS XLS",
+    "canonical_name": "Allied Signal GNS XLS",
+    "function_category": "FMS",
+    "tso_refs": [],
+    "aliases": [
+      "GNS-XLS",
+      "GNSXLS"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "turbine",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GA 56",
+    "canonical_name": "Garmin GA 56",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "GA56",
+      "GA-56"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 250,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from BAS/global priced-token matching pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 245",
+    "canonical_name": "Garmin GMA 245",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "GMA245",
+      "GMA-245"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett/Pacific)."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNC 215",
+    "canonical_name": "Garmin GNC 215",
+    "function_category": "NAV/COMM",
+    "tso_refs": [],
+    "aliases": [
+      "GNC215",
+      "GNC-215"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett/Pacific)."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GI 106B",
+    "canonical_name": "Garmin GI 106B",
+    "function_category": "NAV Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "GI106B",
+      "GI-106B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett/Pacific)."
+  },
+  {
+    "manufacturer": "ARC",
+    "model": "MK 12D",
+    "canonical_name": "ARC MK 12D",
+    "function_category": "NAV/COMM",
+    "tso_refs": [],
+    "aliases": [
+      "MK12D",
+      "MK-12D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett)."
+  },
+  {
+    "manufacturer": "ARC",
+    "model": "MK 12E",
+    "canonical_name": "ARC MK 12E",
+    "function_category": "NAV/COMM",
+    "tso_refs": [],
+    "aliases": [
+      "MK12E",
+      "MK-12E"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 125",
+    "canonical_name": "BendixKing KX 125",
+    "function_category": "NAV/COMM",
+    "tso_refs": [],
+    "aliases": [
+      "KX125",
+      "KX-125"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KNS 81",
+    "canonical_name": "BendixKing KNS 81",
+    "function_category": "RNAV",
+    "tso_refs": [],
+    "aliases": [
+      "KNS81",
+      "KNS-81"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from Phase 5/6 unmatched reduction pass (Bennett)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 525A",
+    "canonical_name": "BendixKing KI 525A",
+    "function_category": "HSI",
+    "tso_refs": [],
+    "aliases": [
+      "KI525A",
+      "KI-525A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 227",
+    "canonical_name": "BendixKing KI 227",
+    "function_category": "ADF Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "KI227",
+      "KI-227"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 250,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 92",
+    "canonical_name": "BendixKing KA 92",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA92",
+      "KA-92"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 120,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KS 271A",
+    "canonical_name": "BendixKing KS 271A",
+    "function_category": "Autopilot Servo",
+    "tso_refs": [],
+    "aliases": [
+      "KS271A",
+      "KS-271A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 225",
+    "canonical_name": "BendixKing KI 225",
+    "function_category": "ADF Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "KI225",
+      "KI-225"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 150,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GI 260",
+    "canonical_name": "Garmin GI 260",
+    "function_category": "Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "GI260",
+      "GI-260"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 69",
+    "canonical_name": "Garmin GDL 69",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL69",
+      "GDL-69"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA 450B",
+    "canonical_name": "PS Engineering PMA 450B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA 450",
+      "PMA-450",
+      "PMA-450B",
+      "PMA450",
+      "PMA450B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA 4000",
+    "canonical_name": "PS Engineering PMA 4000",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA4000",
+      "PMA-4000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 255",
+    "canonical_name": "BendixKing KI 255",
+    "function_category": "Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "KI255",
+      "KI-255"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 185",
+    "canonical_name": "BendixKing KA 185",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA185",
+      "KA-185"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 120,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 42",
+    "canonical_name": "BendixKing KA 42",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA42",
+      "KA-42"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 203",
+    "canonical_name": "BendixKing KI 203",
+    "function_category": "Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "KI203",
+      "KI-203"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KI 204",
+    "canonical_name": "BendixKing KI 204",
+    "function_category": "Indicator",
+    "tso_refs": [],
+    "aliases": [
+      "KI204",
+      "KI-204"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 325,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 815",
+    "canonical_name": "BendixKing KA 815",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA815",
+      "KA-815"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KA 61",
+    "canonical_name": "BendixKing KA 61",
+    "function_category": "Antenna",
+    "tso_refs": [],
+    "aliases": [
+      "KA61",
+      "KA-61"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 120,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from targeted Phase 5/6 unmatched reduction pass (Global/Pacific)."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GRS 79",
+    "canonical_name": "Garmin GRS 79",
+    "function_category": "AHRS",
+    "tso_refs": [],
+    "aliases": [
+      "GRS 79",
+      "GRS-79",
+      "GRS79"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token reduction pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 72",
+    "canonical_name": "Garmin GDC 72",
+    "function_category": "Air Data Computer",
+    "tso_refs": [],
+    "aliases": [
+      "GDC 72",
+      "GDC-72",
+      "GDC72"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token reduction pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 1360",
+    "canonical_name": "Garmin GMA 1360",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "GMA 1360",
+      "GMA-1360",
+      "GMA1360"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token reduction pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA7000B",
+    "canonical_name": "PS Engineering PMA7000B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA 7000B",
+      "PMA-7000B",
+      "PMA7000B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from unresolved-token reduction pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 60-2",
+    "canonical_name": "S-TEC 60-2 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "STEC60",
+      "STEC-60",
+      "S-TEC60",
+      "S-TEC 60",
+      "STEC 60-2",
+      "STEC60-2"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 55",
+    "canonical_name": "S-TEC 55 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "STEC55",
+      "STEC-55",
+      "S-TEC55",
+      "S-TEC 55"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GEA 110",
+    "canonical_name": "Garmin GEA 110 Engine/Airframe",
+    "function_category": "Engine Monitor",
+    "tso_refs": [],
+    "aliases": [
+      "GEA110",
+      "GEA-110",
+      "GEA 110"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 60",
+    "canonical_name": "Garmin GDL 60 Datalink",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL60",
+      "GDL-60",
+      "GDL 60"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 342",
+    "canonical_name": "Garmin GMA 342 Audio Panel",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "GMA342",
+      "GMA-342",
+      "GMA 342"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GEA 24",
+    "canonical_name": "Garmin GEA 24 Engine/Airframe",
+    "function_category": "Engine Monitor",
+    "tso_refs": [],
+    "aliases": [
+      "GEA24",
+      "GEA-24",
+      "GEA 24"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GPS 496",
+    "canonical_name": "Garmin GPS 496",
+    "function_category": "Portable GPS",
+    "tso_refs": [],
+    "aliases": [
+      "GPS496",
+      "GPS-496",
+      "GPS 496"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMU 11",
+    "canonical_name": "Garmin GMU 11 Magnetometer",
+    "function_category": "Magnetometer",
+    "tso_refs": [],
+    "aliases": [
+      "GMU11",
+      "GMU-11",
+      "GMU 11"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1060",
+    "canonical_name": "Garmin GDU 1060 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU1060",
+      "GDU-1060",
+      "GDU 1060"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTS 825",
+    "canonical_name": "Garmin GTS 825 Traffic",
+    "function_category": "Traffic System",
+    "tso_refs": [],
+    "aliases": [
+      "GTS825",
+      "GTS-825",
+      "GTS 825"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA6000M",
+    "canonical_name": "PS Engineering PMA6000M",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA6000M",
+      "PMA-6000M",
+      "PMA 6000M"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA7000",
+    "canonical_name": "PS Engineering PMA7000",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA7000",
+      "PMA-7000",
+      "PMA 7000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 90B",
+    "canonical_name": "BendixKing KLN 90B",
+    "function_category": "GPS IFR",
+    "tso_refs": [],
+    "aliases": [
+      "KLN90B",
+      "KLN-90B",
+      "KLN 90B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.8 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 39",
+    "canonical_name": "Garmin GDL 39",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL39",
+      "GDL-39",
+      "GDL 39"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 450,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 320A",
+    "canonical_name": "Garmin GTX 320A",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX320A",
+      "GTX-320A",
+      "GTX 320A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 650,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 325",
+    "canonical_name": "Garmin GTX 325",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX325",
+      "GTX-325",
+      "GTX 325"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 33D",
+    "canonical_name": "Garmin GTX 33D",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX33D",
+      "GTX-33D",
+      "GTX 33D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 345DR",
+    "canonical_name": "Garmin GTX 345DR",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX345DR",
+      "GTX-345DR",
+      "GTX 345DR"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1044",
+    "canonical_name": "Garmin GDU 1044 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU1044",
+      "GDU-1044",
+      "GDU 1044"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 620",
+    "canonical_name": "Garmin GDU 620 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 620",
+      "GDU-620",
+      "GDU620"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 507",
+    "canonical_name": "Garmin GMC 507 AFCS Controller",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC507",
+      "GMC-507",
+      "GMC 507"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 950,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTS 820",
+    "canonical_name": "Garmin GTS 820 Traffic",
+    "function_category": "Traffic System",
+    "tso_refs": [],
+    "aliases": [
+      "GTS820",
+      "GTS-820",
+      "GTS 820"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA6000B",
+    "canonical_name": "PS Engineering PMA6000B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA6000B",
+      "PMA-6000B",
+      "PMA 6000B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA7000M",
+    "canonical_name": "PS Engineering PMA7000M",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA7000M",
+      "PMA-7000M",
+      "PMA 7000M"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA6000",
+    "canonical_name": "PS Engineering PMA6000",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA6000",
+      "PMA-6000",
+      "PMA 6000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 31",
+    "canonical_name": "Garmin GDC 31 Air Data Computer",
+    "function_category": "Air Data Computer",
+    "tso_refs": [],
+    "aliases": [
+      "GDC31",
+      "GDC-31",
+      "GDC 31"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 950,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.0.9 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 375",
+    "canonical_name": "Garmin GTX 375",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX375",
+      "GTX-375",
+      "GTX 375"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.0 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1045",
+    "canonical_name": "Garmin GDU 1045 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU1045",
+      "GDU-1045",
+      "GDU 1045"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.0 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1050",
+    "canonical_name": "Garmin GDU 1050 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU1050",
+      "GDU-1050",
+      "GDU 1050"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.0 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Genesys/S-TEC",
+    "model": "STEC 40",
+    "canonical_name": "S-TEC 40 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "STEC40",
+      "S-TEC40",
+      "S TEC 40",
+      "STEC 40"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.0 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA8000C",
+    "canonical_name": "PS Engineering PMA8000C",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA8000C",
+      "PMA-8000C",
+      "PMA 8000C"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.0 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 51R",
+    "canonical_name": "Garmin GDL 51R",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 51R",
+      "GDL-51R",
+      "GDL51R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 51",
+    "canonical_name": "Garmin GDL 51",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 51",
+      "GDL-51",
+      "GDL51"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 850,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 50",
+    "canonical_name": "Garmin GDL 50",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 50",
+      "GDL-50",
+      "GDL50"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 50R",
+    "canonical_name": "Garmin GDL 50R",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 50R",
+      "GDL-50R",
+      "GDL50R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 52",
+    "canonical_name": "Garmin GDL 52",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 52",
+      "GDL-52",
+      "GDL52"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 49",
+    "canonical_name": "Garmin GDL 49 Datalink",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 49",
+      "GDL-49",
+      "GDL49"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 393D",
+    "canonical_name": "Garmin GDL 393D",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 393D",
+      "GDL-393D",
+      "GDL393D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 39R",
+    "canonical_name": "Garmin GDL 39R",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 39R",
+      "GDL-39R",
+      "GDL39R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 320",
+    "canonical_name": "Garmin GTX 320",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 320",
+      "GTX-320",
+      "GTX320"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 33R",
+    "canonical_name": "Garmin GTX 33R",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 33R",
+      "GTX-33R",
+      "GTX33R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 330D",
+    "canonical_name": "Garmin GTX 330D",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 330D",
+      "GTX-330D",
+      "GTX330D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 337",
+    "canonical_name": "Garmin GTX 337",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 337",
+      "GTX-337",
+      "GTX337"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 340",
+    "canonical_name": "Garmin GTX 340",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 340",
+      "GTX-340",
+      "GTX340"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 345D",
+    "canonical_name": "Garmin GTX 345D",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 345D",
+      "GTX-345D",
+      "GTX345D"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 355",
+    "canonical_name": "Garmin GTX 355",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 355",
+      "GTX-355",
+      "GTX355"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 435",
+    "canonical_name": "Garmin GTX 435",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 435",
+      "GTX-435",
+      "GTX435"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 35R",
+    "canonical_name": "Garmin GTX 35R",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 35R",
+      "GTX-35R",
+      "GTX35R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 300",
+    "canonical_name": "Garmin GTX 300",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 300",
+      "GTX-300",
+      "GTX300"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 650,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 200",
+    "canonical_name": "Garmin GTX 200",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 200",
+      "GTX-200",
+      "GTX200"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 750",
+    "canonical_name": "Garmin GTX 750",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 750",
+      "GTX-750",
+      "GTX750"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 245R",
+    "canonical_name": "Garmin GTX 245R",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 245R",
+      "GTX-245R",
+      "GTX245R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 328",
+    "canonical_name": "Garmin GTX 328",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 328",
+      "GTX-328",
+      "GTX328"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1500",
+    "canonical_name": "Garmin GDU 1500 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 1500",
+      "GDU-1500",
+      "GDU1500"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1550",
+    "canonical_name": "Garmin GDU 1550 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 1550",
+      "GDU-1550",
+      "GDU1550"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 1042",
+    "canonical_name": "Garmin GDU 1042 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 1042",
+      "GDU-1042",
+      "GDU1042"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 465",
+    "canonical_name": "Garmin GDU 465 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 465",
+      "GDU-465",
+      "GDU465"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 470",
+    "canonical_name": "Garmin GDU 470 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 470",
+      "GDU-470",
+      "GDU470"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDU 10",
+    "canonical_name": "Garmin GDU 10 Display",
+    "function_category": "Display",
+    "tso_refs": [],
+    "aliases": [
+      "GDU 10",
+      "GDU-10",
+      "GDU10"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 710",
+    "canonical_name": "Garmin GMC 710 AFCS Controller",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC 710",
+      "GMC-710",
+      "GMC710"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 707",
+    "canonical_name": "Garmin GMC 707 AFCS Controller",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC 707",
+      "GMC-707",
+      "GMC707"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 350",
+    "canonical_name": "Garmin GMC 350 AFCS Controller",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC 350",
+      "GMC-350",
+      "GMC350"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMC 307",
+    "canonical_name": "Garmin GMC 307 AFCS Controller",
+    "function_category": "Autopilot Controller",
+    "tso_refs": [],
+    "aliases": [
+      "GMC 307",
+      "GMC-307",
+      "GMC307"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GCU 477",
+    "canonical_name": "Garmin GCU 477 Controller",
+    "function_category": "Control Unit",
+    "tso_refs": [],
+    "aliases": [
+      "GCU 477",
+      "GCU-477",
+      "GCU477"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GCU 485",
+    "canonical_name": "Garmin GCU 485 Controller",
+    "function_category": "Control Unit",
+    "tso_refs": [],
+    "aliases": [
+      "GCU 485",
+      "GCU-485",
+      "GCU485"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 72A",
+    "canonical_name": "Garmin GDC 72A Air Data Computer",
+    "function_category": "Air Data Computer",
+    "tso_refs": [],
+    "aliases": [
+      "GDC 72A",
+      "GDC-72A",
+      "GDC72A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 74B",
+    "canonical_name": "Garmin GDC 74B Air Data Computer",
+    "function_category": "Air Data Computer",
+    "tso_refs": [],
+    "aliases": [
+      "GDC 74B",
+      "GDC-74B",
+      "GDC74B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDC 7400",
+    "canonical_name": "Garmin GDC 7400 Air Data Computer",
+    "function_category": "Air Data Computer",
+    "tso_refs": [],
+    "aliases": [
+      "GDC 7400",
+      "GDC-7400",
+      "GDC7400"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GRS 56",
+    "canonical_name": "Garmin GRS 56 AHRS",
+    "function_category": "AHRS",
+    "tso_refs": [],
+    "aliases": [
+      "GRS 56",
+      "GRS-56",
+      "GRS56"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GRS 72",
+    "canonical_name": "Garmin GRS 72 AHRS",
+    "function_category": "AHRS",
+    "tso_refs": [],
+    "aliases": [
+      "GRS 72",
+      "GRS-72",
+      "GRS72"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMU 22",
+    "canonical_name": "Garmin GMU 22 Magnetometer",
+    "function_category": "Magnetometer",
+    "tso_refs": [],
+    "aliases": [
+      "GMU 22",
+      "GMU-22",
+      "GMU22"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTS 855",
+    "canonical_name": "Garmin GTS 855 Traffic",
+    "function_category": "Traffic System",
+    "tso_refs": [],
+    "aliases": [
+      "GTS 855",
+      "GTS-855",
+      "GTS855"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTC 345",
+    "canonical_name": "Garmin GTC 345 Controller",
+    "function_category": "Control Unit",
+    "tso_refs": [],
+    "aliases": [
+      "GTC 345",
+      "GTC-345",
+      "GTC345"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTC 575",
+    "canonical_name": "Garmin GTC 575 Controller",
+    "function_category": "Control Unit",
+    "tso_refs": [],
+    "aliases": [
+      "GTC 575",
+      "GTC-575",
+      "GTC575"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 245",
+    "canonical_name": "Garmin GMA 245 Audio Panel",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "GMA 245",
+      "GMA-245",
+      "GMA245"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GMA 3659",
+    "canonical_name": "Garmin GMA 3659 Audio Panel",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "GMA 3659",
+      "GMA-3659",
+      "GMA3659"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GNX 750",
+    "canonical_name": "Garmin GNX 750",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "GNX 750",
+      "GNX-750",
+      "GNX750"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 12000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 35A",
+    "canonical_name": "BendixKing KLN 35A",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 35A",
+      "KLN-35A",
+      "KLN35A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 62A",
+    "canonical_name": "BendixKing KLN 62A",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 62A",
+      "KLN-62A",
+      "KLN62A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 89",
+    "canonical_name": "BendixKing KLN 89",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 89",
+      "KLN-89",
+      "KLN89"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 90",
+    "canonical_name": "BendixKing KLN 90",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 90",
+      "KLN-90",
+      "KLN90"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 90A",
+    "canonical_name": "BendixKing KLN 90A",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 90A",
+      "KLN-90A",
+      "KLN90A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 94B",
+    "canonical_name": "BendixKing KLN 94B",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 94B",
+      "KLN-94B",
+      "KLN94B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KLN 900",
+    "canonical_name": "BendixKing KLN 900",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "KLN 900",
+      "KLN-900",
+      "KLN900"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 76A",
+    "canonical_name": "BendixKing KX 76A",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "KX 76A",
+      "KX-76A",
+      "KX76A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 550,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 155S",
+    "canonical_name": "BendixKing KX 155S",
+    "function_category": "Nav/Comm",
+    "tso_refs": [],
+    "aliases": [
+      "KX 155S",
+      "KX-155S",
+      "KX155S"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 950,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KFC 325",
+    "canonical_name": "BendixKing KFC 325",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "KFC 325",
+      "KFC-325",
+      "KFC325"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 20",
+    "canonical_name": "S-TEC 20 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 20",
+      "S-TEC 20",
+      "STEC 20",
+      "STEC-20",
+      "STEC20"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 30A",
+    "canonical_name": "S-TEC 30A Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 30A",
+      "S-TEC 30A",
+      "STEC 30A",
+      "STEC-30A",
+      "STEC30A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 36",
+    "canonical_name": "S-TEC 36 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 36",
+      "S-TEC 36",
+      "STEC 36",
+      "STEC-36",
+      "STEC36"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 65",
+    "canonical_name": "S-TEC 65 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 65",
+      "S-TEC 65",
+      "STEC 65",
+      "STEC-65",
+      "STEC65"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 65W",
+    "canonical_name": "S-TEC 65W Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 65W",
+      "S-TEC 65W",
+      "STEC 65W",
+      "STEC-65W",
+      "STEC65W"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 180",
+    "canonical_name": "S-TEC 180 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 180",
+      "S-TEC 180",
+      "STEC 180",
+      "STEC-180",
+      "STEC180"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 1972",
+    "canonical_name": "S-TEC 1972 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 1972",
+      "S-TEC 1972",
+      "STEC 1972",
+      "STEC-1972",
+      "STEC1972"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 1977",
+    "canonical_name": "S-TEC 1977 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 1977",
+      "S-TEC 1977",
+      "STEC 1977",
+      "STEC-1977",
+      "STEC1977"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 1979",
+    "canonical_name": "S-TEC 1979 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 1979",
+      "S-TEC 1979",
+      "STEC 1979",
+      "STEC-1979",
+      "STEC1979"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 1981",
+    "canonical_name": "S-TEC 1981 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 1981",
+      "S-TEC 1981",
+      "STEC 1981",
+      "STEC-1981",
+      "STEC1981"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 360",
+    "canonical_name": "S-TEC 360 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 360",
+      "S-TEC 360",
+      "STEC 360",
+      "STEC-360",
+      "STEC360"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 361",
+    "canonical_name": "S-TEC 361 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 361",
+      "S-TEC 361",
+      "STEC 361",
+      "STEC-361",
+      "STEC361"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 3200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA340",
+    "canonical_name": "PS Engineering PMA340",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA340"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA1000",
+    "canonical_name": "PS Engineering PMA1000",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA1000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 750,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA8000M",
+    "canonical_name": "PS Engineering PMA8000M",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA8000M"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA459B",
+    "canonical_name": "PS Engineering PMA459B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA459B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1600,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA450C",
+    "canonical_name": "PS Engineering PMA450C",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA450C"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "L3Harris",
+    "model": "NGT-900",
+    "canonical_name": "L3Harris NGT-900 ADS-B",
+    "function_category": "ADS-B",
+    "tso_refs": [],
+    "aliases": [
+      "NGT-900",
+      "NGT900"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2100,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 740Xi",
+    "canonical_name": "Garmin GTN 740Xi",
+    "function_category": "Navigator",
+    "tso_refs": [],
+    "aliases": [
+      "GTN 740Xi",
+      "GTN-740Xi",
+      "GTN740Xi"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 15000,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.1 unresolved-token pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTS 8000",
+    "canonical_name": "Garmin GTS 8000 Traffic",
+    "function_category": "Traffic System",
+    "tso_refs": [],
+    "aliases": [
+      "GTS 8000",
+      "GTS-8000",
+      "GTS8000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 6500,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTN 327",
+    "canonical_name": "Garmin GTN 327",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTN 327",
+      "GTN-327",
+      "GTN327"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1800,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GDL 52R",
+    "canonical_name": "Garmin GDL 52R",
+    "function_category": "Datalink Receiver",
+    "tso_refs": [],
+    "aliases": [
+      "GDL 52R",
+      "GDL-52R",
+      "GDL52R"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1400,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTX 33X",
+    "canonical_name": "Garmin GTX 33X",
+    "function_category": "Transponder",
+    "tso_refs": [],
+    "aliases": [
+      "GTX 33X",
+      "GTX-33X",
+      "GTX33X"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "GTS 600",
+    "canonical_name": "Garmin GTS 600 Traffic",
+    "function_category": "Traffic System",
+    "tso_refs": [],
+    "aliases": [
+      "GTS 600",
+      "GTS-600",
+      "GTS600"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 2300,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "glass",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "S-TEC",
+    "model": "STEC 2100",
+    "canonical_name": "S-TEC 2100 Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [],
+    "aliases": [
+      "S TEC 2100",
+      "S-TEC 2100",
+      "STEC 2100",
+      "STEC-2100",
+      "STEC2100"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 4200,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA700B",
+    "canonical_name": "PS Engineering PMA700B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA700B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA450A",
+    "canonical_name": "PS Engineering PMA450A",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA450A"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 1700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "PS Engineering",
+    "model": "PMA600B",
+    "canonical_name": "PS Engineering PMA600B",
+    "function_category": "Audio Panel",
+    "tso_refs": [],
+    "aliases": [
+      "PMA600B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 155B",
+    "canonical_name": "BendixKing KX 155B",
+    "function_category": "Nav/Comm",
+    "tso_refs": [],
+    "aliases": [
+      "KX 155B",
+      "KX-155B",
+      "KX155B"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 900,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "BendixKing",
+    "model": "KX 170",
+    "canonical_name": "BendixKing KX 170",
+    "function_category": "Nav/Comm",
+    "tso_refs": [],
+    "aliases": [
+      "KX 170",
+      "KX-170",
+      "KX170"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "used_inventory_2026",
+    "market_estimate_usd": 700,
+    "market_estimate_source": "used_inventory_2026",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "piston_single",
+    "notes": "Added from v2.1.2 unresolved micro-pass."
   }
 ]

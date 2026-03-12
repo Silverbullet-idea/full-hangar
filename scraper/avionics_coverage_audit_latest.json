@@ -1,10 +1,261 @@
 {
   "lookback_days": 90,
-  "observation_rows_total": 55,
-  "listings_with_observations": 37,
-  "matched_rows": 55,
-  "unresolved_rows": 0,
-  "matched_rate_pct": 100.0,
+  "cutoff_date": "2025-12-12",
+  "listings_scanned": 8319,
+  "listings_with_text": 6540,
+  "listings_with_avionics_text": 3096,
+  "listings_with_observations": 2487,
+  "listings_with_observations_in_avionics_text": 2362,
+  "listings_with_unresolved": 31,
+  "observation_rows_total": 8399,
+  "matched_rows": 8363,
+  "unresolved_rows": 36,
   "avg_match_confidence": 0.95,
-  "top_unresolved_tokens": []
+  "matched_rate_pct": 99.57,
+  "unresolved_rate_pct": 0.43,
+  "extraction_coverage_pct": 76.29,
+  "top_unresolved_tokens": [
+    {
+      "token": "kx170b",
+      "count": 2
+    },
+    {
+      "token": "gia63",
+      "count": 2
+    },
+    {
+      "token": "gdu25",
+      "count": 2
+    },
+    {
+      "token": "gia275",
+      "count": 2
+    },
+    {
+      "token": "kap100",
+      "count": 2
+    },
+    {
+      "token": "kx175b",
+      "count": 1
+    },
+    {
+      "token": "gtn345",
+      "count": 1
+    },
+    {
+      "token": "pma6000",
+      "count": 1
+    },
+    {
+      "token": "gdc74",
+      "count": 1
+    },
+    {
+      "token": "gtx435",
+      "count": 1
+    },
+    {
+      "token": "kln90a",
+      "count": 1
+    },
+    {
+      "token": "pma150",
+      "count": 1
+    },
+    {
+      "token": "gtx345rw",
+      "count": 1
+    },
+    {
+      "token": "gtx650xi",
+      "count": 1
+    },
+    {
+      "token": "gtx245",
+      "count": 1
+    },
+    {
+      "token": "kx135",
+      "count": 1
+    },
+    {
+      "token": "gtx750xi",
+      "count": 1
+    },
+    {
+      "token": "gma20",
+      "count": 1
+    },
+    {
+      "token": "gtx45r",
+      "count": 1
+    },
+    {
+      "token": "gtn335",
+      "count": 1
+    },
+    {
+      "token": "gns400",
+      "count": 1
+    },
+    {
+      "token": "gdc72b",
+      "count": 1
+    },
+    {
+      "token": "gtc580",
+      "count": 1
+    },
+    {
+      "token": "gcu475",
+      "count": 1
+    },
+    {
+      "token": "gtx354r",
+      "count": 1
+    },
+    {
+      "token": "gtn625xi",
+      "count": 1
+    },
+    {
+      "token": "kln89",
+      "count": 1
+    },
+    {
+      "token": "gns355",
+      "count": 1
+    },
+    {
+      "token": "gtx350",
+      "count": 1
+    },
+    {
+      "token": "gdl90",
+      "count": 1
+    },
+    {
+      "token": "pma4000",
+      "count": 1
+    }
+  ],
+  "parser_version_breakdown": {
+    "2.1.3": 6207,
+    "2.0.3": 641,
+    "2.1.2": 253,
+    "2.1.1": 34,
+    "2.0.6": 24,
+    "2.1.0": 17,
+    "2.0.9": 15,
+    "2.0.5": 15,
+    "2.0.7": 6,
+    "2.0.8": 4
+  },
+  "source_breakdown": [
+    {
+      "source_site": "trade_a_plane",
+      "listings_scanned": 3347,
+      "listings_with_avionics_text": 1508,
+      "listings_with_observations": 1246,
+      "listings_with_observations_in_avionics_text": 1197,
+      "listings_with_unresolved": 19,
+      "matched_rows": 4756,
+      "unresolved_rows": 19,
+      "observation_rows_total": 4775,
+      "matched_rate_pct": 99.6,
+      "extraction_coverage_pct": 79.38
+    },
+    {
+      "source_site": "controller",
+      "listings_scanned": 1703,
+      "listings_with_avionics_text": 639,
+      "listings_with_observations": 567,
+      "listings_with_observations_in_avionics_text": 554,
+      "listings_with_unresolved": 12,
+      "matched_rows": 2359,
+      "unresolved_rows": 17,
+      "observation_rows_total": 2376,
+      "matched_rate_pct": 99.28,
+      "extraction_coverage_pct": 86.7
+    },
+    {
+      "source_site": "globalair",
+      "listings_scanned": 1727,
+      "listings_with_avionics_text": 416,
+      "listings_with_observations": 292,
+      "listings_with_observations_in_avionics_text": 265,
+      "listings_with_unresolved": 0,
+      "matched_rows": 453,
+      "unresolved_rows": 0,
+      "observation_rows_total": 453,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 63.7
+    },
+    {
+      "source_site": "aerotrader",
+      "listings_scanned": 280,
+      "listings_with_avionics_text": 148,
+      "listings_with_observations": 122,
+      "listings_with_observations_in_avionics_text": 120,
+      "listings_with_unresolved": 0,
+      "matched_rows": 346,
+      "unresolved_rows": 0,
+      "observation_rows_total": 346,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 81.08
+    },
+    {
+      "source_site": "aso",
+      "listings_scanned": 606,
+      "listings_with_avionics_text": 234,
+      "listings_with_observations": 166,
+      "listings_with_observations_in_avionics_text": 150,
+      "listings_with_unresolved": 0,
+      "matched_rows": 327,
+      "unresolved_rows": 0,
+      "observation_rows_total": 327,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 64.1
+    },
+    {
+      "source_site": "avbuyer",
+      "listings_scanned": 637,
+      "listings_with_avionics_text": 146,
+      "listings_with_observations": 89,
+      "listings_with_observations_in_avionics_text": 71,
+      "listings_with_unresolved": 0,
+      "matched_rows": 113,
+      "unresolved_rows": 0,
+      "observation_rows_total": 113,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 48.63
+    },
+    {
+      "source_site": "barnstormers",
+      "listings_scanned": 17,
+      "listings_with_avionics_text": 5,
+      "listings_with_observations": 5,
+      "listings_with_observations_in_avionics_text": 5,
+      "listings_with_unresolved": 0,
+      "matched_rows": 9,
+      "unresolved_rows": 0,
+      "observation_rows_total": 9,
+      "matched_rate_pct": 100.0,
+      "extraction_coverage_pct": 100.0
+    },
+    {
+      "source_site": "unknown",
+      "listings_scanned": 2,
+      "listings_with_avionics_text": 0,
+      "listings_with_observations": 0,
+      "listings_with_observations_in_avionics_text": 0,
+      "listings_with_unresolved": 0,
+      "matched_rows": 0,
+      "unresolved_rows": 0,
+      "observation_rows_total": 0,
+      "matched_rate_pct": 0.0,
+      "extraction_coverage_pct": 0.0
+    }
+  ]
 }

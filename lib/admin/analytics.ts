@@ -2,6 +2,8 @@ import { createPrivilegedServerClient } from "@/lib/supabase/server";
 import { COMPLETENESS_FIELDS, getRecommendationLevel, type CompletenessField } from "@/lib/admin/completeness";
 
 type ListingRow = Record<string, unknown>;
+const AVIONICS_HINT_RE =
+  /\b(avionics|panel|autopilot|transponder|waas|ads[\s-]?b|gtn[\s-]?\d{3}|gns[\s-]?\d{3}|gfc[\s-]?\d{3}|gtx[\s-]?\d{2,4}|ifd[\s-]?\d{3}|g1000|g500|g600|aspen|stormscope|taws|svt|esp|engine\s*monitor|jpi|pma[\s-]?\d{2,4}|kx[\s-]?\d{2,4}|kap[\s-]?\d{2,4}|kfc[\s-]?\d{2,4})\b/i;
 
 const SOURCE_ORDER = [
   "tradaplane",
@@ -89,6 +91,48 @@ function asArray(value: unknown): unknown[] {
     return trimmed.includes(",") ? trimmed.split(",").map((part) => part.trim()).filter(Boolean) : [trimmed];
   }
   return [];
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  if (!value) return {};
+  if (typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return {};
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function normalizeToken(value: unknown): string {
+  const raw = String(value ?? "").toLowerCase();
+  const alnumSpaces = raw.replace(/[^a-z0-9]+/g, " ");
+  return alnumSpaces.replace(/\s+/g, " ").trim();
+}
+
+function compareSemver(a: string, b: string): number {
+  const parse = (v: string) =>
+    v
+      .split(".")
+      .map((part) => Number.parseInt(part, 10))
+      .map((n) => (Number.isFinite(n) ? n : 0));
+  const av = parse(a);
+  const bv = parse(b);
+  const maxLen = Math.max(av.length, bv.length);
+  for (let i = 0; i < maxLen; i += 1) {
+    const ai = av[i] ?? 0;
+    const bi = bv[i] ?? 0;
+    if (ai > bi) return 1;
+    if (ai < bi) return -1;
+  }
+  return 0;
 }
 
 function hasFilledValue(value: unknown, field: string): boolean {
@@ -757,5 +801,184 @@ export async function listInvitesWithSessions() {
       total_activated: inviteRows.filter((row) => Boolean(row.used_at)).length,
       currently_active_sessions: inviteRows.filter((row) => row.session_active === true).length,
     },
+  };
+}
+
+export async function computeAvionicsIntelligence(options?: { days?: number; top?: number }) {
+  const supabase = createPrivilegedServerClient();
+  const lookbackDays = Math.max(1, Number(options?.days ?? 90));
+  const topN = Math.max(1, Number(options?.top ?? 30));
+  const cutoffDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  let offset = 0;
+  const pageSize = 1000;
+  let listingsScanned = 0;
+  let listingsWithAvionicsText = 0;
+  let listingsWithObservations = 0;
+  let listingsWithObservationsInAvionicsText = 0;
+  let observationRowsTotal = 0;
+  let matchedRows = 0;
+  let unresolvedRows = 0;
+  let confidenceSum = 0;
+  let confidenceCount = 0;
+
+  const unresolvedCounts = new Map<string, number>();
+  const parserCounts = new Map<string, number>();
+  const sourceStats = new Map<
+    string,
+    {
+      listings_scanned: number;
+      listings_with_avionics_text: number;
+      listings_with_observations: number;
+      matched_rows: number;
+      unresolved_rows: number;
+    }
+  >();
+
+  while (true) {
+    const to = offset + pageSize - 1;
+    const page = await supabase
+      .from("aircraft_listings")
+      .select("source_site,last_seen_date,avionics_description,description_full,description,description_intelligence")
+      .gte("last_seen_date", cutoffDate)
+      .order("last_seen_date", { ascending: false })
+      .range(offset, to);
+
+    if (page.error) throw new Error(page.error.message);
+    const rows = (page.data ?? []) as ListingRow[];
+    if (rows.length === 0) break;
+
+    for (const row of rows) {
+      listingsScanned += 1;
+      const source = inferSource(row);
+      if (!sourceStats.has(source)) {
+        sourceStats.set(source, {
+          listings_scanned: 0,
+          listings_with_avionics_text: 0,
+          listings_with_observations: 0,
+          matched_rows: 0,
+          unresolved_rows: 0,
+        });
+      }
+      const sourceRow = sourceStats.get(source)!;
+      sourceRow.listings_scanned += 1;
+
+      const text = `${String(row.avionics_description ?? "")} ${String(row.description_full ?? "")} ${String(row.description ?? "")}`.trim();
+      const hasAvionicsText = AVIONICS_HINT_RE.test(text);
+      if (hasAvionicsText) {
+        listingsWithAvionicsText += 1;
+        sourceRow.listings_with_avionics_text += 1;
+      }
+
+      const parsed = asObject(row.description_intelligence);
+      const parserVersion = String(parsed.avionics_parser_version ?? "").trim();
+      if (parserVersion) {
+        parserCounts.set(parserVersion, (parserCounts.get(parserVersion) ?? 0) + 1);
+      }
+
+      const detailed = Array.isArray(parsed.avionics_detailed) ? (parsed.avionics_detailed as Array<Record<string, unknown>>) : [];
+      const unresolved = Array.isArray(parsed.avionics_unresolved) ? parsed.avionics_unresolved : [];
+      let rowMatched = 0;
+      let rowUnresolved = 0;
+
+      for (const item of detailed) {
+        const canonical = String(item?.canonical_name ?? "").trim();
+        if (!canonical) continue;
+        rowMatched += 1;
+        const confidence = asNumber(item?.confidence);
+        if (confidence !== null) {
+          confidenceSum += confidence;
+          confidenceCount += 1;
+        }
+      }
+
+      for (const token of unresolved) {
+        const normalized = normalizeToken(token);
+        if (!normalized) continue;
+        rowUnresolved += 1;
+        unresolvedCounts.set(normalized, (unresolvedCounts.get(normalized) ?? 0) + 1);
+      }
+
+      const rowTotal = rowMatched + rowUnresolved;
+      if (rowTotal > 0) {
+        listingsWithObservations += 1;
+        sourceRow.listings_with_observations += 1;
+        if (hasAvionicsText) listingsWithObservationsInAvionicsText += 1;
+      }
+
+      matchedRows += rowMatched;
+      unresolvedRows += rowUnresolved;
+      observationRowsTotal += rowTotal;
+      sourceRow.matched_rows += rowMatched;
+      sourceRow.unresolved_rows += rowUnresolved;
+    }
+
+    offset += rows.length;
+    if (rows.length < pageSize) break;
+  }
+
+  const sortedUnresolved = Array.from(unresolvedCounts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, topN)
+    .map(([token, count]) => ({ token, count }));
+
+  const parserVersionBreakdown = Array.from(parserCounts.entries())
+    .sort((a, b) => compareSemver(b[0], a[0]))
+    .reduce<Record<string, number>>((acc, [version, count]) => {
+      acc[version] = count;
+      return acc;
+    }, {});
+
+  const leadingParserVersion = Object.entries(parserVersionBreakdown).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "unknown";
+  const matchedRatePct = observationRowsTotal > 0 ? Number(((matchedRows / observationRowsTotal) * 100).toFixed(2)) : 0;
+  const unresolvedRatePct = observationRowsTotal > 0 ? Number(((unresolvedRows / observationRowsTotal) * 100).toFixed(2)) : 0;
+  const extractionCoveragePct =
+    listingsWithAvionicsText > 0 ? Number(((listingsWithObservationsInAvionicsText / listingsWithAvionicsText) * 100).toFixed(2)) : 0;
+  const avgMatchConfidence = confidenceCount > 0 ? Number((confidenceSum / confidenceCount).toFixed(4)) : 0;
+
+  const [unitsActive, aliasesTotal, marketValuesTotal, priceObservationsTotal] = await Promise.all([
+    safeCount("avionics_units"),
+    safeCount("avionics_aliases"),
+    safeCount("avionics_market_values"),
+    safeCount("avionics_price_observations"),
+  ]);
+
+  const sourceBreakdown = Array.from(sourceStats.entries())
+    .map(([source, stats]) => {
+      const total = stats.matched_rows + stats.unresolved_rows;
+      return {
+        source_site: source,
+        ...stats,
+        observation_rows_total: total,
+        matched_rate_pct: total > 0 ? Number(((stats.matched_rows / total) * 100).toFixed(2)) : 0,
+      };
+    })
+    .sort((a, b) => b.observation_rows_total - a.observation_rows_total);
+
+  return {
+    computed_at: new Date().toISOString(),
+    window_days: lookbackDays,
+    cutoff_date: cutoffDate,
+    listings_scanned: listingsScanned,
+    listings_with_avionics_text: listingsWithAvionicsText,
+    listings_with_observations: listingsWithObservations,
+    listings_with_observations_in_avionics_text: listingsWithObservationsInAvionicsText,
+    observation_rows_total: observationRowsTotal,
+    matched_rows: matchedRows,
+    unresolved_rows: unresolvedRows,
+    matched_rate_pct: matchedRatePct,
+    unresolved_rate_pct: unresolvedRatePct,
+    extraction_coverage_pct: extractionCoveragePct,
+    avg_match_confidence: avgMatchConfidence,
+    parser_version_breakdown: parserVersionBreakdown,
+    leading_parser_version: leadingParserVersion,
+    top_unresolved_tokens: sortedUnresolved,
+    catalog: {
+      units_active: unitsActive,
+      aliases_total: aliasesTotal,
+      market_values_total: marketValuesTotal,
+      price_observations_total: priceObservationsTotal,
+    },
+    source_breakdown: sourceBreakdown,
   };
 }
