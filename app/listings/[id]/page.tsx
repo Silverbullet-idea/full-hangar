@@ -54,8 +54,13 @@ type ListingPageProps = {
 type ScoreMetricRow = [string, ReactNode]
 
 const getListingForSeo = cache(async (id: string) => {
-  const listing = await getListingById(id)
-  return listing ? (listing as AircraftListing) : null
+  try {
+    const listing = await getListingById(id)
+    return listing ? (listing as AircraftListing) : null
+  } catch (error) {
+    console.error("[listings/[id]] metadata lookup failed", { id, error })
+    return null
+  }
 })
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -131,7 +136,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     typeof returnToValue === "string" && returnToValue.startsWith("/listings")
       ? returnToValue
       : "/listings"
-  const [listing, raw] = await Promise.all([getListingById(id), getListingRawById(id)])
+  let listing: AircraftListing | null = null
+  let raw: UnknownRow = null
+  try {
+    const [listingResult, rawResult] = await Promise.all([getListingById(id), getListingRawById(id)])
+    listing = listingResult ? (listingResult as AircraftListing) : null
+    raw = rawResult as UnknownRow
+  } catch (error) {
+    console.error("[listings/[id]] initial data lookup failed", { id, error })
+  }
 
   if (!listing) {
     return (
@@ -242,7 +255,18 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const fractionalPricingContext = descriptionIntelligence.pricingContext
   const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
   const fractionalPricingNote = buildFractionalPricingNote(fractionalBreakdown)
-  const marketPricing = await getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year)
+  let marketPricing: Awaited<ReturnType<typeof getSimilarMarketPricing>> = null
+  try {
+    marketPricing = await getSimilarMarketPricing(listingRow.make, listingRow.model, listingRow.year)
+  } catch (error) {
+    console.error("[listings/[id]] market pricing lookup failed", {
+      id,
+      make: listingRow.make,
+      model: listingRow.model,
+      year: listingRow.year,
+      error,
+    })
+  }
   const effectiveCompSource = resolveCompSource(dealComparisonSource, marketPricing?.sampleSize ?? null)
   const effectiveDataConfidence = resolveDataConfidence(dataConfidence, listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null)
   const scoreMethodSummary = buildScoreMethodSummary(
@@ -253,7 +277,17 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     scoreExplanation.length
   )
   const confidenceSignals = buildConfidenceSignals(listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null, dataConfidence)
-  const priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
+  let priceHistoryRaw: Awaited<ReturnType<typeof getListingPriceHistory>> = []
+  try {
+    priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
+  } catch (error) {
+    console.error("[listings/[id]] price history lookup failed", {
+      id,
+      source: listingRow.source,
+      sourceId: listingRow.source_id,
+      error,
+    })
+  }
   const priceHistory = normalizePriceHistory(priceHistoryRaw)
   const priceHistoryStats = buildPriceHistoryStats(priceHistory)
   const priceHistoryChart = buildPriceHistoryChart(priceHistory)
