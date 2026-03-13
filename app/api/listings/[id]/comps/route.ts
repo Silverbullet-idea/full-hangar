@@ -92,6 +92,10 @@ type QueryResult = {
 
 type ListingsTableName = "aircraft_listings" | "public_listings"
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
 async function runListingsQueryWithFallback(
   run: (
     client: ReturnType<typeof createServerClient>,
@@ -122,11 +126,13 @@ async function runListingsQueryWithFallback(
 }
 
 async function getListingByIdPublic(id: string): Promise<Record<string, unknown> | null> {
-  const byId = await runListingsQueryWithFallback(async (client, table) => {
-    return (await client.from(table).select("*").eq("id", id).limit(1)) as unknown as QueryResult
-  })
-  if (byId.length > 0) {
-    return byId[0]
+  if (isUuid(id)) {
+    const byId = await runListingsQueryWithFallback(async (client, table) => {
+      return (await client.from(table).select("*").eq("id", id).limit(1)) as unknown as QueryResult
+    })
+    if (byId.length > 0) {
+      return byId[0]
+    }
   }
 
   const bySource = await runListingsQueryWithFallback(async (client, table) => {
