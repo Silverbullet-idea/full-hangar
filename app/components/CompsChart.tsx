@@ -80,6 +80,14 @@ type ScatterPoint = {
 const TARGET_COLOR = "#FF9900";
 const COMP_COLOR = "#999999";
 const HOVER_COLOR = "#FF9900";
+const MIN_PRICE_AXIS_PADDING = 50_000;
+const PRICE_AXIS_PADDING_PCT = 0.12;
+const PRICE_AXIS_ROUNDING_STEP = 25_000;
+const YEAR_AXIS_MIN_PADDING = 2;
+const YEAR_AXIS_PADDING_PCT = 0.08;
+const MIN_TIME_AXIS_PADDING = 100;
+const TIME_AXIS_PADDING_PCT = 0.12;
+const TIME_AXIS_ROUNDING_STEP = 100;
 
 function formatMoney(value: number | null): string {
   if (typeof value !== "number") return "N/A";
@@ -184,22 +192,6 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   }, [payload, viewMode]);
 
   const yLabel = yMetric === "engine_smoh" ? "Engine SMOH" : yMetric === "year" ? "Year" : "Total Time";
-  const yearAxisDomain = useMemo<[number, number] | undefined>(() => {
-    if (yMetric !== "year") return undefined;
-    const yearValues = [
-      ...(payload?.comps.map((row) => row.year).filter((value): value is number => typeof value === "number" && value >= 1900) ?? []),
-      ...(typeof payload?.target.year === "number" && payload.target.year >= 1900 ? [payload.target.year] : []),
-    ];
-    if (yearValues.length === 0) {
-      return [1940, 2025];
-    }
-    const minYear = Math.min(...yearValues);
-    const maxYear = Math.max(...yearValues);
-    const lowerBound = Math.max(1940, minYear - 5);
-    const upperBound = Math.max(lowerBound + 10, maxYear + 5);
-    return [lowerBound, upperBound];
-  }, [payload, yMetric]);
-
   const points = useMemo<ScatterPoint[]>(() => {
     if (!payload) return [];
     const hasValidPrice = (value: number | null) => typeof value === "number" && value > 0;
@@ -306,6 +298,67 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       missingY,
     };
   }, [payload, yMetric]);
+
+  const priceAxisDomain = useMemo<[number, number] | undefined>(() => {
+    const prices = points
+      .map((point) => point.price)
+      .filter((value): value is number => Number.isFinite(value) && value > 0);
+    if (prices.length === 0) return undefined;
+
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const spread = maxPrice - minPrice;
+    const baseline = spread > 0 ? spread : maxPrice;
+    const rawPadding = Math.max(MIN_PRICE_AXIS_PADDING, baseline * PRICE_AXIS_PADDING_PCT);
+
+    const lowerBoundRaw = Math.max(0, minPrice - rawPadding);
+    const upperBoundRaw = maxPrice + rawPadding;
+    const lowerBound = Math.max(0, Math.floor(lowerBoundRaw / PRICE_AXIS_ROUNDING_STEP) * PRICE_AXIS_ROUNDING_STEP);
+    const upperBound = Math.ceil(upperBoundRaw / PRICE_AXIS_ROUNDING_STEP) * PRICE_AXIS_ROUNDING_STEP;
+
+    if (upperBound <= lowerBound) {
+      return [Math.max(0, minPrice - MIN_PRICE_AXIS_PADDING), maxPrice + MIN_PRICE_AXIS_PADDING];
+    }
+    return [lowerBound, upperBound];
+  }, [points]);
+
+  const yAxisDomain = useMemo<[number, number] | undefined>(() => {
+    if (yMetric === "year") {
+      const yearValues = points
+        .map((point) => point.yValue)
+        .filter((value): value is number => Number.isFinite(value) && value >= 1900);
+      if (yearValues.length === 0) {
+        return [1940, 2025];
+      }
+      const minYear = Math.min(...yearValues);
+      const maxYear = Math.max(...yearValues);
+      const spread = maxYear - minYear;
+      const yearPadding = Math.max(YEAR_AXIS_MIN_PADDING, Math.ceil(spread * YEAR_AXIS_PADDING_PCT));
+      const lowerBound = Math.max(1940, minYear - yearPadding);
+      const upperBound = Math.max(lowerBound + 6, maxYear + yearPadding);
+      return [lowerBound, upperBound];
+    }
+
+    const timeValues = points
+      .map((point) => point.yValue)
+      .filter((value): value is number => Number.isFinite(value) && value > 0);
+    if (timeValues.length === 0) return undefined;
+
+    const minTime = Math.min(...timeValues);
+    const maxTime = Math.max(...timeValues);
+    const spread = maxTime - minTime;
+    const baseline = spread > 0 ? spread : maxTime;
+    const rawPadding = Math.max(MIN_TIME_AXIS_PADDING, baseline * TIME_AXIS_PADDING_PCT);
+    const lowerRaw = Math.max(0, minTime - rawPadding);
+    const upperRaw = maxTime + rawPadding;
+    const lowerBound = Math.max(0, Math.floor(lowerRaw / TIME_AXIS_ROUNDING_STEP) * TIME_AXIS_ROUNDING_STEP);
+    const upperBound = Math.ceil(upperRaw / TIME_AXIS_ROUNDING_STEP) * TIME_AXIS_ROUNDING_STEP;
+
+    if (upperBound <= lowerBound) {
+      return [Math.max(0, minTime - MIN_TIME_AXIS_PADDING), maxTime + MIN_TIME_AXIS_PADDING];
+    }
+    return [lowerBound, upperBound];
+  }, [points, yMetric]);
 
   const marketCompsTableRows = useMemo(() => {
     if (!payload) return [];
@@ -496,7 +549,9 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 type="number"
                 dataKey="price"
                 name="Price"
+                domain={priceAxisDomain}
                 tickFormatter={formatPriceTick}
+                tickCount={6}
                 stroke={axisTextColor}
                 tick={{ fill: axisTextColor, fontSize: 12 }}
               />
@@ -504,7 +559,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 type="number"
                 dataKey="yValue"
                 name={yLabel}
-                domain={yearAxisDomain}
+                domain={yAxisDomain}
                 allowDecimals={false}
                 stroke={axisTextColor}
                 tick={{ fill: axisTextColor, fontSize: 12 }}
