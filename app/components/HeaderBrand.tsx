@@ -8,10 +8,11 @@ type HeaderBrandProps = {
 }
 
 export default function HeaderBrand({ className = "h-10 w-auto" }: HeaderBrandProps) {
-  const { theme } = useTheme()
+  const { theme, mounted } = useTheme()
+  const resolvedTheme = mounted ? theme : "light"
   const sources = useMemo(
     () =>
-      theme === "light"
+      resolvedTheme === "light"
         ? [
             process.env.NEXT_PUBLIC_BRAND_LOGO_LIGHT_URL,
             "/branding/FullHangarLight.png",
@@ -22,13 +23,13 @@ export default function HeaderBrand({ className = "h-10 w-auto" }: HeaderBrandPr
             "/branding/FullHangar.png",
             "/branding/FullHangar.svg",
           ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
-    [theme]
+    [resolvedTheme]
   )
   const [sourceIndex, setSourceIndex] = useState(0)
 
   useEffect(() => {
     setSourceIndex(0)
-  }, [theme])
+  }, [resolvedTheme])
 
   if (sources.length > 0 && sourceIndex < sources.length) {
     return (

@@ -6,6 +6,7 @@ export type ThemeMode = "dark" | "light"
 
 type ThemeContextValue = {
   theme: ThemeMode
+  mounted: boolean
   setTheme: (next: ThemeMode) => void
   toggleTheme: () => void
 }
@@ -23,16 +24,19 @@ function applyTheme(theme: ThemeMode) {
 function readStoredTheme(): ThemeMode {
   if (typeof window === "undefined") return DEFAULT_THEME
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === "light" ? "light" : "dark"
+  if (stored === "dark") return "dark"
+  return "light"
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const initial = readStoredTheme()
     setThemeState(initial)
     applyTheme(initial)
+    setMounted(true)
   }, [])
 
   const setTheme = (next: ThemeMode) => {
@@ -50,10 +54,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
+      mounted,
       setTheme,
       toggleTheme,
     }),
-    [theme]
+    [theme, mounted]
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

@@ -57,6 +57,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing detail comps API hardening shipped: `/api/listings/[id]/comps` now queries `public_listings` directly and avoids `aircraft_listings` dependency so chart payloads continue to resolve under public-role constraints.
 - Listing detail comps API fallback hardened again: route now attempts privileged `aircraft_listings` reads first and auto-falls back to `public_listings` on any privileged-query failure to keep chart/table payloads available in mixed-permission environments.
 - Root layout hydration-noise mitigation shipped: `suppressHydrationWarning` is now applied at `html/body` to avoid false-positive text mismatch errors from client bootstrap/theme state variance.
+- Header hydration mismatch fix shipped: theme-dependent header brand/toggle now render a stable pre-mount shell and only apply stored dark-mode state after mount, preventing React `#418` text/src mismatches on detail-page loads.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
