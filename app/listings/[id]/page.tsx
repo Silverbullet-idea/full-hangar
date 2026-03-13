@@ -181,7 +181,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const parsedEngineTbo = descriptionIntelligence.times.engineTbo
   const parsedLastAnnual = descriptionIntelligence.maintenance.lastAnnualInspection || parsedDescription.lastAnnualInspection
   const parsedCylinderHours = descriptionIntelligence.maintenance.cylindersSinceNewHours || parsedDescription.cylindersSinceNewHours
-  const parsedHoursSinceIran = descriptionIntelligence.maintenance.hoursSinceIran || parsedDescription.hoursSinceIran
   const totalTimeHours = typeof listingRow.total_time_airframe === "number"
     ? listingRow.total_time_airframe
     : parsedTotalTime ?? parsedDescription.totalTimeAirframe
@@ -208,6 +207,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     pickText(raw, ["engine_manufacturer", "engine_make"]) ||
     inferEngineManufacturerFromModel(engineModelText)
   const faaTypeEngine = pickText(raw, ["faa_type_engine_detail"])
+  const normalizedEngineType = normalizeEngineTypeLabel(faaTypeEngine, engineModelText, engineManufacturerText)
   const faaAirworthinessCategory = pickText(raw, ["faa_airworthiness_category_detail"])
   const faaAirworthinessClassification = pickText(raw, ["faa_airworthiness_classification_detail"])
   const faaAirworthinessDate = pickText(raw, ["faa_aw_date_detail"])
@@ -410,22 +410,26 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     ["Location", safeDisplay(listingRow.location_label)],
     ["Condition", safeDisplay(conditionText)],
   ]
-  const engineRows: Array<[string, ReactNode]> = [
-    ["Total Time", safeDisplay(formatHours(totalTimeHours))],
-    ["Engine Time SMOH", safeDisplay(formatHours(engineSmohHours))],
-    ["Cylinders Since New", safeDisplay(formatHours(parsedCylinderHours))],
-    ["Hours Since IRAN", safeDisplay(formatHours(parsedHoursSinceIran))],
-    ["Engine TBO", safeDisplay(formatHours(engineTboHours))],
-    ["Engine Manufacturer", safeDisplay(engineManufacturerText)],
-    ["Engine Model", safeDisplay(engineModelText)],
-    ["Last Annual", safeDisplay(parsedLastAnnual)],
-    ["Type Engine", safeDisplay(faaTypeEngine)],
-    ["Airworthiness Category", safeDisplay(faaAirworthinessCategory)],
-    ["Airworthiness Classification", safeDisplay(faaAirworthinessClassification)],
-    ["A/W Date", safeDisplay(formatIsoDate(faaAirworthinessDate))],
-    ["Avionics", renderAvionicsValue(avionicsList, avionicsText)],
-    ["Airworthy", safeDisplay(formatAirworthy(raw, parsedDescription), { unknownAsDash: true })],
-  ]
+  const engineRows: Array<[string, ReactNode]> = []
+  const pushEngineRow = (label: string, rawValue: unknown, rendered: ReactNode) => {
+    if (!hasDisplayValue(rawValue)) return
+    engineRows.push([label, rendered])
+  }
+  pushEngineRow("Total Time", totalTimeHours, safeDisplay(formatHours(totalTimeHours)))
+  pushEngineRow("Engine Time", engineSmohHours, safeDisplay(formatHours(engineSmohHours)))
+  pushEngineRow("Cylinders Since New", parsedCylinderHours, safeDisplay(formatHours(parsedCylinderHours)))
+  pushEngineRow("Engine TBO", engineTboHours, safeDisplay(formatHours(engineTboHours)))
+  pushEngineRow("Engine Manufacturer", engineManufacturerText, safeDisplay(engineManufacturerText))
+  pushEngineRow("Engine Model", engineModelText, safeDisplay(engineModelText))
+  pushEngineRow("Last Annual", parsedLastAnnual, safeDisplay(parsedLastAnnual))
+  pushEngineRow("Engine Type", normalizedEngineType, safeDisplay(normalizedEngineType))
+  if (avionicsList.length > 0 || hasDisplayValue(avionicsText)) {
+    engineRows.push(["Avionics", renderAvionicsValue(avionicsList, avionicsText)])
+  }
+  const airworthyText = formatAirworthy(raw, parsedDescription)
+  if (hasDisplayValue(airworthyText) && airworthyText !== "Unknown") {
+    engineRows.push(["Airworthy", safeDisplay(airworthyText, { unknownAsDash: true })])
+  }
   const faaRows: Array<[string, ReactNode]> = [
     ["N-Number", safeDisplay(nNumber)],
     ["FAA Match", faaMatched ? "Matched" : hasFaaSnapshot ? "Partial" : "Pending enrich"],
@@ -720,6 +724,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           font-size: 0.8rem;
           line-height: 1.35;
         }
+        .score-method-list {
+          margin: 0 0 0.6rem;
+          padding-left: 1rem;
+          color: var(--brand-muted);
+          font-size: 0.8rem;
+          line-height: 1.4;
+          display: grid;
+          gap: 0.2rem;
+        }
         .score-notes {
           margin: 0 0 0.6rem;
           border: 1px solid var(--brand-dark);
@@ -892,6 +905,65 @@ function formatAirworthy(raw: UnknownRow, parsedDescription?: ParsedSellerDescri
   const text = pickText(raw, ["airworthy"])
   if (!text && parsedDescription?.airworthy) return parsedDescription.airworthy
   return text || "Unknown"
+}
+
+function normalizeEngineTypeLabel(
+  faaTypeEngine: string | null,
+  engineModel: string | null,
+  engineManufacturer: string | null
+): string | null {
+  const model = (engineModel || "").toLowerCase()
+  const manufacturer = (engineManufacturer || "").toLowerCase()
+  const faaRaw = (faaTypeEngine || "").trim()
+  const faa = faaRaw.toLowerCase()
+
+  if (model.includes("rotax") || manufacturer.includes("rotax")) return "Rotax"
+  if (faa.includes("rotax")) return "Rotax"
+
+  const numericType = /^\d+$/.test(faaRaw) ? Number(faaRaw) : null
+  if (numericType !== null) {
+    if ([1, 7, 8].includes(numericType)) return "Piston"
+    if ([2, 3, 4, 5, 6].includes(numericType)) return "Turbine"
+  }
+
+  if (
+    faa.includes("recip") ||
+    faa.includes("piston") ||
+    faa.includes("4 cycle") ||
+    faa.includes("4-cycle") ||
+    faa.includes("2 cycle") ||
+    faa.includes("2-cycle")
+  ) {
+    return "Piston"
+  }
+
+  if (
+    faa.includes("turb") ||
+    faa.includes("jet") ||
+    faa.includes("shaft") ||
+    faa.includes("fan") ||
+    model.includes("pt6") ||
+    model.includes("tpe") ||
+    model.includes("m601")
+  ) {
+    return "Turbine"
+  }
+
+  if (faaRaw) return "?"
+  return null
+}
+
+function hasDisplayValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (typeof value === "number") return Number.isFinite(value) && value > 0
+  if (typeof value === "string") {
+    const clean = value.trim()
+    if (!clean) return false
+    if (/^(unknown|n\/a|na|none|-|--|tbd)$/i.test(clean)) return false
+    return true
+  }
+  if (Array.isArray(value)) return value.length > 0
+  return true
 }
 
 function calculateTrueCost(askingPrice: number | null, deferredTotal: number | null, trueCost: number | null): number | null {
@@ -1248,10 +1320,8 @@ function buildScoreMethodSummary(
   dealComparisonSource: string | null,
   scoreExplanationCount: number
 ): string {
-  const parts: string[] = []
-  parts.push(
-    `${scoreBreakdown.primaryLabel} is a 0-100 investment signal built from three components: Market Opportunity (45%), Condition (35%), and Execution Readiness (20%).`
-  )
+  const lines: string[] = []
+  lines.push(`${scoreBreakdown.primaryLabel}: 45% Market Opportunity + 35% Condition + 20% Execution Readiness.`)
 
   const hasAllSubscores =
     typeof scoreBreakdown.marketScore === "number" &&
@@ -1266,22 +1336,25 @@ function buildScoreMethodSummary(
     const conditionContribution = conditionScore * 0.35
     const executionContribution = executionScore * 0.2
     const blended = marketContribution + conditionContribution + executionContribution
-    parts.push(
-      `Current component scores are Market ${formatScore(marketScore)}, Condition ${formatScore(conditionScore)}, and Execution ${formatScore(executionScore)}. Weighted contributions are ${marketContribution.toFixed(1)} + ${conditionContribution.toFixed(1)} + ${executionContribution.toFixed(1)} = ${blended.toFixed(1)}.`
+    lines.push(
+      `Current scores: Market ${formatScore(marketScore)}, Condition ${formatScore(conditionScore)}, Execution ${formatScore(executionScore)}.`
+    )
+    lines.push(
+      `Weighted result: ${marketContribution.toFixed(1)} + ${conditionContribution.toFixed(1)} + ${executionContribution.toFixed(1)} = ${blended.toFixed(1)}.`
     )
   }
   if (dealComparisonSource) {
-    parts.push(`Market pricing inputs are sourced from ${dealComparisonSource} using the comps waterfall (exact match first, then broader fallback tiers when needed).`)
+    lines.push(`Market pricing source: ${dealComparisonSource} (exact-first comps waterfall, then broader fallback tiers).`)
   }
   if (dataConfidence) {
-    parts.push(`Data confidence is ${dataConfidence}, which indicates how reliable the underlying listing and comparison data is.`)
+    lines.push(`Data confidence: ${dataConfidence}.`)
   }
   if (pricingConfidence) {
-    parts.push(`Pricing confidence is ${pricingConfidence}, reflecting asking-price and comparables completeness.`)
+    lines.push(`Pricing confidence: ${pricingConfidence}.`)
   }
   if (scoreExplanationCount > 0) {
-    parts.push("The factor list below highlights the strongest positive and negative drivers behind this aircraft's score.")
+    lines.push("See the factor list below for the strongest positive and negative score drivers.")
   }
-  return parts.join(" ")
+  return lines.join("\n")
 }
 

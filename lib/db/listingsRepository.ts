@@ -759,22 +759,32 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const trueCostMin = Number(query.trueCostMin ?? 0);
   const trueCostMax = Number(query.trueCostMax ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
+  const requestedOwnershipType = ownershipType === "fractional" || ownershipType === "full";
   const listBaseTable =
-    ownershipType === "fractional" || ownershipType === "full"
+    requestedOwnershipType
       ? "aircraft_listings"
       : "public_listings";
   const listBaseColumns = columnsForListingsTable(listBaseTable);
   const supabase = createReadServerClient();
 
   if (isDefaultListingsLandingQuery(query)) {
-    return runDefaultCuratedListingsPage(supabase, {
-      listBaseTable,
-      from,
-      to,
-      page,
-      pageSize,
-      ownershipType,
-    });
+    try {
+      return await runDefaultCuratedListingsPage(supabase, {
+        listBaseTable,
+        from,
+        to,
+        page,
+        pageSize,
+        ownershipType,
+      });
+    } catch (error) {
+      const message = String(error instanceof Error ? error.message : "").toLowerCase();
+      // Public API routes should never hard-fail if raw-table access is restricted.
+      if (requestedOwnershipType && message.includes("permission denied") && message.includes("aircraft_listings")) {
+        return getListingsPage({ ...query, ownershipType: "all" });
+      }
+      throw error;
+    }
   }
 
   let dbQuery = supabase
@@ -888,6 +898,12 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     }
   }
   if (result.error) {
+    const permissionDenied =
+      String(result.error.message).toLowerCase().includes("permission denied") &&
+      String(result.error.message).toLowerCase().includes("aircraft_listings");
+    if (permissionDenied && requestedOwnershipType) {
+      return getListingsPage({ ...query, ownershipType: "all" });
+    }
     const timedOut = String(result.error.message).toLowerCase().includes("statement timeout");
     if (timedOut) {
       if (q) {

@@ -122,7 +122,15 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             <li><strong>50-69</strong>: Mixed, inspect closely</li>
             <li><strong>0-49</strong>: Weak edge / high risk</li>
           </ul>
-          <p className="score-method" style={{ marginTop: '0.45rem' }}>{props.scoreMethodSummary}</p>
+          <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
+            {props.scoreMethodSummary
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+          </ul>
         </details>
         <div className="score-notes">
           <div style={{ fontWeight: 600, color: 'var(--brand-white)' }}>
