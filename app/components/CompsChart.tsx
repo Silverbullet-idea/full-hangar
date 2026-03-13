@@ -55,6 +55,8 @@ type Props = {
 };
 
 type ViewMode = "time" | "year";
+type MarketCompsSortKey = "price" | "year" | "totalTimeHours";
+type MarketCompsSortDirection = "asc" | "desc";
 
 type ScatterPoint = {
   id: string;
@@ -129,6 +131,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
   const [loading, setLoading] = useState(true);
   const [submodelOnly, setSubmodelOnly] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("time");
+  const [marketCompsSortKey, setMarketCompsSortKey] = useState<MarketCompsSortKey>("price");
+  const [marketCompsSortDirection, setMarketCompsSortDirection] = useState<MarketCompsSortDirection>("asc");
   const [activePoint, setActivePoint] = useState<ScatterPoint | null>(null);
   const [activePointPosition, setActivePointPosition] = useState<{ x: number; y: number } | null>(null);
   const [isHoveringChart, setIsHoveringChart] = useState(false);
@@ -305,7 +309,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
 
   const marketCompsTableRows = useMemo(() => {
     if (!payload) return [];
-    return payload.comps
+    const rows = payload.comps
       .filter((row) => typeof row.price === "number" && row.price > 0)
       .map((row) => ({
         id: row.id,
@@ -313,13 +317,29 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
         price: row.price as number,
         year: row.year,
         totalTimeHours: row.total_time_hours,
-        riskLevel: row.risk_level ?? "UNKNOWN",
-        dealTier: row.deal_tier,
         locationLabel: row.location_label ?? "Location unavailable",
-      }))
-      .sort((a, b) => a.price - b.price)
-      .slice(0, 24);
-  }, [payload]);
+      }));
+
+    const sortedRows = [...rows].sort((a, b) => {
+      const directionFactor = marketCompsSortDirection === "asc" ? 1 : -1;
+
+      if (marketCompsSortKey === "price") {
+        return (a.price - b.price) * directionFactor;
+      }
+
+      if (marketCompsSortKey === "year") {
+        const aYear = typeof a.year === "number" ? a.year : Number.POSITIVE_INFINITY;
+        const bYear = typeof b.year === "number" ? b.year : Number.POSITIVE_INFINITY;
+        return (aYear - bYear) * directionFactor;
+      }
+
+      const aTt = typeof a.totalTimeHours === "number" ? a.totalTimeHours : Number.POSITIVE_INFINITY;
+      const bTt = typeof b.totalTimeHours === "number" ? b.totalTimeHours : Number.POSITIVE_INFINITY;
+      return (aTt - bTt) * directionFactor;
+    });
+
+    return sortedRows.slice(0, 24);
+  }, [payload, marketCompsSortDirection, marketCompsSortKey]);
 
   const otherMarketCompsRows = useMemo(() => {
     if (!payload) return [];
@@ -662,11 +682,57 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               <thead>
                 <tr style={{ background: "var(--surface-muted)" }}>
                   <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Aircraft</th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Price</th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Year</th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>TT</th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Risk</th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Deal</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (marketCompsSortKey === "price") {
+                          setMarketCompsSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+                          return;
+                        }
+                        setMarketCompsSortKey("price");
+                        setMarketCompsSortDirection("asc");
+                      }}
+                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      title="Sort by price (low/high)"
+                    >
+                      {`Price ${marketCompsSortKey === "price" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
+                    </button>
+                  </th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (marketCompsSortKey === "year") {
+                          setMarketCompsSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+                          return;
+                        }
+                        setMarketCompsSortKey("year");
+                        setMarketCompsSortDirection("asc");
+                      }}
+                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      title="Sort by year (old/new)"
+                    >
+                      {`Year ${marketCompsSortKey === "year" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
+                    </button>
+                  </th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (marketCompsSortKey === "totalTimeHours") {
+                          setMarketCompsSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+                          return;
+                        }
+                        setMarketCompsSortKey("totalTimeHours");
+                        setMarketCompsSortDirection("asc");
+                      }}
+                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      title="Sort by total time (low/high)"
+                    >
+                      {`TT ${marketCompsSortKey === "totalTimeHours" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -682,11 +748,9 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                       )}
                       <div style={{ color: tooltipMutedTextColor, fontSize: "0.7rem" }}>{row.locationLabel}</div>
                     </td>
-                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor, fontWeight: 700 }}>{formatMoney(row.price)}</td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: "#86efac", fontWeight: 700 }}>{formatMoney(row.price)}</td>
                     <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{typeof row.year === "number" ? row.year : "N/A"}</td>
                     <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{formatHours(row.totalTimeHours)}</td>
-                    <td style={{ padding: "0.45rem 0.55rem", color: getRiskColor(row.riskLevel), fontWeight: 700 }}>{row.riskLevel}</td>
-                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{row.dealTier ? row.dealTier.replace(/_/g, " ") : "N/A"}</td>
                   </tr>
                 ))}
               </tbody>

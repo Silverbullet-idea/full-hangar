@@ -658,12 +658,23 @@ def parser_backfill_updates(row: dict) -> dict:
 
     parsed_times = parsed.get("times", {})
     parsed_tt = parsed_times.get("total_time")
-    if row.get("total_time_airframe") in (None, "", 0) and isinstance(parsed_tt, int):
+    if row.get("total_time_airframe") in (None, "", 0) and isinstance(parsed_tt, (int, float)):
         updates["total_time_airframe"] = parsed_tt
 
     parsed_smoh = parsed_times.get("engine_smoh")
-    if row.get("engine_time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, int):
+    if row.get("engine_time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, (int, float)):
         updates["engine_time_since_overhaul"] = parsed_smoh
+
+    parsed_spoh = parsed_times.get("prop_spoh")
+    if row.get("time_since_prop_overhaul") in (None, "", 0) and isinstance(parsed_spoh, (int, float)):
+        updates["time_since_prop_overhaul"] = parsed_spoh
+
+    raw_prop_model = row.get("prop_model")
+    raw_prop_text = str(raw_prop_model).strip() if raw_prop_model else ""
+    parsed_prop_model = parsed.get("prop", {}).get("model")
+    if isinstance(parsed_prop_model, str) and parsed_prop_model.strip():
+        if not raw_prop_text or len(raw_prop_text) > 120:
+            updates["prop_model"] = parsed_prop_model.strip()
 
     raw_engine_model = row.get("engine_model")
     raw_engine_text = str(raw_engine_model).strip() if raw_engine_model else ""
@@ -699,7 +710,7 @@ def run_backfill_from_db(
         "description", "description_full", "description_intelligence", "avionics_description", "avionics_notes", "title", "source", "total_time_airframe",
         "value_score", "avionics_score",
         "time_since_overhaul", "time_since_new_engine", "time_since_prop_overhaul", "engine_time_since_overhaul",
-        "aircraft_type", "engine_model", "days_on_market", "price_reduced",
+        "aircraft_type", "engine_model", "prop_model", "days_on_market", "price_reduced",
         "accident_count", "most_recent_accident_date", "most_severe_damage", "has_accident_history",
     ]
     active_select_cols = list(select_cols)

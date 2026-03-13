@@ -1,0 +1,67 @@
+{
+  "lookback_days": 90,
+  "cutoff_date": "2025-12-13",
+  "listings_scanned": 800,
+  "listings_with_description_text": 190,
+  "notes": [
+    "Coverage uplift estimates parser-fill potential only; not precision/ground-truth accuracy.",
+    "Use sampled candidates for manual validation before trusting score-impacting logic."
+  ],
+  "summary": [
+    {
+      "field": "engine_time_since_overhaul",
+      "label": "Engine SMOH",
+      "existing_count": 49,
+      "parser_count": 8,
+      "parser_fill_missing_count": 2,
+      "baseline_coverage_pct": 25.79,
+      "combined_coverage_pct": 26.84,
+      "coverage_uplift_pct_points": 1.05,
+      "fill_rate_of_missing_pct": 1.42
+    },
+    {
+      "field": "time_since_prop_overhaul",
+      "label": "Prop SPOH",
+      "existing_count": 16,
+      "parser_count": 3,
+      "parser_fill_missing_count": 3,
+      "baseline_coverage_pct": 8.42,
+      "combined_coverage_pct": 10.0,
+      "coverage_uplift_pct_points": 1.58,
+      "fill_rate_of_missing_pct": 1.72
+    },
+    {
+      "field": "prop_model",
+      "label": "Prop Model",
+      "existing_count": 0,
+      "parser_count": 0,
+      "parser_fill_missing_count": 0,
+      "baseline_coverage_pct": 0.0,
+      "combined_coverage_pct": 0.0,
+      "coverage_uplift_pct_points": 0.0,
+      "fill_rate_of_missing_pct": 0.0
+    }
+  ],
+  "sample_candidates": {
+    "time_since_prop_overhaul": [
+      {
+        "id": "355534ec-4a23-4eb1-823b-2c7fcbb3f480",
+        "source": "globalair",
+        "source_id": "ga_139821",
+        "parsed_prop_spoh": 1429.0
+      },
+      {
+        "id": "9559bb45-8695-44eb-b128-bbb51a33847e",
+        "source": "globalair",
+        "source_id": "ga_135947",
+        "parsed_prop_spoh": 2021.0
+      },
+      {
+        "id": "f07b7997-cabf-4790-8e75-7d9262bb626a",
+        "source": "globalair",
+        "source_id": "ga_136841",
+        "parsed_prop_spoh": 2016.0
+      }
+    ]
+  }
+}

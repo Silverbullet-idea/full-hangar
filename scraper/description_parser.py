@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PARSER_VERSION = "2.1.6"
+PARSER_VERSION = "2.1.7"
 
 TOKEN_CANDIDATE_RE = re.compile(
     r"\b(?:GTN[\- ]?\d{3}(?:XI)?|GNS[\- ]?\d{3}W?|IFD[\- ]?\d{3}|GNX[\- ]?\d{3}|GPS[\- ]?\d{3}|"
@@ -319,6 +319,15 @@ def _float_from_number_text(number_text: str) -> float | None:
         return None
 
 
+def _number_from_number_text(number_text: str) -> float | None:
+    value = _float_from_number_text(number_text)
+    if value is None:
+        return None
+    if float(value).is_integer():
+        return float(int(value))
+    return float(value)
+
+
 def sanitize_engine_model(value: str | None) -> str | None:
     if not value:
         return None
@@ -416,30 +425,34 @@ def extract_engine_model(text: str) -> str | None:
     return None
 
 
-def extract_times(text: str) -> dict[str, int]:
+def extract_times(text: str) -> dict[str, float]:
     src = _normalize_text(text)
-    out: dict[str, int] = {}
+    out: dict[str, float] = {}
+    num = r"([\d,]{1,7}(?:\.\d+)?)"
 
     patterns = {
         "total_time": [
-            r"\bTTAF\s*[:\-]?\s*([\d,]{2,7})\b",
-            r"\b([\d,]{2,7})\s*TT\b",
-            r"\b([\d,]{2,7})\s*TTAF\b",
-            r"\b([\d,]{2,7})\s*total\s*time\b",
+            rf"\bTTAF\s*[:\-]?\s*{num}\b",
+            rf"\b{num}\s*TT\b",
+            rf"\b{num}\s*TTAF\b",
+            rf"\b{num}\s*total\s*time\b",
         ],
         "engine_smoh": [
-            r"\b([\d,]{2,7})\s*SMOH\b",
-            r"\b([\d,]{2,7})\s*SRAM\b",
-            r"\b([\d,]{2,7})\s*since\s*major\b",
-            r"\bSMOH\s*[:\-]?\s*([\d,]{2,7})\b",
+            rf"\b{num}\s*SMOH\b",
+            rf"\b{num}\s*SRAM\b",
+            rf"\b{num}\s*since\s*major\b",
+            rf"\bSMOH\s*[:\-]?\s*{num}\b",
+            rf"\b{num}\s*time\s*since\s*(?:ram\s*)?overhaul\b",
+            rf"\btime\s*since\s*(?:ram\s*)?overhaul\s*[:\-]?\s*{num}\b",
         ],
         "prop_spoh": [
-            r"\b([\d,]{2,7})\s*SPOH\b",
-            r"\b([\d,]{2,7})\s*since\s*prop\s*overhaul\b",
+            rf"\b{num}\s*SPOH\b",
+            rf"\b{num}\s*since\s*prop(?:eller)?\s*overhaul\b",
+            rf"\bprop(?:eller)?[^.;]{0,40}\b{num}\s*(?:hours?|hrs?)?\s*(?:spoh|since\s*(?:prop(?:eller)?\s*)?overhaul)\b",
         ],
         "engine_stop": [
-            r"\b([\d,]{2,7})\s*since\s*top\b",
-            r"\b([\d,]{2,7})\s*STOP\b",
+            rf"\b{num}\s*since\s*top\b",
+            rf"\b{num}\s*STOP\b",
         ],
     }
 
@@ -448,11 +461,39 @@ def extract_times(text: str) -> dict[str, int]:
             match = re.search(pattern, src, flags=re.IGNORECASE)
             if not match:
                 continue
-            value = _int_from_number_text(match.group(1))
+            value = _number_from_number_text(match.group(1))
             if value is not None:
                 out[key] = value
                 break
     return out
+
+
+def extract_prop_model(text: str) -> str | None:
+    src = _normalize_text(text)
+    if not src:
+        return None
+
+    patterns = [
+        r"\bprop(?:eller)?\s*(?:model)?\s*[:\-]\s*([^.;]{4,180})",
+        r"\bprop(?:eller)?\s*[:\-]\s*([^.;]{4,180})",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, src, flags=re.IGNORECASE)
+        if not match:
+            continue
+        candidate = _normalize_text(match.group(1)).strip(" -:;,")
+        if not candidate:
+            continue
+        cut_match = re.search(
+            r"\b(?:installed|overhaul(?:ed)?|since|hours?|hrs?|smoh|spoh|annual|avionics|interior|exterior)\b",
+            candidate,
+            flags=re.IGNORECASE,
+        )
+        if cut_match and cut_match.start() > 8:
+            candidate = candidate[: cut_match.start()].strip(" -:;,")
+        if candidate and len(candidate) <= 120:
+            return candidate
+    return None
 
 
 def extract_cylinder_time_since_new(text: str) -> int | None:
@@ -819,6 +860,7 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
     special_equipment = extract_special_equipment(src)
     pricing_context = extract_fractional_pricing(src, observed_price=observed_price)
     engine_model = extract_engine_model(src)
+    prop_model = extract_prop_model(src)
     cylinders_since_new = extract_cylinder_time_since_new(src)
     hours_since_iran = extract_hours_since_iran(src)
     last_annual_inspection = extract_last_annual_inspection(src)
@@ -831,6 +873,11 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
         "stop": times.get("engine_stop"),
     }
     engine_payload = {k: v for k, v in engine_payload.items() if v is not None}
+    prop_payload = {
+        "model": prop_model,
+        "spoh": times.get("prop_spoh"),
+    }
+    prop_payload = {k: v for k, v in prop_payload.items() if v is not None}
 
     maintenance_payload: dict[str, Any] = {}
     if cylinders_since_new is not None:
@@ -844,6 +891,7 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
 
     evidence_count = 0
     evidence_count += len(engine_payload)
+    evidence_count += len(prop_payload)
     evidence_count += len(avionics_detailed)
     evidence_count += len(mods)
     evidence_count += 1 if useful_load is not None else 0
@@ -855,6 +903,7 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
 
     payload: dict[str, Any] = {
         "engine": engine_payload,
+        "prop": prop_payload,
         "mods": mods,
         "avionics": avionics,
         "avionics_detailed": avionics_detailed,
