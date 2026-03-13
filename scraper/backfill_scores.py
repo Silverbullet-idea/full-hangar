@@ -656,18 +656,29 @@ def parser_backfill_updates(row: dict) -> dict:
         updates["fractional_review_needed"] = bool(review_needed)
         updates["fractional_pricing_evidence"] = evidence if isinstance(evidence, list) else None
 
+    def _to_hour_int(value: object) -> int | None:
+        if not isinstance(value, (int, float)):
+            return None
+        numeric = float(value)
+        if numeric <= 0:
+            return None
+        return int(round(numeric))
+
     parsed_times = parsed.get("times", {})
     parsed_tt = parsed_times.get("total_time")
-    if row.get("total_time_airframe") in (None, "", 0) and isinstance(parsed_tt, (int, float)):
-        updates["total_time_airframe"] = parsed_tt
+    parsed_tt_int = _to_hour_int(parsed_tt)
+    if row.get("total_time_airframe") in (None, "", 0) and parsed_tt_int is not None:
+        updates["total_time_airframe"] = parsed_tt_int
 
     parsed_smoh = parsed_times.get("engine_smoh")
-    if row.get("engine_time_since_overhaul") in (None, "", 0) and isinstance(parsed_smoh, (int, float)):
-        updates["engine_time_since_overhaul"] = parsed_smoh
+    parsed_smoh_int = _to_hour_int(parsed_smoh)
+    if row.get("engine_time_since_overhaul") in (None, "", 0) and parsed_smoh_int is not None:
+        updates["engine_time_since_overhaul"] = parsed_smoh_int
 
     parsed_spoh = parsed_times.get("prop_spoh")
-    if row.get("time_since_prop_overhaul") in (None, "", 0) and isinstance(parsed_spoh, (int, float)):
-        updates["time_since_prop_overhaul"] = parsed_spoh
+    parsed_spoh_int = _to_hour_int(parsed_spoh)
+    if row.get("time_since_prop_overhaul") in (None, "", 0) and parsed_spoh_int is not None:
+        updates["time_since_prop_overhaul"] = parsed_spoh_int
 
     raw_prop_model = row.get("prop_model")
     raw_prop_text = str(raw_prop_model).strip() if raw_prop_model else ""

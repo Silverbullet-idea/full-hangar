@@ -4,7 +4,7 @@
 
 Set these in your production environment and redeploy:
 
-- `NEXT_PUBLIC_SITE_URL=https://fullhangar.com`
+- `NEXT_PUBLIC_SITE_URL=https://full-hangar.com`
 - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=<paste_google_token>`
 - `NEXT_PUBLIC_BING_SITE_VERIFICATION=<paste_bing_msvalidate_token>`
 
@@ -16,9 +16,9 @@ Notes:
 
 Open these URLs and confirm they load:
 
-- `https://fullhangar.com/robots.txt`
-- `https://fullhangar.com/sitemap.xml`
-- `https://fullhangar.com/listings/sitemap.xml`
+- `https://full-hangar.com/robots.txt`
+- `https://full-hangar.com/sitemap.xml`
+- `https://full-hangar.com/listings/sitemap.xml`
 
 Expected:
 - `robots.txt` references both sitemap URLs.
@@ -29,16 +29,16 @@ Expected:
 
 ### Google Search Console
 
-1. Add property: `https://fullhangar.com`
+1. Add property: `https://full-hangar.com`
 2. Choose HTML tag verification.
 3. Confirm token matches `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`.
 4. Submit:
-   - `https://fullhangar.com/sitemap.xml`
-   - `https://fullhangar.com/listings/sitemap.xml`
+   - `https://full-hangar.com/sitemap.xml`
+   - `https://full-hangar.com/listings/sitemap.xml`
 
 ### Bing Webmaster Tools
 
-1. Add site: `https://fullhangar.com`
+1. Add site: `https://full-hangar.com`
 2. Choose meta tag verification.
 3. Confirm token matches `NEXT_PUBLIC_BING_SITE_VERIFICATION`.
 4. Submit the same two sitemap URLs.
