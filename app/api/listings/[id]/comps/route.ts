@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  createPrivilegedServerClient,
   createServerClient,
 } from "../../../../../lib/supabase/server"
 
@@ -84,37 +85,54 @@ function dedupeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] 
   return deduped
 }
 
-function isPermissionDenied(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error ?? "")
-  const normalized = message.toLowerCase()
-  return normalized.includes("permission denied") && normalized.includes("aircraft_listings")
+type QueryResult = {
+  data: Record<string, unknown>[] | null
+  error: { message: string } | null
+}
+
+type ListingsTableName = "aircraft_listings" | "public_listings"
+
+async function runListingsQueryWithFallback(
+  run: (
+    client: ReturnType<typeof createServerClient>,
+    table: ListingsTableName
+  ) => Promise<QueryResult>
+): Promise<Record<string, unknown>[]> {
+  let privilegedError: Error | null = null
+
+  try {
+    const privilegedClient = createPrivilegedServerClient()
+    const privilegedResult = await run(privilegedClient, "aircraft_listings")
+    if (privilegedResult.error) {
+      throw new Error(privilegedResult.error.message)
+    }
+    return privilegedResult.data ?? []
+  } catch (error) {
+    privilegedError = error instanceof Error ? error : new Error(String(error ?? "Unknown query error"))
+  }
+
+  const publicClient = createServerClient()
+  const publicResult = await run(publicClient, "public_listings")
+  if (publicResult.error) {
+    throw new Error(
+      `Privileged query failed (${privilegedError?.message ?? "unknown"}) and public query failed (${publicResult.error.message}).`
+    )
+  }
+  return publicResult.data ?? []
 }
 
 async function getListingByIdPublic(id: string): Promise<Record<string, unknown> | null> {
-  const supabase = createServerClient()
-
-  const byId = await supabase
-    .from("public_listings")
-    .select("*")
-    .eq("id", id)
-    .limit(1)
-  if (byId.error) {
-    throw new Error(byId.error.message)
-  }
-  if ((byId.data ?? []).length > 0) {
-    return (byId.data ?? [])[0] as Record<string, unknown>
+  const byId = await runListingsQueryWithFallback(async (client, table) => {
+    return (await client.from(table).select("*").eq("id", id).limit(1)) as unknown as QueryResult
+  })
+  if (byId.length > 0) {
+    return byId[0]
   }
 
-  const bySource = await supabase
-    .from("public_listings")
-    .select("*")
-    .eq("source_id", id)
-    .limit(1)
-  if (bySource.error) {
-    throw new Error(bySource.error.message)
-  }
-
-  return ((bySource.data ?? [])[0] as Record<string, unknown> | undefined) ?? null
+  const bySource = await runListingsQueryWithFallback(async (client, table) => {
+    return (await client.from(table).select("*").eq("source_id", id).limit(1)) as unknown as QueryResult
+  })
+  return bySource[0] ?? null
 }
 
 async function getComparableListingsPublic(
@@ -123,26 +141,21 @@ async function getComparableListingsPublic(
   maxPrice?: number,
   opts: { minYear?: number; maxYear?: number; excludeId?: string; limit?: number } = {}
 ): Promise<Record<string, unknown>[]> {
-  const supabase = createServerClient()
   const { minYear, maxYear, excludeId, limit = 20 } = opts
-  let query = supabase
-    .from("public_listings")
-    .select("*")
-    .eq("make", make)
-    .eq("model", model)
-    .eq("is_active", true)
-    .limit(limit)
+  const rows = await runListingsQueryWithFallback(async (client, table) => {
+    let query = client
+      .from(table)
+      .select("*")
+      .eq("make", make)
+      .eq("model", model)
+      .eq("is_active", true)
+      .limit(limit)
 
-  if (typeof minYear === "number") query = query.gte("year", minYear)
-  if (typeof maxYear === "number") query = query.lte("year", maxYear)
-  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
-
-  const result = await query
-  if (result.error) {
-    throw new Error(result.error.message)
-  }
-
-  const rows = (result.data ?? []) as Record<string, unknown>[]
+    if (typeof minYear === "number") query = query.gte("year", minYear)
+    if (typeof maxYear === "number") query = query.lte("year", maxYear)
+    if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+    return (await query) as unknown as QueryResult
+  })
   if (!excludeId) return rows
   return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
 }
@@ -153,26 +166,21 @@ async function getComparableListingsByModelFamilyPublic(
   maxPrice?: number,
   opts: { minYear?: number; maxYear?: number; excludeId?: string; limit?: number } = {}
 ): Promise<Record<string, unknown>[]> {
-  const supabase = createServerClient()
   const { minYear, maxYear, excludeId, limit = 20 } = opts
-  let query = supabase
-    .from("public_listings")
-    .select("*")
-    .eq("make", make)
-    .ilike("model", `${modelFamily}%`)
-    .eq("is_active", true)
-    .limit(limit)
+  const rows = await runListingsQueryWithFallback(async (client, table) => {
+    let query = client
+      .from(table)
+      .select("*")
+      .eq("make", make)
+      .ilike("model", `${modelFamily}%`)
+      .eq("is_active", true)
+      .limit(limit)
 
-  if (typeof minYear === "number") query = query.gte("year", minYear)
-  if (typeof maxYear === "number") query = query.lte("year", maxYear)
-  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
-
-  const result = await query
-  if (result.error) {
-    throw new Error(result.error.message)
-  }
-
-  const rows = (result.data ?? []) as Record<string, unknown>[]
+    if (typeof minYear === "number") query = query.gte("year", minYear)
+    if (typeof maxYear === "number") query = query.lte("year", maxYear)
+    if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+    return (await query) as unknown as QueryResult
+  })
   if (!excludeId) return rows
   return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
 }
@@ -183,24 +191,19 @@ async function getComparableListingsByCategoryPublic(
   maxPrice?: number,
   opts: { excludeId?: string; limit?: number } = {}
 ): Promise<Record<string, unknown>[]> {
-  const supabase = createServerClient()
   const { excludeId, limit = 20 } = opts
-  let query = supabase
-    .from("public_listings")
-    .select("*")
-    .eq("make", make)
-    .eq("aircraft_category", category)
-    .eq("is_active", true)
-    .limit(limit)
+  const rows = await runListingsQueryWithFallback(async (client, table) => {
+    let query = client
+      .from(table)
+      .select("*")
+      .eq("make", make)
+      .eq("aircraft_category", category)
+      .eq("is_active", true)
+      .limit(limit)
 
-  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
-
-  const result = await query
-  if (result.error) {
-    throw new Error(result.error.message)
-  }
-
-  const rows = (result.data ?? []) as Record<string, unknown>[]
+    if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+    return (await query) as unknown as QueryResult
+  })
   if (!excludeId) return rows
   return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
 }
@@ -290,12 +293,6 @@ export async function GET(
 
     return NextResponse.json({ data: payload, error: null }, { status: 200 })
   } catch (error) {
-    if (isPermissionDenied(error)) {
-      return NextResponse.json(
-        { data: null, error: "Comparable listings temporarily unavailable. Please try again shortly." },
-        { status: 503 }
-      )
-    }
     const message = error instanceof Error ? error.message : "Failed to load comparable listings."
     return NextResponse.json({ data: null, error: message }, { status: 500 })
   }
