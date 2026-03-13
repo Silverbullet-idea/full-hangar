@@ -14,6 +14,7 @@ type VerificationFlag = {
 
 type RightDetailColumnProps = {
   listingId: string
+  askingPrice: number | null
   marketPricing: { low: number | null; high: number | null; median: number | null } | null
   formatMoney: (value: number | null | undefined) => string
   scoreColor: string
@@ -68,16 +69,27 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
     <div className="panel-stack">
       <section className="table-card">
         <h3 className="section-title">Comp & Cost</h3>
+        {typeof props.askingPrice === 'number' && props.askingPrice > 0 ? (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#22c55e', lineHeight: 1.1 }}>
+              {props.formatMoney(props.askingPrice)}
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginBottom: '0.75rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
+            Asking price not published.
+          </div>
+        )}
         {props.marketPricing &&
         typeof props.marketPricing.low === 'number' &&
         typeof props.marketPricing.high === 'number' &&
         typeof props.marketPricing.median === 'number' ? (
           <div style={{ marginBottom: '0.9rem' }}>
             <div style={{ fontSize: '0.82rem', color: 'var(--brand-muted)', marginBottom: '0.15rem' }}>Estimated Asking Range</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#86efac' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#86efac' }}>
               {`${props.formatMoney(props.marketPricing.low)} - ${props.formatMoney(props.marketPricing.high)}`}
             </div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--brand-white)', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--brand-muted)', marginTop: '0.2rem' }}>
               {`Median ${props.formatMoney(props.marketPricing.median)}`}
             </div>
           </div>

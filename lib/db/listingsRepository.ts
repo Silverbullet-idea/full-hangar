@@ -20,7 +20,16 @@ export type ListingsPageQuery = {
   risk?: string;
   dealTier?: string;
   minValueScore?: number;
+  minPrice?: number;
   maxPrice?: number;
+  priceStatus?: "all" | "priced";
+  yearMin?: number;
+  yearMax?: number;
+  totalTimeMin?: number;
+  totalTimeMax?: number;
+  maintenanceBand?: "any" | "light" | "moderate" | "heavy" | "severe";
+  trueCostMin?: number;
+  trueCostMax?: number;
   sortBy?: string;
   category?: string;
   ownershipType?: "all" | "full" | "fractional";
@@ -140,9 +149,9 @@ export async function getListings(filters: ListingFilters = {}) {
 }
 
 const LISTINGS_PAGE_COLUMNS_PUBLIC =
-  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
 const LISTINGS_PAGE_COLUMNS_AIRCRAFT =
-  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
 
 function columnsForListingsTable(table: string): string {
   return table === "aircraft_listings"
@@ -338,6 +347,10 @@ function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
   const hasText = (value: unknown) => String(value ?? "").trim().length > 0;
   const ownershipType = String(query.ownershipType ?? "").trim().toLowerCase();
   const isDefaultOwnership = !ownershipType || ownershipType === "all";
+  const priceStatus = String(query.priceStatus ?? "").trim().toLowerCase();
+  const maintenanceBand = String(query.maintenanceBand ?? "").trim().toLowerCase();
+  const isDefaultPriceStatus = !priceStatus || priceStatus === "all";
+  const isDefaultMaintenanceBand = !maintenanceBand || maintenanceBand === "any";
   return (
     !hasText(query.q) &&
     !hasText(query.make) &&
@@ -351,6 +364,15 @@ function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
     !hasText(query.category) &&
     isDefaultOwnership &&
     Number(query.minValueScore ?? 0) <= 0 &&
+    Number(query.minPrice ?? 0) <= 0 &&
+    isDefaultPriceStatus &&
+    Number(query.yearMin ?? 0) <= 0 &&
+    Number(query.yearMax ?? 0) <= 0 &&
+    Number(query.totalTimeMin ?? 0) <= 0 &&
+    Number(query.totalTimeMax ?? 0) <= 0 &&
+    isDefaultMaintenanceBand &&
+    Number(query.trueCostMin ?? 0) <= 0 &&
+    Number(query.trueCostMax ?? 0) <= 0 &&
     Number(query.maxPrice ?? 0) <= 0
   );
 }
@@ -434,6 +456,10 @@ function parseListingsSearch(rawQuery: string): ParsedListingsSearch {
 function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
   const q = String(query.q ?? "").trim();
   if (!q) return false;
+  const priceStatus = String(query.priceStatus ?? "").trim().toLowerCase();
+  const maintenanceBand = String(query.maintenanceBand ?? "").trim().toLowerCase();
+  const isDefaultPriceStatus = !priceStatus || priceStatus === "all";
+  const isDefaultMaintenanceBand = !maintenanceBand || maintenanceBand === "any";
   return (
     !String(query.make ?? "").trim() &&
     !String(query.model ?? "").trim() &&
@@ -446,6 +472,15 @@ function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
     !String(query.dealTier ?? "").trim() &&
     !String(query.category ?? "").trim() &&
     Number(query.minValueScore ?? 0) <= 0 &&
+    Number(query.minPrice ?? 0) <= 0 &&
+    isDefaultPriceStatus &&
+    Number(query.yearMin ?? 0) <= 0 &&
+    Number(query.yearMax ?? 0) <= 0 &&
+    Number(query.totalTimeMin ?? 0) <= 0 &&
+    Number(query.totalTimeMax ?? 0) <= 0 &&
+    isDefaultMaintenanceBand &&
+    Number(query.trueCostMin ?? 0) <= 0 &&
+    Number(query.trueCostMax ?? 0) <= 0 &&
     Number(query.maxPrice ?? 0) <= 0
   );
 }
@@ -528,6 +563,51 @@ function applyPositivePriceCeiling(query: any, maxPrice: number) {
     .not("asking_price", "is", null)
     .gt("asking_price", 0)
     .lte("asking_price", maxPrice);
+}
+
+function applyPositiveNumericRange(
+  query: any,
+  column: string,
+  minValue: number,
+  maxValue: number
+) {
+  let next = query;
+  const hasMin = Number.isFinite(minValue) && minValue > 0;
+  const hasMax = Number.isFinite(maxValue) && maxValue > 0;
+  if (!hasMin && !hasMax) return next;
+  if (hasMin) next = next.gte(column, minValue);
+  if (hasMax) next = next.lte(column, maxValue);
+  return next;
+}
+
+function applyPriceFilters(
+  query: any,
+  opts: { minPrice: number; maxPrice: number; priceStatus: string }
+) {
+  const { minPrice, maxPrice, priceStatus } = opts;
+  let next = query;
+  const normalizedStatus = String(priceStatus ?? "").trim().toLowerCase();
+  const hasMin = Number.isFinite(minPrice) && minPrice > 0;
+  const hasMax = Number.isFinite(maxPrice) && maxPrice > 0;
+  const needsPositivePrice = normalizedStatus === "priced" || hasMin || hasMax;
+
+  if (!needsPositivePrice) return next;
+
+  next = next.not("asking_price", "is", null).gt("asking_price", 0);
+  if (hasMin) next = next.gte("asking_price", minPrice);
+  if (hasMax) next = next.lte("asking_price", maxPrice);
+  return next;
+}
+
+function applyMaintenanceBandFilter(query: any, band: string) {
+  const normalized = String(band ?? "").trim().toLowerCase();
+  if (!normalized || normalized === "any") return query;
+  let next = query.not("deferred_total", "is", null);
+  if (normalized === "light") return next.lte("deferred_total", 25000);
+  if (normalized === "moderate") return next.gt("deferred_total", 25000).lte("deferred_total", 100000);
+  if (normalized === "heavy") return next.gt("deferred_total", 100000).lte("deferred_total", 250000);
+  if (normalized === "severe") return next.gt("deferred_total", 250000);
+  return query;
 }
 
 function applyHelicopterExclusion(query: any) {
@@ -668,7 +748,16 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const dealTier = String(query.dealTier ?? "").trim();
   const category = String(query.category ?? "").trim();
   const minValueScore = Number(query.minValueScore ?? 0);
+  const minPrice = Number(query.minPrice ?? 0);
   const maxPrice = Number(query.maxPrice ?? 0);
+  const priceStatus = String(query.priceStatus ?? "all").trim().toLowerCase();
+  const yearMin = Number(query.yearMin ?? 0);
+  const yearMax = Number(query.yearMax ?? 0);
+  const totalTimeMin = Number(query.totalTimeMin ?? 0);
+  const totalTimeMax = Number(query.totalTimeMax ?? 0);
+  const maintenanceBand = String(query.maintenanceBand ?? "any").trim().toLowerCase();
+  const trueCostMin = Number(query.trueCostMin ?? 0);
+  const trueCostMax = Number(query.trueCostMax ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
   const listBaseTable =
     ownershipType === "fractional" || ownershipType === "full"
@@ -726,7 +815,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (dealTier === "TOP_DEALS") dbQuery = dbQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
   else if (dealTier) dbQuery = dbQuery.eq("deal_tier", dealTier.toUpperCase());
   if (Number.isFinite(minValueScore) && minValueScore > 0) dbQuery = dbQuery.gte("value_score", minValueScore);
-  dbQuery = applyPositivePriceCeiling(dbQuery, maxPrice);
+  dbQuery = applyPriceFilters(dbQuery, { minPrice, maxPrice, priceStatus });
+  dbQuery = applyPositiveNumericRange(dbQuery, "year", yearMin, yearMax);
+  dbQuery = applyPositiveNumericRange(dbQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
+  dbQuery = applyMaintenanceBandFilter(dbQuery, maintenanceBand);
+  dbQuery = applyPositiveNumericRange(dbQuery, "true_cost", trueCostMin, trueCostMax);
   dbQuery = applyCategoryFilter(dbQuery, category);
 
   dbQuery = dbQuery.order("deal_rating", { ascending: false, nullsFirst: false });
@@ -768,7 +861,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (dealTier === "TOP_DEALS") fallbackQuery = fallbackQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
     else if (dealTier) fallbackQuery = fallbackQuery.eq("deal_tier", dealTier.toUpperCase());
     if (Number.isFinite(minValueScore) && minValueScore > 0) fallbackQuery = fallbackQuery.gte("value_score", minValueScore);
-    fallbackQuery = applyPositivePriceCeiling(fallbackQuery, maxPrice);
+    fallbackQuery = applyPriceFilters(fallbackQuery, { minPrice, maxPrice, priceStatus });
+    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "year", yearMin, yearMax);
+    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
+    fallbackQuery = applyMaintenanceBandFilter(fallbackQuery, maintenanceBand);
+    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "true_cost", trueCostMin, trueCostMax);
     fallbackQuery = applyCategoryFilter(fallbackQuery, category);
     fallbackQuery = fallbackQuery
       .order("deal_rating", { ascending: false, nullsFirst: false })
@@ -852,7 +949,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (dealTier === "TOP_DEALS") countQuery = countQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
     else if (dealTier) countQuery = countQuery.eq("deal_tier", dealTier.toUpperCase());
     if (Number.isFinite(minValueScore) && minValueScore > 0) countQuery = countQuery.gte("value_score", minValueScore);
-    countQuery = applyPositivePriceCeiling(countQuery, maxPrice);
+    countQuery = applyPriceFilters(countQuery, { minPrice, maxPrice, priceStatus });
+    countQuery = applyPositiveNumericRange(countQuery, "year", yearMin, yearMax);
+    countQuery = applyPositiveNumericRange(countQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
+    countQuery = applyMaintenanceBandFilter(countQuery, maintenanceBand);
+    countQuery = applyPositiveNumericRange(countQuery, "true_cost", trueCostMin, trueCostMax);
     countQuery = applyCategoryFilter(countQuery, category);
     const countResult = await countQuery;
     if (!countResult.error && typeof countResult.count === "number") {

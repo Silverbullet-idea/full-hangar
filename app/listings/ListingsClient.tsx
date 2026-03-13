@@ -34,6 +34,9 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
+type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+type PriceStatusFilter = 'all' | 'priced'
+type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 
 type FilterOptions = {
   makes: string[]
@@ -54,7 +57,7 @@ type ListingsClientProps = {
   initialFilterOptions: FilterOptions
   initialSearchTerm?: string
   initialCategoryFilter?: CategoryValue
-  initialDealFilter?: 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+  initialDealFilter?: DealTierFilter
   initialSortBy?: SortOption
   initialMakeFilter?: string
   initialModelFilter?: string
@@ -63,7 +66,16 @@ type ListingsClientProps = {
   initialStateFilter?: string
   initialRiskFilter?: string
   initialMinimumScore?: number
+  initialMinPrice?: number
   initialMaxPrice?: number
+  initialPriceStatus?: PriceStatusFilter
+  initialYearMin?: number
+  initialYearMax?: number
+  initialTotalTimeMin?: number
+  initialTotalTimeMax?: number
+  initialMaintenanceBand?: MaintenanceBandFilter
+  initialTrueCostMin?: number
+  initialTrueCostMax?: number
   initialPage?: number
   initialPageSize?: number
 }
@@ -102,7 +114,16 @@ export default function ListingsClient({
   initialStateFilter = '',
   initialRiskFilter = 'all',
   initialMinimumScore = 0,
+  initialMinPrice = 0,
   initialMaxPrice = 0,
+  initialPriceStatus = 'all',
+  initialYearMin = 0,
+  initialYearMax = 0,
+  initialTotalTimeMin = 0,
+  initialTotalTimeMax = 0,
+  initialMaintenanceBand = 'any',
+  initialTrueCostMin = 0,
+  initialTrueCostMax = 0,
   initialPage = 1,
   initialPageSize = 24,
 }: ListingsClientProps) {
@@ -129,10 +150,28 @@ export default function ListingsClient({
   const [appliedSourceFilter, setAppliedSourceFilter] = useState<'all' | ListingSourceKey>(normalizedInitialSourceFilter)
   const [riskFilter, setRiskFilter] = useState(initialRiskFilter || 'all')
   const [appliedRiskFilter, setAppliedRiskFilter] = useState(initialRiskFilter || 'all')
-  const [dealFilter, setDealFilter] = useState<'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'>(initialDealFilter)
+  const [dealFilter, setDealFilter] = useState<DealTierFilter>(initialDealFilter)
   const [minimumScore, setMinimumScore] = useState(Math.max(0, initialMinimumScore))
+  const [minPrice, setMinPrice] = useState(Math.max(0, initialMinPrice))
   const [maxPrice, setMaxPrice] = useState(Math.max(0, initialMaxPrice))
+  const [priceStatus, setPriceStatus] = useState<PriceStatusFilter>(initialPriceStatus)
+  const [yearMin, setYearMin] = useState(Math.max(0, initialYearMin))
+  const [yearMax, setYearMax] = useState(Math.max(0, initialYearMax))
+  const [totalTimeMin, setTotalTimeMin] = useState(Math.max(0, initialTotalTimeMin))
+  const [totalTimeMax, setTotalTimeMax] = useState(Math.max(0, initialTotalTimeMax))
+  const [maintenanceBand, setMaintenanceBand] = useState<MaintenanceBandFilter>(initialMaintenanceBand)
+  const [trueCostMin, setTrueCostMin] = useState(Math.max(0, initialTrueCostMin))
+  const [trueCostMax, setTrueCostMax] = useState(Math.max(0, initialTrueCostMax))
+  const [appliedMinPrice, setAppliedMinPrice] = useState(Math.max(0, initialMinPrice))
   const [appliedMaxPrice, setAppliedMaxPrice] = useState(Math.max(0, initialMaxPrice))
+  const [appliedPriceStatus, setAppliedPriceStatus] = useState<PriceStatusFilter>(initialPriceStatus)
+  const [appliedYearMin, setAppliedYearMin] = useState(Math.max(0, initialYearMin))
+  const [appliedYearMax, setAppliedYearMax] = useState(Math.max(0, initialYearMax))
+  const [appliedTotalTimeMin, setAppliedTotalTimeMin] = useState(Math.max(0, initialTotalTimeMin))
+  const [appliedTotalTimeMax, setAppliedTotalTimeMax] = useState(Math.max(0, initialTotalTimeMax))
+  const [appliedMaintenanceBand, setAppliedMaintenanceBand] = useState<MaintenanceBandFilter>(initialMaintenanceBand)
+  const [appliedTrueCostMin, setAppliedTrueCostMin] = useState(Math.max(0, initialTrueCostMin))
+  const [appliedTrueCostMax, setAppliedTrueCostMax] = useState(Math.max(0, initialTrueCostMax))
   const [categoryFilter, setCategoryFilter] = useState<CategoryValue>(initialCategoryFilter)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('tiles')
   const [sortBy, setSortBy] = useState<SortOption>(initialSortBy)
@@ -159,8 +198,26 @@ export default function ListingsClient({
     setAppliedRiskFilter(initialRiskFilter || 'all')
     setDealFilter(initialDealFilter)
     setMinimumScore(Math.max(0, initialMinimumScore))
+    setMinPrice(Math.max(0, initialMinPrice))
     setMaxPrice(Math.max(0, initialMaxPrice))
+    setPriceStatus(initialPriceStatus)
+    setYearMin(Math.max(0, initialYearMin))
+    setYearMax(Math.max(0, initialYearMax))
+    setTotalTimeMin(Math.max(0, initialTotalTimeMin))
+    setTotalTimeMax(Math.max(0, initialTotalTimeMax))
+    setMaintenanceBand(initialMaintenanceBand)
+    setTrueCostMin(Math.max(0, initialTrueCostMin))
+    setTrueCostMax(Math.max(0, initialTrueCostMax))
+    setAppliedMinPrice(Math.max(0, initialMinPrice))
     setAppliedMaxPrice(Math.max(0, initialMaxPrice))
+    setAppliedPriceStatus(initialPriceStatus)
+    setAppliedYearMin(Math.max(0, initialYearMin))
+    setAppliedYearMax(Math.max(0, initialYearMax))
+    setAppliedTotalTimeMin(Math.max(0, initialTotalTimeMin))
+    setAppliedTotalTimeMax(Math.max(0, initialTotalTimeMax))
+    setAppliedMaintenanceBand(initialMaintenanceBand)
+    setAppliedTrueCostMin(Math.max(0, initialTrueCostMin))
+    setAppliedTrueCostMax(Math.max(0, initialTrueCostMax))
     setCategoryFilter(initialCategoryFilter)
     setSortBy(initialSortBy)
     if (typeof window !== 'undefined') {
@@ -181,7 +238,16 @@ export default function ListingsClient({
     initialRiskFilter,
     initialDealFilter,
     initialMinimumScore,
+    initialMinPrice,
     initialMaxPrice,
+    initialPriceStatus,
+    initialYearMin,
+    initialYearMax,
+    initialTotalTimeMin,
+    initialTotalTimeMax,
+    initialMaintenanceBand,
+    initialTrueCostMin,
+    initialTrueCostMax,
     initialCategoryFilter,
     initialSortBy,
   ])
@@ -363,7 +429,7 @@ export default function ListingsClient({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMaxPrice, categoryFilter, appliedRiskFilter, dealFilter, pageSize])
+  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMinPrice, appliedMaxPrice, appliedPriceStatus, appliedYearMin, appliedYearMax, appliedTotalTimeMin, appliedTotalTimeMax, appliedMaintenanceBand, appliedTrueCostMin, appliedTrueCostMax, categoryFilter, appliedRiskFilter, dealFilter, pageSize])
 
   useEffect(() => {
     if (!hasSkippedInitialFetch.current) {
@@ -391,7 +457,16 @@ export default function ListingsClient({
         if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
         if (dealFilter !== 'all') params.set('dealTier', dealFilter)
         if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
+        if (appliedMinPrice > 0) params.set('minPrice', String(appliedMinPrice))
         if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
+        if (appliedPriceStatus !== 'all') params.set('priceStatus', appliedPriceStatus)
+        if (appliedYearMin > 0) params.set('yearMin', String(appliedYearMin))
+        if (appliedYearMax > 0) params.set('yearMax', String(appliedYearMax))
+        if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
+        if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
+        if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+        if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
+        if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
         if (categoryFilter) params.set('category', categoryFilter)
 
         const response = await fetch(`/api/listings?${params.toString()}`, {
@@ -430,7 +505,16 @@ export default function ListingsClient({
     appliedRiskFilter,
     dealFilter,
     minimumScore,
+    appliedMinPrice,
     appliedMaxPrice,
+    appliedPriceStatus,
+    appliedYearMin,
+    appliedYearMax,
+    appliedTotalTimeMin,
+    appliedTotalTimeMax,
+    appliedMaintenanceBand,
+    appliedTrueCostMin,
+    appliedTrueCostMax,
     categoryFilter,
     sortBy,
   ])
@@ -449,7 +533,16 @@ export default function ListingsClient({
     if (appliedSourceFilter !== 'all') params.set('source', appliedSourceFilter)
     if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
     if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
+    if (appliedMinPrice > 0) params.set('minPrice', String(appliedMinPrice))
     if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
+    if (appliedPriceStatus !== 'all') params.set('priceStatus', appliedPriceStatus)
+    if (appliedYearMin > 0) params.set('yearMin', String(appliedYearMin))
+    if (appliedYearMax > 0) params.set('yearMax', String(appliedYearMax))
+    if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
+    if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
+    if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+    if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
+    if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (safePage > 1) params.set('page', String(safePage))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
@@ -464,7 +557,16 @@ export default function ListingsClient({
     appliedSourceFilter,
     appliedRiskFilter,
     minimumScore,
+    appliedMinPrice,
     appliedMaxPrice,
+    appliedPriceStatus,
+    appliedYearMin,
+    appliedYearMax,
+    appliedTotalTimeMin,
+    appliedTotalTimeMax,
+    appliedMaintenanceBand,
+    appliedTrueCostMin,
+    appliedTrueCostMax,
     safePage,
     pageSize,
   ])
@@ -480,7 +582,16 @@ export default function ListingsClient({
     if (appliedSourceFilter !== 'all') params.set('source', appliedSourceFilter)
     if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
     if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
+    if (appliedMinPrice > 0) params.set('minPrice', String(appliedMinPrice))
     if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
+    if (appliedPriceStatus !== 'all') params.set('priceStatus', appliedPriceStatus)
+    if (appliedYearMin > 0) params.set('yearMin', String(appliedYearMin))
+    if (appliedYearMax > 0) params.set('yearMax', String(appliedYearMax))
+    if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
+    if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
+    if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+    if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
+    if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (page > 1) params.set('page', String(page))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
@@ -554,7 +665,7 @@ export default function ListingsClient({
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
   }
 
-  const buildDealHref = (dealTier: 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED') => {
+  const buildDealHref = (dealTier: DealTierFilter) => {
     const params = new URLSearchParams()
     if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
     if (dealTier !== 'all') params.set('dealTier', dealTier)
@@ -652,8 +763,28 @@ export default function ListingsClient({
           setSubModelFilter={setSubModelFilter}
           sourceFilter={sourceFilter}
           setSourceFilter={setSourceFilter}
+          dealFilter={dealFilter}
+          setDealFilter={setDealFilter}
+          priceStatus={priceStatus}
+          setPriceStatus={setPriceStatus}
+          minPrice={minPrice}
+          setMinPrice={setMinPrice}
           maxPrice={maxPrice}
           setMaxPrice={setMaxPrice}
+          yearMin={yearMin}
+          setYearMin={setYearMin}
+          yearMax={yearMax}
+          setYearMax={setYearMax}
+          totalTimeMin={totalTimeMin}
+          setTotalTimeMin={setTotalTimeMin}
+          totalTimeMax={totalTimeMax}
+          setTotalTimeMax={setTotalTimeMax}
+          maintenanceBand={maintenanceBand}
+          setMaintenanceBand={setMaintenanceBand}
+          trueCostMin={trueCostMin}
+          setTrueCostMin={setTrueCostMin}
+          trueCostMax={trueCostMax}
+          setTrueCostMax={setTrueCostMax}
           riskFilter={riskFilter}
           setRiskFilter={setRiskFilter}
           makeOptions={makeOptions}
@@ -664,7 +795,17 @@ export default function ListingsClient({
             setModelFilter('')
             setSubModelFilter('')
             setSourceFilter('all')
+            setDealFilter('all')
+            setPriceStatus('all')
+            setMinPrice(0)
             setMaxPrice(0)
+            setYearMin(0)
+            setYearMax(0)
+            setTotalTimeMin(0)
+            setTotalTimeMax(0)
+            setMaintenanceBand('any')
+            setTrueCostMin(0)
+            setTrueCostMax(0)
             setRiskFilter('all')
           }}
           onApplyFilters={() => {
@@ -673,7 +814,16 @@ export default function ListingsClient({
             setAppliedSubModelFilter(subModelFilter)
             setAppliedSourceFilter(sourceFilter)
             setAppliedRiskFilter(riskFilter)
+            setAppliedMinPrice(minPrice)
             setAppliedMaxPrice(maxPrice)
+            setAppliedPriceStatus(priceStatus)
+            setAppliedYearMin(yearMin)
+            setAppliedYearMax(yearMax)
+            setAppliedTotalTimeMin(totalTimeMin)
+            setAppliedTotalTimeMax(totalTimeMax)
+            setAppliedMaintenanceBand(maintenanceBand)
+            setAppliedTrueCostMin(trueCostMin)
+            setAppliedTrueCostMax(trueCostMax)
             setCurrentPage(1)
           }}
           riskTooltip={(

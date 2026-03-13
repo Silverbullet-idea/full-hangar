@@ -26,6 +26,8 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
+type PriceStatus = 'all' | 'priced'
+type MaintenanceBand = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 
 function parseParam(searchParams: SearchParams | undefined, key: string): string {
   const raw = searchParams?.[key]
@@ -104,6 +106,17 @@ function parsePositiveInt(searchParams: SearchParams | undefined, key: string, f
   if (!Number.isFinite(value)) return fallback
   const normalized = Math.floor(value)
   return normalized > 0 ? normalized : fallback
+}
+
+function parsePriceStatus(searchParams?: SearchParams): PriceStatus {
+  const value = parseParam(searchParams, 'priceStatus').toLowerCase()
+  return value === 'priced' ? 'priced' : 'all'
+}
+
+function parseMaintenanceBand(searchParams?: SearchParams): MaintenanceBand {
+  const value = parseParam(searchParams, 'maintenanceBand').toLowerCase()
+  if (value === 'light' || value === 'moderate' || value === 'heavy' || value === 'severe') return value
+  return 'any'
 }
 
 function buildFilterOptions(rows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }>) {
@@ -198,7 +211,16 @@ export default async function ListingsPage({
   const initialStateFilter = parseParam(resolvedSearchParams, 'state')
   const initialRiskFilter = parseParam(resolvedSearchParams, 'risk')
   const initialMinimumScore = parsePositiveInt(resolvedSearchParams, 'minValueScore', 0)
+  const initialMinPrice = parsePositiveInt(resolvedSearchParams, 'minPrice', 0)
   const initialMaxPrice = parsePositiveInt(resolvedSearchParams, 'maxPrice', 0)
+  const initialPriceStatus = parsePriceStatus(resolvedSearchParams)
+  const initialYearMin = parsePositiveInt(resolvedSearchParams, 'yearMin', 0)
+  const initialYearMax = parsePositiveInt(resolvedSearchParams, 'yearMax', 0)
+  const initialTotalTimeMin = parsePositiveInt(resolvedSearchParams, 'totalTimeMin', 0)
+  const initialTotalTimeMax = parsePositiveInt(resolvedSearchParams, 'totalTimeMax', 0)
+  const initialMaintenanceBand = parseMaintenanceBand(resolvedSearchParams)
+  const initialTrueCostMin = parsePositiveInt(resolvedSearchParams, 'trueCostMin', 0)
+  const initialTrueCostMax = parsePositiveInt(resolvedSearchParams, 'trueCostMax', 0)
   const initialPage = parsePositiveInt(resolvedSearchParams, 'page', 1)
   const requestedPageSize = parsePositiveInt(resolvedSearchParams, 'pageSize', 24)
   const initialPageSize = Math.min(48, Math.max(12, requestedPageSize))
@@ -222,7 +244,16 @@ export default async function ListingsPage({
         state: initialStateFilter,
         risk: initialRiskFilter,
         minValueScore: initialMinimumScore,
+        minPrice: initialMinPrice,
         maxPrice: initialMaxPrice,
+        priceStatus: initialPriceStatus,
+        yearMin: initialYearMin,
+        yearMax: initialYearMax,
+        totalTimeMin: initialTotalTimeMin,
+        totalTimeMax: initialTotalTimeMax,
+        maintenanceBand: initialMaintenanceBand,
+        trueCostMin: initialTrueCostMin,
+        trueCostMax: initialTrueCostMax,
         category: initialCategoryFilter ?? '',
         dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
       }),
@@ -290,7 +321,16 @@ export default async function ListingsPage({
         initialStateFilter={initialStateFilter}
         initialRiskFilter={initialRiskFilter}
         initialMinimumScore={initialMinimumScore}
+        initialMinPrice={initialMinPrice}
         initialMaxPrice={initialMaxPrice}
+        initialPriceStatus={initialPriceStatus}
+        initialYearMin={initialYearMin}
+        initialYearMax={initialYearMax}
+        initialTotalTimeMin={initialTotalTimeMin}
+        initialTotalTimeMax={initialTotalTimeMax}
+        initialMaintenanceBand={initialMaintenanceBand}
+        initialTrueCostMin={initialTrueCostMin}
+        initialTrueCostMax={initialTrueCostMax}
         initialPage={initialPage}
         initialPageSize={initialPageSize}
       />

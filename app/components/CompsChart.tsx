@@ -303,6 +303,34 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
     };
   }, [payload, yMetric]);
 
+  const marketCompsTableRows = useMemo(() => {
+    if (!payload) return [];
+    return payload.comps
+      .filter((row) => typeof row.price === "number" && row.price > 0)
+      .map((row) => ({
+        id: row.id,
+        label: `${row.year ?? "?"} ${row.make ?? ""} ${row.model ?? ""}`.trim(),
+        price: row.price as number,
+        year: row.year,
+        totalTimeHours: row.total_time_hours,
+        riskLevel: row.risk_level ?? "UNKNOWN",
+        dealTier: row.deal_tier,
+        locationLabel: row.location_label ?? "Location unavailable",
+      }))
+      .sort((a, b) => a.price - b.price)
+      .slice(0, 24);
+  }, [payload]);
+
+  const otherMarketCompsRows = useMemo(() => {
+    if (!payload) return [];
+    const hasValidPrice = (value: number | null) => typeof value === "number" && value > 0;
+    const hasValidY = (value: number | null) =>
+      typeof value === "number" && (yMetric === "year" ? value >= 1900 : value > 0);
+    return payload.comps
+      .filter((row) => !hasValidPrice(row.price) || !hasValidY(row[yMetric]))
+      .slice(0, 20);
+  }, [payload, yMetric]);
+
   if (loading) {
     return <div style={{ height: 280, borderRadius: 10, border: "1px solid var(--brand-dark)", background: "var(--card-bg)" }} />;
   }
@@ -389,7 +417,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
           <button
             type="button"
             onClick={() => setSubmodelOnly((prev) => !prev)}
-            title={submodelOnly ? "Showing this exact submodel only. Click to compare all submodels in this model family." : "Showing full model family (all submodels). Click to show only this exact submodel."}
+            title={submodelOnly ? "Currently exact sub-model only. Click to compare all related models." : "Currently showing broader related models. Click for exact sub-model only."}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -408,7 +436,9 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
             <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 5h18l-7 8v6l-4-2v-4L3 5z" />
             </svg>
-            {submodelOnly ? "Submodel only" : "All submodels"}
+            {submodelOnly
+              ? `show_all_other: '${payload?.target?.model ?? "exact sub-model"}'`
+              : `show_all_other: '${payload?.metadata?.model_family ? `${payload.target.make ?? ""} ${payload.metadata.model_family}`.trim() : payload?.target?.model ?? "broader model set"}'`}
           </button>
         </div>
       </div>
@@ -622,6 +652,48 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       <div className="comps-metric-label" style={{ marginTop: "0.25rem" }}>
         {payload.metadata.search_criteria_used}
       </div>
+      {marketCompsTableRows.length > 0 ? (
+        <div style={{ marginTop: "0.8rem", border: "1px solid var(--brand-dark)", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ fontSize: "0.82rem", color: "#FF9900", fontWeight: 800, padding: "0.5rem 0.6rem", borderBottom: "1px solid var(--brand-dark)", background: "var(--surface-muted)" }}>
+            Market Comps Table
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.76rem" }}>
+              <thead>
+                <tr style={{ background: "var(--surface-muted)" }}>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Aircraft</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Price</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Year</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>TT</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Risk</th>
+                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Deal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {marketCompsTableRows.map((row, index) => (
+                  <tr key={`${row.id ?? row.label}-${index}`} style={{ borderTop: "1px solid var(--brand-dark)" }}>
+                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>
+                      {row.id ? (
+                        <a href={`/listings/${encodeURIComponent(row.id)}`} style={{ color: readableBodyTextColor, textDecorationColor: "var(--brand-muted)" }}>
+                          {row.label}
+                        </a>
+                      ) : (
+                        row.label
+                      )}
+                      <div style={{ color: tooltipMutedTextColor, fontSize: "0.7rem" }}>{row.locationLabel}</div>
+                    </td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor, fontWeight: 700 }}>{formatMoney(row.price)}</td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{typeof row.year === "number" ? row.year : "N/A"}</td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{formatHours(row.totalTimeHours)}</td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: getRiskColor(row.riskLevel), fontWeight: 700 }}>{row.riskLevel}</td>
+                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{row.dealTier ? row.dealTier.replace(/_/g, " ") : "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
       {priceKnownButMissingY.length > 0 ? (
         <div style={{ marginTop: "0.7rem", border: "1px solid var(--brand-dark)", borderRadius: 8, padding: "0.55rem", background: "var(--card-bg)" }}>
           <div style={{ fontSize: "0.8rem", color: "#FF9900", fontWeight: 700, marginBottom: "0.35rem" }}>
@@ -633,6 +705,32 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               const href = row.id ? `/listings/${encodeURIComponent(String(row.id))}` : null;
               return (
                 <li key={`${row.id ?? label}-${row.price}`}>
+                  {href ? (
+                    <a href={href} style={{ color: readableBodyTextColor, textDecorationColor: "var(--brand-muted)", fontWeight: 600 }}>
+                      {`${label} · ${formatMoney(row.price)} · ${row.location_label ?? "Location unavailable"}`}
+                    </a>
+                  ) : (
+                    <span style={{ color: readableBodyTextColor }}>
+                      {`${label} · ${formatMoney(row.price)} · ${row.location_label ?? "Location unavailable"}`}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+      {otherMarketCompsRows.length > 0 ? (
+        <div style={{ marginTop: "0.7rem", border: "1px solid var(--brand-dark)", borderRadius: 8, padding: "0.55rem", background: "var(--card-bg)" }}>
+          <div style={{ fontSize: "0.8rem", color: "#FF9900", fontWeight: 700, marginBottom: "0.35rem" }}>
+            Other Market Comps
+          </div>
+          <ul style={{ margin: 0, paddingLeft: "1rem", display: "grid", gap: "0.2rem" }}>
+            {otherMarketCompsRows.map((row) => {
+              const label = `${row.year ?? "?"} ${row.make ?? ""} ${row.model ?? ""}`.trim();
+              const href = row.id ? `/listings/${encodeURIComponent(String(row.id))}` : null;
+              return (
+                <li key={`${row.id ?? label}-${row.price ?? "na"}-${row.total_time_hours ?? "na"}`}>
                   {href ? (
                     <a href={href} style={{ color: readableBodyTextColor, textDecorationColor: "var(--brand-muted)", fontWeight: 600 }}>
                       {`${label} · ${formatMoney(row.price)} · ${row.location_label ?? "Location unavailable"}`}

@@ -498,12 +498,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
 
       <h1 className="listing-title">
         {titleText}
-        {typeof resolvedAskingPrice === "number" && resolvedAskingPrice > 0 ? (
-          <span className="asking-price-inline">
-            {" - Asking Price: "}
-            <span className="asking-price-value">{formatMoney(resolvedAskingPrice)}</span>
-          </span>
-        ) : null}
       </h1>
       {fractionalBreakdown.isFractional ? (
         <div className="fractional-chip-row">
@@ -529,6 +523,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         />
         <RightDetailColumn
           listingId={id}
+          askingPrice={resolvedAskingPrice}
           marketPricing={marketPricing}
           formatMoney={formatMoney}
           scoreColor={scoreColor}
@@ -579,16 +574,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           font-size: clamp(2rem, 4vw, 3rem);
           line-height: 1.1;
           white-space: nowrap;
-        }
-        .asking-price-inline {
-          font-size: clamp(1rem, 2vw, 1.45rem);
-          font-weight: 700;
-          color: #e5e7eb;
-          margin-left: 0.25rem;
-        }
-        .asking-price-value {
-          color: #22c55e;
-          font-weight: 800;
         }
         .fractional-pricing-note {
           margin: -8px 0 14px;

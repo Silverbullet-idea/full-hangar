@@ -49,9 +49,11 @@ This is the short, operational board for current work. Permanent standards stay 
 - Global header/search improvements shipped, including listings search entry and inventory-aware UX updates.
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
 - Listings filter reliability pass shipped: make/model family filtering now uses wildcard matching (preventing zero-result false negatives), max-price filtering now enforces positive non-null prices (excluding call-for-price/$0 rows), top-category make dropdowns now include low-count makes, and helicopter detection/isolation was tightened so rotorcraft no longer leak into fixed-wing category lanes.
+- Listings sidebar filter expansion shipped: added deal-type selection, priced-only toggle, min/max price range (preset + manual), year range (preset + manual), total-time range (preset + manual), maintenance-burden bands, and true-cost exact range filters wired through URL params + API + DB query pipeline.
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
 - Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
+- Listing detail comps UX refresh shipped: removed inline asking-price text from the H1 title line, moved asking price into the `Comp & Cost` panel above estimated range, and restored expanded comparable-market outputs with a comps table plus an additional "other comps" list while keeping the Price-vs-Year/Time toggle and exact-submodel toggle behavior.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
