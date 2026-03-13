@@ -51,6 +51,7 @@ from compute_market_comps import (
     fetch_transfer_rows,
     upsert_market_comps,
 )
+from registration_parser import derive_registration_fields, normalize_us_n_number
 try:
     from controller_scraper import _STATE_ABBREV, _normalize_state
 except Exception:
@@ -257,9 +258,6 @@ PRECHECK_DB_UPDATE_COLUMNS = {
 }
 PRECHECK_JSON_UPSERT_COLUMNS = PRECHECK_DB_UPDATE_COLUMNS | {"listing_source"}
 
-N_NUMBER_PATTERN = re.compile(r"\bN[\s\-]*([0-9]{1,5}[A-HJ-NP-Z]{0,2})\b", re.I)
-
-
 def _write_checkpoint(
     checkpoint_path: Path | None,
     *,
@@ -310,16 +308,7 @@ def _clear_checkpoint(checkpoint_path: Path | None) -> None:
 
 
 def normalize_n_number(raw_value: str | None) -> str | None:
-    if not raw_value:
-        return None
-    compact = re.sub(r"[^A-Za-z0-9]", "", raw_value).upper()
-    if not compact:
-        return None
-    if not compact.startswith("N"):
-        compact = f"N{compact}"
-    if re.fullmatch(r"N[0-9]{1,5}[A-HJ-NP-Z]{0,2}", compact):
-        return compact
-    return None
+    return normalize_us_n_number(raw_value)
 
 
 def infer_n_number(listing: dict) -> str | None:
@@ -327,21 +316,23 @@ def infer_n_number(listing: dict) -> str | None:
     if existing:
         return existing
 
-    sources = [
-        listing.get("registration"),
-        listing.get("tail_number"),
-        listing.get("title"),
-        listing.get("description"),
-        listing.get("description_full"),
-    ]
-    text = " ".join(str(value or "") for value in sources)
-    if not text.strip():
-        return None
-
-    match = N_NUMBER_PATTERN.search(text.upper())
-    if not match:
-        return None
-    return normalize_n_number(f"N{match.group(1)}")
+    fields = derive_registration_fields(
+        raw_value=str(
+            listing.get("registration_raw")
+            or listing.get("registration")
+            or listing.get("tail_number")
+            or ""
+        ),
+        fallback_text=" ".join(
+            str(value or "")
+            for value in (
+                listing.get("title"),
+                listing.get("description"),
+                listing.get("description_full"),
+            )
+        ),
+    )
+    return normalize_n_number(str(fields.get("n_number") or ""))
 
 
 def parse_missing_column_names_from_exception(exc: Exception) -> set[str]:
@@ -528,6 +519,10 @@ def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
 
 def listing_for_intelligence(row: dict) -> dict:
     """Build a listing dict suitable for aircraft_intelligence_score from a DB row."""
+    primary_engine_model = row.get("engine_model")
+    fallback_faa_engine_model = row.get("faa_engine_model")
+    resolved_engine_model = primary_engine_model or fallback_faa_engine_model
+
     # DB may use different keys; normalize to what intelligence expects
     return {
         "year": row.get("year"),
@@ -543,7 +538,7 @@ def listing_for_intelligence(row: dict) -> dict:
         "time_since_new_engine": row.get("time_since_new_engine"),
         "time_since_prop_overhaul": row.get("time_since_prop_overhaul"),
         "aircraft_type": row.get("aircraft_type"),
-        "engine_model": row.get("engine_model"),
+        "engine_model": resolved_engine_model,
         "days_on_market": row.get("days_on_market"),
         "price_reduced": row.get("price_reduced"),
         "accident_count": row.get("accident_count"),
@@ -721,7 +716,7 @@ def run_backfill_from_db(
         "description", "description_full", "description_intelligence", "avionics_description", "avionics_notes", "title", "source", "total_time_airframe",
         "value_score", "avionics_score",
         "time_since_overhaul", "time_since_new_engine", "time_since_prop_overhaul", "engine_time_since_overhaul",
-        "aircraft_type", "engine_model", "prop_model", "days_on_market", "price_reduced",
+        "aircraft_type", "engine_model", "faa_engine_model", "prop_model", "days_on_market", "price_reduced",
         "accident_count", "most_recent_accident_date", "most_severe_damage", "has_accident_history",
     ]
     active_select_cols = list(select_cols)
@@ -868,7 +863,7 @@ def run_backfill_from_db(
                     listing["total_time_airframe"] = parser_updates["total_time_airframe"]
                 if "engine_time_since_overhaul" in parser_updates and listing.get("time_since_overhaul") in (None, "", 0):
                     listing["time_since_overhaul"] = parser_updates["engine_time_since_overhaul"]
-                if "engine_model" in parser_updates:
+                if "engine_model" in parser_updates and not str(listing.get("engine_model") or "").strip():
                     listing["engine_model"] = parser_updates["engine_model"]
                 if "description_intelligence" in parser_updates:
                     # Use freshly parsed enrichment immediately for this scoring pass.
@@ -1071,6 +1066,32 @@ def run_backfill_from_json(
             continue
         attempted += 1
         try:
+            registration_fields = derive_registration_fields(
+                raw_value=str(
+                    L.get("registration_raw")
+                    or L.get("registration")
+                    or L.get("tail_number")
+                    or L.get("n_number")
+                    or ""
+                ),
+                fallback_text=" ".join(
+                    str(value or "")
+                    for value in (
+                        L.get("title"),
+                        L.get("description"),
+                        L.get("description_full"),
+                    )
+                ),
+            )
+            for reg_key in (
+                "registration_raw",
+                "registration_normalized",
+                "registration_scheme",
+                "registration_country_code",
+                "registration_confidence",
+            ):
+                if registration_fields.get(reg_key) and not L.get(reg_key):
+                    L[reg_key] = registration_fields[reg_key]
             inferred_n = infer_n_number(L)
             if inferred_n and not L.get("n_number"):
                 L["n_number"] = inferred_n
