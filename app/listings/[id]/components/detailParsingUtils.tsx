@@ -385,8 +385,9 @@ function parseAvionicsLineItems(value: string | null | undefined): string[] {
   const avionicsOnly: string[] = []
   for (const line of lines) {
     if (/^additional equipment/i.test(line)) break
-    if (!isLikelyAvionicsLine(line)) continue
-    avionicsOnly.push(line)
+    const normalized = normalizeAvionicsLine(line)
+    if (!normalized) continue
+    avionicsOnly.push(normalized)
   }
   return avionicsOnly
 }
@@ -421,6 +422,8 @@ function splitAvionicsDisplayLines(source: string): string[] {
   if (!text) return []
 
   text = text.replace(/\bAdditional Equipment\b\s*[:\-]?/gi, "\nAdditional Equipment:")
+  text = text.replace(/\bAdditional Highlights include\b/gi, "\n")
+  text = text.replace(/\bit delivers excellent performance and ease of operation\b/gi, "\n")
   text = text.replace(/[;,]\s+/g, "\n")
 
   const tokenPattern = /\b(?:Garmin Synthetic Vision Technology|Garmin Electronic Stability Protection|Garmin|Avidyne|Bendix\/King|BendixKing|King|Genesys|S-TEC|PS Engineering|GNS[-\s]?\d{3}[A-Z]*|GTN[-\s]?\d{3}[A-Z]*|IFD[-\s]?\d{3}[A-Z]*|GNX[-\s]?\d{3}[A-Z]*|GPS[-\s]?\d{3}[A-Z]*|GI[-\s]?\d{2,4}[A-Z]*|KMA[-\s]?\d{2,4}[A-Z]*|KX[-\s]?\d{2,4}[A-Z]*|KLN[-\s]?\d{2,4}[A-Z]*|KFC[-\s]?\d{2,4}[A-Z]*|KAP[-\s]?\d{2,4}[A-Z]*|PMA[-\s]?\d{2,4}[A-Z]*|GMA[-\s]?\d{2,4}[A-Z]*|GTC[-\s]?\d{2,4}[A-Z]*|GTX[-\s]?\d{2,4}[A-Z]*|GTS[-\s]?\d{2,4}[A-Z]*|GIA[-\s]?\d{2,4}[A-Z]*|GSR[-\s]?\d{2,4}[A-Z]*|GDU[-\s]?\d{2,4}[A-Z]*|GEA[-\s]?\d{2,4}[A-Z]*|GRS[-\s]?\d{2,4}[A-Z]*|GDC[-\s]?\d{2,4}[A-Z]*|GMU[-\s]?\d{2,4}[A-Z]*|GCU[-\s]?\d{2,4}[A-Z]*|GFC[-\s]?\d{2,4}[A-Z]*|GMC[-\s]?\d{2,4}[A-Z]*|GDL[-\s]?\d{2,4}[A-Z]*|ADS-B(?:\s+Out|\s+In)?|WAAS|Nav\/Com\s*\d+|Audio Panel|Autopilot|Transponder|Engine Monitor|XM Weather|FIKI|Factory Air Conditioning|Artex ELT[-\s]?[A-Z0-9]+|Built-in Oxygen System|Engine Pre-Heat|Custom Aircraft Cover|Trilogy ESI[-\s]?\d{3,4})\b/gi
@@ -439,10 +442,12 @@ function splitAvionicsDisplayLines(source: string): string[] {
   const deduped: string[] = []
   const seen = new Set<string>()
   for (const line of lines) {
-    const key = normalizeAvionicsToken(line)
-    if (!key || seen.has(key)) continue
+    const normalized = normalizeAvionicsLine(line)
+    if (!normalized) continue
+    const key = normalizeAvionicsToken(normalized)
+    if (seen.has(key)) continue
     seen.add(key)
-    deduped.push(line)
+    deduped.push(normalized)
   }
   return deduped
 }
@@ -452,9 +457,45 @@ function isLikelyAvionicsLine(value: string): boolean {
   if (!line) return false
   if (/^(avionics|equipment)$/i.test(line)) return false
   if (/^(additional equipment|modifications)/i.test(line)) return false
-  if (/stc\b|vortex|baffle|visors|shoulder harness|usb charging|gross weight/i.test(line)) return false
+  if (NON_AVIONICS_RE.test(line)) return false
   return /\b(garmin|avidyne|king|bendix|genesys|s-tec|ps engineering|gtn|gns|ifd|gnx|gps|gi\s*\d|kma|kx|kln|kfc|kap|pma|gma|gtx|gfc|gts|gdu|gia|gdc|gmu|gcu|gmc|gdl|ads-b|waas|autopilot|transponder|audio panel|nav\/com)\b/i.test(line)
 }
+
+function normalizeAvionicsLine(value: string): string | null {
+  let line = value.replace(/^[-•\s]+/, "").replace(/\s+/g, " ").trim()
+  if (!line) return null
+  if (/^(avionics|equipment)$/i.test(line)) return null
+  if (/^additional equipment/i.test(line)) return null
+
+  // Drop long non-avionics narratives that happen to appear in avionics/equipment blocks.
+  if (NON_AVIONICS_RE.test(line) && !/\b(ads-b|autopilot|garmin|gtn|gns|gfc|gtx|g1000|nxi|tas|traffic|xm weather|synthetic vision|svt)\b/i.test(line)) {
+    return null
+  }
+
+  // Trim at the first clearly non-avionics clause (door mods, tanks, STC prose, etc).
+  const cutMatch = NON_AVIONICS_CLAUSE_RE.exec(line)
+  if (cutMatch && cutMatch.index > 0) {
+    line = line.slice(0, cutMatch.index).trim().replace(/[,:;\-]+$/, "")
+  }
+
+  // Normalize common noisy prose into concise avionics items.
+  if (/\bg1000\s*nxi\b/i.test(line)) return "Garmin G1000 NXi"
+  if (/\bgfc[\s\-]?700\b/i.test(line) && /\bautopilot\b/i.test(line)) return "GFC700 Autopilot"
+  if (/\bsynthetic vision|\bsvt\b/i.test(line)) return "Synthetic Vision (SVT)"
+  if (/\btraffic awareness system|\btas\b/i.test(line)) return "Traffic Awareness System (TAS)"
+  if (/\bxm weather/i.test(line)) return "XM Weather & Radio"
+  if (/\bads[\s\-]?b\b/i.test(line) && /\bin\b/i.test(line) && /\bout\b/i.test(line)) return "ADS-B In and Out"
+  if (/\bgarmin\s*275|\bgi[\s\-]?275\b/i.test(line)) return "Garmin GI 275"
+
+  if (!isLikelyAvionicsLine(line)) return null
+  return line
+}
+
+const NON_AVIONICS_RE =
+  /\b(passenger door|rear baggage door|baggage door|flint tip tanks?|wipaire|vortex generators?|engine baffles?|rosen visors?|dual yokes?|shoulder harness|usb charging|gross weight increase|paint|interior condition|exterior condition|ownership history|damage history|logbook|canadian regulations?|floats?|fuel of \d+ gallons?|hours of flying|range|hinged window|stc\b)\b/i
+
+const NON_AVIONICS_CLAUSE_RE =
+  /\b(added a passenger door|passenger door|rear baggage door|baggage door|flint tip tanks?|wipaire|canadian regulations?|which was done under an stc|stc\b|fuel of \d+ gallons?|hours of flying|range|hinged window|floats?)\b/i
 
 function normalizeAvionicsToken(value: string): string {
   return value
