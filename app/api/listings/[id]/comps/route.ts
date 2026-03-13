@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
-  getComparableListings,
-  getComparableListingsByCategory,
-  getComparableListingsByModelFamily,
-  getListingById,
-} from "../../../../../lib/db/listingsRepository"
+  createServerClient,
+} from "../../../../../lib/supabase/server"
 
 type CompRow = {
   id: string | null
@@ -87,6 +84,127 @@ function dedupeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] 
   return deduped
 }
 
+function isPermissionDenied(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "")
+  const normalized = message.toLowerCase()
+  return normalized.includes("permission denied") && normalized.includes("aircraft_listings")
+}
+
+async function getListingByIdPublic(id: string): Promise<Record<string, unknown> | null> {
+  const supabase = createServerClient()
+
+  const byId = await supabase
+    .from("public_listings")
+    .select("*")
+    .eq("id", id)
+    .limit(1)
+  if (byId.error) {
+    throw new Error(byId.error.message)
+  }
+  if ((byId.data ?? []).length > 0) {
+    return (byId.data ?? [])[0] as Record<string, unknown>
+  }
+
+  const bySource = await supabase
+    .from("public_listings")
+    .select("*")
+    .eq("source_id", id)
+    .limit(1)
+  if (bySource.error) {
+    throw new Error(bySource.error.message)
+  }
+
+  return ((bySource.data ?? [])[0] as Record<string, unknown> | undefined) ?? null
+}
+
+async function getComparableListingsPublic(
+  make: string,
+  model: string,
+  maxPrice?: number,
+  opts: { minYear?: number; maxYear?: number; excludeId?: string; limit?: number } = {}
+): Promise<Record<string, unknown>[]> {
+  const supabase = createServerClient()
+  const { minYear, maxYear, excludeId, limit = 20 } = opts
+  let query = supabase
+    .from("public_listings")
+    .select("*")
+    .eq("make", make)
+    .eq("model", model)
+    .eq("is_active", true)
+    .limit(limit)
+
+  if (typeof minYear === "number") query = query.gte("year", minYear)
+  if (typeof maxYear === "number") query = query.lte("year", maxYear)
+  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+
+  const result = await query
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+
+  const rows = (result.data ?? []) as Record<string, unknown>[]
+  if (!excludeId) return rows
+  return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
+}
+
+async function getComparableListingsByModelFamilyPublic(
+  make: string,
+  modelFamily: string,
+  maxPrice?: number,
+  opts: { minYear?: number; maxYear?: number; excludeId?: string; limit?: number } = {}
+): Promise<Record<string, unknown>[]> {
+  const supabase = createServerClient()
+  const { minYear, maxYear, excludeId, limit = 20 } = opts
+  let query = supabase
+    .from("public_listings")
+    .select("*")
+    .eq("make", make)
+    .ilike("model", `${modelFamily}%`)
+    .eq("is_active", true)
+    .limit(limit)
+
+  if (typeof minYear === "number") query = query.gte("year", minYear)
+  if (typeof maxYear === "number") query = query.lte("year", maxYear)
+  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+
+  const result = await query
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+
+  const rows = (result.data ?? []) as Record<string, unknown>[]
+  if (!excludeId) return rows
+  return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
+}
+
+async function getComparableListingsByCategoryPublic(
+  make: string,
+  category: string,
+  maxPrice?: number,
+  opts: { excludeId?: string; limit?: number } = {}
+): Promise<Record<string, unknown>[]> {
+  const supabase = createServerClient()
+  const { excludeId, limit = 20 } = opts
+  let query = supabase
+    .from("public_listings")
+    .select("*")
+    .eq("make", make)
+    .eq("aircraft_category", category)
+    .eq("is_active", true)
+    .limit(limit)
+
+  if (typeof maxPrice === "number") query = query.lte("asking_price", maxPrice)
+
+  const result = await query
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+
+  const rows = (result.data ?? []) as Record<string, unknown>[]
+  if (!excludeId) return rows
+  return rows.filter((row) => row?.id !== excludeId && row?.source_id !== excludeId)
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> | { id: string } }
@@ -99,7 +217,7 @@ export async function GET(
     }
 
     const submodelOnly = request.nextUrl.searchParams.get("submodelOnly") === "1"
-    const targetRaw = (await getListingById(id)) as Record<string, unknown> | null
+    const targetRaw = await getListingByIdPublic(id)
     if (!targetRaw) {
       return NextResponse.json({ data: null, error: "Listing not found." }, { status: 404 })
     }
@@ -119,29 +237,24 @@ export async function GET(
     let searchCriteria = "same make + category fallback"
 
     if (make && model && submodelOnly) {
-      comps = (await getComparableListings(make, model, undefined, baseOpts)) as Record<string, unknown>[]
+      comps = await getComparableListingsPublic(make, model, undefined, baseOpts)
       searchCriteria = "same make/model within ±10 years"
     } else if (make && modelFamily) {
-      comps = (await getComparableListingsByModelFamily(
-        make,
-        modelFamily,
-        undefined,
-        baseOpts
-      )) as Record<string, unknown>[]
+      comps = await getComparableListingsByModelFamilyPublic(make, modelFamily, undefined, baseOpts)
       searchCriteria = `same make/model family (${modelFamily}) within ±10 years`
     }
 
     if (comps.length < 3 && make && model) {
-      const exact = (await getComparableListings(make, model, undefined, baseOpts)) as Record<string, unknown>[]
+      const exact = await getComparableListingsPublic(make, model, undefined, baseOpts)
       comps = dedupeRows([...comps, ...exact])
       if (exact.length > 0) searchCriteria = "same make/model within ±10 years"
     }
 
     if (comps.length < 5 && make && category) {
-      const fallback = (await getComparableListingsByCategory(make, category, undefined, {
+      const fallback = await getComparableListingsByCategoryPublic(make, category, undefined, {
         excludeId: id,
         limit: 20,
-      })) as Record<string, unknown>[]
+      })
       comps = dedupeRows([...comps, ...fallback])
       if (fallback.length > 0) searchCriteria = `same make + ${category} fallback`
     }
@@ -177,6 +290,12 @@ export async function GET(
 
     return NextResponse.json({ data: payload, error: null }, { status: 200 })
   } catch (error) {
+    if (isPermissionDenied(error)) {
+      return NextResponse.json(
+        { data: null, error: "Comparable listings temporarily unavailable. Please try again shortly." },
+        { status: 503 }
+      )
+    }
     const message = error instanceof Error ? error.message : "Failed to load comparable listings."
     return NextResponse.json({ data: null, error: message }, { status: 500 })
   }

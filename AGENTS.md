@@ -54,6 +54,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Listing detail comps UX refresh shipped: removed inline asking-price text from the H1 title line, moved asking price into the `Comp & Cost` panel above estimated range, and restored expanded comparable-market outputs with a comps table plus an additional "other comps" list while keeping the Price-vs-Year/Time toggle and exact-submodel toggle behavior.
+- Listing detail comps API hardening shipped: `/api/listings/[id]/comps` now queries `public_listings` directly and avoids `aircraft_listings` dependency so chart payloads continue to resolve under public-role constraints.
 - Comps panel supports multiple comparison modes and dynamic chart loading behavior.
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
