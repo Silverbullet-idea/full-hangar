@@ -12,9 +12,9 @@ import {
   collectImageCandidates,
   deriveModelFamily,
   inferCategoriesForMakeModel,
+  isLikelyHelicopterMake,
   normalizeTopMenuMakeLabel,
   normalizeSourceKey,
-  TOP_MENU_MIN_COUNT,
   type CategoryValue,
   type ListingSourceKey,
 } from './components/listingsClientUtils'
@@ -322,35 +322,35 @@ export default function ListingsClient({
 
     const makesByCategory = {
       single: Array.from(makeBuckets.single.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       multi: Array.from(makeBuckets.multi.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       se_turboprop: Array.from(makeBuckets.se_turboprop.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       me_turboprop: Array.from(makeBuckets.me_turboprop.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       jet: Array.from(makeBuckets.jet.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       helicopter: Array.from(makeBuckets.helicopter.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       lsp: Array.from(makeBuckets.lsp.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
       sea: Array.from(makeBuckets.sea.entries())
-        .filter(([, count]) => count > 1)
+        .filter(([, count]) => count > 0)
         .map(([make, count]) => ({ make, count }))
         .sort((a, b) => a.make.localeCompare(b.make)),
     }
@@ -623,7 +623,7 @@ export default function ListingsClient({
         topMenuButtonCount={topMenuButtonCount}
         visibleCategories={visibleCategories}
         categoryFilter={categoryFilter}
-        makeOptions={makeOptions}
+        makeOptions={makeOptions.filter((make) => !isLikelyHelicopterMake(make))}
         makeCountMap={makeCountMap}
         categoryMenuData={categoryMenuData}
         dealFilter={dealFilter}

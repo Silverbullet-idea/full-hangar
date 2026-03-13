@@ -48,6 +48,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Theme system shipped with persistent dark/light mode, dual logos, and tokenized styling parity.
 - Global header/search improvements shipped, including listings search entry and inventory-aware UX updates.
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
+- Listings filter reliability pass shipped: make/model family filtering now uses wildcard matching (preventing zero-result false negatives), max-price filtering now enforces positive non-null prices (excluding call-for-price/$0 rows), top-category make dropdowns now include low-count makes, and helicopter detection/isolation was tightened so rotorcraft no longer leak into fixed-wing category lanes.
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
 - Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.

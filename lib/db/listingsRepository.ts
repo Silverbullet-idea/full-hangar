@@ -131,7 +131,7 @@ export async function getListings(filters: ListingFilters = {}) {
 
   if (onlyActive) query = query.eq("is_active", true);
   if (typeof maxPrice === "number") {
-    query = query.or(`asking_price.lte.${maxPrice},asking_price.is.null`);
+    query = applyPositivePriceCeiling(query, maxPrice);
   }
 
   const result = await query;
@@ -160,8 +160,43 @@ const SEA_OR =
   "model.ilike.%Seaplane%,model.ilike.%Amphib%,model.ilike.%Float%,model.ilike.%Flying Boat%,model.ilike.%SeaRey%,model.ilike.%Sea Rey%,make.ilike.%Icon%,make.ilike.%Lake%,make.ilike.%Seawind%,make.ilike.%Progressive Aerodyne%";
 const MULTI_OR =
   "model.ilike.%Twin%,model.ilike.%Seneca%,model.ilike.%Aztec%,model.ilike.%Baron%,model.ilike.%310%,model.ilike.%340%,model.ilike.%402%,model.ilike.%414%,model.ilike.%421%";
+const HELICOPTER_MAKE_PATTERNS = [
+  "%Robinson%",
+  "%Bell%",
+  "%Sikorsky%",
+  "%Eurocopter%",
+  "%Airbus Helicopter%",
+  "%MD Helicopters%",
+  "%Schweizer%",
+  "%Agusta%",
+  "%AgustaWestland%",
+  "%Leonardo%",
+  "%Enstrom%",
+  "%Kaman%",
+  "%Hughes Helicopter%",
+];
+const HELICOPTER_MODEL_PATTERNS = [
+  "%R22%",
+  "%R44%",
+  "%R66%",
+  "%EC120%",
+  "%EC130%",
+  "%EC135%",
+  "%H125%",
+  "%AS350%",
+  "%UH-%",
+  "%AW109%",
+  "%AW119%",
+  "%AW139%",
+  "%MD500%",
+  "%rotorcraft%",
+  "%helicopter%",
+];
 const HELICOPTER_OR =
-  "make.ilike.%Robinson%,make.ilike.%Bell%,make.ilike.%Sikorsky%,make.ilike.%Eurocopter%,make.ilike.%Airbus Helicopter%,make.ilike.%MD Helicopters%,make.ilike.%Schweizer%";
+  [
+    ...HELICOPTER_MAKE_PATTERNS.map((pattern) => `make.ilike.${pattern}`),
+    ...HELICOPTER_MODEL_PATTERNS.map((pattern) => `model.ilike.${pattern}`),
+  ].join(",");
 const LSP_OR =
   "model.ilike.%LSA%,model.ilike.%Light Sport%,make.ilike.%Flight Design%,make.ilike.%Tecnam%,make.ilike.%Jabiru%,make.ilike.%Pipistrel%";
 const SINGLE_OR =
@@ -487,6 +522,39 @@ function applySourceFilter(
   return query.or(clauses.join(","));
 }
 
+function applyPositivePriceCeiling(query: any, maxPrice: number) {
+  if (!Number.isFinite(maxPrice) || maxPrice <= 0) return query;
+  return query
+    .not("asking_price", "is", null)
+    .gt("asking_price", 0)
+    .lte("asking_price", maxPrice);
+}
+
+function applyHelicopterExclusion(query: any) {
+  let nextQuery = query;
+  for (const pattern of HELICOPTER_MAKE_PATTERNS) {
+    nextQuery = nextQuery.not("make", "ilike", pattern);
+  }
+  for (const pattern of HELICOPTER_MODEL_PATTERNS) {
+    nextQuery = nextQuery.not("model", "ilike", pattern);
+  }
+  return nextQuery;
+}
+
+function applyCategoryFilter(query: any, categoryInput: string) {
+  const category = String(categoryInput ?? "").trim().toLowerCase();
+  if (!category) return applyHelicopterExclusion(query);
+  if (category === "single") return applyHelicopterExclusion(query.or(SINGLE_OR));
+  if (category === "multi") return applyHelicopterExclusion(query.or(MULTI_OR));
+  if (category === "helicopter") return query.or(HELICOPTER_OR);
+  if (category === "lsp") return applyHelicopterExclusion(query.or(LSP_OR));
+  if (category === "se_turboprop") return applyHelicopterExclusion(query.or(SE_TURBOPROP_OR));
+  if (category === "me_turboprop") return applyHelicopterExclusion(query.or(ME_TURBOPROP_OR));
+  if (category === "jet") return applyHelicopterExclusion(query.or(JET_OR));
+  if (category === "sea") return applyHelicopterExclusion(query.or(SEA_OR));
+  return applyHelicopterExclusion(query);
+}
+
 async function runSimpleSearchListingsPage(
   supabase: ReturnType<typeof createServerClient>,
   opts: {
@@ -648,9 +716,9 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (parsedSearch.modelToken) dbQuery = dbQuery.ilike("model", `%${parsedSearch.modelToken}%`);
   if (typeof parsedSearch.yearToken === "number") dbQuery = dbQuery.eq("year", parsedSearch.yearToken);
   if (parsedSearch.orClause) dbQuery = dbQuery.or(parsedSearch.orClause);
-  if (make) dbQuery = dbQuery.ilike("make", make);
+  if (make) dbQuery = dbQuery.ilike("make", `%${make}%`);
   if (subModel) dbQuery = dbQuery.ilike("model", subModel);
-  else if (modelFamily) dbQuery = dbQuery.ilike("model", `${modelFamily}%`);
+  else if (modelFamily) dbQuery = dbQuery.ilike("model", `%${modelFamily}%`);
   else if (model) dbQuery = dbQuery.ilike("model", `%${model}%`);
   dbQuery = applySourceFilter(dbQuery, source, listBaseTable === "aircraft_listings");
   if (state) dbQuery = dbQuery.eq("location_state", state.toUpperCase());
@@ -658,16 +726,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   if (dealTier === "TOP_DEALS") dbQuery = dbQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
   else if (dealTier) dbQuery = dbQuery.eq("deal_tier", dealTier.toUpperCase());
   if (Number.isFinite(minValueScore) && minValueScore > 0) dbQuery = dbQuery.gte("value_score", minValueScore);
-  if (Number.isFinite(maxPrice) && maxPrice > 0) dbQuery = dbQuery.lte("asking_price", maxPrice);
-
-  if (category === "single") dbQuery = dbQuery.or(SINGLE_OR);
-  if (category === "multi") dbQuery = dbQuery.or(MULTI_OR);
-  if (category === "helicopter") dbQuery = dbQuery.or(HELICOPTER_OR);
-  if (category === "lsp") dbQuery = dbQuery.or(LSP_OR);
-  if (category === "se_turboprop") dbQuery = dbQuery.or(SE_TURBOPROP_OR);
-  if (category === "me_turboprop") dbQuery = dbQuery.or(ME_TURBOPROP_OR);
-  if (category === "jet") dbQuery = dbQuery.or(JET_OR);
-  if (category === "sea") dbQuery = dbQuery.or(SEA_OR);
+  dbQuery = applyPositivePriceCeiling(dbQuery, maxPrice);
+  dbQuery = applyCategoryFilter(dbQuery, category);
 
   dbQuery = dbQuery.order("deal_rating", { ascending: false, nullsFirst: false });
   if (sortBy === "value_desc") dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
@@ -698,9 +758,9 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (parsedSearch.modelToken) fallbackQuery = fallbackQuery.ilike("model", `%${parsedSearch.modelToken}%`);
     if (typeof parsedSearch.yearToken === "number") fallbackQuery = fallbackQuery.eq("year", parsedSearch.yearToken);
     if (parsedSearch.orClause) fallbackQuery = fallbackQuery.or(parsedSearch.orClause);
-    if (make) fallbackQuery = fallbackQuery.ilike("make", make);
+    if (make) fallbackQuery = fallbackQuery.ilike("make", `%${make}%`);
     if (subModel) fallbackQuery = fallbackQuery.ilike("model", subModel);
-    else if (modelFamily) fallbackQuery = fallbackQuery.ilike("model", `${modelFamily}%`);
+    else if (modelFamily) fallbackQuery = fallbackQuery.ilike("model", `%${modelFamily}%`);
     else if (model) fallbackQuery = fallbackQuery.ilike("model", `%${model}%`);
     fallbackQuery = applySourceFilter(fallbackQuery, source, listBaseTable === "aircraft_listings");
     if (state) fallbackQuery = fallbackQuery.eq("location_state", state.toUpperCase());
@@ -708,15 +768,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (dealTier === "TOP_DEALS") fallbackQuery = fallbackQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
     else if (dealTier) fallbackQuery = fallbackQuery.eq("deal_tier", dealTier.toUpperCase());
     if (Number.isFinite(minValueScore) && minValueScore > 0) fallbackQuery = fallbackQuery.gte("value_score", minValueScore);
-    if (Number.isFinite(maxPrice) && maxPrice > 0) fallbackQuery = fallbackQuery.lte("asking_price", maxPrice);
-    if (category === "single") fallbackQuery = fallbackQuery.or(SINGLE_OR);
-    if (category === "multi") fallbackQuery = fallbackQuery.or(MULTI_OR);
-    if (category === "helicopter") fallbackQuery = fallbackQuery.or(HELICOPTER_OR);
-    if (category === "lsp") fallbackQuery = fallbackQuery.or(LSP_OR);
-    if (category === "se_turboprop") fallbackQuery = fallbackQuery.or(SE_TURBOPROP_OR);
-    if (category === "me_turboprop") fallbackQuery = fallbackQuery.or(ME_TURBOPROP_OR);
-    if (category === "jet") fallbackQuery = fallbackQuery.or(JET_OR);
-    if (category === "sea") fallbackQuery = fallbackQuery.or(SEA_OR);
+    fallbackQuery = applyPositivePriceCeiling(fallbackQuery, maxPrice);
+    fallbackQuery = applyCategoryFilter(fallbackQuery, category);
     fallbackQuery = fallbackQuery
       .order("deal_rating", { ascending: false, nullsFirst: false })
       .order("value_score", { ascending: false, nullsFirst: false });
@@ -789,9 +842,9 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (parsedSearch.modelToken) countQuery = countQuery.ilike("model", `%${parsedSearch.modelToken}%`);
     if (typeof parsedSearch.yearToken === "number") countQuery = countQuery.eq("year", parsedSearch.yearToken);
     if (parsedSearch.orClause) countQuery = countQuery.or(parsedSearch.orClause);
-    if (make) countQuery = countQuery.ilike("make", make);
+    if (make) countQuery = countQuery.ilike("make", `%${make}%`);
     if (subModel) countQuery = countQuery.ilike("model", subModel);
-    else if (modelFamily) countQuery = countQuery.ilike("model", `${modelFamily}%`);
+    else if (modelFamily) countQuery = countQuery.ilike("model", `%${modelFamily}%`);
     else if (model) countQuery = countQuery.ilike("model", `%${model}%`);
     countQuery = applySourceFilter(countQuery, source, listBaseTable === "aircraft_listings");
     if (state) countQuery = countQuery.eq("location_state", state.toUpperCase());
@@ -799,15 +852,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (dealTier === "TOP_DEALS") countQuery = countQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
     else if (dealTier) countQuery = countQuery.eq("deal_tier", dealTier.toUpperCase());
     if (Number.isFinite(minValueScore) && minValueScore > 0) countQuery = countQuery.gte("value_score", minValueScore);
-    if (Number.isFinite(maxPrice) && maxPrice > 0) countQuery = countQuery.lte("asking_price", maxPrice);
-    if (category === "single") countQuery = countQuery.or(SINGLE_OR);
-    if (category === "multi") countQuery = countQuery.or(MULTI_OR);
-    if (category === "helicopter") countQuery = countQuery.or(HELICOPTER_OR);
-    if (category === "lsp") countQuery = countQuery.or(LSP_OR);
-    if (category === "se_turboprop") countQuery = countQuery.or(SE_TURBOPROP_OR);
-    if (category === "me_turboprop") countQuery = countQuery.or(ME_TURBOPROP_OR);
-    if (category === "jet") countQuery = countQuery.or(JET_OR);
-    if (category === "sea") countQuery = countQuery.or(SEA_OR);
+    countQuery = applyPositivePriceCeiling(countQuery, maxPrice);
+    countQuery = applyCategoryFilter(countQuery, category);
     const countResult = await countQuery;
     if (!countResult.error && typeof countResult.count === "number") {
       total = countResult.count;

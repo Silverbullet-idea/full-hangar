@@ -30,6 +30,41 @@ const includesAny = (text: string, terms: string[]) => {
   return terms.some((term) => normalized.includes(term.toLowerCase()))
 }
 
+const HELICOPTER_MAKE_TERMS = [
+  'robinson',
+  'bell',
+  'sikorsky',
+  'eurocopter',
+  'airbus helicopter',
+  'airbus helicopters',
+  'md helicopters',
+  'schweizer',
+  'agusta',
+  'agustawestland',
+  'leonardo',
+  'enstrom',
+  'kaman',
+  'hughes helicopter',
+]
+
+const HELICOPTER_MODEL_TERMS = [
+  'r22',
+  'r44',
+  'r66',
+  'ec120',
+  'ec130',
+  'ec135',
+  'h125',
+  'as350',
+  'uh-',
+  'aw109',
+  'aw119',
+  'aw139',
+  'md500',
+  'rotorcraft',
+  'helicopter',
+]
+
 const hasWholeWord = (text: string, word: string) => {
   const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   return new RegExp(`\\b${escaped}\\b`, "i").test(text)
@@ -50,6 +85,16 @@ export const inferCategoriesForMakeModel = (makeRaw: string, modelRaw: string): 
   const make = makeRaw.toLowerCase()
   const model = modelRaw.toLowerCase()
   const categories: Array<Exclude<CategoryValue, null>> = []
+  const isHelicopter =
+    includesAny(make, HELICOPTER_MAKE_TERMS) ||
+    includesAny(model, HELICOPTER_MODEL_TERMS)
+
+  // Rotorcraft should only appear in the helicopter lane and never leak into fixed-wing categories.
+  if (isHelicopter) {
+    categories.push('helicopter')
+    return categories
+  }
+
   const isMultiEngineModel = includesAny(model, ['twin', 'seneca', 'aztec', 'baron', '310', '340', '402', '414', '421'])
   const isMultiEngineMake = includesAny(make, ['tecnam p2006', 'diamond da42', 'diamond da62'])
   const isSingleTurboprop =
@@ -103,7 +148,8 @@ export const inferCategoriesForMakeModel = (makeRaw: string, modelRaw: string): 
   ) categories.push('jet')
 
   if (
-    includesAny(make, ['robinson', 'bell', 'sikorsky', 'eurocopter', 'airbus helicopter', 'md helicopters', 'schweizer'])
+    includesAny(make, HELICOPTER_MAKE_TERMS) ||
+    includesAny(model, HELICOPTER_MODEL_TERMS)
   ) categories.push('helicopter')
 
   if (
@@ -136,6 +182,12 @@ export const normalizeTopMenuMakeLabel = (makeRaw: string, modelRaw: string) => 
   if (lower === 'king air') return 'Beechcraft'
 
   return make
+}
+
+export const isLikelyHelicopterMake = (makeRaw: string) => {
+  const make = makeRaw.trim().toLowerCase()
+  if (!make) return false
+  return includesAny(make, HELICOPTER_MAKE_TERMS)
 }
 
 export const normalizeSourceKey = (sourceRaw: string): ListingSourceKey => {
