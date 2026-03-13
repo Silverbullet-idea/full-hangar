@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PARSER_VERSION = "2.1.3"
+PARSER_VERSION = "2.1.6"
 
 TOKEN_CANDIDATE_RE = re.compile(
     r"\b(?:GTN[\- ]?\d{3}(?:XI)?|GNS[\- ]?\d{3}W?|IFD[\- ]?\d{3}|GNX[\- ]?\d{3}|GPS[\- ]?\d{3}|"
@@ -11,7 +11,9 @@ TOKEN_CANDIDATE_RE = re.compile(
     r"GIA[\- ]?\d{2,4}[A-Z]?|GDU[\- ]?\d{2,4}|GEA[\- ]?\d{2,4}|GRS[\- ]?\d{2,4}|GSR[\- ]?\d{2,4}|"
     r"GDL[\- ]?\d{2,4}[A-Z]?|GMU[\- ]?\d{2,4}|GDC[\- ]?\d{2,4}[A-Z]?|GCU[\- ]?\d{2,4}|GMC[\- ]?\d{2,4}|"
     r"KAP[\- ]?\d{2,4}|KFC[\- ]?\d{2,4}|KX[\- ]?\d{2,4}[A-Z]?|KLN[\- ]?\d{2,4}[A-Z]?|KGX[\- ]?\d{2,4}|"
-    r"STEC[\- ]?\d{2,4}[A-Z]?|S[\- ]?TEC[\- ]?\d{2,4}[A-Z]?|PMA[\- ]?\d{2,4}[A-Z]?|NGT[\- ]?\d{2,4})\b"
+    r"STEC[\- ]?\d{2,4}[A-Z]?|S[\- ]?TEC[\- ]?\d{2,4}[A-Z]?|PMA[\- ]?\d{2,4}[A-Z]?|NGT[\- ]?\d{2,4}|"
+    r"UNS[\- ]?\d[A-Z]?|DU[\- ]?\d{3,4}|RCZ[\- ]?\d{3,4}[A-Z]?|RNZ[\- ]?\d{3,4}|DM[\- ]?\d{3,4}|DF[\- ]?\d{3,4}|"
+    r"FMS[\- ]?\d{3,4}|PRIMUS[\- ]?\d{3,4}|PRO[\- ]?LINE[\- ]?\d{2})\b"
 )
 
 
@@ -30,6 +32,38 @@ AVIONICS_MAP: dict[str, str] = {
     r"\bGNS[\s\-]?530W?\b": "Garmin GNS 530W",
     r"\bG1000\b": "Garmin G1000",
     r"\bG2000\b": "Garmin G2000",
+    r"\bG3000\b": "Garmin G3000",
+    r"\bG5000\b": "Garmin G5000",
+    r"\bPro[\s\-]?Line[\s\-]?21\b": "Rockwell Collins Pro Line 21",
+    r"\bPrimus[\s\-]?2000\b": "Honeywell Primus 2000",
+    r"\bPrimus[\s\-]?1000\b": "Honeywell Primus 1000",
+    r"\bUNS[\s\-]?1K\b": "Universal UNS-1K",
+    r"\bUNS[\s\-]?1(?!K\b)[A-Z]?\b": "Universal UNS-1",
+    r"\bFMS[\s\-]?3000\b": "Collins FMS 3000",
+    r"\bFMS[\s\-]?4200\b": "Collins FMS 4200",
+    r"\bFMS[\s\-]?6000\b": "Collins FMS 6000",
+    r"\bGPS[\s\-]?4000S?\b": "Collins GPS 4000S",
+    r"\bDU[\s\-]?870\b": "Honeywell DU-870",
+    r"\bDU[\s\-]?875[A-Z]?\b": "Honeywell DU-875",
+    r"\bDU[\s\-]?885[A-Z]?\b": "Honeywell DU-885",
+    r"\bDU[\s\-]?1080\b": "Honeywell DU-1080",
+    r"\bDU[\s\-]?1310\b": "Honeywell DU-1310",
+    r"\bRCZ[\s\-]?851E?\b": "Honeywell RCZ-851E",
+    r"\bRCZ[\s\-]?833K\b": "Honeywell RCZ-833K",
+    r"\bRCZ[\s\-]?833E\b": "Honeywell RCZ-833E",
+    r"\bRCZ[\s\-]?833M\b": "Honeywell RCZ-833M",
+    r"\bRCZ[\s\-]?833F\b": "Honeywell RCZ-833F",
+    r"\bRCZ[\s\-]?833\b": "Honeywell RCZ-833",
+    r"\bRCZ[\s\-]?850\b": "Honeywell RCZ-850",
+    r"\bRNZ[\s\-]?850\b": "Honeywell RNZ-850",
+    r"\bRNZ[\s\-]?851\b": "Honeywell RNZ-851",
+    r"\bDM[\s\-]?850\b": "Honeywell DM-850",
+    r"\bDM[\s\-]?855[A-Z]?\b": "Honeywell DM-855",
+    r"\bDF[\s\-]?850\b": "Honeywell DF-850",
+    r"\bDF[\s\-]?855\b": "Honeywell DF-855",
+    r"\bPrimus(?:\s*II)?[\s\-]?880\b": "Honeywell Primus 880",
+    r"\bPrimus[\s\-]?650\b": "Honeywell Primus 650",
+    r"\bHeli[\s\-]?SAS\b": "HeliSAS Autopilot",
     r"\bAspen(?:\s+EFD)?\b": "Aspen EFD1000",
     r"\bADS[\s\-]?B(?:\s*(?:OUT|IN\/OUT|IN\s*OUT))?\b": "ADS-B Out",
     r"\bADS[\s\-]?B\s*IN\b": "ADS-B In",

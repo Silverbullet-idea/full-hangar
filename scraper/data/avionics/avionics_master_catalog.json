@@ -7090,5 +7090,670 @@
     "legacy_vs_glass": "legacy",
     "priority_family": "piston_single",
     "notes": "Added from v2.1.2 unresolved micro-pass."
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G3000",
+    "canonical_name": "Garmin G3000",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "G3000",
+      "Garmin G3000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Garmin",
+    "model": "G5000",
+    "canonical_name": "Garmin G5000",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "G5000",
+      "Garmin G5000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Rockwell Collins",
+    "model": "Pro Line 21",
+    "canonical_name": "Rockwell Collins Pro Line 21",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Pro Line 21",
+      "ProLine 21",
+      "Collins Pro Line 21"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "Primus 2000",
+    "canonical_name": "Honeywell Primus 2000",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Primus 2000",
+      "Honeywell Primus 2000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "Primus 1000",
+    "canonical_name": "Honeywell Primus 1000",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "Primus 1000",
+      "Honeywell Primus 1000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "glass",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Universal Avionics",
+    "model": "UNS-1K",
+    "canonical_name": "Universal UNS-1K",
+    "function_category": "FMS",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "UNS-1K",
+      "UNS 1K",
+      "Universal Avionics UNS-1K"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Collins",
+    "model": "FMS 3000",
+    "canonical_name": "Collins FMS 3000",
+    "function_category": "FMS",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "FMS 3000",
+      "Collins FMS 3000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Collins",
+    "model": "GPS 4000S",
+    "canonical_name": "Collins GPS 4000S",
+    "function_category": "GPS IFR",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "GPS 4000S",
+      "GPS4000S",
+      "Collins GPS 4000S"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DU-870",
+    "canonical_name": "Honeywell DU-870",
+    "function_category": "Display Unit",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DU-870",
+      "DU 870",
+      "Honeywell DU-870"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-851E",
+    "canonical_name": "Honeywell RCZ-851E",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-851E",
+      "RCZ 851E",
+      "Honeywell RCZ-851E"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RNZ-850",
+    "canonical_name": "Honeywell RNZ-850",
+    "function_category": "ADF",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RNZ-850",
+      "RNZ 850",
+      "Honeywell RNZ-850"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DM-850",
+    "canonical_name": "Honeywell DM-850",
+    "function_category": "DME",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DM-850",
+      "DM 850",
+      "Honeywell DM-850"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DF-850",
+    "canonical_name": "Honeywell DF-850",
+    "function_category": "ADF",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DF-850",
+      "DF 850",
+      "Honeywell DF-850"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 jet alias pack"
+  },
+  {
+    "manufacturer": "Genesys Aerosystems",
+    "model": "HeliSAS",
+    "canonical_name": "HeliSAS Autopilot",
+    "function_category": "Autopilot",
+    "tso_refs": [
+      "STC"
+    ],
+    "aliases": [
+      "HeliSAS",
+      "Helisas",
+      "Heli SAS"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "rotorcraft",
+    "notes": "Wave 3 rotorcraft alias pack"
+  },
+  {
+    "manufacturer": "Universal Avionics",
+    "model": "UNS-1",
+    "canonical_name": "Universal UNS-1",
+    "function_category": "FMS",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "UNS-1",
+      "UNS 1",
+      "Universal UNS-1"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Collins",
+    "model": "FMS 4200",
+    "canonical_name": "Collins FMS 4200",
+    "function_category": "FMS",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "FMS 4200",
+      "FMS4200",
+      "Collins FMS 4200"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Collins",
+    "model": "FMS 6000",
+    "canonical_name": "Collins FMS 6000",
+    "function_category": "FMS",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "FMS 6000",
+      "FMS6000",
+      "Collins FMS 6000"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DU-875",
+    "canonical_name": "Honeywell DU-875",
+    "function_category": "Display Unit",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DU-875",
+      "DU 875",
+      "Honeywell DU-875"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DU-885",
+    "canonical_name": "Honeywell DU-885",
+    "function_category": "Display Unit",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DU-885",
+      "DU 885",
+      "Honeywell DU-885"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DU-1080",
+    "canonical_name": "Honeywell DU-1080",
+    "function_category": "Display Unit",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DU-1080",
+      "DU 1080",
+      "Honeywell DU-1080"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DU-1310",
+    "canonical_name": "Honeywell DU-1310",
+    "function_category": "Display Unit",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DU-1310",
+      "DU 1310",
+      "Honeywell DU-1310"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-833K",
+    "canonical_name": "Honeywell RCZ-833K",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-833K",
+      "RCZ 833K",
+      "Honeywell RCZ-833K"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-833E",
+    "canonical_name": "Honeywell RCZ-833E",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-833E",
+      "RCZ 833E",
+      "Honeywell RCZ-833E"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-833M",
+    "canonical_name": "Honeywell RCZ-833M",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-833M",
+      "RCZ 833M",
+      "Honeywell RCZ-833M"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-833",
+    "canonical_name": "Honeywell RCZ-833",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-833",
+      "RCZ 833",
+      "Honeywell RCZ-833"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-850",
+    "canonical_name": "Honeywell RCZ-850",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-850",
+      "RCZ 850",
+      "Honeywell RCZ-850"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RNZ-851",
+    "canonical_name": "Honeywell RNZ-851",
+    "function_category": "ADF",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RNZ-851",
+      "RNZ 851",
+      "Honeywell RNZ-851"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DM-855",
+    "canonical_name": "Honeywell DM-855",
+    "function_category": "DME",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DM-855",
+      "DM 855",
+      "Honeywell DM-855"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "DF-855",
+    "canonical_name": "Honeywell DF-855",
+    "function_category": "ADF",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "DF-855",
+      "DF 855",
+      "Honeywell DF-855"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "Primus 880",
+    "canonical_name": "Honeywell Primus 880",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "Primus 880",
+      "Honeywell Primus 880"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "Primus 650",
+    "canonical_name": "Honeywell Primus 650",
+    "function_category": "Integrated Flight Deck",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "Primus 650",
+      "Honeywell Primus 650"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "hybrid",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
+  },
+  {
+    "manufacturer": "Honeywell",
+    "model": "RCZ-833F",
+    "canonical_name": "Honeywell RCZ-833F",
+    "function_category": "COM Radio",
+    "tso_refs": [
+      "TSO"
+    ],
+    "aliases": [
+      "RCZ-833F",
+      "RCZ 833F",
+      "Honeywell RCZ-833F"
+    ],
+    "oem_msrp_usd": null,
+    "msrp_source": "",
+    "market_estimate_usd": null,
+    "market_estimate_source": "",
+    "legacy_vs_glass": "legacy",
+    "priority_family": "jet",
+    "notes": "Wave 3 unresolved micro-pass"
   }
 ]
