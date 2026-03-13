@@ -162,6 +162,8 @@
     "Wave 3 market baseline (2026-03-12): rotorcraft market_values rows=8 (oem_msrp=8, sample_floor_met=0), jet rows=9 (oem_msrp=9, sample_floor_met=0).",
     "Wave 3 rotorcraft baseline audit (2026-03-12): listings_scanned=363, matched_rate_pct=100.0, unresolved_rows=0, extraction_coverage_pct=34.15; artifacts written to avionics_coverage_audit_rotorcraft_latest.{json,md}.",
     "Wave 3 jet baseline audit (2026-03-12): listings_scanned=1243, matched_rate_pct=100.0, unresolved_rows=0, extraction_coverage_pct=55.65; artifacts written to avionics_coverage_audit_jet_latest.{json,md}.",
-    "Post-wave3 global refresh (2026-03-12): matched_rate_pct=99.72, unresolved_rows=24, extraction_coverage_pct=76.22 with segment_breakdown now reporting all five segments."
+    "Post-wave3 global refresh (2026-03-12): matched_rate_pct=99.72, unresolved_rows=24, extraction_coverage_pct=76.22 with segment_breakdown now reporting all five segments.",
+    "Listing detail section reparse pass (2026-03-12): new script scraper/reparse_listing_details_sections.py processed 8319 listings and updated 1253 rows with cleaned avionics/engine/interior/maintenance section notes and recovered prop-overhaul timing where available.",
+    "Engine-model cleanup follow-up pass (2026-03-12): reran listing detail reparse with noisy-model replacement enabled; updated 238 additional rows and normalized verbose engine_model values (e.g., 'IO-550-B Engine HP ...' -> 'IO-550-B')."
   ]
 }

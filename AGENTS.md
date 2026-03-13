@@ -107,6 +107,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Wave 2 rollout activation pass completed for `piston_multi`: catalog seed applied (`units=10`, `aliases=40`, `certs=10`), segment market ingest refreshed (`rows=10`; valuation basis `oem_msrp=8`, `market_insufficient=2`), and latest 90-day audit moved to `99.62%` matched-row rate with `32` unresolved rows and `76.24%` scoped extraction coverage.
 - Wave 3 shadow lane is now active for `turboprop`: seeded catalog segment (`units=9`, `aliases=28`, `certs=9`), applied turboprop market snapshots (`rows=9`), added segment-aware audit support (`--segment` + `segment_breakdown`), and captured a dedicated turboprop 90-day baseline (`listings_scanned=420`, `matched_rate=100%`, `unresolved_rows=0`, `coverage=73.47%`).
 - Wave 3 shadow baselines completed for `rotorcraft` and `jet`: seeded catalog segments (`rotorcraft units=8`, `jet units=9`), applied market snapshots (`rotorcraft rows=8`, `jet rows=9`, all currently OEM-anchored), and published dedicated 90-day audits/queues with unresolved rows at `0` for both segments.
+- Listing detail cleanup pass shipped for all active listings: added `scraper/reparse_listing_details_sections.py`, reparsed `description_full` sections (`processed=8319`, `updated=1253` + `engine-model cleanup updates=238`), and now prefer cleaned `avionics_notes` over raw `avionics_description` on listing detail pages for clearer Aircraft Details rendering.
 
 ---
 

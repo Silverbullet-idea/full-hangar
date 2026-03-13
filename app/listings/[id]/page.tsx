@@ -218,7 +218,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         descriptionIntelligence.avionics,
         avionicsMatchedItems.map((item) => toTitleCase(item.label))
       )
-  const avionicsText = pickText(raw, ["avionics_description", "avionics_notes"]) || parsedDescription.avionics
+  const avionicsText = pickText(raw, ["avionics_notes", "avionics_description"]) || parsedDescription.avionics
   const conditionText = pickText(raw, ["condition", "listing_condition", "aircraft_condition"]) || parsedDescription.condition
   const marketOpportunityScore = pickNumber(raw, ["market_opportunity_score"]) ?? listingRow.market_opportunity_score
   const conditionScore = pickNumber(raw, ["condition_score"]) ?? listingRow.condition_score

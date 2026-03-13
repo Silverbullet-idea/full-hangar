@@ -381,12 +381,14 @@ function extractSectionLines(text: string, sectionNames: string[]): string[] {
 
 function parseAvionicsLineItems(value: string | null | undefined): string[] {
   if (!value) return []
-  return value
-    .replace(/\r/g, "\n")
-    .split(/\n|,|;|\u2022/)
-    .map((part) => part.replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .filter((part) => !/^(avionics|equipment)$/i.test(part))
+  const lines = splitAvionicsDisplayLines(value)
+  const avionicsOnly: string[] = []
+  for (const line of lines) {
+    if (/^additional equipment/i.test(line)) break
+    if (!isLikelyAvionicsLine(line)) continue
+    avionicsOnly.push(line)
+  }
+  return avionicsOnly
 }
 
 function extractAvionicsDisplayLines(
@@ -421,7 +423,7 @@ function splitAvionicsDisplayLines(source: string): string[] {
   text = text.replace(/\bAdditional Equipment\b\s*[:\-]?/gi, "\nAdditional Equipment:")
   text = text.replace(/[;,]\s+/g, "\n")
 
-  const tokenPattern = /\b(?:Garmin Synthetic Vision Technology|Garmin Electronic Stability Protection|GMA[-\s]?\d{2,4}[A-Z]*|GTC[-\s]?\d{2,4}[A-Z]*|GTX[-\s]?\d{2,4}[A-Z]*|GTS[-\s]?\d{2,4}[A-Z]*|GIA[-\s]?\d{2,4}[A-Z]*|GSR[-\s]?\d{2,4}[A-Z]*|GDU[-\s]?\d{2,4}[A-Z]*|GEA[-\s]?\d{2,4}[A-Z]*|GRS[-\s]?\d{2,4}[A-Z]*|GDC[-\s]?\d{2,4}[A-Z]*|GMU[-\s]?\d{2,4}[A-Z]*|GCU[-\s]?\d{2,4}[A-Z]*|GFC[-\s]?\d{2,4}[A-Z]*|GMC[-\s]?\d{2,4}[A-Z]*|GDL[-\s]?\d{2,4}[A-Z]*|ADS-B(?:\s+Out|\s+In)?|WAAS|XM Weather|FIKI|Factory Air Conditioning|Artex ELT[-\s]?[A-Z0-9]+|Built-in Oxygen System|Engine Pre-Heat|Custom Aircraft Cover|Trilogy ESI[-\s]?\d{3,4})\b/gi
+  const tokenPattern = /\b(?:Garmin Synthetic Vision Technology|Garmin Electronic Stability Protection|Garmin|Avidyne|Bendix\/King|BendixKing|King|Genesys|S-TEC|PS Engineering|GNS[-\s]?\d{3}[A-Z]*|GTN[-\s]?\d{3}[A-Z]*|IFD[-\s]?\d{3}[A-Z]*|GNX[-\s]?\d{3}[A-Z]*|GPS[-\s]?\d{3}[A-Z]*|GI[-\s]?\d{2,4}[A-Z]*|KMA[-\s]?\d{2,4}[A-Z]*|KX[-\s]?\d{2,4}[A-Z]*|KLN[-\s]?\d{2,4}[A-Z]*|KFC[-\s]?\d{2,4}[A-Z]*|KAP[-\s]?\d{2,4}[A-Z]*|PMA[-\s]?\d{2,4}[A-Z]*|GMA[-\s]?\d{2,4}[A-Z]*|GTC[-\s]?\d{2,4}[A-Z]*|GTX[-\s]?\d{2,4}[A-Z]*|GTS[-\s]?\d{2,4}[A-Z]*|GIA[-\s]?\d{2,4}[A-Z]*|GSR[-\s]?\d{2,4}[A-Z]*|GDU[-\s]?\d{2,4}[A-Z]*|GEA[-\s]?\d{2,4}[A-Z]*|GRS[-\s]?\d{2,4}[A-Z]*|GDC[-\s]?\d{2,4}[A-Z]*|GMU[-\s]?\d{2,4}[A-Z]*|GCU[-\s]?\d{2,4}[A-Z]*|GFC[-\s]?\d{2,4}[A-Z]*|GMC[-\s]?\d{2,4}[A-Z]*|GDL[-\s]?\d{2,4}[A-Z]*|ADS-B(?:\s+Out|\s+In)?|WAAS|Nav\/Com\s*\d+|Audio Panel|Autopilot|Transponder|Engine Monitor|XM Weather|FIKI|Factory Air Conditioning|Artex ELT[-\s]?[A-Z0-9]+|Built-in Oxygen System|Engine Pre-Heat|Custom Aircraft Cover|Trilogy ESI[-\s]?\d{3,4})\b/gi
   text = text.replace(tokenPattern, (match, offset, full) => {
     if (offset === 0) return match
     const prev = full[offset - 1]
@@ -443,6 +445,15 @@ function splitAvionicsDisplayLines(source: string): string[] {
     deduped.push(line)
   }
   return deduped
+}
+
+function isLikelyAvionicsLine(value: string): boolean {
+  const line = value.toLowerCase().trim()
+  if (!line) return false
+  if (/^(avionics|equipment)$/i.test(line)) return false
+  if (/^(additional equipment|modifications)/i.test(line)) return false
+  if (/stc\b|vortex|baffle|visors|shoulder harness|usb charging|gross weight/i.test(line)) return false
+  return /\b(garmin|avidyne|king|bendix|genesys|s-tec|ps engineering|gtn|gns|ifd|gnx|gps|gi\s*\d|kma|kx|kln|kfc|kap|pma|gma|gtx|gfc|gts|gdu|gia|gdc|gmu|gcu|gmc|gdl|ads-b|waas|autopilot|transponder|audio panel|nav\/com)\b/i.test(line)
 }
 
 function normalizeAvionicsToken(value: string): string {
