@@ -20,6 +20,24 @@ const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKE
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`))
+    }, ms)
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId)
+        resolve(value)
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId)
+        reject(error)
+      })
+  })
+}
+
 const startNavigationLoading = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(NAV_LOADING_START_EVENT))
@@ -104,12 +122,16 @@ export default function InternalDealsPage() {
     ;(async () => {
       try {
         startNavigationLoading()
-        const { data, error } = await supabase
-          .from('public_listings')
-          .select('*')
-          .or('asking_price.lte.60000,asking_price.is.null')
-          .order('deal_rating', { ascending: false, nullsFirst: false })
-          .limit(2500)
+        const { data, error } = await withTimeout(
+          supabase
+            .from('public_listings')
+            .select('*')
+            .or('asking_price.lte.60000,asking_price.is.null')
+            .order('deal_rating', { ascending: false, nullsFirst: false })
+            .limit(2500),
+          12000,
+          'internal deals listing query'
+        )
 
         if (error) {
           console.error('Failed to load internal deals:', error)
@@ -124,7 +146,11 @@ export default function InternalDealsPage() {
 
         const idParam = baseRows.map((row) => row.id).filter(Boolean).join(',')
         try {
-          const response = await fetch(`/api/internal/deal-signals?ids=${encodeURIComponent(idParam)}`)
+          const response = await withTimeout(
+            fetch(`/api/internal/deal-signals?ids=${encodeURIComponent(idParam)}`),
+            10000,
+            'internal deal signals fetch'
+          )
           if (!response.ok) throw new Error(`HTTP ${response.status}`)
           const payload = await response.json()
           const signalRows = Array.isArray(payload?.data) ? (payload.data as DealListing[]) : []
@@ -144,7 +170,7 @@ export default function InternalDealsPage() {
 
   useEffect(() => {
     startNavigationLoading()
-    fetch('/api/internal/recent-sales?days=30&limit=20')
+    withTimeout(fetch('/api/internal/recent-sales?days=30&limit=20'), 10000, 'recent sales fetch')
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const payload = await response.json()

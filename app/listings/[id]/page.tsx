@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { cache, type ReactNode } from "react"
 import LeftDetailColumn from "./components/LeftDetailColumn"
 import RightDetailColumn from "./components/RightDetailColumn"
+import DealDeskCard from "../../components/DealDeskCard"
 import {
   buildListingFallbackImagePath,
   buildPriceHistoryChart,
@@ -167,6 +168,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const sourceUrl = listingRow.url || pickText(raw, ["source_url", "listing_url", "url"])
   const sourceLinkLabel = getSourceLinkLabel(listingRow.source, listingRow.source_id, sourceUrl)
   const titleText = formatTitle(listingRow.year, listingRow.make, listingRow.model, listingRow.title)
+  const dealDeskAircraftLabel = nNumber !== "—" ? `${titleText} — ${nNumber}` : titleText
   const fallbackImageUrl = buildListingFallbackImagePath({
     source: listingRow.source,
     sourceId: listingRow.source_id,
@@ -569,6 +571,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           verificationFlags={verificationFlags}
           faaRows={faaRows}
           faaLookupUrl={faaLookupUrl}
+        />
+      </div>
+      <div style={{ marginTop: "1rem" }}>
+        <DealDeskCard
+          listingId={id}
+          askingPrice={resolvedAskingPrice ?? 0}
+          deferredMaintenance={listingRow.deferred_total ?? 0}
+          aircraftLabel={dealDeskAircraftLabel}
+          sourceUrl={sourceUrl ?? ""}
         />
       </div>
 

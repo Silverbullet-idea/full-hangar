@@ -29,6 +29,31 @@ function FragmentRow({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function copyText(value: string) {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value).catch(() => {
+      // Ignore clipboard failures and fall back silently.
+    })
+    return
+  }
+
+  if (typeof document !== 'undefined') {
+    const input = document.createElement('textarea')
+    input.value = value
+    input.style.position = 'fixed'
+    input.style.opacity = '0'
+    document.body.appendChild(input)
+    input.focus()
+    input.select()
+    try {
+      document.execCommand('copy')
+    } catch {
+      // Ignore copy command failures.
+    }
+    document.body.removeChild(input)
+  }
+}
+
 export default function DealsTable({
   displayedRows,
   expandedId,
@@ -162,6 +187,23 @@ export default function DealsTable({
                         onClick={(event) => event.stopPropagation()}
                       >
                         Full Report
+                      </a>
+                      <button
+                        type="button"
+                        className="rounded border border-brand-dark px-2 py-1 text-center text-[10px] font-bold text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          copyText(row.id)
+                        }}
+                      >
+                        Copy ID
+                      </button>
+                      <a
+                        href={`/internal/deal-desk/${row.id}`}
+                        className="rounded border border-brand-dark px-2 py-1 text-center text-[10px] font-bold text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        Open Deal Desk
                       </a>
                     </div>
                   </td>

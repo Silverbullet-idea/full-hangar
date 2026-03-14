@@ -88,3 +88,39 @@ export type AircraftListing = {
   time_since_new_engine: number | null
   time_since_prop_overhaul: number | null
 }
+
+export interface DealDeskScenario {
+  id: string
+  listing_id: string
+  label: string
+  asking_price: number | null
+  deferred_maintenance: number
+  avionics_upgrade_budget: number
+  paint_interior_budget: number
+  ferry_flight_cost: number
+  hold_period_months: number
+  title_escrow_fees: number
+  insurance_estimate: number
+  total_acquisition_cost: number | null
+  estimated_resale_price: number | null
+  profit_at_ask: number | null
+  profit_percent_at_ask: number | null
+  target_profit_dollars: number
+  max_offer_price: number | null
+  source_listing_url: string | null
+  aircraft_label: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DealDeskInputs {
+  asking_price: number
+  deferred_maintenance: number
+  avionics_upgrade_budget: number
+  paint_interior_budget: number
+  ferry_flight_cost: number
+  hold_period_months: number
+  title_escrow_fees: number
+  target_profit_dollars: number
+  estimated_resale_price: number
+}

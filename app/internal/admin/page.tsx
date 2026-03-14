@@ -138,10 +138,20 @@ export default async function InternalAdminPage() {
   return (
     <main className="space-y-4 p-4 md:p-6">
       <header className="rounded border border-brand-dark bg-card-bg p-4">
-        <h1 className="text-2xl font-semibold">Admin Portal</h1>
-        <p className="text-sm text-brand-muted">
-          Operational command center for platform health, data quality, and buyer intelligence.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-semibold">Admin Portal</h1>
+            <p className="text-sm text-brand-muted">
+              Operational command center for platform health, data quality, and buyer intelligence.
+            </p>
+          </div>
+          <Link
+            href="/internal/deal-desk"
+            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black hover:bg-brand-burn hover:text-white"
+          >
+            🧮 Open Deal Desk
+          </Link>
+        </div>
       </header>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -312,7 +322,10 @@ export default async function InternalAdminPage() {
             Active invites: {inviteRows.filter((row) => row.is_active === true).length}
           </p>
           <p className="text-sm text-brand-muted">Live sessions: {invites.stats.currently_active_sessions}</p>
-          <Link href="/internal/admin/invites" className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black">
+          <Link
+            href="/internal/admin/invites"
+            className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-white hover:bg-brand-burn"
+          >
             Create New Invite Link
           </Link>
           <Link href="/internal/admin/users" className="mt-2 inline-block rounded border border-brand-dark px-3 py-2 text-sm">
