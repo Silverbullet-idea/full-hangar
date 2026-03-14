@@ -6,6 +6,8 @@ import HomeScoringExplainer from "./components/home/HomeScoringExplainer"
 import HomeSocialProofFaq from "./components/home/HomeSocialProofFaq"
 import { getAircraftListingsCount, getListingsPage } from "../lib/db/listingsRepository"
 
+export const dynamic = "force-dynamic"
+
 type ListingImageRow = {
   id?: string
   source_id?: string | null

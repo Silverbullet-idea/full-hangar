@@ -114,6 +114,14 @@ export default async function InternalAdminPage() {
     console.error("[admin] computeAvionicsIntelligence failed", avionicsResult.reason);
   }
 
+  const failedPanels = [
+    platformResult.status === "rejected" ? "Platform stats" : null,
+    qualityResult.status === "rejected" ? "Data quality" : null,
+    buyerResult.status === "rejected" ? "Buyer intelligence" : null,
+    invitesResult.status === "rejected" ? "Invites/sessions" : null,
+    avionicsResult.status === "rejected" ? "Avionics intelligence" : null,
+  ].filter((value): value is string => Boolean(value));
+
   const platform = platformResult.status === "fulfilled" ? platformResult.value : EMPTY_PLATFORM;
   const dataQuality = qualityResult.status === "fulfilled" ? qualityResult.value : EMPTY_DATA_QUALITY;
   const buyer = buyerResult.status === "fulfilled" ? buyerResult.value : EMPTY_BUYER;
@@ -152,6 +160,11 @@ export default async function InternalAdminPage() {
             🧮 Open Deal Desk
           </Link>
         </div>
+        {failedPanels.length > 0 ? (
+          <p className="mt-3 rounded border border-brand-dark bg-[#161616] px-3 py-2 text-xs text-brand-orange">
+            Live data is temporarily unavailable for: {failedPanels.join(", ")}. Displaying fallback values.
+          </p>
+        ) : null}
       </header>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
