@@ -8,6 +8,13 @@ type SourceQualityRow = {
   active_listings: number;
   pct_with_price: number;
   pct_with_n_number: number;
+  pct_with_registration_any: number;
+  pct_with_us_n_number: number;
+  pct_with_non_us_registration: number;
+  pct_unclassified_registration: number;
+  pct_us_expected: number;
+  pct_with_us_n_number_when_us_expected: number;
+  pct_with_non_us_registration_when_non_us_expected: number;
   pct_with_total_time: number;
   pct_with_smoh: number;
   pct_with_engine_model: number;
@@ -62,6 +69,13 @@ type SortKey =
   | "avg_full_completeness_pct"
   | "pct_with_price"
   | "pct_with_n_number"
+  | "pct_with_registration_any"
+  | "pct_with_us_n_number"
+  | "pct_with_non_us_registration"
+  | "pct_unclassified_registration"
+  | "pct_us_expected"
+  | "pct_with_us_n_number_when_us_expected"
+  | "pct_with_non_us_registration_when_non_us_expected"
   | "pct_with_total_time"
   | "pct_with_smoh"
   | "pct_with_engine_model"
@@ -110,6 +124,12 @@ function alertBadgeClass(level: "critical" | "warning") {
   return "border-brand-orange text-brand-orange";
 }
 
+function sanitizeErrorMessage(value: string): string {
+  const withoutTags = value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  if (!withoutTags) return "Source quality is temporarily unavailable.";
+  return withoutTags.length > 220 ? `${withoutTags.slice(0, 220)}...` : withoutTags;
+}
+
 export function SourceQualitySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -125,9 +145,18 @@ export function SourceQualitySection() {
       setError("");
       try {
         const response = await fetch("/api/internal/source-quality");
-        const body = (await response.json()) as Partial<SourceQualityPayload> & { error?: string };
+        const contentType = response.headers.get("content-type") || "";
+        const rawText = await response.text();
+        let body: (Partial<SourceQualityPayload> & { error?: string }) | null = null;
+        if (contentType.includes("application/json")) {
+          body = JSON.parse(rawText) as Partial<SourceQualityPayload> & { error?: string };
+        }
         if (!response.ok) {
-          throw new Error(body.error ?? "Failed to load source quality");
+          const cleanMessage = sanitizeErrorMessage(body?.error || rawText || "Failed to load source quality");
+          throw new Error(cleanMessage || "Failed to load source quality");
+        }
+        if (!body) {
+          throw new Error("Source quality returned an unexpected response format.");
         }
         if (!cancelled) {
           setPayload({
@@ -138,7 +167,7 @@ export function SourceQualitySection() {
           });
         }
       } catch (fetchError) {
-        if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : "Failed to load source quality");
+        if (!cancelled) setError(sanitizeErrorMessage(fetchError instanceof Error ? fetchError.message : "Failed to load source quality"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -171,6 +200,20 @@ export function SourceQualitySection() {
           return row.pct_with_price;
         case "pct_with_n_number":
           return row.pct_with_n_number;
+        case "pct_with_registration_any":
+          return row.pct_with_registration_any;
+        case "pct_with_us_n_number":
+          return row.pct_with_us_n_number;
+        case "pct_with_non_us_registration":
+          return row.pct_with_non_us_registration;
+        case "pct_unclassified_registration":
+          return row.pct_unclassified_registration;
+        case "pct_us_expected":
+          return row.pct_us_expected;
+        case "pct_with_us_n_number_when_us_expected":
+          return row.pct_with_us_n_number_when_us_expected;
+        case "pct_with_non_us_registration_when_non_us_expected":
+          return row.pct_with_non_us_registration_when_non_us_expected;
         case "pct_with_total_time":
           return row.pct_with_total_time;
         case "pct_with_smoh":
@@ -292,7 +335,7 @@ export function SourceQualitySection() {
           })}
         </div>
         <div className="mt-3 overflow-auto rounded border border-brand-dark">
-          <table className="min-w-[1650px] text-sm">
+          <table className="min-w-[2250px] text-sm">
             <thead className="sticky top-0 bg-[#111111] text-left text-xs uppercase tracking-wide text-brand-muted">
               <tr>
                 <th className="px-3 py-2">
@@ -333,6 +376,41 @@ export function SourceQualitySection() {
                 <th className="px-3 py-2">
                   <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_n_number")}>
                     % with N-Number <span aria-hidden>{sortArrow("pct_with_n_number")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_registration_any")}>
+                    % with Any Registration <span aria-hidden>{sortArrow("pct_with_registration_any")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_us_n_number")}>
+                    % with US Registration <span aria-hidden>{sortArrow("pct_with_us_n_number")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_non_us_registration")}>
+                    % with Non-US Registration <span aria-hidden>{sortArrow("pct_with_non_us_registration")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_unclassified_registration")}>
+                    % Unclassified Registration <span aria-hidden>{sortArrow("pct_unclassified_registration")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_us_expected")}>
+                    % US-Expected Inventory <span aria-hidden>{sortArrow("pct_us_expected")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_us_n_number_when_us_expected")}>
+                    % US Reg (US-Expected) <span aria-hidden>{sortArrow("pct_with_us_n_number_when_us_expected")}</span>
+                  </button>
+                </th>
+                <th className="px-3 py-2">
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-brand-white" onClick={() => toggleSort("pct_with_non_us_registration_when_non_us_expected")}>
+                    % Non-US Reg (Non-US-Expected) <span aria-hidden>{sortArrow("pct_with_non_us_registration_when_non_us_expected")}</span>
                   </button>
                 </th>
                 <th className="px-3 py-2">
@@ -416,6 +494,13 @@ export function SourceQualitySection() {
                   <td className="px-3 py-2">{fmtPct(row.avg_full_completeness_pct)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_price)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_n_number)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_registration_any)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_us_n_number)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_non_us_registration)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_unclassified_registration)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_us_expected)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_us_n_number_when_us_expected)}</td>
+                  <td className="px-3 py-2">{fmtPct(row.pct_with_non_us_registration_when_non_us_expected)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_total_time)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_smoh)}</td>
                   <td className="px-3 py-2">{fmtPct(row.pct_with_engine_model)}</td>

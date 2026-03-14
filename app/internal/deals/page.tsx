@@ -20,13 +20,13 @@ const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKE
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timeoutId = window.setTimeout(() => {
       reject(new Error(`${label} timed out after ${ms}ms`))
     }, ms)
 
-    promise
+    Promise.resolve(promiseLike)
       .then((value) => {
         window.clearTimeout(timeoutId)
         resolve(value)
@@ -122,16 +122,19 @@ export default function InternalDealsPage() {
     ;(async () => {
       try {
         startNavigationLoading()
-        const { data, error } = await withTimeout(
-          supabase
-            .from('public_listings')
-            .select('*')
-            .or('asking_price.lte.60000,asking_price.is.null')
-            .order('deal_rating', { ascending: false, nullsFirst: false })
-            .limit(2500),
+        const listingQuery = supabase
+          .from('public_listings')
+          .select('*')
+          .or('asking_price.lte.60000,asking_price.is.null')
+          .order('deal_rating', { ascending: false, nullsFirst: false })
+          .limit(2500)
+        const listingResult = await withTimeout(
+          listingQuery as unknown as Promise<{ data: DealListing[] | null; error: unknown }>,
           12000,
           'internal deals listing query'
         )
+        const data = listingResult.data
+        const error = listingResult.error
 
         if (error) {
           console.error('Failed to load internal deals:', error)

@@ -3,6 +3,7 @@ import { ensureInternalApiAccess } from "@/lib/internal/auth";
 import { createPrivilegedServerClient } from "@/lib/supabase/server";
 
 type ListingRow = Record<string, unknown>;
+type SupabaseRow = Record<string, unknown>;
 
 const COMPLETENESS_FIELDS = [
   "year",
@@ -35,6 +36,15 @@ const DOMAIN_SOURCE_HINTS: Array<[string, string]> = [
   ["aircraftforsale", "afs"],
   ["aso", "aso"],
   ["avbuyer", "avbuyer"],
+];
+const US_STATE_CODES = new Set([
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
+]);
+const US_LIKELY_SOURCES = new Set(["tradaplane", "controller", "aso", "aerotrader", "barnstormers", "afs"]);
+const NON_US_LOCATION_MARKERS = [
+  "canada", "united kingdom", "uk", "england", "france", "germany", "mexico", "brazil", "australia", "new zealand",
 ];
 
 function normalizeSource(value: unknown): string {
@@ -82,6 +92,50 @@ function hasValue(value: unknown): boolean {
   return false;
 }
 
+function registrationScheme(value: unknown): string {
+  return String(value ?? "").trim().toUpperCase();
+}
+
+function hasAnyRegistration(row: ListingRow): boolean {
+  return hasValue(row.registration_normalized) || hasValue(row.registration_raw) || hasValue(row.n_number);
+}
+
+function hasUsRegistration(row: ListingRow): boolean {
+  const scheme = registrationScheme(row.registration_scheme);
+  if (scheme === "US_N") return true;
+  return hasValue(row.n_number);
+}
+
+function hasNonUsRegistration(row: ListingRow): boolean {
+  const scheme = registrationScheme(row.registration_scheme);
+  if (!hasAnyRegistration(row)) return false;
+  if (!scheme) return false;
+  return scheme !== "US_N" && scheme !== "UNKNOWN";
+}
+
+function hasUnclassifiedRegistration(row: ListingRow): boolean {
+  if (!hasAnyRegistration(row)) return false;
+  const scheme = registrationScheme(row.registration_scheme);
+  return !scheme || scheme === "UNKNOWN";
+}
+
+function inferUsExpected(row: ListingRow, source: string): boolean {
+  const countryCode = String(row.registration_country_code ?? "").trim().toUpperCase();
+  if (countryCode && countryCode !== "US") return false;
+
+  const scheme = registrationScheme(row.registration_scheme);
+  if (scheme && scheme !== "US_N" && scheme !== "UNKNOWN") return false;
+  if (scheme === "US_N") return true;
+
+  const stateCode = String(row.state ?? "").trim().toUpperCase();
+  if (US_STATE_CODES.has(stateCode)) return true;
+  const rawLocation = String(row.location_raw ?? "").trim().toLowerCase();
+  if (rawLocation.includes("usa") || rawLocation.includes("united states")) return true;
+  if (NON_US_LOCATION_MARKERS.some((marker) => rawLocation.includes(marker))) return false;
+
+  return US_LIKELY_SOURCES.has(source);
+}
+
 function toPercent(numerator: number, denominator: number): number {
   if (denominator <= 0) return 0;
   return Number(((numerator / denominator) * 100).toFixed(1));
@@ -127,26 +181,43 @@ function parseDomain(sourceUrl: unknown): string | null {
   }
 }
 
+function sanitizeErrorMessage(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "Source quality request failed.";
+  const withoutTags = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const normalized = withoutTags || "Source quality request failed.";
+  return normalized.length > 220 ? `${normalized.slice(0, 220)}...` : normalized;
+}
+
 export async function GET(request: NextRequest) {
   const access = await ensureInternalApiAccess(request);
   if (access.ok !== true) return access.response;
 
   try {
     const supabase = createPrivilegedServerClient();
-    const columns =
+    const columnsWithRegistration =
+      "source,source_site,listing_source,source_url,url,value_score,asking_price,n_number,registration_raw,registration_normalized,registration_scheme,registration_country_code,registration_confidence,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type,created_at,updated_at,last_seen_date,scraped_at,first_seen_date,listing_date";
+    const columnsLegacy =
       "source,source_site,listing_source,source_url,url,value_score,asking_price,n_number,total_time_airframe,time_since_overhaul,engine_model,location_raw,year,make,model,description,time_since_prop_overhaul,state,seller_name,seller_type,primary_image_url,aircraft_type,created_at,updated_at,last_seen_date,scraped_at,first_seen_date,listing_date";
     const pageSize = 1000;
     const rows: ListingRow[] = [];
     let from = 0;
+    let selectedColumns = columnsWithRegistration;
     while (true) {
       const to = from + pageSize - 1;
       const result = await supabase
         .from("aircraft_listings")
-        .select(columns)
+        .select(selectedColumns)
         .eq("is_active", true)
         .range(from, to);
-      if (result.error) throw new Error(result.error.message);
-      const pageRows = (result.data ?? []) as ListingRow[];
+      if (result.error) {
+        if (selectedColumns === columnsWithRegistration) {
+          selectedColumns = columnsLegacy;
+          continue;
+        }
+        throw new Error(sanitizeErrorMessage(result.error.message));
+      }
+      const pageRows = ((result.data ?? []) as unknown as SupabaseRow[]).map((row) => row as ListingRow);
       rows.push(...pageRows);
       if (pageRows.length < pageSize) break;
       from += pageSize;
@@ -172,6 +243,14 @@ export async function GET(request: NextRequest) {
 
         let withPrice = 0;
         let withNNumber = 0;
+        let withRegistrationAny = 0;
+        let withUsRegistration = 0;
+        let withNonUsRegistration = 0;
+        let withUnclassifiedRegistration = 0;
+        let usExpected = 0;
+        let usExpectedWithUsRegistration = 0;
+        let nonUsExpected = 0;
+        let nonUsExpectedWithNonUsRegistration = 0;
         let withTotalTime = 0;
         let withSmoh = 0;
         let withEngineModel = 0;
@@ -202,6 +281,18 @@ export async function GET(request: NextRequest) {
         for (const row of sourceRows) {
           if (hasValue(row.asking_price)) withPrice += 1;
           if (hasValue(row.n_number)) withNNumber += 1;
+          if (hasAnyRegistration(row)) withRegistrationAny += 1;
+          if (hasUsRegistration(row)) withUsRegistration += 1;
+          if (hasNonUsRegistration(row)) withNonUsRegistration += 1;
+          if (hasUnclassifiedRegistration(row)) withUnclassifiedRegistration += 1;
+          const isUsExpected = inferUsExpected(row, source);
+          if (isUsExpected) {
+            usExpected += 1;
+            if (hasUsRegistration(row)) usExpectedWithUsRegistration += 1;
+          } else {
+            nonUsExpected += 1;
+            if (hasNonUsRegistration(row)) nonUsExpectedWithNonUsRegistration += 1;
+          }
           if (hasValue(row.total_time_airframe)) withTotalTime += 1;
           if (hasValue(row.time_since_overhaul)) withSmoh += 1;
           if (hasValue(row.engine_model)) withEngineModel += 1;
@@ -345,12 +436,26 @@ export async function GET(request: NextRequest) {
             detail: "Review top source_url domains to classify this source.",
           });
         }
+        if (toPercent(withUnclassifiedRegistration, total) >= 15) {
+          alerts.push({
+            level: "warning",
+            label: "Registration classification weak",
+            detail: `${toPercent(withUnclassifiedRegistration, total).toFixed(1)}% registrations are unclassified.`,
+          });
+        }
 
         return {
           source,
           active_listings: total,
           pct_with_price: toPercent(withPrice, total),
           pct_with_n_number: toPercent(withNNumber, total),
+          pct_with_registration_any: toPercent(withRegistrationAny, total),
+          pct_with_us_n_number: toPercent(withUsRegistration, total),
+          pct_with_non_us_registration: toPercent(withNonUsRegistration, total),
+          pct_unclassified_registration: toPercent(withUnclassifiedRegistration, total),
+          pct_us_expected: toPercent(usExpected, total),
+          pct_with_us_n_number_when_us_expected: toPercent(usExpectedWithUsRegistration, usExpected),
+          pct_with_non_us_registration_when_non_us_expected: toPercent(nonUsExpectedWithNonUsRegistration, nonUsExpected),
           pct_with_total_time: toPercent(withTotalTime, total),
           pct_with_smoh: toPercent(withSmoh, total),
           pct_with_engine_model: toPercent(withEngineModel, total),
@@ -405,7 +510,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to compute source quality." },
+      { error: sanitizeErrorMessage(error instanceof Error ? error.message : "Failed to compute source quality.") },
       { status: 500 }
     );
   }
