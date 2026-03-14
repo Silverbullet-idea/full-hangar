@@ -181,6 +181,21 @@ function parseDomain(sourceUrl: unknown): string | null {
   }
 }
 
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    Promise.resolve(promiseLike)
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
 function sanitizeErrorMessage(value: unknown): string {
   const raw = String(value ?? "").trim();
   if (!raw) return "Source quality request failed.";
@@ -214,11 +229,15 @@ export async function GET(request: NextRequest) {
     let selectedColumns = columnsWithRegistration;
     while (true) {
       const to = from + pageSize - 1;
-      const result = await supabase
-        .from("aircraft_listings")
-        .select(selectedColumns)
-        .eq("is_active", true)
-        .range(from, to);
+      const result = await withTimeout(
+        supabase
+          .from("aircraft_listings")
+          .select(selectedColumns)
+          .eq("is_active", true)
+          .range(from, to),
+        10000,
+        "source quality query"
+      );
       if (result.error) {
         if (selectedColumns === columnsWithRegistration) {
           selectedColumns = columnsLegacy;

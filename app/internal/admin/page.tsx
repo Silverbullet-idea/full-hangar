@@ -15,6 +15,16 @@ function statValue(value: number | string) {
   return value;
 }
 
+function summarizeFailure(reason: unknown): string {
+  const raw = String(reason ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  if (!raw) return "request failed";
+  if (raw.includes("timed out")) return "timed out";
+  if (raw.includes("missing service-role supabase key")) return "service key missing";
+  if (raw.includes("permission denied") || raw.includes("not authorized")) return "permission denied";
+  if (raw.includes("cloudflare") || raw.includes("error 522")) return "upstream timeout";
+  return "request failed";
+}
+
 const EMPTY_PLATFORM = {
   listings: {
     total_active: 0,
@@ -115,11 +125,21 @@ export default async function InternalAdminPage() {
   }
 
   const failedPanels = [
-    platformResult.status === "rejected" ? "Platform stats" : null,
-    qualityResult.status === "rejected" ? "Data quality" : null,
-    buyerResult.status === "rejected" ? "Buyer intelligence" : null,
-    invitesResult.status === "rejected" ? "Invites/sessions" : null,
-    avionicsResult.status === "rejected" ? "Avionics intelligence" : null,
+    platformResult.status === "rejected"
+      ? `Platform stats (${summarizeFailure(platformResult.reason)})`
+      : null,
+    qualityResult.status === "rejected"
+      ? `Data quality (${summarizeFailure(qualityResult.reason)})`
+      : null,
+    buyerResult.status === "rejected"
+      ? `Buyer intelligence (${summarizeFailure(buyerResult.reason)})`
+      : null,
+    invitesResult.status === "rejected"
+      ? `Invites/sessions (${summarizeFailure(invitesResult.reason)})`
+      : null,
+    avionicsResult.status === "rejected"
+      ? `Avionics intelligence (${summarizeFailure(avionicsResult.reason)})`
+      : null,
   ].filter((value): value is string => Boolean(value));
 
   const platform = platformResult.status === "fulfilled" ? platformResult.value : EMPTY_PLATFORM;

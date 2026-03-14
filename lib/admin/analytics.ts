@@ -1,5 +1,6 @@
 import { createPrivilegedServerClient } from "@/lib/supabase/server";
 import { COMPLETENESS_FIELDS, getRecommendationLevel, type CompletenessField } from "@/lib/admin/completeness";
+import { cache } from "react";
 
 type ListingRow = Record<string, unknown>;
 const AVIONICS_HINT_RE =
@@ -187,14 +188,33 @@ function rowTimestamp(value: unknown): number | null {
   return Number.isFinite(ts) ? ts : null;
 }
 
-async function getActiveListings(): Promise<ListingRow[]> {
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    Promise.resolve(promiseLike)
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+const getActiveListings = cache(async (): Promise<ListingRow[]> => {
   const supabase = createPrivilegedServerClient();
   const pageSize = 1000;
   const rows: ListingRow[] = [];
   let from = 0;
   while (true) {
     const to = from + pageSize - 1;
-    const result = await supabase.from("aircraft_listings").select("*").eq("is_active", true).range(from, to);
+    const result = await withTimeout(
+      supabase.from("aircraft_listings").select("*").eq("is_active", true).range(from, to),
+      12000,
+      "active listings query"
+    );
     if (result.error) throw new Error(result.error.message);
     const pageRows = (result.data ?? []) as ListingRow[];
     rows.push(...pageRows);
@@ -202,7 +222,7 @@ async function getActiveListings(): Promise<ListingRow[]> {
     from += pageSize;
   }
   return rows;
-}
+});
 
 export async function computeDataQuality() {
   const rows = await getActiveListings();
@@ -300,14 +320,22 @@ export async function computeDataQuality() {
 
 async function safeCount(table: string): Promise<number> {
   const supabase = createPrivilegedServerClient();
-  const result = await supabase.from(table).select("id", { count: "exact", head: true });
+  const result = await withTimeout(
+    supabase.from(table).select("id", { count: "exact", head: true }),
+    8000,
+    `${table} count query`
+  );
   if (result.error || typeof result.count !== "number") return 0;
   return result.count;
 }
 
 async function safeCountByColumn(table: string, column: string): Promise<number> {
   const supabase = createPrivilegedServerClient();
-  const result = await supabase.from(table).select(column, { count: "exact", head: true });
+  const result = await withTimeout(
+    supabase.from(table).select(column, { count: "exact", head: true }),
+    8000,
+    `${table}.${column} count query`
+  );
   if (result.error || typeof result.count !== "number") return 0;
   return result.count;
 }
@@ -674,18 +702,26 @@ export async function computeBuyerIntelligence() {
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
   const supabase = createPrivilegedServerClient();
-  const transfers = await supabase
-    .from("detected_ownership_changes")
-    .select("n_number,old_owner,new_owner,new_cert_date,asking_price_at_detection,listing_id")
-    .order("detected_at", { ascending: false })
-    .limit(20);
+  const transfers = await withTimeout(
+    supabase
+      .from("detected_ownership_changes")
+      .select("n_number,old_owner,new_owner,new_cert_date,asking_price_at_detection,listing_id")
+      .order("detected_at", { ascending: false })
+      .limit(20),
+    10000,
+    "ownership transfer query"
+  );
 
   const listingIds = Array.from(
     new Set((transfers.data ?? []).map((row) => String(row.listing_id ?? "")).filter((id) => id.length > 0))
   );
   const listingMap = new Map<string, { make: string; model: string; year: number }>();
   if (listingIds.length > 0) {
-    const listingRows = await supabase.from("aircraft_listings").select("id,make,model,year").in("id", listingIds);
+    const listingRows = await withTimeout(
+      supabase.from("aircraft_listings").select("id,make,model,year").in("id", listingIds),
+      10000,
+      "ownership listing lookup query"
+    );
     for (const row of listingRows.data ?? []) {
       listingMap.set(String(row.id), {
         make: String(row.make ?? ""),
@@ -837,12 +873,16 @@ export async function computeAvionicsIntelligence(options?: { days?: number; top
 
   while (true) {
     const to = offset + pageSize - 1;
-    const page = await supabase
-      .from("aircraft_listings")
-      .select("source_site,last_seen_date,avionics_description,description_full,description,description_intelligence")
-      .gte("last_seen_date", cutoffDate)
-      .order("last_seen_date", { ascending: false })
-      .range(offset, to);
+    const page = await withTimeout(
+      supabase
+        .from("aircraft_listings")
+        .select("source_site,last_seen_date,avionics_description,description_full,description,description_intelligence")
+        .gte("last_seen_date", cutoffDate)
+        .order("last_seen_date", { ascending: false })
+        .range(offset, to),
+      12000,
+      "avionics intelligence query"
+    );
 
     if (page.error) throw new Error(page.error.message);
     const rows = (page.data ?? []) as ListingRow[];
