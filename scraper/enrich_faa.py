@@ -27,6 +27,7 @@ load_dotenv()
 
 log = logging.getLogger(__name__)
 DEREGISTRATION_ALERT = "DEREGISTERED - VERIFY BEFORE PURCHASE"
+_UNSUPPORTED_REGISTRY_FIELDS: set[str] = set()
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -43,36 +44,119 @@ def get_supabase() -> Client:
 
 
 def fetch_pending_listings(supabase: Client, limit: int | None = None) -> list[dict[str, Any]]:
-    base = supabase.table("aircraft_listings").not_.is_("n_number", "null").is_("faa_owner", "null")
-    columns = "id, n_number, engine_model, registration_scheme"
+    columns = "id, n_number, serial_number, engine_model, registration_scheme"
     try:
-        query = base.select(columns)
+        page_limit = limit if limit is not None else 10000
+        # Prefer queueing by faa_matched state so we do not repeatedly reprocess
+        # rows that were already matched but have null owner values in FAA registry.
+        missing_match = (
+            supabase.table("aircraft_listings")
+            .select(columns)
+            .not_.is_("n_number", "null")
+            .is_("faa_matched", "null")
+            .limit(page_limit)
+            .execute()
+        ).data or []
+        false_match = (
+            supabase.table("aircraft_listings")
+            .select(columns)
+            .not_.is_("n_number", "null")
+            .eq("faa_matched", False)
+            .limit(page_limit)
+            .execute()
+        ).data or []
+        merged: dict[str, dict[str, Any]] = {}
+        for row in [*missing_match, *false_match]:
+            row_id = str(row.get("id") or "")
+            if not row_id:
+                continue
+            merged[row_id] = row
+        rows = list(merged.values())
         if limit is not None:
-            query = query.limit(limit)
-        response = query.execute()
-        return response.data or []
+            rows = rows[:limit]
+        return rows
     except Exception:
-        # Backward compatibility for environments missing registration columns.
-        query = base.select("id, n_number, engine_model")
+        # Backward compatibility for environments missing faa_matched/registration columns.
+        query = (
+            supabase.table("aircraft_listings")
+            .select("id, n_number, serial_number, engine_model")
+            .not_.is_("n_number", "null")
+            .is_("faa_owner", "null")
+        )
         if limit is not None:
             query = query.limit(limit)
         response = query.execute()
         return response.data or []
 
 
-def fetch_faa_match(supabase: Client, n_number: str) -> dict[str, Any] | None:
-    candidates = _n_number_candidates(n_number)
-    for candidate in candidates:
+def _normalize_serial(serial_number: Any) -> str | None:
+    if serial_number is None:
+        return None
+    normalized = "".join(ch for ch in str(serial_number).upper() if ch.isalnum())
+    return normalized or None
+
+
+def _serial_candidates(serial_number: Any) -> list[str]:
+    base = _normalize_serial(serial_number)
+    if not base:
+        return []
+
+    candidates: list[str] = []
+    seen: set[str] = set()
+
+    def _add(value: str) -> None:
+        text = value.strip().upper()
+        if not text or text in seen:
+            return
+        seen.add(text)
+        candidates.append(text)
+
+    _add(base)
+    _add(re.sub(r"^(SN|S\/N|SERIAL|SERIALNO|SERIALNUMBER)", "", base))
+    _add(base.lstrip("0"))
+    return candidates
+
+
+def _registry_lookup_by_field(
+    supabase: Client,
+    *,
+    field: str,
+    value: str,
+) -> dict[str, Any] | None:
+    if field in _UNSUPPORTED_REGISTRY_FIELDS:
+        return None
+    try:
         response = (
             supabase.table("faa_registry")
             .select("*")
-            .eq("n_number", candidate)
+            .eq(field, value)
             .limit(1)
             .execute()
         )
-        row = (response.data or [None])[0]
+    except Exception as exc:
+        message = str(exc).lower()
+        if "could not find the" in message or "does not exist" in message:
+            _UNSUPPORTED_REGISTRY_FIELDS.add(field)
+        return None
+    return (response.data or [None])[0]
+
+
+def fetch_faa_match(supabase: Client, n_number: str, serial_number: Any = None) -> dict[str, Any] | None:
+    candidates = _n_number_candidates(n_number)
+    for candidate in candidates:
+        row = _registry_lookup_by_field(supabase, field="n_number", value=candidate)
         if row:
             return row
+
+    for serial_candidate in _serial_candidates(serial_number):
+        for serial_field in ("serial_number", "serial_no", "serial"):
+            row = _registry_lookup_by_field(
+                supabase,
+                field=serial_field,
+                value=serial_candidate,
+            )
+            if row:
+                return row
     return None
 
 
@@ -135,13 +219,39 @@ def _n_number_candidates(n_number: str) -> list[str]:
     normalized = "".join(ch for ch in str(n_number).upper() if ch.isalnum())
     if not normalized:
         return []
+    candidates: list[str] = []
+    seen: set[str] = set()
+
+    def _add(value: str) -> None:
+        text = value.strip().upper()
+        if not text or text in seen:
+            return
+        seen.add(text)
+        candidates.append(text)
+
     if normalized.startswith("N"):
         without_prefix = normalized[1:]
-        values = [normalized]
+        _add(normalized)
         if without_prefix:
-            values.append(without_prefix)
-        return values
-    return [f"N{normalized}", normalized]
+            _add(without_prefix)
+
+        digit_run = ""
+        suffix = ""
+        for idx, ch in enumerate(without_prefix):
+            if ch.isdigit():
+                digit_run += ch
+                continue
+            suffix = without_prefix[idx:]
+            break
+        if digit_run:
+            stripped_digits = digit_run.lstrip("0") or "0"
+            if stripped_digits != digit_run:
+                _add(f"N{stripped_digits}{suffix}")
+                _add(f"{stripped_digits}{suffix}")
+        return candidates
+    _add(f"N{normalized}")
+    _add(normalized)
+    return candidates
 
 
 def _should_backfill_engine_model(existing_engine_model: Any) -> bool:
@@ -149,8 +259,60 @@ def _should_backfill_engine_model(existing_engine_model: Any) -> bool:
     if not text:
         return True
 
-    normalized = text.lower()
+    normalized = re.sub(r"\s+", " ", text.strip().lower())
+    normalized_compact = re.sub(r"[^a-z0-9]+", "", normalized)
+
     if normalized in {"unknown", "n/a", "na", "-", "--", "none"}:
+        return True
+    if not normalized_compact:
+        return True
+    if len(normalized_compact) <= 3:
+        return True
+
+    if re.search(r"\b(unknown|offered|inquire|tbd|see listing|to be determined)\b", normalized):
+        return True
+
+    generic_tokens = {
+        "one",
+        "two",
+        "single",
+        "twin",
+        "engine",
+        "engines",
+        "piston",
+        "turbine",
+        "turbo",
+        "jet",
+        "rotary",
+        "prop",
+        "props",
+    }
+    token_parts = [part for part in re.split(r"[^a-z0-9]+", normalized) if part]
+    if token_parts and all(part in generic_tokens for part in token_parts):
+        return True
+
+    manufacturer_only = {
+        "lycoming",
+        "continental",
+        "contmotor",
+        "prattwhitney",
+        "pw",
+        "pwc",
+        "honeywell",
+        "rollsroyce",
+        "garrett",
+        "rotax",
+        "austro",
+        "amaexpr",
+        "cfm",
+        "jabiru",
+    }
+    if normalized_compact in manufacturer_only:
+        return True
+
+    # Most FAA/scraped engine models contain digits (e.g., IO-540, PW535B, PT6A-67P).
+    # If no digits are present, treat as likely noisy/generic and allow FAA replacement.
+    if not re.search(r"\d", normalized):
         return True
 
     return False
@@ -234,6 +396,7 @@ def run_enrichment(supabase: Client, limit: int | None = None, dry_run: bool = F
     for listing in listings:
         listing_id = listing["id"]
         n_number = listing.get("n_number")
+        serial_number = listing.get("serial_number")
         if not n_number:
             continue
         registration_scheme = str(listing.get("registration_scheme") or "").strip().upper()
@@ -245,7 +408,7 @@ def run_enrichment(supabase: Client, limit: int | None = None, dry_run: bool = F
             log.debug("Skipping invalid n-number listing_id=%s n_number=%s", listing_id, n_number)
             continue
 
-        faa_record = fetch_faa_match(supabase, normalized_n_number)
+        faa_record = fetch_faa_match(supabase, normalized_n_number, serial_number=serial_number)
         dereg_record = fetch_deregistered_match(supabase, normalized_n_number)
 
         if not faa_record and not dereg_record:
