@@ -186,6 +186,15 @@ function sanitizeErrorMessage(value: unknown): string {
   if (!raw) return "Source quality request failed.";
   const withoutTags = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   const normalized = withoutTags || "Source quality request failed.";
+  const lower = normalized.toLowerCase();
+  if (
+    lower.includes("doctype html") ||
+    lower.includes("cloudflare") ||
+    lower.includes("error 522") ||
+    lower.includes("connection timed out")
+  ) {
+    return "Source quality is temporarily unavailable due to an upstream timeout.";
+  }
   return normalized.length > 220 ? `${normalized.slice(0, 220)}...` : normalized;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type SourceQualityRow = {
   source: string;
@@ -58,6 +58,8 @@ type SourceQualityPayload = {
   critical_fields: string[];
   sources: SourceQualityRow[];
 };
+
+const SOURCE_QUALITY_CACHE_KEY = "internal_source_quality_cache_v1";
 
 type SortDirection = "asc" | "desc";
 type SortKey =
@@ -125,26 +127,60 @@ function alertBadgeClass(level: "critical" | "warning") {
 }
 
 function sanitizeErrorMessage(value: string): string {
-  const withoutTags = value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  if (!withoutTags) return "Source quality is temporarily unavailable.";
-  return withoutTags.length > 220 ? `${withoutTags.slice(0, 220)}...` : withoutTags;
+  const normalized = value
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&amp;/gi, "&")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return "Source quality is temporarily unavailable.";
+  const lower = normalized.toLowerCase();
+  if (
+    lower.includes("doctype html") ||
+    lower.includes("cloudflare") ||
+    lower.includes("connection timed out") ||
+    lower.includes("error 522")
+  ) {
+    return "Source quality is temporarily unavailable due to an upstream timeout. Please retry in a moment.";
+  }
+  return normalized.length > 220 ? `${normalized.slice(0, 220)}...` : normalized;
 }
 
 export function SourceQualitySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const [payload, setPayload] = useState<SourceQualityPayload | null>(null);
+  const hasCachedPayloadRef = useRef(false);
   const [sortKey, setSortKey] = useState<SortKey>("source_health_score");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
     let cancelled = false;
+    const cachedRaw =
+      typeof window !== "undefined" ? window.sessionStorage.getItem(SOURCE_QUALITY_CACHE_KEY) : null;
+    if (cachedRaw) {
+      try {
+        const cached = JSON.parse(cachedRaw) as SourceQualityPayload;
+        if (cached && Array.isArray(cached.sources)) {
+          setPayload(cached);
+          hasCachedPayloadRef.current = true;
+          setLoading(false);
+        }
+      } catch {
+        // Ignore malformed cache and fetch fresh data.
+      }
+    }
 
     async function load() {
       setLoading(true);
       setError("");
+      setWarning("");
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 15000);
       try {
-        const response = await fetch("/api/internal/source-quality");
+        const response = await fetch("/api/internal/source-quality", { signal: controller.signal });
         const contentType = response.headers.get("content-type") || "";
         const rawText = await response.text();
         let body: (Partial<SourceQualityPayload> & { error?: string }) | null = null;
@@ -159,16 +195,31 @@ export function SourceQualitySection() {
           throw new Error("Source quality returned an unexpected response format.");
         }
         if (!cancelled) {
-          setPayload({
+          const nextPayload = {
             computed_at: String(body.computed_at ?? ""),
             completeness_fields: Array.isArray(body.completeness_fields) ? body.completeness_fields : [],
             critical_fields: Array.isArray(body.critical_fields) ? body.critical_fields : [],
             sources: Array.isArray(body.sources) ? (body.sources as SourceQualityRow[]) : [],
-          });
+          };
+          setPayload(nextPayload);
+          hasCachedPayloadRef.current = true;
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(SOURCE_QUALITY_CACHE_KEY, JSON.stringify(nextPayload));
+          }
         }
       } catch (fetchError) {
-        if (!cancelled) setError(sanitizeErrorMessage(fetchError instanceof Error ? fetchError.message : "Failed to load source quality"));
+        if (!cancelled) {
+          const message =
+            fetchError instanceof DOMException && fetchError.name === "AbortError"
+              ? "Source quality request timed out. Showing last available data."
+              : sanitizeErrorMessage(
+                  fetchError instanceof Error ? fetchError.message : "Failed to load source quality"
+                );
+          if (hasCachedPayloadRef.current) setWarning(message);
+          else setError(message);
+        }
       } finally {
+        window.clearTimeout(timeoutId);
         if (!cancelled) setLoading(false);
       }
     }
@@ -285,6 +336,11 @@ export function SourceQualitySection() {
     <section className="space-y-4">
       <article className="rounded border border-brand-dark bg-card-bg p-4">
         <h2 className="text-lg font-semibold">Inventory by Source — Detail View</h2>
+        {warning ? (
+          <p className="mt-2 rounded border border-brand-dark bg-[#161616] px-2 py-1 text-xs text-brand-orange">
+            {warning}
+          </p>
+        ) : null}
         <p className="mt-1 text-xs text-brand-muted">
           Live source-level inventory and completeness health. Updated: {payload?.computed_at ? new Date(payload.computed_at).toLocaleString() : "n/a"}
         </p>
