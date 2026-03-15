@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start";
 const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end";
+const LOGIN_NAV_HOLD_FLAG = "fullhangar:hold-nav-overlay-until-next-page";
 
 export default function InternalLoginPage() {
   const router = useRouter();
@@ -17,9 +18,11 @@ export default function InternalLoginPage() {
     event.preventDefault();
     setError("");
     setIsSubmitting(true);
+    let keepOverlayUntilNextPage = false;
 
     try {
       if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(LOGIN_NAV_HOLD_FLAG);
         window.dispatchEvent(new Event(NAV_LOADING_START_EVENT));
       }
       const response = await fetch("/api/internal/auth", {
@@ -35,13 +38,18 @@ export default function InternalLoginPage() {
         return;
       }
 
+      keepOverlayUntilNextPage = true;
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(LOGIN_NAV_HOLD_FLAG, "1");
+      }
       router.push("/internal/admin");
       router.refresh();
     } catch {
       setError("Unable to sign in right now. Please try again.");
     } finally {
       setIsSubmitting(false);
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !keepOverlayUntilNextPage) {
+        window.sessionStorage.removeItem(LOGIN_NAV_HOLD_FLAG);
         window.dispatchEvent(new Event(NAV_LOADING_END_EVENT));
       }
     }

@@ -106,7 +106,7 @@ export default function DealDeskIndexPage() {
             <p className="text-sm text-brand-muted">Saved deal scenarios sorted by most recent activity.</p>
           </div>
           {selected.size >= 2 ? (
-            <Link href={compareHref} className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black hover:bg-brand-burn hover:text-white">
+            <Link href={compareHref} className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black">
               Compare Selected →
             </Link>
           ) : null}
@@ -122,7 +122,7 @@ export default function DealDeskIndexPage() {
             type="button"
             onClick={onCreateBaseScenario}
             disabled={creating || newListingId.trim().length === 0}
-            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black hover:bg-brand-burn hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black disabled:cursor-not-allowed disabled:opacity-60"
           >
             {creating ? "Creating..." : "Create Base Scenario"}
           </button>
@@ -176,7 +176,7 @@ export default function DealDeskIndexPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/internal/deal-desk/${encodeURIComponent(row.listing_id)}`}
-                        className="rounded bg-brand-orange px-2 py-1 text-[11px] font-semibold text-black hover:bg-brand-burn hover:text-white"
+                        className="rounded bg-brand-orange px-2 py-1 text-[11px] font-semibold !text-black hover:bg-brand-burn hover:!text-black"
                       >
                         Open
                       </Link>

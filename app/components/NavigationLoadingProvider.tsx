@@ -6,6 +6,7 @@ import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from 
 const FAILSAFE_HIDE_MS = 15000
 const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start"
 const NAV_LOADING_END_EVENT = "fullhangar:navigation-loading-end"
+const LOGIN_NAV_HOLD_FLAG = "fullhangar:hold-nav-overlay-until-next-page"
 
 function isModifiedEvent(event: MouseEvent | ReactMouseEvent) {
   return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
@@ -105,6 +106,17 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
 
   useEffect(() => {
     if (!isNavigating) return
+    const shouldReleaseHeldLoginOverlay =
+      typeof window !== "undefined" &&
+      window.sessionStorage.getItem(LOGIN_NAV_HOLD_FLAG) === "1" &&
+      pathname !== "/internal/login"
+    if (shouldReleaseHeldLoginOverlay) {
+      window.sessionStorage.removeItem(LOGIN_NAV_HOLD_FLAG)
+      loadingLocksRef.current = Math.max(0, loadingLocksRef.current - 1)
+      pendingListingsNavigationRef.current = false
+      endOverlay()
+      return
+    }
     if (pendingListingsNavigationRef.current) {
       // Keep overlay visible through listing transitions.
       if (pathname !== "/listings") return
