@@ -43,6 +43,20 @@ function createReadServerClient() {
   }
 }
 
+function isTransientSupabaseUpstreamFailure(rawMessage: unknown): boolean {
+  const message = String(rawMessage ?? "").toLowerCase();
+  return (
+    message.includes("statement timeout") ||
+    message.includes("connection timed out") ||
+    message.includes("error code 522") ||
+    message.includes("cloudflare") ||
+    message.includes("<!doctype html") ||
+    message.includes("bad gateway") ||
+    message.includes("gateway timeout") ||
+    message.includes("fetch failed")
+  );
+}
+
 export async function getAircraftListingsCount() {
   const supabase = createPrivilegedServerClient();
   const result = await supabase
@@ -852,7 +866,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 
   dbQuery = dbQuery.range(from, to);
   let result = await dbQuery;
-  if (result.error && String(result.error.message).toLowerCase().includes("statement timeout")) {
+  if (result.error && isTransientSupabaseUpstreamFailure(result.error.message)) {
     let fallbackQuery = supabase
       .from(listBaseTable)
       .select(listBaseColumns)
@@ -882,7 +896,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       .order("value_score", { ascending: false, nullsFirst: false });
     result = await fallbackQuery.range(from, to);
   }
-  if (result.error && String(result.error.message).toLowerCase().includes("statement timeout") && q) {
+  if (result.error && isTransientSupabaseUpstreamFailure(result.error.message) && q) {
     // Last-resort fallback: keep search responsive on hot terms.
     const emergencyQuery = supabase
       .from(listBaseTable)
@@ -904,8 +918,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (permissionDenied && requestedOwnershipType) {
       return getListingsPage({ ...query, ownershipType: "all" });
     }
-    const timedOut = String(result.error.message).toLowerCase().includes("statement timeout");
-    if (timedOut) {
+    const transientFailure = isTransientSupabaseUpstreamFailure(result.error.message);
+    if (transientFailure) {
       if (q) {
         let tableFallback = supabase
           .from("aircraft_listings")
@@ -1019,8 +1033,8 @@ export async function getListingFilterOptions(): Promise<ListingFilterOption[]> 
       }));
     }
 
-    const isTimeout = String(result.error.message).toLowerCase().includes("statement timeout");
-    if (!isTimeout) throw new Error(result.error.message);
+    const isTransientFailure = isTransientSupabaseUpstreamFailure(result.error.message);
+    if (!isTransientFailure) throw new Error(result.error.message);
     lastError = new Error(result.error.message);
   }
 

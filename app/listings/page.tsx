@@ -230,37 +230,45 @@ export default async function ListingsPage({
   let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
   let optionRows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }> = []
 
-  try {
-    ;[initialPageData, optionRows] = await Promise.all([
-      getListingsPage({
-        page: initialPage,
-        pageSize: initialPageSize,
-        sortBy: initialSortBy,
-        q: initialSearchTerm,
-        make: initialMakeFilter,
-        modelFamily: initialModelFamilyFilter,
-        subModel: initialSubModelFilter,
-        source: initialSourceFilter,
-        state: initialStateFilter,
-        risk: initialRiskFilter,
-        minValueScore: initialMinimumScore,
-        minPrice: initialMinPrice,
-        maxPrice: initialMaxPrice,
-        priceStatus: initialPriceStatus,
-        yearMin: initialYearMin,
-        yearMax: initialYearMax,
-        totalTimeMin: initialTotalTimeMin,
-        totalTimeMax: initialTotalTimeMax,
-        maintenanceBand: initialMaintenanceBand,
-        trueCostMin: initialTrueCostMin,
-        trueCostMax: initialTrueCostMax,
-        category: initialCategoryFilter ?? '',
-        dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-      }),
-      getListingFilterOptions(),
-    ])
-  } catch (error) {
-    console.error("[listings/page] failed to load initial data", error)
+  const [pageDataResult, optionsResult] = await Promise.allSettled([
+    getListingsPage({
+      page: initialPage,
+      pageSize: initialPageSize,
+      sortBy: initialSortBy,
+      q: initialSearchTerm,
+      make: initialMakeFilter,
+      modelFamily: initialModelFamilyFilter,
+      subModel: initialSubModelFilter,
+      source: initialSourceFilter,
+      state: initialStateFilter,
+      risk: initialRiskFilter,
+      minValueScore: initialMinimumScore,
+      minPrice: initialMinPrice,
+      maxPrice: initialMaxPrice,
+      priceStatus: initialPriceStatus,
+      yearMin: initialYearMin,
+      yearMax: initialYearMax,
+      totalTimeMin: initialTotalTimeMin,
+      totalTimeMax: initialTotalTimeMax,
+      maintenanceBand: initialMaintenanceBand,
+      trueCostMin: initialTrueCostMin,
+      trueCostMax: initialTrueCostMax,
+      category: initialCategoryFilter ?? '',
+      dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
+    }),
+    getListingFilterOptions(),
+  ])
+
+  if (pageDataResult.status === 'fulfilled') {
+    initialPageData = pageDataResult.value
+  } else {
+    console.error("[listings/page] failed to load initial listings", pageDataResult.reason)
+  }
+
+  if (optionsResult.status === 'fulfilled') {
+    optionRows = optionsResult.value
+  } else {
+    console.error("[listings/page] failed to load listing filter options", optionsResult.reason)
   }
 
   const itemListJsonLd = {

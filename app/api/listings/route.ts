@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getListingsPage } from "../../../lib/db/listingsRepository";
 
+function sanitizeListingsApiError(rawMessage: unknown): string {
+  const message = String(rawMessage ?? "");
+  const normalized = message.toLowerCase();
+  if (
+    normalized.includes("connection timed out") ||
+    normalized.includes("error code 522") ||
+    normalized.includes("cloudflare") ||
+    normalized.includes("<!doctype html") ||
+    normalized.includes("statement timeout") ||
+    normalized.includes("gateway timeout")
+  ) {
+    return "Listings data is temporarily unavailable due to an upstream database timeout. Please retry shortly.";
+  }
+  return message || "Unknown error";
+}
+
 export async function GET(request: NextRequest) {
   const startedAt = Date.now();
   const search = request.nextUrl.searchParams;
@@ -60,8 +76,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     const elapsedMs = Date.now() - startedAt;
+    const message = sanitizeListingsApiError(error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { data: [], meta: null, error: error instanceof Error ? error.message : "Unknown error" },
+      { data: [], meta: null, error: message },
       { status: 500, headers: { "X-Response-Time-Ms": String(elapsedMs) } }
     );
   }
