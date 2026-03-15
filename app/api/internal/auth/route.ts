@@ -3,6 +3,21 @@ import { createInternalSessionValue, getInternalSessionSecret, internalSessionCo
 import { createPrivilegedServerClient } from "@/lib/supabase/server";
 import { findAdminUserByUsernameOrEmail, verifyPassword } from "@/lib/admin/users";
 
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
+    Promise.resolve(promiseLike)
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
 export async function POST(request: NextRequest) {
   const envUsername = process.env.INTERNAL_USERNAME || "Ryan";
   const envPassword = process.env.INTERNAL_PASSWORD;
@@ -25,11 +40,19 @@ export async function POST(request: NextRequest) {
   let credentialValid = false;
   let matchedAdminUserId: string | null = null;
   if (typeof username === "string" && typeof password === "string") {
-    const adminUser = await findAdminUserByUsernameOrEmail(username.trim());
+    const normalizedUsername = username.trim();
+    let adminUser = null;
+    try {
+      // Keep login responsive during transient Supabase outages.
+      adminUser = await withTimeout(findAdminUserByUsernameOrEmail(normalizedUsername), 3500);
+    } catch {
+      adminUser = null;
+    }
+
     if (adminUser && adminUser.is_active && adminUser.role === "admin" && verifyPassword(password, adminUser.password_hash)) {
       credentialValid = true;
       matchedAdminUserId = adminUser.id;
-    } else if (acceptedUsernames.has(username.trim().toLowerCase()) && acceptedPasswords.has(password)) {
+    } else if (acceptedUsernames.has(normalizedUsername.toLowerCase()) && acceptedPasswords.has(password)) {
       credentialValid = true;
     }
   }
@@ -54,11 +77,18 @@ export async function POST(request: NextRequest) {
   });
 
   if (matchedAdminUserId) {
-    const supabase = createPrivilegedServerClient();
-    await supabase
-      .from("admin_users")
-      .update({ last_login_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq("id", matchedAdminUserId);
+    try {
+      const supabase = createPrivilegedServerClient();
+      await withTimeout(
+        supabase
+          .from("admin_users")
+          .update({ last_login_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("id", matchedAdminUserId),
+        2000
+      );
+    } catch {
+      // Non-blocking telemetry write.
+    }
   }
 
   return response;
