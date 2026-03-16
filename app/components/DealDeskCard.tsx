@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { calculateDeal } from "@/lib/dealDesk/calculations";
-import type { DealDeskScenarioWithContext } from "@/app/internal/deal-desk/components/DealDeskCalculator";
+import { calculateFlip } from "@/lib/dealDesk/calculations";
+import type { DealDeskScenarioWithContext } from "@/app/internal/deal-desk/types";
 
 type DealDeskCardProps = {
   listingId: string;
@@ -20,7 +20,7 @@ function formatCurrency(value: number | null | undefined): string {
 
 function profitColor(value: number): string {
   if (value < 0) return "text-red-400";
-  if (Math.abs(value) < 2000) return "text-amber-300";
+  if (Math.abs(value) < 3000) return "text-amber-300";
   return "text-emerald-400";
 }
 
@@ -52,21 +52,49 @@ export default function DealDeskCard({ listingId, askingPrice, deferredMaintenan
     };
   }, [listingId]);
 
-  const fallback = useMemo(
-    () =>
-      calculateDeal({
-        asking_price: Math.round(askingPrice),
-        deferred_maintenance: Math.round(deferredMaintenance),
-        avionics_upgrade_budget: 0,
-        paint_interior_budget: 0,
-        ferry_flight_cost: 0,
-        hold_period_months: 3,
-        title_escrow_fees: 800,
-        target_profit_dollars: 8000,
-        estimated_resale_price: Math.round(askingPrice * 1.15),
-      }),
-    [askingPrice, deferredMaintenance]
-  );
+  const fallback = useMemo(() => {
+    const calc = calculateFlip({
+      purchase_price: Math.round(askingPrice),
+      resale_base: Math.round(askingPrice * 1.12),
+      resale_low: Math.round(askingPrice * 1.02),
+      resale_stretch: Math.round(askingPrice * 1.22),
+      hold_months: 3,
+      planned_hours_flown: 0,
+      acquisition_items: [
+        { id: "seed-prebuy", label: "Pre-buy inspection", amount: 800, category: "prebuy" },
+        { id: "seed-travel", label: "Travel to inspection", amount: 400, category: "prebuy" },
+      ],
+      upgrade_items: [],
+      hangar_monthly: 0,
+      insurance_annual_premium: 0,
+      subscriptions_monthly: 0,
+      annual_inspection_reserve_monthly: 0,
+      admin_overhead_monthly: 0,
+      fuel_gph: 8,
+      fuel_price_per_gallon: 6.5,
+      oil_cost_per_hour: 0.5,
+      engine_reserve_per_hour: 15,
+      prop_reserve_per_hour: 3,
+      misc_maintenance_per_hour: 5,
+      financing_enabled: false,
+      loan_amount: 0,
+      interest_rate_pct: 7.5,
+      loan_term_years: 15,
+      loan_origination_fees: 0,
+      opportunity_cost_rate_pct: 5,
+      insurance_hull_value: 0,
+      insurance_deductible_pct: 2,
+      broker_commission_pct: 5,
+      exit_escrow_fees: 500,
+      presale_spruce_up: 0,
+      buyer_squawk_contingency_pct: 3,
+      exit_sales_tax_pct: 0,
+      days_to_sell_slow: 180,
+      maintenance_contingency_pct: 15,
+      target_profit_dollars: 8000,
+    });
+    return calc;
+  }, [askingPrice]);
 
   if (loading) {
     return (
@@ -90,13 +118,16 @@ export default function DealDeskCard({ listingId, askingPrice, deferredMaintenan
       {scenario ? (
         <div className="mt-2 space-y-1 text-sm">
           <p className="text-brand-muted">{scenario.label}</p>
-          <p className={`text-xl font-bold ${profitColor(scenario.profit_at_ask ?? 0)}`}>Profit at Ask: {formatCurrency(scenario.profit_at_ask)}</p>
-          <p className="text-sm text-emerald-400">Max Offer: {formatCurrency(scenario.max_offer_price)}</p>
+          <p>All-in basis: {formatCurrency(scenario.all_in_basis)}</p>
+          <p className={`text-lg font-bold ${profitColor(scenario.net_profit_base ?? 0)}`}>Net profit: {formatCurrency(scenario.net_profit_base)}</p>
+          <p>Monthly burn: {formatCurrency(((scenario.total_carrying_costs ?? 0) + (scenario.total_variable_costs ?? 0)) / Math.max(1, scenario.hold_period_months || 1))}</p>
         </div>
       ) : (
         <div className="mt-2 space-y-1 text-sm">
           <p className="text-brand-muted">{aircraftLabel}</p>
-          <p className={`text-xl font-bold ${profitColor(fallback.profit_at_ask)}`}>Profit at Ask: {formatCurrency(fallback.profit_at_ask)}</p>
+          <p>All-in basis: {formatCurrency(fallback.section_totals.all_in_basis)}</p>
+          <p className={`text-lg font-bold ${profitColor(fallback.base.net_profit)}`}>Net profit: {formatCurrency(fallback.base.net_profit)}</p>
+          <p>Monthly burn: {formatCurrency(fallback.monthly_burn_rate)}</p>
           <p className="text-xs text-brand-muted">Source: {sourceUrl || "N/A"}</p>
         </div>
       )}

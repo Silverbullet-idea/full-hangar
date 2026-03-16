@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { DealDeskScenarioWithContext } from "./components/DealDeskCalculator";
+import type { DealDeskScenarioWithContext } from "./types";
 
 function formatCurrency(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "$0";
@@ -17,7 +17,7 @@ function formatPercent(value: number | null | undefined): string {
 
 function profitColor(value: number): string {
   if (value < 0) return "text-red-400";
-  if (Math.abs(value) < 2000) return "text-amber-300";
+  if (Math.abs(value) < 3000) return "text-amber-300";
   return "text-emerald-400";
 }
 
@@ -105,11 +105,19 @@ export default function DealDeskIndexPage() {
             <h1 className="text-xl font-semibold">🧮 Deal Desk</h1>
             <p className="text-sm text-brand-muted">Saved deal scenarios sorted by most recent activity.</p>
           </div>
-          {selected.size >= 2 ? (
-            <Link href={compareHref} className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black">
-              Compare Selected →
+          <div className="flex items-center gap-2">
+            <Link
+              href="/internal/market-intel"
+              className="rounded border border-brand-dark px-3 py-2 text-sm text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+            >
+              📈 Market Intel
             </Link>
-          ) : null}
+            {selected.size >= 2 ? (
+              <Link href={compareHref} className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black">
+                Compare Selected →
+              </Link>
+            ) : null}
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <input
@@ -138,9 +146,10 @@ export default function DealDeskIndexPage() {
               <th className="px-2 py-2 text-left">Aircraft</th>
               <th className="px-2 py-2 text-left">Scenario</th>
               <th className="px-2 py-2 text-left">Asking</th>
-              <th className="px-2 py-2 text-left">Max Offer</th>
-              <th className="px-2 py-2 text-left">Profit at Ask</th>
-              <th className="px-2 py-2 text-left">Return %</th>
+              <th className="px-2 py-2 text-left">All-in Basis</th>
+              <th className="px-2 py-2 text-left">Monthly Burn</th>
+              <th className="px-2 py-2 text-left">Net Profit (base)</th>
+              <th className="px-2 py-2 text-left">Annualized ROI</th>
               <th className="px-2 py-2 text-left">Last Updated</th>
               <th className="px-2 py-2 text-left">Actions</th>
             </tr>
@@ -148,7 +157,11 @@ export default function DealDeskIndexPage() {
           <tbody>
             {rows.map((row) => {
               const currentSelected = selected.has(row.id);
-              const profit = row.profit_at_ask ?? 0;
+              const profit = row.net_profit_base ?? row.profit_at_ask ?? 0;
+              const holdMonths = row.hold_period_months > 0 ? row.hold_period_months : 1;
+              const monthlyBurn =
+                (row.total_carrying_costs ?? 0) / holdMonths +
+                (row.total_variable_costs ?? 0) / holdMonths;
               return (
                 <tr key={row.id} className="border-t border-brand-dark bg-[#131313]">
                   <td className="px-2 py-2">
@@ -168,9 +181,10 @@ export default function DealDeskIndexPage() {
                   <td className="px-2 py-2 font-semibold">{row.aircraft_label || row.listing_id}</td>
                   <td className="px-2 py-2">{row.label}</td>
                   <td className="px-2 py-2">{formatCurrency(row.asking_price)}</td>
-                  <td className="px-2 py-2 font-semibold text-emerald-400">{formatCurrency(row.max_offer_price)}</td>
-                  <td className={`px-2 py-2 font-semibold ${profitColor(profit)}`}>{formatCurrency(row.profit_at_ask)}</td>
-                  <td className={`px-2 py-2 ${profitColor(profit)}`}>{formatPercent(row.profit_percent_at_ask)}</td>
+                  <td className="px-2 py-2">{formatCurrency(row.all_in_basis)}</td>
+                  <td className="px-2 py-2">{formatCurrency(monthlyBurn)}</td>
+                  <td className={`px-2 py-2 font-semibold ${profitColor(profit)}`}>{formatCurrency(profit)}</td>
+                  <td className={`px-2 py-2 ${profitColor(profit)}`}>{formatPercent(row.annualized_roi_pct_base)}</td>
                   <td className="px-2 py-2 text-brand-muted">{new Date(row.updated_at).toLocaleString()}</td>
                   <td className="px-2 py-2">
                     <div className="flex items-center gap-2">
