@@ -41,6 +41,8 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
   const deferredMaintenance = asNumber(row?.deferred_total) ?? 0;
   const sourceUrl = asString(row?.listing_url) || asString(row?.source_url) || asString(row?.url) || "";
   const aircraftLabel = buildAircraftLabel(row, listingId);
+  const make = asString(row?.make) || "";
+  const model = asString(row?.model) || "";
 
   return (
     <main className="space-y-3">
@@ -56,6 +58,8 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
           sourceUrl,
           askingPrice,
           deferredMaintenance,
+          make,
+          model,
         }}
       />
     </main>

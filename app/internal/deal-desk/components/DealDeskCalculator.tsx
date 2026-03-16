@@ -40,6 +40,8 @@ export type DealDeskSeed = {
   sourceUrl: string;
   askingPrice: number;
   deferredMaintenance: number;
+  make?: string;
+  model?: string;
 };
 
 type CalculatorSnapshot = {

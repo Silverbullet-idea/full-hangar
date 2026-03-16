@@ -54,6 +54,31 @@ function copyText(value: string) {
   }
 }
 
+function parseMakeModelFromTitle(title: string | null | undefined): { make: string; model: string } | null {
+  const normalized = (title ?? '').trim()
+  if (!normalized) return null
+  const withoutYear = normalized.replace(/^\d{4}\s+/, '').trim()
+  const tokens = withoutYear.split(/\s+/).filter(Boolean)
+  if (tokens.length < 2) return null
+  const make = tokens[0]
+  const model = tokens.slice(1).join(' ')
+  if (!make || !model) return null
+  return { make, model }
+}
+
+function marketIntelHref(row: DealListing): string {
+  const make = (row.make ?? '').trim()
+  const model = (row.model ?? '').trim()
+  if (make && model) {
+    return `/internal/market-intel?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`
+  }
+  const titleFallback = parseMakeModelFromTitle((row as unknown as Record<string, unknown>).title as string | null | undefined)
+  if (titleFallback) {
+    return `/internal/market-intel?make=${encodeURIComponent(titleFallback.make)}&model=${encodeURIComponent(titleFallback.model)}`
+  }
+  return '/internal/market-intel'
+}
+
 export default function DealsTable({
   displayedRows,
   expandedId,
@@ -176,7 +201,7 @@ export default function DealsTable({
                         href={row.listing_url || row.url || '#'}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded bg-brand-orange px-2 py-1 text-center text-[10px] font-bold text-black hover:bg-brand-burn hover:text-white"
+                        className="rounded bg-brand-orange px-2 py-1 text-center text-[10px] font-bold !text-black hover:bg-brand-burn hover:!text-black"
                         onClick={(event) => event.stopPropagation()}
                       >
                         View Listing
@@ -204,6 +229,13 @@ export default function DealsTable({
                         onClick={(event) => event.stopPropagation()}
                       >
                         Open Deal Desk
+                      </a>
+                      <a
+                        href={marketIntelHref(row)}
+                        className="rounded border border-brand-dark px-2 py-1 text-center text-[10px] font-bold text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        Research Market →
                       </a>
                     </div>
                   </td>

@@ -20,6 +20,12 @@ const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKE
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
+function preferText(primary: string | null | undefined, fallback: string | null | undefined): string | null | undefined {
+  const normalizedPrimary = (primary ?? '').trim()
+  if (normalizedPrimary.length > 0) return primary
+  return fallback
+}
+
 function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timeoutId = window.setTimeout(() => {
@@ -158,7 +164,19 @@ export default function InternalDealsPage() {
           const payload = await response.json()
           const signalRows = Array.isArray(payload?.data) ? (payload.data as DealListing[]) : []
           const signalById = new Map(signalRows.map((row) => [String(row.id), row]))
-          const merged = baseRows.map((row) => ({ ...row, ...(signalById.get(String(row.id)) ?? {}) }))
+          const merged = baseRows.map((row) => {
+            const signal = signalById.get(String(row.id))
+            if (!signal) return row
+            return {
+              ...row,
+              ...signal,
+              make: preferText(signal.make, row.make),
+              model: preferText(signal.model, row.model),
+              year: signal.year ?? row.year,
+              listing_url: preferText(signal.listing_url, row.listing_url),
+              url: preferText(signal.url, row.url),
+            }
+          })
           setRows(merged)
         } catch (signalError) {
           console.error('Failed to load internal deal signals:', signalError)

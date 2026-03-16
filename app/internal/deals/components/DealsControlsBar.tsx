@@ -91,6 +91,12 @@ export default function DealsControlsBar({
       >
         🧮 Deal Desk
       </a>
+      <a
+        href="/internal/market-intel"
+        className="rounded border border-brand-dark px-2 py-1 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+      >
+        📈 Market Intel
+      </a>
     </div>
   )
 }
