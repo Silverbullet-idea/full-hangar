@@ -110,7 +110,7 @@ export default function DealDeskCard({ listingId, askingPrice, deferredMaintenan
         <h3 className="text-lg font-semibold">🧮 Deal Desk</h3>
         <Link
           href={`/internal/deal-desk/${encodeURIComponent(listingId)}`}
-          className="rounded bg-brand-orange px-3 py-1 text-xs font-semibold text-black hover:bg-brand-burn hover:text-white"
+          className="rounded bg-brand-orange px-3 py-1 text-xs font-semibold !text-black hover:bg-brand-burn hover:!text-black"
         >
           Open Deal Desk →
         </Link>
