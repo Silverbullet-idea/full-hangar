@@ -1012,18 +1012,40 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 
 export async function getListingFilterOptions(): Promise<ListingFilterOption[]> {
   const supabase = createReadServerClient();
-  const limits = [5000, 2500, 1000, 500];
+  const chunkSizes = [2000, 1000, 500];
+  const maxRows = 50000;
   let lastError: Error | null = null;
 
-  for (const limit of limits) {
-    const result = await supabase
-      .from("public_listings")
-      .select("make,model,location_state,source,deal_tier,value_score")
-      .eq("is_active", true)
-      .limit(limit);
+  for (const chunkSize of chunkSizes) {
+    const allRows: Array<{
+      make: string | null;
+      model: string | null;
+      location_state: string | null;
+      source: string | null;
+      deal_tier: string | null;
+      value_score: number | null;
+    }> = [];
 
-    if (!result.error) {
-      return (result.data ?? []).map((row) => ({
+    try {
+      for (let offset = 0; offset < maxRows; offset += chunkSize) {
+        const result = await supabase
+          .from("public_listings")
+          .select("make,model,location_state,source,deal_tier,value_score")
+          .eq("is_active", true)
+          .order("id", { ascending: true })
+          .range(offset, offset + chunkSize - 1);
+
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        const rows = result.data ?? [];
+        if (rows.length === 0) break;
+        allRows.push(...rows);
+        if (rows.length < chunkSize) break;
+      }
+
+      return allRows.map((row) => ({
         make: row.make ?? null,
         model: row.model ?? null,
         state: row.location_state ?? null,
@@ -1031,17 +1053,14 @@ export async function getListingFilterOptions(): Promise<ListingFilterOption[]> 
         dealTier: row.deal_tier ?? null,
         valueScore: typeof row.value_score === "number" ? row.value_score : null,
       }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error ?? "");
+      if (!isTransientSupabaseUpstreamFailure(message)) throw new Error(message);
+      lastError = new Error(message);
     }
-
-    const isTransientFailure = isTransientSupabaseUpstreamFailure(result.error.message);
-    if (!isTransientFailure) throw new Error(result.error.message);
-    lastError = new Error(result.error.message);
   }
 
-  if (lastError) {
-    // Keep listings page usable even when filter-option query is slow.
-    return [];
-  }
+  if (lastError) return [];
   return [];
 }
 

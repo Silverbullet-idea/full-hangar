@@ -837,6 +837,8 @@ export default function ListingsClient({
           <ListingsResultsToolbar
             safePage={safePage}
             totalPages={totalPages}
+            visibleCount={paginatedListings.length}
+            totalFiltered={totalFiltered}
             sortBy={sortBy}
             setSortBy={setSortBy}
             pageSize={pageSize}

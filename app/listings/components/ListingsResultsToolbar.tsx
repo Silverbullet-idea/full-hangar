@@ -17,6 +17,8 @@ type SortOption =
 type ListingsResultsToolbarProps = {
   safePage: number
   totalPages: number
+  visibleCount: number
+  totalFiltered: number
   sortBy: SortOption
   setSortBy: (value: SortOption) => void
   pageSize: number
@@ -29,6 +31,8 @@ type ListingsResultsToolbarProps = {
 export default function ListingsResultsToolbar({
   safePage,
   totalPages,
+  visibleCount,
+  totalFiltered,
   sortBy,
   setSortBy,
   pageSize,
@@ -37,6 +41,13 @@ export default function ListingsResultsToolbar({
   setLayoutMode,
   fetchError,
 }: ListingsResultsToolbarProps) {
+  const showingStart = totalFiltered > 0 && visibleCount > 0
+    ? (safePage - 1) * pageSize + 1
+    : 0
+  const showingEnd = totalFiltered > 0 && visibleCount > 0
+    ? Math.min(totalFiltered, showingStart + visibleCount - 1)
+    : 0
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-2.5">
@@ -126,8 +137,8 @@ export default function ListingsResultsToolbar({
           </button>
         </div>
       </div>
-      <p className="mb-3 text-[11px] text-[#9CA3AF]">
-        Each listing uses the same table order for faster comparison across layouts, with N-Number first.
+      <p className="mb-3 text-[12px] font-bold text-[#D1D5DB]">
+        Showing {showingStart.toLocaleString('en-US')}-{showingEnd.toLocaleString('en-US')} of {totalFiltered.toLocaleString('en-US')} Listings.
       </p>
       {fetchError && (
         <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
