@@ -175,7 +175,7 @@ export default async function InternalAdminPage() {
           </div>
           <Link
             href="/internal/deal-desk"
-            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-black hover:bg-brand-burn hover:text-white"
+            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-zinc-950 whitespace-nowrap hover:bg-brand-burn hover:!text-zinc-950"
           >
             🧮 Open Deal Desk
           </Link>
