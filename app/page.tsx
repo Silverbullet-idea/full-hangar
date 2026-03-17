@@ -1,12 +1,29 @@
+import Link from "next/link"
 import HomeBenefits from "./components/home/HomeBenefits"
 import HomeDealSignals from "./components/home/HomeDealSignals"
 import HomeFinalCta from "./components/home/HomeFinalCta"
 import HomeHero from "./components/home/HomeHero"
 import HomeScoringExplainer from "./components/home/HomeScoringExplainer"
 import HomeSocialProofFaq from "./components/home/HomeSocialProofFaq"
+import { CATEGORIES } from "./listings/components/listingsClientUtils"
 import { getAircraftListingsCount, getListingsPage } from "../lib/db/listingsRepository"
 
 export const dynamic = "force-dynamic"
+
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    const timeoutId = setTimeout(() => resolve(fallback), ms)
+    Promise.resolve(promiseLike)
+      .then((value) => {
+        clearTimeout(timeoutId)
+        resolve(value)
+      })
+      .catch(() => {
+        clearTimeout(timeoutId)
+        resolve(fallback)
+      })
+  })
+}
 
 type ListingImageRow = {
   id?: string
@@ -25,6 +42,13 @@ type HeroImage = {
   href: string
   dealBadgeText: string
   dealBadgeTone: "exceptional" | "good" | "neutral"
+}
+
+type ListingsPageResult = {
+  rows: Record<string, unknown>[]
+  total: number
+  page: number
+  pageSize: number
 }
 
 const FALLBACK_HERO_IMAGES = [
@@ -55,26 +79,41 @@ const ALLOWED_EXACT_HOSTS = new Set([
 const ALLOWED_HOST_SUFFIXES = [".controller.com", ".aerotrader.com", ".barnstormers.com", ".globalair.com", ".avbuyer.com"]
 
 export default async function HomePage() {
+  const emptyListingsPage: ListingsPageResult = {
+    rows: [],
+    total: 0,
+    page: 1,
+    pageSize: 24,
+  }
+
   const [listingsCount, exceptionalResult] = await Promise.all([
-    getAircraftListingsCount().catch(() => 0),
-    getListingsPage({
-      page: 1,
-      pageSize: 24,
-      category: "single",
-      dealTier: "EXCEPTIONAL_DEAL",
-      sortBy: "deal_desc",
-    }).catch(() => ({ rows: [] })),
+    withTimeout(getAircraftListingsCount(), 5000, 0),
+    withTimeout(
+      getListingsPage({
+        page: 1,
+        pageSize: 24,
+        category: "single",
+        dealTier: "EXCEPTIONAL_DEAL",
+        sortBy: "deal_desc",
+      }),
+      6000,
+      emptyListingsPage
+    ),
   ])
 
   let rows = (exceptionalResult?.rows ?? []) as ListingImageRow[]
   if (rows.length === 0) {
-    const topDealsFallback = await getListingsPage({
-      page: 1,
-      pageSize: 24,
-      category: "single",
-      dealTier: "TOP_DEALS",
-      sortBy: "deal_desc",
-    }).catch(() => ({ rows: [] }))
+    const topDealsFallback = await withTimeout(
+      getListingsPage({
+        page: 1,
+        pageSize: 24,
+        category: "single",
+        dealTier: "TOP_DEALS",
+        sortBy: "deal_desc",
+      }),
+      6000,
+      emptyListingsPage
+    )
     rows = (topDealsFallback?.rows ?? []) as ListingImageRow[]
   }
 
@@ -84,6 +123,30 @@ export default async function HomePage() {
 
   return (
     <main className="space-y-2 home-page-wrap">
+      <section className="mb-2">
+        <div className="w-full rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-1.5">
+          <div
+            className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3 lg:[grid-template-columns:repeat(var(--top-btn-count),minmax(0,1fr))]"
+            style={{ ["--top-btn-count" as any]: CATEGORIES.length + 1 }}
+          >
+            {CATEGORIES.map((category) => (
+              <Link
+                key={category.label}
+                href={buildHomeCategoryHref(category.value)}
+                className="h-8 rounded-md border border-[#3A4454] bg-[#121822] px-2 py-2 text-center text-xs font-semibold text-white transition-colors hover:border-[#FF9900] hover:text-[#FF9900]"
+              >
+                {category.label}
+              </Link>
+            ))}
+            <Link
+              href="/listings?dealTier=TOP_DEALS&sortBy=deal_desc"
+              className="flex h-8 items-center justify-center rounded-md border border-[#166534] bg-[#166534] px-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#15803d]"
+            >
+              Deals
+            </Link>
+          </div>
+        </div>
+      </section>
       <div className="home-reveal home-r1">
         <HomeHero listingsCount={listingsCount} heroImages={heroImages} />
       </div>
@@ -133,6 +196,11 @@ export default async function HomePage() {
       `}</style>
     </main>
   )
+}
+
+function buildHomeCategoryHref(category: (typeof CATEGORIES)[number]["value"]) {
+  if (!category) return "/listings"
+  return `/listings?category=${encodeURIComponent(category)}`
 }
 
 function buildHeroImages(rows: ListingImageRow[]): HeroImage[] {
