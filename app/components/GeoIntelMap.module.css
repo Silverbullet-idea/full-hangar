@@ -1,0 +1,137 @@
+.wrapper {
+  margin-top: 0.75rem;
+}
+
+.mapShell {
+  position: relative;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--color-background-secondary);
+}
+
+.mapSvg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 960 / 600;
+}
+
+.statePathColored {
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+
+[data-theme="dark"] .statePathColored {
+  opacity: 0.85;
+}
+
+.statePathColored:hover,
+.statePathNoData:hover {
+  filter: brightness(1.04);
+}
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  max-width: 220px;
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 0.5rem;
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  padding: 0.5rem 0.6rem;
+  font-size: 12px;
+  line-height: 1.35;
+  transform: translate(0, -100%);
+}
+
+@media (max-width: 500px) {
+  .tooltip {
+    left: 12px !important;
+    right: 12px;
+    top: auto !important;
+    bottom: 12px;
+    max-width: none;
+    transform: none;
+  }
+}
+
+.tooltipTitle {
+  margin: 0 0 0.25rem 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.deltaCheap {
+  color: #15803d;
+}
+
+.deltaExpensive {
+  color: #dc2626;
+}
+
+.legend {
+  width: min(100%, 400px);
+  margin: 0.75rem auto 0;
+  text-align: center;
+}
+
+.legendEnds {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 0.35rem 0;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.legendSwatches {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.legendSwatches span {
+  display: block;
+  width: 20px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legendMedian {
+  margin: 0.4rem 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.nonUsWrap {
+  margin-top: 0.85rem;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.nonUsTitle {
+  margin: 0 0 0.35rem 0;
+  font-weight: 500;
+}
+
+.nonUsTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--color-border-secondary);
+}
+
+.nonUsTable th,
+.nonUsTable td {
+  border-bottom: 1px solid var(--color-border-secondary);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+
+.nonUsTable th {
+  font-weight: 500;
+}
+
+.nonUsNote {
+  margin: 0.4rem 0 0;
+  font-size: 12px;
+}

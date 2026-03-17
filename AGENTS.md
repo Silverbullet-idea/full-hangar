@@ -73,6 +73,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - `/beta/join` and `/beta/dashboard` beta-facing intelligence preview shipped with token-session access.
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
 - `/internal/admin` now includes source-level inventory detail view (table, completeness tiers, unknown-domain disambiguation, and 15-field coverage heatmap).
+- Geographic Intelligence section (market-intel Section 5) upgraded from plain table to interactive SVG choropleth map with state-level color encoding, listing count circles, hover tooltips, non-US footnote table, and full dark/light theme parity. New component: `app/components/GeoIntelMap.tsx`. State path data at `lib/geo/us-states-albers.ts`.
 
 ### Backend, Pipeline, and Data Sources
 

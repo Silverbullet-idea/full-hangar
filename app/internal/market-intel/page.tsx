@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import GeoIntelMap from "@/app/components/GeoIntelMap";
 
 type SummaryResponse = {
   market_pulse: {
@@ -556,39 +557,20 @@ export default function MarketIntelPage() {
 
           <section className="rounded border border-brand-dark bg-card-bg p-4">
             <h2 className="text-lg font-semibold">5. Geographic Intelligence</h2>
-            {limitedData(summary.geo_heatmap_data.length) ? (
-              <p className="mt-2 text-sm text-brand-muted">
-                Limited data ({summary.geo_heatmap_data.length} states): need at least 3 state-level points.
-              </p>
-            ) : (
-              <>
-                <div className="mt-3 overflow-x-auto rounded border border-brand-dark">
-                  <table className="min-w-[980px] w-full text-xs">
-                    <thead className="bg-[#151515] text-brand-muted">
-                      <tr>
-                        <th className="px-2 py-2 text-left">State</th>
-                        <th className="px-2 py-2 text-left">Active Listings</th>
-                        <th className="px-2 py-2 text-left">Median Price</th>
-                        <th className="px-2 py-2 text-left">vs. National Median</th>
-                        <th className="px-2 py-2 text-left">Cheapest Listed</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {summary.geo_heatmap_data.map((row) => {
-                        const delta = row.median_price != null && nationalMedian != null ? row.median_price - nationalMedian : null;
-                        return (
-                          <tr key={row.state} className="border-t border-brand-dark bg-[#111]">
-                            <td className="px-2 py-2">{row.state}</td>
-                            <td className="px-2 py-2">{formatNumber(row.listing_count)}</td>
-                            <td className="px-2 py-2">{formatCurrency(row.median_price)}</td>
-                            <td className="px-2 py-2">{formatSignedCurrency(delta)}</td>
-                            <td className="px-2 py-2">{formatCurrency(row.cheapest_listed)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+            <>
+                <GeoIntelMap
+                  data={summary.geo_heatmap_data.map((row) => ({
+                    state: row.state,
+                    active_listings: row.listing_count,
+                    median_price: row.median_price ?? 0,
+                    vs_national_median:
+                      row.median_price != null && nationalMedian != null
+                        ? row.median_price - nationalMedian
+                        : 0,
+                    cheapest_listed: row.cheapest_listed ?? 0,
+                  }))}
+                  nationalMedian={nationalMedian ?? 0}
+                />
                 <div className="mt-3 grid gap-3 lg:grid-cols-2">
                   <MiniGeoCard title="Cheapest States" rows={[...summary.geo_heatmap_data].sort((a, b) => (a.median_price ?? Number.POSITIVE_INFINITY) - (b.median_price ?? Number.POSITIVE_INFINITY)).slice(0, 5)} nationalMedian={nationalMedian} />
                   <MiniGeoCard title="Most Active Markets" rows={[...summary.geo_heatmap_data].sort((a, b) => b.listing_count - a.listing_count).slice(0, 5)} nationalMedian={nationalMedian} />
@@ -596,8 +578,7 @@ export default function MarketIntelPage() {
                 <p className="mt-3 rounded border border-brand-dark bg-[#111] p-3 text-sm text-brand-muted">
                   {buildGeoInsight(summary.geo_heatmap_data, nationalMedian)}
                 </p>
-              </>
-            )}
+            </>
           </section>
 
           <section className="rounded border border-brand-dark bg-card-bg p-4">
