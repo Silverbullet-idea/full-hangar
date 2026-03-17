@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import ListingsClient from './ListingsClient'
-import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
+import { getListingsPage } from '../../lib/db/listingsRepository'
 import {
   buildListingsCanonicalPath,
   buildListingsPageDescription,
@@ -228,10 +228,8 @@ export default async function ListingsPage({
     initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
 
   let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
-  let optionRows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }> = []
-
-  const [pageDataResult, optionsResult] = await Promise.allSettled([
-    getListingsPage({
+  try {
+    initialPageData = await getListingsPage({
       page: initialPage,
       pageSize: initialPageSize,
       sortBy: initialSortBy,
@@ -255,20 +253,9 @@ export default async function ListingsPage({
       trueCostMax: initialTrueCostMax,
       category: initialCategoryFilter ?? '',
       dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-    }),
-    getListingFilterOptions(),
-  ])
-
-  if (pageDataResult.status === 'fulfilled') {
-    initialPageData = pageDataResult.value
-  } else {
-    console.error("[listings/page] failed to load initial listings", pageDataResult.reason)
-  }
-
-  if (optionsResult.status === 'fulfilled') {
-    optionRows = optionsResult.value
-  } else {
-    console.error("[listings/page] failed to load listing filter options", optionsResult.reason)
+    })
+  } catch (error) {
+    console.error("[listings/page] failed to load initial listings", error)
   }
 
   const itemListJsonLd = {
@@ -317,7 +304,7 @@ export default async function ListingsPage({
       <ListingsClient
         initialListings={initialPageData.rows}
         initialTotalFiltered={initialPageData.total}
-        initialFilterOptions={buildFilterOptions(optionRows)}
+        initialFilterOptions={buildFilterOptions([])}
         initialSearchTerm={initialSearchTerm}
         initialCategoryFilter={initialCategoryFilter}
         initialDealFilter={initialDealFilter}
