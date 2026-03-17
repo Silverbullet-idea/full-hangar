@@ -357,9 +357,9 @@ export default async function InternalAdminPage() {
           <p className="text-sm text-brand-muted">Live sessions: {invites.stats.currently_active_sessions}</p>
           <Link
             href="/internal/admin/invites"
-            className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-sm font-semibold text-white hover:bg-brand-burn"
+            className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black"
           >
-            Create New Invite Link
+            <span className="!text-zinc-950">Create New Invite Link</span>
           </Link>
           <Link href="/internal/admin/users" className="mt-2 inline-block rounded border border-brand-dark px-3 py-2 text-sm">
             Manage Users & Google Access
