@@ -19,10 +19,10 @@ function normalizeLastModified(rawValue: string | null | undefined): Date {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createServerClient()
   const rows: ListingSitemapRow[] = []
 
   try {
+    const supabase = createServerClient()
     for (let offset = 0; offset < MAX_ROWS; offset += BATCH_SIZE) {
       const { data, error } = await supabase
         .from("public_listings")
@@ -37,7 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       rows.push(...batch)
       if (batch.length < BATCH_SIZE) break
     }
-  } catch {
+  } catch (error) {
+    console.error("[sitemap:listings] Failed to generate dynamic listing sitemap entries", error)
     return []
   }
 
