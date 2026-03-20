@@ -194,6 +194,27 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     pickNumber(raw, ["engine_tbo_hours", "engine_tbo"]) ??
     parsedEngineTbo ??
     parsedDescription.engineTbo
+  const engineRemainingValue =
+    pickNumber(raw, ["engine_remaining_value", "engine_value_remaining"]) ?? null
+  const engineOverrunLiability =
+    pickNumber(raw, ["engine_overrun_liability", "engine_tbo_overrun_liability"]) ?? null
+  const engineReservePerHour =
+    pickNumber(raw, ["engine_reserve_per_hour", "engine_hourly_reserve"]) ?? null
+  const engineHoursSmoh =
+    pickNumber(raw, ["engine_hours_smoh", "engine_time_since_overhaul", "time_since_overhaul"]) ??
+    engineSmohHours ??
+    null
+  const listedEngineReplacementCost =
+    pickNumber(raw, ["engine_replacement_cost", "engine_overhaul_cost", "engine_exchange_price", "engine_new_cost"]) ?? null
+  const derivedEngineReplacementCost =
+    typeof engineRemainingValue === "number" &&
+    engineRemainingValue > 0 &&
+    typeof engineHoursSmoh === "number" &&
+    typeof engineTboHours === "number" &&
+    engineTboHours > engineHoursSmoh
+      ? (engineRemainingValue * engineTboHours) / (engineTboHours - engineHoursSmoh)
+      : null
+  const engineReplacementCost = listedEngineReplacementCost ?? derivedEngineReplacementCost
   const engineModelText =
     cleanEngineModelText(
       pickText(raw, ["engine_model", "faa_engine_model_detail"]) ||
@@ -353,7 +374,23 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const faaLookupUrl = nNumber !== "—"
     ? `https://registry.faa.gov/aircraftinquiry/Search/NNumberResult?nNumberTxt=${encodeURIComponent(nNumber.replace(/^N/i, ""))}`
     : null
-  const trueCostEstimate = calculateTrueCost(resolvedAskingPrice, listingRow.deferred_total, listingRow.true_cost)
+  const baseDeferredMaintenance =
+    listingRow.deferred_total ??
+    pickNumber(raw, ["deferred_total", "deferred_maintenance"]) ??
+    null
+  const engineOverrunLiabilityAmount =
+    typeof engineOverrunLiability === "number" && engineOverrunLiability > 0
+      ? engineOverrunLiability
+      : 0
+  const deferredMaintenanceTotal =
+    (typeof baseDeferredMaintenance === "number" ? baseDeferredMaintenance : 0) +
+    engineOverrunLiabilityAmount
+  const trueCostEstimate = calculateTrueCost(
+    resolvedAskingPrice,
+    deferredMaintenanceTotal,
+    listingRow.true_cost,
+    engineOverrunLiabilityAmount
+  )
   const scoreInputRows = buildScoreInputRows({
     listing: listingRow,
     scoreBreakdown,
@@ -371,6 +408,8 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     },
     askingPrice: resolvedAskingPrice,
     trueCostEstimate,
+    deferredMaintenance: deferredMaintenanceTotal,
+    engineOverrunLiability: engineOverrunLiabilityAmount,
     installedAvionicsValue,
     stcPremiumTotal,
     dataConfidence: effectiveDataConfidence,
@@ -526,6 +565,14 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           sourceLinkLabel={sourceLinkLabel}
           logbookUrls={logbookUrls}
           dealTier={detailDealTier}
+          engineValuePanel={{
+            remainingValue: engineRemainingValue,
+            overrunLiability: engineOverrunLiabilityAmount > 0 ? engineOverrunLiabilityAmount : null,
+            reservePerHour: engineReservePerHour,
+            hoursSmoh: engineHoursSmoh,
+            tboHours: typeof engineTboHours === "number" ? engineTboHours : null,
+            replacementCost: engineReplacementCost,
+          }}
         />
         <RightDetailColumn
           listingId={id}
@@ -577,7 +624,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         <DealDeskCard
           listingId={id}
           askingPrice={resolvedAskingPrice ?? 0}
-          deferredMaintenance={listingRow.deferred_total ?? 0}
+          deferredMaintenance={deferredMaintenanceTotal}
           aircraftLabel={dealDeskAircraftLabel}
           sourceUrl={sourceUrl ?? ""}
         />
@@ -977,9 +1024,16 @@ function hasDisplayValue(value: unknown): boolean {
   return true
 }
 
-function calculateTrueCost(askingPrice: number | null, deferredTotal: number | null, trueCost: number | null): number | null {
-  if (typeof trueCost === "number") return trueCost
-  if (typeof askingPrice !== "number" || typeof deferredTotal !== "number") return null
+function calculateTrueCost(
+  askingPrice: number | null,
+  deferredTotal: number,
+  trueCost: number | null,
+  engineOverrunLiability: number
+): number | null {
+  if (typeof askingPrice !== "number") return null
+  if (typeof trueCost === "number") {
+    return trueCost + engineOverrunLiability
+  }
   return askingPrice + deferredTotal
 }
 
@@ -1171,6 +1225,8 @@ function buildScoreInputRows(args: {
   }
   askingPrice: number | null
   trueCostEstimate: number | null
+  deferredMaintenance: number
+  engineOverrunLiability: number
   installedAvionicsValue: number | null
   stcPremiumTotal: number | null
   dataConfidence: string | null
@@ -1184,7 +1240,21 @@ function buildScoreInputRows(args: {
   } | null
 }): ScoreMetricRow[] {
   const rows: ScoreMetricRow[] = []
-  const { listing, scoreBreakdown, pricingConfidence, compInsights, askingPrice, trueCostEstimate, installedAvionicsValue, stcPremiumTotal, dataConfidence, compSource, marketPricing } = args
+  const {
+    listing,
+    scoreBreakdown,
+    pricingConfidence,
+    compInsights,
+    askingPrice,
+    trueCostEstimate,
+    deferredMaintenance,
+    engineOverrunLiability,
+    installedAvionicsValue,
+    stcPremiumTotal,
+    dataConfidence,
+    compSource,
+    marketPricing,
+  } = args
 
   rows.push([scoreBreakdown.primaryLabel, `${safeDisplay(formatScore(scoreBreakdown.primaryScore))} / 100`])
   rows.push(["Market opportunity", `${safeDisplay(formatScore(scoreBreakdown.marketScore))} / 100`])
@@ -1227,8 +1297,11 @@ function buildScoreInputRows(args: {
     ])
   }
 
-  if (typeof listing.deferred_total === "number" && listing.deferred_total > 0) {
-    rows.push(["Deferred maintenance", safeDisplay(formatMoney(listing.deferred_total))])
+  if (typeof deferredMaintenance === "number" && deferredMaintenance > 0) {
+    rows.push(["Deferred maintenance", safeDisplay(formatMoney(deferredMaintenance))])
+  }
+  if (typeof engineOverrunLiability === "number" && engineOverrunLiability > 0) {
+    rows.push(["Engine Overhaul (past TBO)", safeDisplay(formatMoney(engineOverrunLiability))])
   }
   if (typeof trueCostEstimate === "number" && trueCostEstimate > 0) {
     rows.push(["True cost estimate", safeDisplay(formatMoney(trueCostEstimate))])

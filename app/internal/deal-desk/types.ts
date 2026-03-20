@@ -6,6 +6,7 @@ export type DealDeskSeed = {
   sourceUrl: string;
   askingPrice: number;
   deferredMaintenance: number;
+  engineReservePerHour?: number;
   make?: string;
   model?: string;
 };

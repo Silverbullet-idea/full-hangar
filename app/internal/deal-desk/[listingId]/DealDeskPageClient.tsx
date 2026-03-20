@@ -109,7 +109,10 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
     fuel_gph: 8,
     fuel_price_per_gallon: 6.5,
     oil_cost_per_hour: 0.5,
-    engine_reserve_per_hour: 15,
+    engine_reserve_per_hour:
+      typeof seed.engineReservePerHour === "number" && seed.engineReservePerHour > 0
+        ? Number(seed.engineReservePerHour.toFixed(2))
+        : 15,
     prop_reserve_per_hour: 3,
     misc_maintenance_per_hour: 5,
     financing_enabled: false,
@@ -151,6 +154,10 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
   const researchHref =
     makeModel != null
       ? `/internal/market-intel?make=${encodeURIComponent(makeModel.make)}&model=${encodeURIComponent(makeModel.model)}`
+      : null;
+  const suggestedEngineReserve =
+    typeof seed.engineReservePerHour === "number" && seed.engineReservePerHour > 0
+      ? Number(seed.engineReservePerHour.toFixed(2))
       : null;
 
   useEffect(() => {
@@ -556,6 +563,30 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             <div className="grid gap-2 md:grid-cols-2"><NumberInput label="Fuel GPH" value={form.fuel_gph} onChange={(value) => setForm((p) => ({ ...p, fuel_gph: value }))} /><CurrencyInput label="Fuel price per gallon" value={form.fuel_price_per_gallon} onChange={(value) => setForm((p) => ({ ...p, fuel_price_per_gallon: value }))} /></div>
             <CurrencyInput label="Oil per hour" value={form.oil_cost_per_hour} onChange={(value) => setForm((p) => ({ ...p, oil_cost_per_hour: value }))} />
             <CurrencyInput label="Engine reserve per hour" value={form.engine_reserve_per_hour} onChange={(value) => setForm((p) => ({ ...p, engine_reserve_per_hour: value }))} />
+            {suggestedEngineReserve !== null ? (
+              <div className="rounded border border-brand-dark bg-[var(--surface-muted)] px-3 py-2 text-xs text-brand-muted">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-brand-dark text-[11px] text-brand-orange"
+                    title="Based on AirPower exchange pricing. Adjust to your actual maintenance reserve."
+                    aria-label="Engine reserve suggestion details"
+                  >
+                    i
+                  </span>
+                  <span>{`Suggested reserve: ${formatCurrency(suggestedEngineReserve)}/h`}</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, engine_reserve_per_hour: suggestedEngineReserve }))}
+                    className="rounded border border-brand-dark px-2 py-0.5 text-[11px] text-brand-white hover:border-brand-orange hover:text-brand-orange"
+                  >
+                    Use suggestion
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] leading-4 text-brand-muted/90">
+                  Advisory only. Update this to match your maintenance program assumptions.
+                </p>
+              </div>
+            ) : null}
             <CurrencyInput label="Prop reserve per hour" value={form.prop_reserve_per_hour} onChange={(value) => setForm((p) => ({ ...p, prop_reserve_per_hour: value }))} />
             <CurrencyInput label="Misc maintenance per hour" value={form.misc_maintenance_per_hour} onChange={(value) => setForm((p) => ({ ...p, misc_maintenance_per_hour: value }))} />
             <StaticRow label="Hourly operating cost" value={formatCurrency(variablePerHour)} />

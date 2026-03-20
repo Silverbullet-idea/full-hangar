@@ -39,6 +39,7 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
 
   const askingPrice = asNumber(row?.asking_price) ?? 0;
   const deferredMaintenance = asNumber(row?.deferred_total) ?? 0;
+  const engineReservePerHour = asNumber(row?.engine_reserve_per_hour) ?? null;
   const sourceUrl = asString(row?.listing_url) || asString(row?.source_url) || asString(row?.url) || "";
   const aircraftLabel = buildAircraftLabel(row, listingId);
   const make = asString(row?.make) || "";
@@ -58,6 +59,7 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
           sourceUrl,
           askingPrice,
           deferredMaintenance,
+          engineReservePerHour: engineReservePerHour ?? undefined,
           make,
           model,
         }}
