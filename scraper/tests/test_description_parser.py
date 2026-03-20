@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from scraper.description_parser import (
+    PARSER_VERSION,
     extract_avionics_detailed,
     extract_avionics_unresolved,
     extract_engine_model,
@@ -34,6 +35,27 @@ def test_extract_times_sram_since_major_stop() -> None:
     assert result["total_time"] == 5400
 
 
+def test_extract_times_expanded_acronyms_and_phrases() -> None:
+    text = "Engine 1,234.5 TSMOH, 210 TSTOH, and 55 TSN."
+    result = extract_times(text)
+    assert result["engine_smoh"] == 1234.5
+    assert result["engine_stop"] == 210
+    assert result["engine_time_since_new"] == 55
+
+
+def test_extract_times_skips_tso_c_references() -> None:
+    text = "Garmin GTX345R TSO-C166b compliant transponder."
+    result = extract_times(text)
+    assert "engine_smoh" not in result
+
+
+def test_extract_times_factory_overhaul_and_zero_time_signal() -> None:
+    text = "1200 since factory overhaul with factory reman engine."
+    result = extract_times(text)
+    assert result["engine_sfoh"] == 1200
+    assert result["engine_time_since_new"] == 0
+
+
 def test_extract_engine_model_sanitizes_trailing_narrative() -> None:
     text = (
         "Engine Model: Continental TSIO-550-C (310 hp twin-turbo) - 1131 TT since new "
@@ -65,8 +87,9 @@ def test_extract_avionics_unresolved_tokens() -> None:
     text = "Avionics include GTN 750Xi, KX165A and PMA450B audio panel."
     detailed = extract_avionics_detailed(text)
     unresolved = extract_avionics_unresolved(text, detailed)
-    assert "KX165A" in unresolved
-    assert "PMA450B" in unresolved
+    # KX165A/PMA450B are now recognized aliases and should not remain unresolved.
+    assert "KX165A" not in unresolved
+    assert "PMA450B" not in unresolved
     assert "GTN750XI" not in unresolved
 
 
@@ -181,10 +204,23 @@ def test_parse_description_example_payload() -> None:
     assert "Turbo Normalizing" in parsed["mods"]
     assert "Tip Tanks" in parsed["mods"]
     assert "Garmin GTN 750" in parsed["avionics"]
-    assert parsed["avionics_parser_version"] == "2.0.6"
+    assert parsed["avionics_parser_version"] == PARSER_VERSION
     assert any(item["canonical_name"] == "Garmin GTN 750" for item in parsed["avionics_detailed"])
     assert parsed["useful_load_lbs"] == 1546
     assert parsed["confidence"] >= 0.7
+
+
+def test_parse_description_sets_no_damage_history_boolean() -> None:
+    parsed = parse_description("NDH aircraft, always hangared.")
+    assert parsed["no_damage_history"] is True
+
+
+def test_parse_description_contract_includes_new_time_fields() -> None:
+    parsed = parse_description("s/OH 800, since top OH 200, SFOH 1200, TSN 55")
+    assert parsed["smoh"] == 800
+    assert parsed["stoh"] == 200
+    assert parsed["sfoh"] == 1200
+    assert parsed["time_since_new"] == 55
 
 
 def test_parse_description_empty() -> None:
@@ -258,4 +294,10 @@ def test_parse_description_includes_pricing_context() -> None:
     assert pricing["is_fractional"] is True
     assert pricing["share_price"] == 14500
     assert pricing["normalized_full_price"] == 145000
+
+
+def test_extract_prop_model_trims_narrative_from_fallback_signal() -> None:
+    text = "Hartzell propeller has 256 hours since overhaul and comes with polished spinner."
+    parsed = parse_description(text)
+    assert parsed["prop_model"] == "Hartzell propeller"
 

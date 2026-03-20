@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PARSER_VERSION = "2.1.7"
+PARSER_VERSION = "2.1.8"
 
 TOKEN_CANDIDATE_RE = re.compile(
     r"\b(?:GTN[\- ]?\d{3}(?:XI)?|GNS[\- ]?\d{3}W?|IFD[\- ]?\d{3}|GNX[\- ]?\d{3}|GPS[\- ]?\d{3}|"
@@ -428,31 +428,64 @@ def extract_engine_model(text: str) -> str | None:
 def extract_times(text: str) -> dict[str, float]:
     src = _normalize_text(text)
     out: dict[str, float] = {}
-    num = r"([\d,]{1,7}(?:\.\d+)?)"
+    num = r"((?:\d{1,3}(?:,\d{3})+|\d{1,7})(?:\.\d+)?)"
 
     patterns = {
         "total_time": [
             rf"\bTTAF\s*[:\-]?\s*{num}\b",
-            rf"\b{num}\s*TT\b",
+            rf"\bTT(?:AF)?\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\bairframe\s*(?:total|tt|time)\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\btotal\s+airframe\s+time\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*airframe\s*(?:tt|total|time)\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*TT\b",
             rf"\b{num}\s*TTAF\b",
             rf"\b{num}\s*total\s*time\b",
         ],
         "engine_smoh": [
-            rf"\b{num}\s*SMOH\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:SMOH|TSMOH|TSOH|TTSO|TSLOVH|TSLO|TMOH|TSO(?!\s*-\s*C)|s/\s*MOH|s/\s*OH)\b",
+            rf"\b(?:SMOH|TSMOH|TSOH|TTSO|TSLOVH|TSLO|TMOH|TSO(?!\s*-\s*C)|s/\s*MOH|s/\s*OH)\b\s*[:=\-\(\)]?\s*{num}\s*(?:hours?|hrs?)?\b",
             rf"\b{num}\s*SRAM\b",
             rf"\b{num}\s*since\s*major\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*since\s+(?:major\s+|last\s+)?(?:overhaul|OH|overhauled)\b",
+            rf"\bsince\s+(?:major\s+|last\s+)?(?:overhaul|OH|overhauled)\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
             rf"\bSMOH\s*[:\-]?\s*{num}\b",
+            rf"\boverhauled\s+at\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*TBO\b",
+            rf"\bTBO\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
             rf"\b{num}\s*time\s*since\s*(?:ram\s*)?overhaul\b",
             rf"\btime\s*since\s*(?:ram\s*)?overhaul\s*[:\-]?\s*{num}\b",
         ],
+        "engine_time_since_new": [
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:TSN|TTSN)\b",
+            rf"\b(?:TSN|TTSN)\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:SNEW)\b",
+            rf"\bSNEW\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\bengine\b[^.;]{{0,30}}\bS/\s*N\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*since\s+new\b",
+            rf"\bsince\s+new\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\bengine\b[^.;]{{0,40}}\bTTE\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+        ],
+        "engine_sfoh": [
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*SFOH\b",
+            rf"\bSFOH\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:since\s+)?factory\s+(?:overhaul|OH|overhauled|reman(?:ufactured)?|rebuilt)\b",
+            rf"\bsince\s+factory\s+(?:overhaul|OH|overhauled|reman(?:ufactured)?|rebuilt)\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+        ],
         "prop_spoh": [
-            rf"\b{num}\s*SPOH\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:SPOH|TSPOH|s/\s*POH|s/\s*PO)\b",
+            rf"\b(?:SPOH|TSPOH|s/\s*POH|s/\s*PO)\b\s*[:=\-\(\)]?\s*{num}\s*(?:hours?|hrs?)?\b",
             rf"\b{num}\s*since\s*prop(?:eller)?\s*overhaul\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*prop(?:eller)?\s*(?:OH|overhauled)\b",
+            rf"\bprop(?:eller)?\s*(?:OH|overhauled|since\s*OH|since\s*prop(?:eller)?\s*overhaul)\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\bprop(?:eller)?[^.;]{0,40}\b{num}\s*(?:hours?|hrs?)?\s*TSO(?!\s*-\s*C)\b",
             rf"\bprop(?:eller)?[^.;]{0,40}\b{num}\s*(?:hours?|hrs?)?\s*(?:spoh|since\s*(?:prop(?:eller)?\s*)?overhaul)\b",
         ],
         "engine_stop": [
-            rf"\b{num}\s*since\s*top\b",
-            rf"\b{num}\s*STOP\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:STOH|TSTOH|STOP)\b",
+            rf"\b(?:STOH|TSTOH|STOP)\b\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*since\s+top\s*(?:OH|overhaul)?\b",
+            rf"\bsince\s+top\s*(?:OH|overhaul)\s*[:=\-]?\s*{num}\s*(?:hours?|hrs?)?\b",
+            rf"\b{num}\s*(?:hours?|hrs?)?\s*(?:cyl(?:inders?)?\s*OH|jugs\s*OH)\b",
         ],
     }
 
@@ -465,6 +498,18 @@ def extract_times(text: str) -> dict[str, float]:
             if value is not None:
                 out[key] = value
                 break
+
+    # Phrase-only conditions where hours are implied to be zero/new.
+    if "engine_time_since_new" not in out:
+        zero_time_patterns = [
+            r"\b0(?:\.0+)?\s*(?:SMOH|TSMOH)\b",
+            r"\b(?:zero\s*time|0\s*time)\b",
+            r"\b(?:factory\s+new|new\s+engine)\b",
+            r"\b(?:factory\s+reman(?:ufactured)?|factory\s+rebuilt|reman)\b",
+            r"\b(?:Lycoming|Continental)\s+new\b",
+        ]
+        if any(re.search(pattern, src, flags=re.IGNORECASE) for pattern in zero_time_patterns):
+            out["engine_time_since_new"] = 0.0
     return out
 
 
@@ -481,19 +526,64 @@ def extract_prop_model(text: str) -> str | None:
         match = re.search(pattern, src, flags=re.IGNORECASE)
         if not match:
             continue
-        candidate = _normalize_text(match.group(1)).strip(" -:;,")
-        if not candidate:
-            continue
-        cut_match = re.search(
-            r"\b(?:installed|overhaul(?:ed)?|since|hours?|hrs?|smoh|spoh|annual|avionics|interior|exterior)\b",
-            candidate,
-            flags=re.IGNORECASE,
-        )
-        if cut_match and cut_match.start() > 8:
-            candidate = candidate[: cut_match.start()].strip(" -:;,")
+        candidate = _trim_prop_model_candidate(match.group(1))
         if candidate and len(candidate) <= 120:
             return candidate
+
+    fallback_patterns = [
+        r"\b((?:Hartzell|McCauley|Sensenich|MT[\-\s]?Propeller)\b[^.;]{0,70})",
+        r"\b((?:PHC|HC|C2YR|C3YR|MTV|F7693)[A-Z0-9\-/]{0,30})\b",
+    ]
+    for pattern in fallback_patterns:
+        match = re.search(pattern, src, flags=re.IGNORECASE)
+        if not match:
+            continue
+        candidate = _trim_prop_model_candidate(match.group(1))
+        if candidate:
+            return candidate
     return None
+
+
+def _trim_prop_model_candidate(candidate: str) -> str | None:
+    text = _normalize_text(candidate).strip(" -:;,")
+    if not text:
+        return None
+
+    cut_markers = [
+        r"\b(?:installed|has|with|overhaul(?:ed)?|since|hours?|hrs?|smoh|spoh|annual|avionics|interior|exterior)\b",
+        r"\b(?:garmin|gtn|gns|gdl|gtx|ifd|aspen|panel)\b",
+        r",\s*(?:all|and|with|plus)\b",
+        r"\s-\s*(?:all|and|with|plus)\b",
+    ]
+    earliest_cut: int | None = None
+    for marker in cut_markers:
+        match = re.search(marker, text, flags=re.IGNORECASE)
+        if match and match.start() > 8:
+            if earliest_cut is None or match.start() < earliest_cut:
+                earliest_cut = match.start()
+    if earliest_cut is not None:
+        text = text[:earliest_cut].strip(" -:;,")
+
+    if len(text) > 90:
+        text = text[:90].rsplit(" ", 1)[0].strip(" -:;,")
+    return text or None
+
+
+def extract_no_damage_history(text: str) -> bool:
+    src = _normalize_text(text)
+    if not src:
+        return False
+    patterns = [
+        r"\bNDH\b",
+        r"\bno\s+damage\s+history\b",
+        r"\bno\s+known\s+damage\b",
+        r"\bclean\s+title\b",
+        r"\bno\s+accident\s+history\b",
+        r"\bno\s+accidents?\b",
+        r"\bdamage[-\s]?free(?:\s+history)?\b",
+        r"\bnever\s+damaged\b",
+    ]
+    return any(re.search(pattern, src, flags=re.IGNORECASE) for pattern in patterns)
 
 
 def extract_cylinder_time_since_new(text: str) -> int | None:
@@ -864,6 +954,7 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
     cylinders_since_new = extract_cylinder_time_since_new(src)
     hours_since_iran = extract_hours_since_iran(src)
     last_annual_inspection = extract_last_annual_inspection(src)
+    no_damage_history = extract_no_damage_history(src)
 
     engine_payload = {
         "model": engine_model,
@@ -871,6 +962,9 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
         "tt": times.get("total_time"),
         "spoh": times.get("prop_spoh"),
         "stop": times.get("engine_stop"),
+        "stoh": times.get("engine_stop"),
+        "sfoh": times.get("engine_sfoh"),
+        "time_since_new": times.get("engine_time_since_new"),
     }
     engine_payload = {k: v for k, v in engine_payload.items() if v is not None}
     prop_payload = {
@@ -902,6 +996,14 @@ def parse_description(text: str, observed_price: int | float | None = None) -> d
     confidence = round(min(1.0, 0.2 + evidence_count * 0.08), 2) if src else 0.0
 
     payload: dict[str, Any] = {
+        "smoh": times.get("engine_smoh"),
+        "spoh": times.get("prop_spoh"),
+        "ttaf": times.get("total_time"),
+        "prop_model": prop_model,
+        "stoh": times.get("engine_stop"),
+        "sfoh": times.get("engine_sfoh"),
+        "time_since_new": times.get("engine_time_since_new"),
+        "no_damage_history": no_damage_history,
         "engine": engine_payload,
         "prop": prop_payload,
         "mods": mods,
