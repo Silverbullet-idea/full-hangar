@@ -881,23 +881,37 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const supabase = createReadServerClient();
 
   if (isDefaultListingsLandingQuery(query)) {
-    try {
-      return await runDefaultCuratedListingsPage(supabase, {
-        listBaseTable,
-        from,
-        to,
-        page,
-        pageSize,
-        ownershipType,
-      });
-    } catch (error) {
-      const message = String(error instanceof Error ? error.message : "").toLowerCase();
-      // Public API routes should never hard-fail if raw-table access is restricted.
-      if (requestedOwnershipType && message.includes("permission denied") && message.includes("aircraft_listings")) {
-        return getListingsPage({ ...query, ownershipType: "all" });
+    const curatedBases = requestedOwnershipType
+      ? (["aircraft_listings"] as const)
+      : (["aircraft_listings", "public_listings"] as const);
+    let lastError: unknown = null;
+    for (const base of curatedBases) {
+      try {
+        return await runDefaultCuratedListingsPage(supabase, {
+          listBaseTable: base,
+          from,
+          to,
+          page,
+          pageSize,
+          ownershipType,
+        });
+      } catch (error) {
+        lastError = error;
+        const message = String(error instanceof Error ? error.message : "").toLowerCase();
+        const aircraftDenied =
+          message.includes("permission denied") ||
+          message.includes("row-level security") ||
+          message.includes("rls");
+        if (base === "aircraft_listings" && aircraftDenied) {
+          continue;
+        }
+        if (requestedOwnershipType && message.includes("permission denied") && message.includes("aircraft_listings")) {
+          return getListingsPage({ ...query, ownershipType: "all" });
+        }
+        throw error;
       }
-      throw error;
     }
+    throw lastError instanceof Error ? lastError : new Error(String(lastError ?? "default listings load failed"));
   }
 
   let dbQuery = supabase
@@ -1144,53 +1158,76 @@ export async function getListingFilterOptions(): Promise<ListingFilterOption[]> 
   return fetchListingFilterOptionsRowsChunked();
 }
 
+function isAircraftListingsAccessDenied(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    (m.includes("permission denied") && m.includes("aircraft_listings")) ||
+    m.includes("row-level security") ||
+    (m.includes("aircraft_listings") && m.includes("policy"))
+  );
+}
+
 async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOption[]> {
   const supabase = createReadServerClient();
-  const chunkSizes = [2000, 1000, 500];
-  const maxRows = 50000;
+  const tables = ["aircraft_listings", "public_listings"] as const;
   let lastError: Error | null = null;
 
-  for (const chunkSize of chunkSizes) {
-    const allRows: Array<{
-      make: string | null;
-      model: string | null;
-      location_state: string | null;
-      source: string | null;
-      deal_tier: string | null;
-      value_score: number | null;
-    }> = [];
+  for (const table of tables) {
+    const chunkSizes = [2000, 1000, 500];
+    const maxRows = 50000;
+    const selectColumns =
+      table === "aircraft_listings"
+        ? "make,model,location_state,state,source,source_site,deal_tier,value_score"
+        : "make,model,location_state,source,deal_tier,value_score";
 
-    try {
-      for (let offset = 0; offset < maxRows; offset += chunkSize) {
-        const result = await supabase
-          .from("public_listings")
-          .select("make,model,location_state,source,deal_tier,value_score")
-          .eq("is_active", true)
-          .order("id", { ascending: true })
-          .range(offset, offset + chunkSize - 1);
+    for (const chunkSize of chunkSizes) {
+      const allRows: Array<Record<string, unknown>> = [];
 
-        if (result.error) {
-          throw new Error(result.error.message);
+      try {
+        for (let offset = 0; offset < maxRows; offset += chunkSize) {
+          const result = await supabase
+            .from(table)
+            .select(selectColumns)
+            .eq("is_active", true)
+            .order("id", { ascending: true })
+            .range(offset, offset + chunkSize - 1);
+
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+
+          const rows = result.data ?? [];
+          if (rows.length === 0) break;
+          allRows.push(...rows);
+          if (rows.length < chunkSize) break;
         }
 
-        const rows = result.data ?? [];
-        if (rows.length === 0) break;
-        allRows.push(...rows);
-        if (rows.length < chunkSize) break;
+        return allRows.map((row) => ({
+          make: (row.make as string | null | undefined) ?? null,
+          model: (row.model as string | null | undefined) ?? null,
+          state:
+            table === "aircraft_listings"
+              ? ((row.location_state ?? row.state) as string | null | undefined) ?? null
+              : ((row.location_state as string | null | undefined) ?? null),
+          source:
+            table === "aircraft_listings"
+              ? ((row.source ?? row.source_site) as string | null | undefined) ?? null
+              : ((row.source as string | null | undefined) ?? null),
+          dealTier: (row.deal_tier as string | null | undefined) ?? null,
+          valueScore:
+            typeof row.value_score === "number"
+              ? row.value_score
+              : toNumericOrNull(row.value_score),
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        if (table === "aircraft_listings" && isAircraftListingsAccessDenied(message)) {
+          lastError = new Error(message);
+          break;
+        }
+        if (!isTransientSupabaseUpstreamFailure(message)) throw new Error(message);
+        lastError = new Error(message);
       }
-
-      return allRows.map((row) => ({
-        make: row.make ?? null,
-        model: row.model ?? null,
-        state: row.location_state ?? null,
-        source: row.source ?? null,
-        dealTier: row.deal_tier ?? null,
-        valueScore: typeof row.value_score === "number" ? row.value_score : null,
-      }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error ?? "");
-      if (!isTransientSupabaseUpstreamFailure(message)) throw new Error(message);
-      lastError = new Error(message);
     }
   }
 
