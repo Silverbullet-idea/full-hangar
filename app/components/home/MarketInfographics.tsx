@@ -65,6 +65,17 @@ const TREND_COLOR: Record<Infographic["barColor"], string> = {
   red: "text-[#f87171]",
 }
 
+function infographicValue(card: Infographic): string {
+  if (card.label.startsWith("Cessna 172 median")) return "$42,500"
+  if (card.label.startsWith("Piper Cherokee 180 geographic")) return "$14K delta"
+  return card.value
+}
+
+function infographicTrend(card: Infographic): string {
+  if (card.label.startsWith("Piper PA-28 wing spar")) return "$25K–$60K liability if triggered"
+  return card.trend
+}
+
 export default function MarketInfographics() {
   return (
     <section className="mt-14">
@@ -83,8 +94,8 @@ export default function MarketInfographics() {
             style={{ animationDelay: `${80 + i * 50}ms` }}
           >
             <p className="mb-1.5 text-xs text-brand-muted">{card.label}</p>
-            <p className="text-3xl font-extrabold leading-tight text-brand-white">{card.value}</p>
-            <p className={`mt-2 text-xs ${TREND_COLOR[card.barColor]}`}>{card.trend}</p>
+            <p className="text-3xl font-extrabold leading-tight text-brand-white">{infographicValue(card)}</p>
+            <p className={`mt-2 text-xs ${TREND_COLOR[card.barColor]}`}>{infographicTrend(card)}</p>
             <div className="mt-3 h-1 overflow-hidden rounded-full bg-brand-dark">
               <div className={`h-full rounded-full ${BAR_BG[card.barColor]}`} style={{ width: `${card.barPct}%` }} />
             </div>

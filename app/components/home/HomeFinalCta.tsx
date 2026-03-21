@@ -21,7 +21,8 @@ export default function HomeFinalCta() {
           </Link>
           <Link
             href="/internal/login"
-            className="rounded-md border border-brand-dark bg-[#161f2d] px-5 py-2.5 text-sm font-semibold !text-[#d7deea] transition hover:border-brand-orange hover:!text-brand-orange"
+            className="rounded-md border border-[#2B3444] px-5 py-2.5 text-sm font-semibold transition hover:border-brand-orange hover:!text-brand-orange"
+            style={{ backgroundColor: "#161f2d", color: "#d7deea" }}
           >
             Internal Deal Dashboard
           </Link>

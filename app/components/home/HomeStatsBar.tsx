@@ -1,68 +1,51 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useState } from "react"
 
-function animateCounter(id: string, target: number, duration: number) {
-  const el = document.getElementById(id)
-  if (!el) return
-  let start = 0
-  const step = target / (duration / 16)
-  const timer = setInterval(() => {
-    start = Math.min(start + step, target)
-    el.textContent = Math.round(start).toLocaleString()
-    if (start >= target) clearInterval(timer)
-  }, 16)
-}
+const INITIAL_COUNTS = {
+  listings: "10,574",
+  faa: "310,196",
+  tbo: "110+",
+  sources: "8",
+} as const
 
 export default function HomeStatsBar() {
-  const statsRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = statsRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          animateCounter("s-listings", 10574, 1200)
-          animateCounter("s-faa", 310196, 1400)
-          const tbo = document.getElementById("s-tbo")
-          if (tbo) tbo.textContent = "110+"
-          animateCounter("s-sources", 8, 600)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.3 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+  const [counts] = useState(INITIAL_COUNTS)
 
   return (
-    <section ref={statsRef} className="border-y border-[#2B3444] bg-[#121923] py-8">
+    <section className="border-y border-[#2B3444] py-8" style={{ backgroundColor: "#121923" }}>
       <div className="mx-auto grid max-w-[1100px] grid-cols-2 gap-6 px-6 lg:grid-cols-4">
         <div>
-          <div id="s-listings" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
-            0
+          <div className="text-[2.2rem] font-extrabold leading-none" style={{ color: "#ffffff" }}>
+            {counts.listings}
           </div>
-          <p className="mt-1 text-xs text-[#9AA4B2]">Live listings tracked</p>
+          <p className="mt-1 text-xs" style={{ color: "#9AA4B2" }}>
+            Live listings tracked
+          </p>
         </div>
         <div>
-          <div id="s-faa" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
-            0
+          <div className="text-[2.2rem] font-extrabold leading-none" style={{ color: "#ffffff" }}>
+            {counts.faa}
           </div>
-          <p className="mt-1 text-xs text-[#9AA4B2]">FAA registry records</p>
+          <p className="mt-1 text-xs" style={{ color: "#9AA4B2" }}>
+            FAA registry records
+          </p>
         </div>
         <div>
-          <div id="s-tbo" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
-            0
+          <div className="text-[2.2rem] font-extrabold leading-none" style={{ color: "#ffffff" }}>
+            {counts.tbo}
           </div>
-          <p className="mt-1 text-xs text-[#9AA4B2]">Engine TBO references</p>
+          <p className="mt-1 text-xs" style={{ color: "#9AA4B2" }}>
+            Engine TBO references
+          </p>
         </div>
         <div>
-          <div id="s-sources" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
-            0
+          <div className="text-[2.2rem] font-extrabold leading-none" style={{ color: "#ffffff" }}>
+            {counts.sources}
           </div>
-          <p className="mt-1 text-xs text-[#9AA4B2]">Data sources scraped daily</p>
+          <p className="mt-1 text-xs" style={{ color: "#9AA4B2" }}>
+            Data sources scraped daily
+          </p>
         </div>
       </div>
     </section>
