@@ -1196,7 +1196,7 @@ async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOpti
             throw new Error(result.error.message);
           }
 
-          const rows = result.data ?? [];
+          const rows = (result.data ?? []) as unknown as Record<string, unknown>[];
           if (rows.length === 0) break;
           allRows.push(...rows);
           if (rows.length < chunkSize) break;
