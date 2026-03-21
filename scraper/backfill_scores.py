@@ -126,6 +126,21 @@ from supabase.lib.client_options import ClientOptions
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+
+def _quiet_http_client_loggers() -> None:
+    """Drop per-request HTTP noise so consoles show backfill progress (Updated N...) instead of freezing."""
+    for name in ("httpx", "httpcore"):
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
+def _quiet_http_from_env() -> bool:
+    v = os.environ.get("FULL_HANGAR_BACKFILL_QUIET_HTTP", "").strip().lower()
+    return v in ("1", "true", "yes", "on")
+
+
+if _quiet_http_from_env():
+    _quiet_http_client_loggers()
+
 DB_CURSOR_PAGE_SIZE = max(50, int(os.environ.get("BACKFILL_DB_PAGE_SIZE", "500")))
 ROW_SLOW_WARNING_SECONDS = max(
     5.0, float(os.environ.get("BACKFILL_ROW_SLOW_WARNING_SECONDS", "20"))
@@ -498,6 +513,10 @@ def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
         "engine_model_normalized": intel.get("engine_model_normalized"),
         "engine_remaining_time_factor": intel.get("engine_remaining_time_factor"),
         "normalized_engine_value": intel.get("normalized_engine_value"),
+        "engine_hours_smoh": intel.get("engine_hours_smoh"),
+        "engine_remaining_value": intel.get("engine_remaining_value"),
+        "engine_overrun_liability": intel.get("engine_overrun_liability"),
+        "engine_reserve_per_hour": intel.get("engine_reserve_per_hour"),
         "avionics_bundle_multiplier": intel.get("avionics_bundle_multiplier"),
         "avionics_bundle_profile": intel.get("avionics_bundle_profile"),
         "avionics_bundle_adjusted_value": intel.get("avionics_bundle_adjusted_value"),
@@ -519,9 +538,7 @@ def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
 
 def listing_for_intelligence(row: dict) -> dict:
     """Build a listing dict suitable for aircraft_intelligence_score from a DB row."""
-    primary_engine_model = row.get("engine_model")
-    fallback_faa_engine_model = row.get("faa_engine_model")
-    resolved_engine_model = primary_engine_model or fallback_faa_engine_model
+    resolved_engine_model = resolve_engine_model_for_scoring(row)
 
     # DB may use different keys; normalize to what intelligence expects
     return {
@@ -546,6 +563,61 @@ def listing_for_intelligence(row: dict) -> dict:
         "most_severe_damage": row.get("most_severe_damage"),
         "has_accident_history": row.get("has_accident_history"),
     }
+
+
+_ENGINE_MODEL_JUNK_TOKENS = {
+    "OUT",
+    "ONE",
+    "OUR",
+    "ORIGINAL",
+    "OPERATION",
+    "OPERATIONS",
+    "OFFERS",
+    "OFFER",
+    "ORIGINALLY",
+    "OWNERSHIP",
+    "OVERHAUL",
+    "OUTSTANDING",
+    "OPTIONAL",
+    "GOLD",
+    "ANALYZER",
+}
+
+_ENGINE_MODEL_VENDOR_ONLY = {"CONTINENTAL", "LYCOMING", "PRATT & WHITNEY", "PRATT AND WHITNEY", "ROTAX"}
+
+
+def is_unusable_engine_model(value: str | None) -> bool:
+    cleaned = sanitize_engine_model(value)
+    if not cleaned:
+        return True
+    token = cleaned.strip().upper()
+    if not token:
+        return True
+    if token in _ENGINE_MODEL_JUNK_TOKENS:
+        return True
+    if token in _ENGINE_MODEL_VENDOR_ONLY:
+        return True
+    # Reject single-word narrative fragments with no numeric model token.
+    if " " not in token and not re.search(r"\d", token) and len(token) <= 12:
+        return True
+    # Reject long narrative strings that have no model-like numeric token.
+    if len(token) > 36 and not re.search(r"\d", token):
+        return True
+    return False
+
+
+def resolve_engine_model_for_scoring(row: dict) -> str | None:
+    primary_engine_model = sanitize_engine_model(row.get("engine_model"))
+    faa_engine_model = sanitize_engine_model(row.get("faa_engine_model"))
+
+    primary_usable = not is_unusable_engine_model(primary_engine_model)
+    faa_usable = not is_unusable_engine_model(faa_engine_model)
+
+    if primary_usable:
+        return primary_engine_model
+    if faa_usable:
+        return faa_engine_model
+    return None
 
 
 def build_parser_text(row: dict) -> str:
@@ -685,12 +757,22 @@ def parser_backfill_updates(row: dict) -> dict:
     raw_engine_model = row.get("engine_model")
     raw_engine_text = str(raw_engine_model).strip() if raw_engine_model else ""
     cleaned_existing_engine_model = sanitize_engine_model(raw_engine_text)
+    existing_engine_unusable = is_unusable_engine_model(cleaned_existing_engine_model)
+    cleaned_faa_engine_model = sanitize_engine_model(row.get("faa_engine_model"))
+    faa_engine_usable = not is_unusable_engine_model(cleaned_faa_engine_model)
     parsed_engine_model = parsed.get("engine", {}).get("model")
     if isinstance(parsed_engine_model, str):
-        if not cleaned_existing_engine_model or len(raw_engine_text) > 120:
-            updates["engine_model"] = parsed_engine_model
+        parsed_engine_model_clean = sanitize_engine_model(parsed_engine_model)
+        if parsed_engine_model_clean and (
+            not cleaned_existing_engine_model
+            or existing_engine_unusable
+            or len(raw_engine_text) > 120
+        ):
+            updates["engine_model"] = parsed_engine_model_clean
     elif cleaned_existing_engine_model and cleaned_existing_engine_model != raw_engine_text:
         updates["engine_model"] = cleaned_existing_engine_model
+    elif existing_engine_unusable and faa_engine_usable and cleaned_faa_engine_model:
+        updates["engine_model"] = cleaned_faa_engine_model
 
     return updates
 
@@ -863,8 +945,21 @@ def run_backfill_from_db(
                     listing["total_time_airframe"] = parser_updates["total_time_airframe"]
                 if "engine_time_since_overhaul" in parser_updates and listing.get("time_since_overhaul") in (None, "", 0):
                     listing["time_since_overhaul"] = parser_updates["engine_time_since_overhaul"]
-                if "engine_model" in parser_updates and not str(listing.get("engine_model") or "").strip():
-                    listing["engine_model"] = parser_updates["engine_model"]
+                if "engine_model" in parser_updates:
+                    parsed_engine_model = sanitize_engine_model(parser_updates.get("engine_model"))
+                    current_engine_raw = str(listing.get("engine_model") or "").strip()
+                    current_engine_clean = sanitize_engine_model(current_engine_raw)
+                    if parsed_engine_model and (
+                        not current_engine_clean
+                        or len(current_engine_raw) > 120
+                        or current_engine_clean != current_engine_raw
+                    ):
+                        listing["engine_model"] = parsed_engine_model
+                else:
+                    current_engine_raw = str(listing.get("engine_model") or "").strip()
+                    current_engine_clean = sanitize_engine_model(current_engine_raw)
+                    if current_engine_clean and current_engine_clean != current_engine_raw:
+                        listing["engine_model"] = current_engine_clean
                 if "description_intelligence" in parser_updates:
                     # Use freshly parsed enrichment immediately for this scoring pass.
                     listing["description_intelligence"] = parser_updates["description_intelligence"]
@@ -1254,7 +1349,15 @@ def main():
         action="store_true",
         help="Only recompute market_comps and skip listing score backfill.",
     )
+    parser.add_argument(
+        "--quiet-http",
+        action="store_true",
+        help="Hide httpx/httpcore per-request INFO logs (less console spam; use with chunked runs).",
+    )
     args = parser.parse_args()
+
+    if args.quiet_http or _quiet_http_from_env():
+        _quiet_http_client_loggers()
 
     mode = "json" if args.from_json else "db"
     if args.compute_comps_only:
