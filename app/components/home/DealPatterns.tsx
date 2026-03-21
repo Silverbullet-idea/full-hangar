@@ -33,15 +33,14 @@ export default function DealPatterns() {
         {DEALS.map((d) => (
           <article
             key={d.title}
-            className="rounded-2xl border border-[#2B3444] p-6 transition-all hover:-translate-y-0.5 hover:border-brand-orange"
-            style={{ backgroundColor: "#161f2d" }}
+            className="home-deal-card rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:border-brand-orange"
           >
             <div className="mb-4 text-3xl" style={{ color: "inherit", filter: "none" }} aria-hidden>
               {d.icon}
             </div>
-            <h3 className="mb-2 text-base font-extrabold text-[#ffffff]">{d.title}</h3>
-            <p className="text-sm leading-relaxed text-[#9AA4B2]">{d.body}</p>
-            <p className="mt-4 rounded-lg border border-[#FF9900]/15 bg-[#FF9900]/10 px-3 py-2.5 text-xs text-[#FF9900]">{d.tag}</p>
+            <h3 className="mb-2 text-base font-extrabold">{d.title}</h3>
+            <p className="body-text text-sm leading-relaxed">{d.body}</p>
+            <p className="home-deal-example-tag mt-4 rounded-lg px-3 py-2.5 text-xs">{d.tag}</p>
           </article>
         ))}
       </div>

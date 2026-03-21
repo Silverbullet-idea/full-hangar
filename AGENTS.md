@@ -85,6 +85,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Homepage pass 3: score card hardcoded dark in both themes (bg/ring/bars/text), deal pattern card headings use `text-[#ffffff]` on `#161f2d`, stats bar always `#121923` with white numerals and `#9AA4B2` labels, hero h1 `#ffffff`, proof pills polished above CTAs with `#9AA4B2`, price strings as clean literals (score card + infographics), confidence box text on dark surface fixed.
 - Homepage pass 4 (final): hero bg/h1 use inline styles to resist light-theme CSS override, score card now visible in light mode, stats bar shows values immediately on render, price strings use explicit JSX string literals / infographic helpers, footer CTA Internal Deal Dashboard button readable in light mode (inline bg/color).
 - Score card visibility fixed: removed duplicate `both` fill-mode from animation shorthand (was: `ease_both_0.2s_forwards` → invalid CSS; now: `ease_0.2s_forwards` → correct). Card now animates in correctly at `lg:` breakpoint in both themes (`HeroScoreCard` outer div).
+- Homepage light mode theming: deal pattern cards, hero score card, FAQ items, Carfax banner, score-breakdown panel, pillar tracks, and confidence box now adapt in light theme via `[data-theme="light"]` rules in `app/page.tsx` (slate-100/200/300 palette). Hero section and stats bar stay hardcoded dark. Dark mode matches prior styling.
 
 ### Backend, Pipeline, and Data Sources
 

@@ -54,7 +54,7 @@ export default function HomeSocialProofFaq() {
         <p className="mt-3 text-sm text-brand-muted">Quick answers on scoring, confidence, and decision support.</p>
         <div className="mt-5 space-y-3">
           {FAQ_ITEMS.map((item) => (
-            <details key={item.question} className="group rounded-xl border border-brand-dark bg-[#161f2d] p-4 transition hover:border-[#55657f]">
+            <details key={item.question} className="home-faq-item group rounded-xl border border-brand-dark p-4 transition hover:border-[#55657f]">
               <summary className="cursor-pointer list-none text-base font-bold text-brand-orange">{item.question}</summary>
               <p className="mt-2 text-sm leading-relaxed text-brand-muted">{item.answer}</p>
             </details>

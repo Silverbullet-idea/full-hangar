@@ -1,6 +1,6 @@
 export default function CarfaxBanner() {
   return (
-    <div className="mx-auto flex max-w-[1100px] flex-col items-start gap-6 rounded-2xl border border-brand-dark bg-card-bg px-6 py-7 sm:flex-row sm:items-center sm:px-8">
+    <div className="home-carfax-banner mx-auto flex max-w-[1100px] flex-col items-start gap-6 rounded-2xl border border-brand-dark bg-card-bg px-6 py-7 sm:flex-row sm:items-center sm:px-8">
       <span className="flex-shrink-0 text-4xl" aria-hidden>
         ✈️
       </span>

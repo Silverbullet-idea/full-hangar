@@ -99,6 +99,130 @@ export default function HomePage() {
             animation: none;
           }
         }
+
+        /* Homepage surfaces — dark defaults (match prior hardcoded navy/slate) */
+        .home-deal-card {
+          background-color: #161f2d;
+          border-color: #2b3444;
+        }
+        .home-deal-card h3 {
+          color: #ffffff;
+        }
+        .home-deal-card p.body-text {
+          color: #9aa4b2;
+        }
+        .home-deal-example-tag {
+          background-color: rgba(255, 153, 0, 0.1);
+          border: 1px solid rgba(255, 153, 0, 0.15);
+          color: #ff9900;
+        }
+
+        .home-score-card {
+          --ring-track: #2b3444;
+          background-color: #1a2538;
+          border-color: #2b3444;
+        }
+        .home-score-card-text-primary {
+          color: #ffffff;
+        }
+        .home-score-card-text-muted {
+          color: #9aa4b2;
+        }
+        .home-score-card-bar-track {
+          background-color: #2b3444;
+        }
+        .home-score-card-ring-bg {
+          background-color: #1a2538;
+        }
+        .home-score-card-section-divider {
+          border-top-color: #2b3444;
+        }
+
+        .home-pillar-track {
+          background-color: var(--color-brand-dark);
+        }
+
+        .home-confidence-box {
+          background-color: #161f2d;
+          border-color: #2b3444;
+        }
+        .home-confidence-box h3 {
+          color: #ffffff;
+        }
+        .home-confidence-box p {
+          color: #9aa4b2;
+        }
+
+        .home-faq-item {
+          background-color: #161f2d;
+        }
+
+        [data-theme="light"] .home-deal-card {
+          background-color: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        [data-theme="light"] .home-deal-card h3 {
+          color: #0f172a;
+        }
+        [data-theme="light"] .home-deal-card p.body-text {
+          color: #475569;
+        }
+        [data-theme="light"] .home-deal-example-tag {
+          background-color: rgba(255, 153, 0, 0.08);
+          border-color: rgba(255, 153, 0, 0.25);
+          color: #92400e;
+        }
+
+        [data-theme="light"] .home-score-card {
+          --ring-track: #cbd5e1;
+          background-color: #e2e8f0;
+          border-color: #cbd5e1;
+        }
+        [data-theme="light"] .home-score-card-text-primary {
+          color: #0f172a;
+        }
+        [data-theme="light"] .home-score-card-text-muted {
+          color: #475569;
+        }
+        [data-theme="light"] .home-score-card-bar-track {
+          background-color: #cbd5e1;
+        }
+        [data-theme="light"] .home-score-card-ring-bg {
+          background-color: #e2e8f0;
+        }
+        [data-theme="light"] .home-score-card-section-divider {
+          border-top-color: #cbd5e1;
+        }
+
+        [data-theme="light"] .home-score-breakdown {
+          background-color: #f8fafc;
+          border-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .home-pillar-track {
+          background-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .home-carfax-banner {
+          background-color: #f1f5f9;
+          border-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .home-faq-item {
+          background-color: #f1f5f9;
+          border-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .home-confidence-box {
+          background-color: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        [data-theme="light"] .home-confidence-box h3 {
+          color: #0f172a;
+        }
+        [data-theme="light"] .home-confidence-box p {
+          color: #475569;
+        }
       `}</style>
     </main>
   )

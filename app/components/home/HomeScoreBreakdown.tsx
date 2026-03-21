@@ -60,7 +60,7 @@ export default function HomeScoreBreakdown() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-        <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-8">
+        <div className="home-score-breakdown rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-muted">Example: 1977 Cessna 172M</p>
           <div className="mt-2 text-[5rem] font-extrabold leading-none text-brand-orange">78</div>
           <p className="text-sm text-brand-muted">Value Score</p>
@@ -82,7 +82,7 @@ export default function HomeScoreBreakdown() {
                 <span className="font-extrabold text-brand-white">{p.name}</span>
                 <span className="text-xs font-semibold text-brand-muted">{p.weight}</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-dark">
+              <div className="home-pillar-track mt-2 h-2 overflow-hidden rounded-full">
                 <div
                   className="h-full rounded-full transition-[width] duration-[800ms] ease-out"
                   style={{
@@ -98,9 +98,9 @@ export default function HomeScoreBreakdown() {
             </div>
           ))}
 
-          <div className="rounded-xl border border-[#2B3444] bg-[#161f2d] p-4">
-            <h3 className="text-sm font-extrabold text-[#ffffff]">Confidence Layering</h3>
-            <p className="mt-2 text-xs leading-relaxed text-[#9AA4B2]">
+          <div className="home-confidence-box rounded-xl border p-4">
+            <h3 className="text-sm font-extrabold">Confidence Layering</h3>
+            <p className="mt-2 text-xs leading-relaxed">
               Every score includes a Data Confidence and Pricing Confidence indicator — so you always know how much signal is behind the
               number, not just what the number is.
             </p>

@@ -1,31 +1,26 @@
 export default function HeroScoreCard() {
   return (
     <div
-      className="home-hero-score-card relative overflow-hidden rounded-2xl border border-[#2B3444] p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_0.2s_forwards]"
-      style={{ backgroundColor: "#1a2538" }}
+      className="home-score-card home-hero-score-card relative overflow-hidden rounded-2xl border p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_0.2s_forwards]"
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#9AA4B2" }}>
+      <p className="home-score-card-text-muted text-[10px] font-bold uppercase tracking-[0.2em]">
         Full Hangar Score Report
       </p>
-      <h3 className="mt-3 text-lg font-extrabold" style={{ color: "#ffffff" }}>
-        1979 Cessna 172N Skyhawk
-      </h3>
-      <p className="mt-1 text-xs" style={{ color: "#9AA4B2" }}>
-        N12345 · 4,210 TTAF · IO-360 · Van Nuys, CA
-      </p>
+      <h3 className="home-score-card-text-primary mt-3 text-lg font-extrabold">1979 Cessna 172N Skyhawk</h3>
+      <p className="home-score-card-text-muted mt-1 text-xs">N12345 · 4,210 TTAF · IO-360 · Van Nuys, CA</p>
 
       <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex shrink-0 justify-center sm:justify-start">
           <div
-            className="relative grid h-[104px] w-[104px] place-items-center rounded-full p-[5px]"
+            className="home-score-card-ring relative grid h-[104px] w-[104px] place-items-center rounded-full p-[5px]"
             style={{
-              background: "conic-gradient(#FF9900 0% 78%, #2B3444 78% 100%)",
+              background: "conic-gradient(#FF9900 0% 78%, var(--ring-track) 78% 100%)",
             }}
           >
-            <div className="grid h-full w-full place-items-center rounded-full" style={{ backgroundColor: "#1a2538" }}>
+            <div className="home-score-card-ring-bg grid h-full w-full place-items-center rounded-full">
               <div className="text-center leading-none">
                 <span className="text-3xl font-extrabold text-brand-orange">78</span>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider" style={{ color: "#9AA4B2" }}>
+                <div className="home-score-card-text-muted mt-0.5 text-[9px] font-bold uppercase tracking-wider">
                   Score
                 </div>
               </div>
@@ -55,17 +50,17 @@ export default function HeroScoreCard() {
         </span>
       </div>
 
-      <div className="mt-5 border-t border-[#2B3444] pt-4 text-sm">
+      <div className="home-score-card-section-divider mt-5 border-t pt-4 text-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span style={{ color: "#9AA4B2" }}>
+          <span className="home-score-card-text-muted">
             Asking:{" "}
-            <span className="font-bold" style={{ color: "#ffffff" }}>
+            <span className="home-score-card-text-primary font-bold">
               {"$38,500"}
             </span>
           </span>
-          <span style={{ color: "#9AA4B2" }}>
+          <span className="home-score-card-text-muted">
             Market:{" "}
-            <span className="font-bold" style={{ color: "#ffffff" }}>
+            <span className="home-score-card-text-primary font-bold">
               {"$42K – $48K"}
             </span>
           </span>
@@ -105,12 +100,10 @@ function PillarRow({
   return (
     <div>
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="font-bold" style={{ color: "#ffffff" }}>
-          {label}
-        </span>
+        <span className="home-score-card-text-primary font-bold">{label}</span>
         <span className="font-extrabold text-brand-orange">{value}</span>
       </div>
-      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#2B3444]">
+      <div className="home-score-card-bar-track mt-1.5 h-2 overflow-hidden rounded-full">
         <div className={`h-full rounded-full ${barClass}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
