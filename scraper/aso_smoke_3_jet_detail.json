@@ -1,0 +1,2067 @@
+[
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201001",
+    "source_listing_id": "aso_201001",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "aso_adv_id": "201001",
+    "title": "2013 Xtremeair XA42",
+    "year": 2013,
+    "make": "Xtremeair",
+    "model": "XA42",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 220000,
+    "price_asking": 220000,
+    "price_text": "$220,000",
+    "n_number": "ZS-AXA",
+    "serial_number": "120",
+    "total_time_airframe": 310,
+    "ttaf_raw": "310",
+    "location_raw": "ZA",
+    "state": null,
+    "seller_name": "Airvan Africa Pty L...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+    "scraped_at": "2026-03-14T07:44:54.827693+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Show Room Condition"
+        ],
+        "text": "Show Room Condition"
+      },
+      "Avionics": {
+        "items": [
+          "2 COMs",
+          "Garmin Aera 660 GPS"
+        ],
+        "text": "2 COMs Garmin Aera 660 GPS"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "description_full": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+(27) 46 624 4899",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38362&name=Airvan+Africa+Pty+Ltd",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "AEIO-580-B1A",
+        "serial#": "333-79E"
+      }
+    ],
+    "engine_count": 1,
+    "props_raw": [
+      {
+        "loc.": "C",
+        "make": "MT",
+        "model": "MTV-9-B-C",
+        "serial#": "180445",
+        "tsn": "120",
+        "tsn_hours": 120
+      }
+    ],
+    "time_since_prop_overhaul": 120,
+    "avionics_notes": "2 COMs, Garmin Aera 660 GPS",
+    "maintenance_condition": "Show Room Condition",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Show Room Condition"
+            ],
+            "text": "Show Room Condition"
+          },
+          "Avionics": {
+            "items": [
+              "2 COMs",
+              "Garmin Aera 660 GPS"
+            ],
+            "text": "2 COMs Garmin Aera 660 GPS"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 2,
+        "captured_at": "2026-03-14T07:45:42.403004+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_199625",
+    "source_listing_id": "aso_199625",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+    "aso_adv_id": "199625",
+    "title": "2001 Wag-Aero Acro Cub",
+    "year": 2001,
+    "make": "Wag-Aero",
+    "model": "Acro Cub",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 69900,
+    "price_asking": 69900,
+    "price_text": "$69,900",
+    "n_number": "N320AK",
+    "serial_number": "3841",
+    "total_time_airframe": 160,
+    "ttaf_raw": "160",
+    "location_raw": "CA, US",
+    "state": "CA",
+    "seller_name": "Skywagons.com, LLC",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/199625/1_6.jpg",
+    "scraped_at": "2026-03-14T07:44:54.827693+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming 0-320 160 160 HP Props Loc. TSN C 160"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Annual Due: March 2026",
+          "Useful Load: 700 Lbs.",
+          "Click here for Aircraft Logbook"
+        ],
+        "text": "Complete Logs: Yes Damage History: No Annual Due: March 2026 Useful Load: 700 Lbs. Click here for Aircraft Logbook"
+      },
+      "Airframe": {
+        "items": [
+          "Fully Aerobatic",
+          "27 Gallons of Fuel in Two Tanks",
+          "Electric Start",
+          "Metal Floors",
+          "Solo from Rear",
+          "Toe Brakes",
+          "Clipped Wings",
+          "No Flaps",
+          "Long Ailerons",
+          "Supercub Rear Fuselage and Tail",
+          "Shoulder Harness",
+          "Skylight",
+          "850 Main Tires",
+          "12 Volt Power Outlet"
+        ],
+        "text": "Fully Aerobatic 27 Gallons of Fuel in Two Tanks Electric Start Metal Floors Solo from Rear Toe Brakes Clipped Wings No Flaps Long Ailerons Supercub Rear Fuselage and Tail Shoulder Harness Skylight 850 Main Tires 12 Volt Power Outlet"
+      },
+      "Avionics": {
+        "items": [
+          "Airspeed Indicator",
+          "Altimeter",
+          "Turn and Bank",
+          "Tachometer",
+          "Oil Pressure Gauge",
+          "Oil Temp Gauge",
+          "Cylinder Head Temp Gauge",
+          "Volt Meter",
+          "Magnetic Compass",
+          "Space on Panel for Ipad Mini with Foreflight",
+          "12 Volt Power Outlet"
+        ],
+        "text": "Airspeed Indicator Altimeter Turn and Bank Tachometer Oil Pressure Gauge Oil Temp Gauge Cylinder Head Temp Gauge Volt Meter Magnetic Compass Space on Panel for Ipad Mini with Foreflight 12 Volt Power Outlet"
+      },
+      "Interior": {
+        "items": [
+          "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+        ],
+        "text": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+      },
+      "Exterior": {
+        "items": [
+          "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+        ],
+        "text": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+      },
+      "History": {
+        "items": [],
+        "text": "Built in 2001 and flown little. Sold into a Southern California desert hangared collection and not flown much. Then sold into a Bakersfield multi plane owner collection and not flown much. Then traded to Skywagons LLC for another plane. This Wag Aero Acro-Cub is literally like a 160 HP, solo-from-the-back, J3 with electric start and clipped wings with a fully aerobatic capability. And it is like new throughout. Complete logs. No damage history. Almost a new plane."
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Annual Due: March 2026\nUseful Load: 700 Lbs.\nClick here for\nAircraft Logbook",
+    "description_full": "Annual Due: March 2026\nUseful Load: 700 Lbs.\nClick here for\nAircraft Logbook",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(530) 642-2806",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=267&name=Skywagons.com%2c+LLC",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "0-320",
+        "tsn": "160",
+        "tsn_hours": 160
+      }
+    ],
+    "engine_count": 1,
+    "time_since_overhaul": 160,
+    "engine_time_since_overhaul": 160,
+    "props_raw": [
+      {
+        "loc.": "C",
+        "tsn": "160",
+        "tsn_hours": 160
+      }
+    ],
+    "time_since_prop_overhaul": 160,
+    "avionics_notes": "Airspeed Indicator, Altimeter, Turn and Bank, Tachometer, Oil Pressure Gauge, Oil Temp Gauge, Cylinder Head Temp Gauge, Volt Meter, Magnetic Compass, Space on Panel for Ipad Mini with Foreflight, 12 Volt Power Outlet",
+    "maintenance_condition": "Annual Due: March 2026 | Useful Load: 700 Lbs. | Click here for Aircraft Logbook",
+    "interior_details": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10",
+    "exterior_details": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/199625/1_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/1_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/2_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/2_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/3_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/3_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/4_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/4_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/5_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/5_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/6_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/6_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/7_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/7_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/8_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/8_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/9_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/9_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/10_4.jpg",
+      "https://www.aso.com/uploads/acImages/199625/10_4_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/11_4.jpg",
+      "https://www.aso.com/uploads/acImages/199625/11_4_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/12_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/12_5_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming 0-320 160 160 HP Props Loc. TSN C 160"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Annual Due: March 2026",
+              "Useful Load: 700 Lbs.",
+              "Click here for Aircraft Logbook"
+            ],
+            "text": "Complete Logs: Yes Damage History: No Annual Due: March 2026 Useful Load: 700 Lbs. Click here for Aircraft Logbook"
+          },
+          "Airframe": {
+            "items": [
+              "Fully Aerobatic",
+              "27 Gallons of Fuel in Two Tanks",
+              "Electric Start",
+              "Metal Floors",
+              "Solo from Rear",
+              "Toe Brakes",
+              "Clipped Wings",
+              "No Flaps",
+              "Long Ailerons",
+              "Supercub Rear Fuselage and Tail",
+              "Shoulder Harness",
+              "Skylight",
+              "850 Main Tires",
+              "12 Volt Power Outlet"
+            ],
+            "text": "Fully Aerobatic 27 Gallons of Fuel in Two Tanks Electric Start Metal Floors Solo from Rear Toe Brakes Clipped Wings No Flaps Long Ailerons Supercub Rear Fuselage and Tail Shoulder Harness Skylight 850 Main Tires 12 Volt Power Outlet"
+          },
+          "Avionics": {
+            "items": [
+              "Airspeed Indicator",
+              "Altimeter",
+              "Turn and Bank",
+              "Tachometer",
+              "Oil Pressure Gauge",
+              "Oil Temp Gauge",
+              "Cylinder Head Temp Gauge",
+              "Volt Meter",
+              "Magnetic Compass",
+              "Space on Panel for Ipad Mini with Foreflight",
+              "12 Volt Power Outlet"
+            ],
+            "text": "Airspeed Indicator Altimeter Turn and Bank Tachometer Oil Pressure Gauge Oil Temp Gauge Cylinder Head Temp Gauge Volt Meter Magnetic Compass Space on Panel for Ipad Mini with Foreflight 12 Volt Power Outlet"
+          },
+          "Interior": {
+            "items": [
+              "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+            ],
+            "text": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+          },
+          "Exterior": {
+            "items": [
+              "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+            ],
+            "text": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+          },
+          "History": {
+            "items": [],
+            "text": "Built in 2001 and flown little. Sold into a Southern California desert hangared collection and not flown much. Then sold into a Bakersfield multi plane owner collection and not flown much. Then traded to Skywagons LLC for another plane. This Wag Aero Acro-Cub is literally like a 160 HP, solo-from-the-back, J3 with electric start and clipped wings with a fully aerobatic capability. And it is like new throughout. Complete logs. No damage history. Almost a new plane."
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 24,
+        "captured_at": "2026-03-14T07:45:52.071119+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_189943",
+    "source_listing_id": "aso_189943",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+    "aso_adv_id": "189943",
+    "title": "1942 Waco YMF",
+    "year": 1942,
+    "make": "Waco",
+    "model": "YMF",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 275000,
+    "price_asking": 275000,
+    "price_text": "$275,000",
+    "n_number": "",
+    "serial_number": "",
+    "total_time_airframe": 650,
+    "ttaf_raw": "650",
+    "location_raw": "AU",
+    "state": null,
+    "seller_name": "Airvan Africa Pty L...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/189943/Waco.jpg",
+    "scraped_at": "2026-03-14T07:44:54.827693+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model TSN STOH C Jacobs R-755B2M 950 15"
+      },
+      "Avionics": {
+        "items": [
+          "Garmin GNS530/430 Nav/Com/GPS",
+          "GTX327 transponder",
+          "Sandel",
+          "EDM700"
+        ],
+        "text": "Garmin GNS530/430 Nav/Com/GPS GTX327 transponder Sandel EDM700"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Garmin GNS530/430 Nav/Com/GPS\nGTX327 transponder\nSandel\nEDM700",
+    "description_full": "Garmin GNS530/430 Nav/Com/GPS\nGTX327 transponder\nSandel\nEDM700",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+(27) 46 624 4899",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38362&name=Airvan+Africa+Pty+Ltd",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Jacobs",
+        "model": "R-755B2M",
+        "tsn": "950",
+        "stoh": "15",
+        "tsn_hours": 950
+      }
+    ],
+    "engine_count": 1,
+    "time_since_overhaul": 950,
+    "engine_time_since_overhaul": 950,
+    "avionics_notes": "Garmin GNS530/430 Nav/Com/GPS, GTX327 transponder, Sandel, EDM700",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/189943/Waco.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco_sp.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco%20ext_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model TSN STOH C Jacobs R-755B2M 950 15"
+          },
+          "Avionics": {
+            "items": [
+              "Garmin GNS530/430 Nav/Com/GPS",
+              "GTX327 transponder",
+              "Sandel",
+              "EDM700"
+            ],
+            "text": "Garmin GNS530/430 Nav/Com/GPS GTX327 transponder Sandel EDM700"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 3,
+        "captured_at": "2026-03-14T07:46:01.126293+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201733",
+    "source_listing_id": "aso_201733",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201733&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201733&listingType=true",
+    "aso_adv_id": "201733",
+    "title": "1933 Waco UIC",
+    "year": 1933,
+    "make": "Waco",
+    "model": "UIC",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": null,
+    "price_asking": null,
+    "price_text": "$: Inquire",
+    "n_number": "N13418",
+    "serial_number": "3776",
+    "total_time_airframe": 2015,
+    "ttaf_raw": "2015",
+    "location_raw": "NC, US",
+    "state": "NC",
+    "seller_name": "Gordon Ramsay Tel",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201733/N13418%201_sp.jpg",
+    "scraped_at": "2026-03-14T07:44:54.827693+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model SMOH C Continental W670-5 180 220 HP Radial, Engine Overhaul Performed October 1989, Cermi-Chrome Cylinders Installed October 1989, Compressions as of January 2023: 72, 78, 80, 80, 80, 80, 79 Props Make McCauley 2-Blade Propeller"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Annual Scheduled to be Completed March 2026",
+          "Annual Performed January 2025",
+          "Airplane Sat in Storage from 1995 to May 2009 \u2013 Annual Performed May 2009 at 1904 Total Time",
+          "Rebuilt May 1944 After Accident \u2013 See Logs for Details",
+          "Useful Load: 791 Lbs."
+        ],
+        "text": "Annual Scheduled to be Completed March 2026 Annual Performed January 2025 Airplane Sat in Storage from 1995 to May 2009 \u2013 Annual Performed May 2009 at 1904 Total Time Rebuilt May 1944 After Accident \u2013 See Logs for Details Useful Load: 791 Lbs."
+      },
+      "Avionics": {
+        "items": [
+          "Garmin GNX 375 COM/NAV/GPS/Transponder",
+          "Garmin GA35 WAAS GPS Antenna",
+          "Dual Uavionix AV-30 HSI/EFD",
+          "Becker VHF Transceiver"
+        ],
+        "text": "Garmin GNX 375 COM/NAV/GPS/Transponder Garmin GA35 WAAS GPS Antenna Dual Uavionix AV-30 HSI/EFD Becker VHF Transceiver"
+      },
+      "Additional Features": {
+        "items": [
+          "ELT Due January 2025",
+          "Served the C.A.P. during World War II",
+          "Vintage Airplane Magazine: October 1997",
+          "2022 AirVenture Antique Aircraft Lindy Award: Silver Age Outstanding Closed Cockpit Biplane"
+        ],
+        "text": "ELT Due January 2025 Served the C.A.P. during World War II Vintage Airplane Magazine: October 1997 2022 AirVenture Antique Aircraft Lindy Award: Silver Age Outstanding Closed Cockpit Biplane SUBJECT TO PRIOR SALE OR REMOVAL FROM AUCTION"
+      },
+      "Interior": {
+        "items": [
+          "# of Seats: 4",
+          "Red Fabric Seats"
+        ],
+        "text": "# of Seats: 4 Red Fabric Seats"
+      },
+      "Exterior": {
+        "items": [
+          "Cream with Vermilion and Gold Trim"
+        ],
+        "text": "Cream with Vermilion and Gold Trim"
+      },
+      "Comments": {
+        "items": [],
+        "text": "Step back in time with this beautifully restored 1933 Waco UIC, a true classic of the Golden Age of Aviation. With its elegant lines, open cockpit charm, upgraded avionics, this rare Continental W670 powered biplane offers an unforgettable flying experience. With notable owners such as John Paul Riddle, Ruth Ellen Dailey Helm, Captain Carl Overstreet, and Maurice Hodges. Own a piece of history that turns heads on the ramp and captures hearts in the sky. Please visit https://thehangar.aircraftbidder.com/ for more information."
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Contact: Gordon Ramsay Tel: (833) 824-7243 1251 Blee Road Hangar 1 Springfield, OH 45502 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice Subject to prior Sale or Removal from Auction"
+      }
+    },
+    "description": "Garmin GNX 375 GPS\n2022 AirVenture Antique Aircraft Lindy Award",
+    "description_full": "Garmin GNX 375 GPS\n2022 AirVenture Antique Aircraft Lindy Award",
+    "remarks": "Step back in time with this beautifully restored 1933 Waco UIC, a true classic of the Golden Age of Aviation. With its elegant lines, open cockpit charm, upgraded avionics, this rare Continental W670 powered biplane offers an unforgettable flying experience. With notable owners such as John Paul Riddle, Ruth Ellen Dailey Helm, Captain Carl Overstreet, and Maurice Hodges. Own a piece of history that turns heads on the ramp and captures hearts in the sky. Please visit https://thehangar.aircraftbidder.com/ for more information.",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Contact: Gordon Ramsay Tel: (833) 824-7243 1251 Blee Road Hangar 1 Springfield, OH 45502 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice Subject to prior Sale or Removal from Auction",
+    "seller_phone": "(833) 824-7243 1251",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=39078&name=Aircraft+Bidder",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Continental",
+        "model": "W670-5",
+        "smoh": "180"
+      }
+    ],
+    "engine_count": 1,
+    "props_raw": [
+      {
+        "make": "McCauley"
+      }
+    ],
+    "avionics_notes": "Garmin GNX 375 COM/NAV/GPS/Transponder, Garmin GA35 WAAS GPS Antenna, Dual Uavionix AV-30 HSI/EFD, Becker VHF Transceiver",
+    "maintenance_condition": "Annual Scheduled to be Completed March 2026 | Annual Performed January 2025 | Airplane Sat in Storage from 1995 to May 2009 \u2013 Annual Performed May 2009 at 1904 Total Time | Rebuilt May 1944 After Accident \u2013 See Logs for Details | Useful Load: 791 Lbs.",
+    "interior_details": "# of Seats: 4 | Red Fabric Seats",
+    "exterior_details": "Cream with Vermilion and Gold Trim",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201733/N13418%201_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%202_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%203_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%204_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%205_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%206_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%207_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%208_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%209_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%2010_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%2011_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201733/N13418%2012_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201733&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model SMOH C Continental W670-5 180 220 HP Radial, Engine Overhaul Performed October 1989, Cermi-Chrome Cylinders Installed October 1989, Compressions as of January 2023: 72, 78, 80, 80, 80, 80, 79 Props Make McCauley 2-Blade Propeller"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Annual Scheduled to be Completed March 2026",
+              "Annual Performed January 2025",
+              "Airplane Sat in Storage from 1995 to May 2009 \u2013 Annual Performed May 2009 at 1904 Total Time",
+              "Rebuilt May 1944 After Accident \u2013 See Logs for Details",
+              "Useful Load: 791 Lbs."
+            ],
+            "text": "Annual Scheduled to be Completed March 2026 Annual Performed January 2025 Airplane Sat in Storage from 1995 to May 2009 \u2013 Annual Performed May 2009 at 1904 Total Time Rebuilt May 1944 After Accident \u2013 See Logs for Details Useful Load: 791 Lbs."
+          },
+          "Avionics": {
+            "items": [
+              "Garmin GNX 375 COM/NAV/GPS/Transponder",
+              "Garmin GA35 WAAS GPS Antenna",
+              "Dual Uavionix AV-30 HSI/EFD",
+              "Becker VHF Transceiver"
+            ],
+            "text": "Garmin GNX 375 COM/NAV/GPS/Transponder Garmin GA35 WAAS GPS Antenna Dual Uavionix AV-30 HSI/EFD Becker VHF Transceiver"
+          },
+          "Additional Features": {
+            "items": [
+              "ELT Due January 2025",
+              "Served the C.A.P. during World War II",
+              "Vintage Airplane Magazine: October 1997",
+              "2022 AirVenture Antique Aircraft Lindy Award: Silver Age Outstanding Closed Cockpit Biplane"
+            ],
+            "text": "ELT Due January 2025 Served the C.A.P. during World War II Vintage Airplane Magazine: October 1997 2022 AirVenture Antique Aircraft Lindy Award: Silver Age Outstanding Closed Cockpit Biplane SUBJECT TO PRIOR SALE OR REMOVAL FROM AUCTION"
+          },
+          "Interior": {
+            "items": [
+              "# of Seats: 4",
+              "Red Fabric Seats"
+            ],
+            "text": "# of Seats: 4 Red Fabric Seats"
+          },
+          "Exterior": {
+            "items": [
+              "Cream with Vermilion and Gold Trim"
+            ],
+            "text": "Cream with Vermilion and Gold Trim"
+          },
+          "Comments": {
+            "items": [],
+            "text": "Step back in time with this beautifully restored 1933 Waco UIC, a true classic of the Golden Age of Aviation. With its elegant lines, open cockpit charm, upgraded avionics, this rare Continental W670 powered biplane offers an unforgettable flying experience. With notable owners such as John Paul Riddle, Ruth Ellen Dailey Helm, Captain Carl Overstreet, and Maurice Hodges. Own a piece of history that turns heads on the ramp and captures hearts in the sky. Please visit https://thehangar.aircraftbidder.com/ for more information."
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Contact: Gordon Ramsay Tel: (833) 824-7243 1251 Blee Road Hangar 1 Springfield, OH 45502 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice Subject to prior Sale or Removal from Auction"
+          }
+        },
+        "gallery_count": 12,
+        "captured_at": "2026-03-14T07:46:09.476495+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201255",
+    "source_listing_id": "aso_201255",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201255&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201255&listingType=true",
+    "aso_adv_id": "201255",
+    "title": "2007 Vans RV-9A",
+    "year": 2007,
+    "make": "Vans",
+    "model": "RV-9A",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 175000,
+    "price_asking": 175000,
+    "price_text": "$175,000",
+    "n_number": "N942R",
+    "serial_number": "91090",
+    "total_time_airframe": 1020,
+    "ttaf_raw": "1020",
+    "location_raw": "AZ, US",
+    "state": "AZ",
+    "seller_name": "Michael Van Heemst Tel",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201255/1_86.jpg",
+    "scraped_at": "2026-03-14T07:44:54.828643+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming O-360-B2C 640 Props Loc. Make TSN C Hartzell 515 2-Blade Propeller"
+      },
+      "Maintenance Condition": {
+        "items": [],
+        "text": "Hangared: Yes Complete Logs: Yes Damage History: No"
+      },
+      "Avionics": {
+        "items": [
+          "Dynon Skyview HDX Touch Displays",
+          "Dynon Skyview Digital Autopilot",
+          "Dynon ADS-B In/Out Transponder",
+          "Garmin GTN 750Xi Touch GPS",
+          "Garmin GMA 245 Audio Panel",
+          "Icom IC-A220 COM Radio"
+        ],
+        "text": "Dynon Skyview HDX Touch Displays Dynon Skyview Digital Autopilot Dynon ADS-B In/Out Transponder Garmin GTN 750Xi Touch GPS Garmin GMA 245 Audio Panel Icom IC-A220 COM Radio"
+      },
+      "Additional Equipment": {
+        "items": [
+          "Lightspeed Plasma Electronic Magneto",
+          "Reiff Engine Pre-Heating System",
+          "Complete LED Lighting",
+          "Lemo Bose Plugs",
+          "12 Volt Power Plug"
+        ],
+        "text": "Lightspeed Plasma Electronic Magneto Reiff Engine Pre-Heating System Complete LED Lighting Lemo Bose Plugs 12 Volt Power Plug"
+      },
+      "Interior": {
+        "items": [
+          "Beige Leather Seating with Blue Fabric Inserts and Coordinating Side Panels and Carpet"
+        ],
+        "text": "Beige Leather Seating with Blue Fabric Inserts and Coordinating Side Panels and Carpet"
+      },
+      "Exterior": {
+        "items": [
+          "Overall White with Dark Metallic Red, Silver, and Black Accents"
+        ],
+        "text": "Overall White with Dark Metallic Red, Silver, and Black Accents"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Contact: Michael Van Heemst Tel: +1 (480) 646-6090 14600 N Airport Dr Scottsdale, AZ 85260 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "2007 Vans RV-9A with a Modern Glass Panel, Recent Paint, and Electronic Ignition. Featuring a Dynon Skyview Suite with Digital Autopilot, Garmin GTN 750Xi, and a Garmin Audio Panel. Complete Logs, Hangared.",
+    "description_full": "2007 Vans RV-9A with a Modern Glass Panel, Recent Paint, and Electronic Ignition. Featuring a Dynon Skyview Suite with Digital Autopilot, Garmin GTN 750Xi, and a Garmin Audio Panel. Complete Logs, Hangared.",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Contact: Michael Van Heemst Tel: +1 (480) 646-6090 14600 N Airport Dr Scottsdale, AZ 85260 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+1 (480) 646-6090 14600",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=40008&name=Southwest+Aero",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "O-360-B2C",
+        "tsn": "640",
+        "tsn_hours": 640
+      }
+    ],
+    "engine_count": 1,
+    "time_since_overhaul": 640,
+    "engine_time_since_overhaul": 640,
+    "props_raw": [
+      {
+        "loc.": "C",
+        "make": "Hartzell",
+        "tsn": "515",
+        "tsn_hours": 515
+      }
+    ],
+    "time_since_prop_overhaul": 515,
+    "avionics_notes": "Dynon Skyview HDX Touch Displays, Dynon Skyview Digital Autopilot, Dynon ADS-B In/Out Transponder, Garmin GTN 750Xi Touch GPS, Garmin GMA 245 Audio Panel, Icom IC-A220 COM Radio",
+    "maintenance_condition": "Hangared: Yes Complete Logs: Yes Damage History: No",
+    "additional_equipment": "Lightspeed Plasma Electronic Magneto | Reiff Engine Pre-Heating System | Complete LED Lighting | Lemo Bose Plugs | 12 Volt Power Plug",
+    "interior_details": "Beige Leather Seating with Blue Fabric Inserts and Coordinating Side Panels and Carpet",
+    "exterior_details": "Overall White with Dark Metallic Red, Silver, and Black Accents",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201255/1_86.jpg",
+      "https://www.aso.com/uploads/acImages/201255/1_86_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/2_85.jpg",
+      "https://www.aso.com/uploads/acImages/201255/2_85_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/3_86.jpg",
+      "https://www.aso.com/uploads/acImages/201255/3_86_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/4_82.jpg",
+      "https://www.aso.com/uploads/acImages/201255/4_82_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/5_79.jpg",
+      "https://www.aso.com/uploads/acImages/201255/5_79_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/6_77.jpg",
+      "https://www.aso.com/uploads/acImages/201255/6_77_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/7_74.jpg",
+      "https://www.aso.com/uploads/acImages/201255/7_74_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/8_73.jpg",
+      "https://www.aso.com/uploads/acImages/201255/8_73_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/9_62.jpg",
+      "https://www.aso.com/uploads/acImages/201255/9_62_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/10_53.jpg",
+      "https://www.aso.com/uploads/acImages/201255/10_53_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/11_52.jpg",
+      "https://www.aso.com/uploads/acImages/201255/11_52_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/12_43.jpg",
+      "https://www.aso.com/uploads/acImages/201255/12_43_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/13_39.jpg",
+      "https://www.aso.com/uploads/acImages/201255/13_39_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/14_41.jpg",
+      "https://www.aso.com/uploads/acImages/201255/14_41_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/15_37.jpg",
+      "https://www.aso.com/uploads/acImages/201255/15_37_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/16_36.jpg",
+      "https://www.aso.com/uploads/acImages/201255/16_36_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/17_32.jpg",
+      "https://www.aso.com/uploads/acImages/201255/17_32_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/18_31.jpg",
+      "https://www.aso.com/uploads/acImages/201255/18_31_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/19_29.jpg",
+      "https://www.aso.com/uploads/acImages/201255/19_29_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201255/20_29.jpg",
+      "https://www.aso.com/uploads/acImages/201255/20_29_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201255&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming O-360-B2C 640 Props Loc. Make TSN C Hartzell 515 2-Blade Propeller"
+          },
+          "Maintenance Condition": {
+            "items": [],
+            "text": "Hangared: Yes Complete Logs: Yes Damage History: No"
+          },
+          "Avionics": {
+            "items": [
+              "Dynon Skyview HDX Touch Displays",
+              "Dynon Skyview Digital Autopilot",
+              "Dynon ADS-B In/Out Transponder",
+              "Garmin GTN 750Xi Touch GPS",
+              "Garmin GMA 245 Audio Panel",
+              "Icom IC-A220 COM Radio"
+            ],
+            "text": "Dynon Skyview HDX Touch Displays Dynon Skyview Digital Autopilot Dynon ADS-B In/Out Transponder Garmin GTN 750Xi Touch GPS Garmin GMA 245 Audio Panel Icom IC-A220 COM Radio"
+          },
+          "Additional Equipment": {
+            "items": [
+              "Lightspeed Plasma Electronic Magneto",
+              "Reiff Engine Pre-Heating System",
+              "Complete LED Lighting",
+              "Lemo Bose Plugs",
+              "12 Volt Power Plug"
+            ],
+            "text": "Lightspeed Plasma Electronic Magneto Reiff Engine Pre-Heating System Complete LED Lighting Lemo Bose Plugs 12 Volt Power Plug"
+          },
+          "Interior": {
+            "items": [
+              "Beige Leather Seating with Blue Fabric Inserts and Coordinating Side Panels and Carpet"
+            ],
+            "text": "Beige Leather Seating with Blue Fabric Inserts and Coordinating Side Panels and Carpet"
+          },
+          "Exterior": {
+            "items": [
+              "Overall White with Dark Metallic Red, Silver, and Black Accents"
+            ],
+            "text": "Overall White with Dark Metallic Red, Silver, and Black Accents"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Contact: Michael Van Heemst Tel: +1 (480) 646-6090 14600 N Airport Dr Scottsdale, AZ 85260 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 40,
+        "captured_at": "2026-03-14T07:46:18.451195+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_189664",
+    "source_listing_id": "aso_189664",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189664&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189664&listingType=true",
+    "aso_adv_id": "189664",
+    "title": "2015 Vans RV-10",
+    "year": 2015,
+    "make": "Vans",
+    "model": "RV-10",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 335000,
+    "price_asking": 335000,
+    "price_text": "$335,000",
+    "n_number": "N703CE",
+    "serial_number": "40625",
+    "total_time_airframe": 282,
+    "ttaf_raw": "282",
+    "location_raw": "FL, US",
+    "state": "FL",
+    "seller_name": "Jesse Saint",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/images/photo_listings/no_img.gif",
+    "scraped_at": "2026-03-14T07:44:54.828643+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming IO-540 282 New at Build Props Loc. Make TSN C Hartzell 282 2-Blade Blended Airfoil Prop New at Build"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Useful Load: 1200 Lb.",
+          "Dual Alternators",
+          "New Surefly Electronic Ignition"
+        ],
+        "text": "Useful Load: 1200 Lb. Dual Alternators New Surefly Electronic Ignition"
+      },
+      "Airframe": {
+        "items": [
+          "Van's RV-10",
+          "Mostly Stock",
+          "Leading Edge LED Landing Lights",
+          "LED NAV/Strobe Lights",
+          "3-Axis Electric Trim",
+          "Andair Fuel Valve",
+          "Dual Batteries"
+        ],
+        "text": "Van's RV-10 Mostly Stock Leading Edge LED Landing Lights LED NAV/Strobe Lights 3-Axis Electric Trim Andair Fuel Valve Dual Batteries"
+      },
+      "Avionics / Equipment": {
+        "items": [
+          "3-Screen G3X Classic",
+          "GRT Mini",
+          "PMA8000BT Audio Panel",
+          "SL-30 NAV/COM",
+          "GTN650 GPS/NAV/COM",
+          "GMC305 Auto Pilot Controller with Roll and Pitch",
+          "Remote ADS-B Transponder",
+          "ADS-B Receiver",
+          "Vertical Power VP-X Pro"
+        ],
+        "text": "3-Screen G3X Classic GRT Mini PMA8000BT Audio Panel SL-30 NAV/COM GTN650 GPS/NAV/COM GMC305 Auto Pilot Controller with Roll and Pitch Remote ADS-B Transponder ADS-B Receiver Vertical Power VP-X Pro"
+      },
+      "Interior": {
+        "items": [
+          "Interior Year: 2015",
+          "# of Seats: 4",
+          "Flightline Interiors Seats and Carpets"
+        ],
+        "text": "Interior Year: 2015 # of Seats: 4 Flightline Interiors Seats and Carpets"
+      },
+      "Exterior": {
+        "items": [
+          "Year Painted: 2016",
+          "No Headliner"
+        ],
+        "text": "Year Painted: 2016 No Headliner"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Jesse Saint Phone: (352) 427-0285 Dunnellon, FL All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "2015 IFR RV-10 with 282 SNEW Airframe, Engine and Prop. IFR glass panel.",
+    "description_full": "2015 IFR RV-10 with 282 SNEW Airframe, Engine and Prop. IFR glass panel.",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Jesse Saint Phone: (352) 427-0285 Dunnellon, FL All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(352) 427-0285",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "IO-540",
+        "tsn": "282",
+        "tsn_hours": 282
+      }
+    ],
+    "engine_count": 1,
+    "time_since_overhaul": 282,
+    "engine_time_since_overhaul": 282,
+    "props_raw": [
+      {
+        "loc.": "C",
+        "make": "Hartzell",
+        "tsn": "282",
+        "tsn_hours": 282
+      }
+    ],
+    "time_since_prop_overhaul": 282,
+    "maintenance_condition": "Useful Load: 1200 Lb. | Dual Alternators | New Surefly Electronic Ignition",
+    "interior_details": "Interior Year: 2015 | # of Seats: 4 | Flightline Interiors Seats and Carpets",
+    "exterior_details": "Year Painted: 2016 | No Headliner",
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189664&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming IO-540 282 New at Build Props Loc. Make TSN C Hartzell 282 2-Blade Blended Airfoil Prop New at Build"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Useful Load: 1200 Lb.",
+              "Dual Alternators",
+              "New Surefly Electronic Ignition"
+            ],
+            "text": "Useful Load: 1200 Lb. Dual Alternators New Surefly Electronic Ignition"
+          },
+          "Airframe": {
+            "items": [
+              "Van's RV-10",
+              "Mostly Stock",
+              "Leading Edge LED Landing Lights",
+              "LED NAV/Strobe Lights",
+              "3-Axis Electric Trim",
+              "Andair Fuel Valve",
+              "Dual Batteries"
+            ],
+            "text": "Van's RV-10 Mostly Stock Leading Edge LED Landing Lights LED NAV/Strobe Lights 3-Axis Electric Trim Andair Fuel Valve Dual Batteries"
+          },
+          "Avionics / Equipment": {
+            "items": [
+              "3-Screen G3X Classic",
+              "GRT Mini",
+              "PMA8000BT Audio Panel",
+              "SL-30 NAV/COM",
+              "GTN650 GPS/NAV/COM",
+              "GMC305 Auto Pilot Controller with Roll and Pitch",
+              "Remote ADS-B Transponder",
+              "ADS-B Receiver",
+              "Vertical Power VP-X Pro"
+            ],
+            "text": "3-Screen G3X Classic GRT Mini PMA8000BT Audio Panel SL-30 NAV/COM GTN650 GPS/NAV/COM GMC305 Auto Pilot Controller with Roll and Pitch Remote ADS-B Transponder ADS-B Receiver Vertical Power VP-X Pro"
+          },
+          "Interior": {
+            "items": [
+              "Interior Year: 2015",
+              "# of Seats: 4",
+              "Flightline Interiors Seats and Carpets"
+            ],
+            "text": "Interior Year: 2015 # of Seats: 4 Flightline Interiors Seats and Carpets"
+          },
+          "Exterior": {
+            "items": [
+              "Year Painted: 2016",
+              "No Headliner"
+            ],
+            "text": "Year Painted: 2016 No Headliner"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Jesse Saint Phone: (352) 427-0285 Dunnellon, FL All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 0,
+        "captured_at": "2026-03-14T07:46:29.110933+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_193956",
+    "source_listing_id": "aso_193956",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193956&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193956&listingType=true",
+    "aso_adv_id": "193956",
+    "title": "2025 TL Ultralight Sting (20...",
+    "year": 2025,
+    "make": "TL",
+    "model": "Ultralight Sting (20...",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": null,
+    "price_asking": null,
+    "price_text": "$: Inquire",
+    "n_number": "",
+    "serial_number": "",
+    "total_time_airframe": 0,
+    "ttaf_raw": "0",
+    "location_raw": "SC, US",
+    "state": "SC",
+    "seller_name": "Hembree Aviation Sa...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/193956/1001%20-%20Sting-clouds-e1648772091572_sp.jpeg",
+    "scraped_at": "2026-03-14T07:44:54.828643+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Light Sport Aircraft Engines Make Model Rotax 912ULS Rotax 912ULS, 912iS, and 914 turbo for incredible performance and efficiency. The edge performance fuel injection package can be added to the 912ULS as well to increase fuel efficiency and performance. Props Three Blade DUC Swirl Prop"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Location (nearest city): Charleston, SC USA (KDYB)",
+          "Flight Rules: VFR or IFR equipped"
+        ],
+        "text": "Location (nearest city): Charleston, SC USA (KDYB) Flight Rules: VFR or IFR equipped"
+      },
+      "Weight and Balance": {
+        "items": [
+          "Baggage Compartment: 55 lbs max weight",
+          "1,320 is the max gross weight",
+          "Take off weight and useful load will very based on equipment Installed in the aircraft. Call for for details"
+        ],
+        "text": "Baggage Compartment: 55 lbs max weight 1,320 is the max gross weight Take off weight and useful load will very based on equipment Installed in the aircraft. Call for for details"
+      },
+      "Technical Data": {
+        "items": [
+          "Length: 20\u2019 4\u201d",
+          "Wing Span: 29\u2019 11\u201d",
+          "Cabin Width: 3\u2019 8\u201d (44\u201d)",
+          "Cruising speed: 138 mph",
+          "VNE:155 kts",
+          "VSO: 44 kts",
+          "Glide ratio: 12:1",
+          "Fuel Consumption 4.8",
+          "Fuel Capacity: 32.3 gallons",
+          "Flying Range: 850 miles",
+          "1250 FPM Climb"
+        ],
+        "text": "Length: 20\u2019 4\u201d Wing Span: 29\u2019 11\u201d Cabin Width: 3\u2019 8\u201d (44\u201d) Cruising speed: 138 mph VNE:155 kts VSO: 44 kts Glide ratio: 12:1 Fuel Consumption 4.8 Fuel Capacity: 32.3 gallons Flying Range: 850 miles 1250 FPM Climb"
+      },
+      "Avionics": {
+        "items": [
+          "Garmin MFD & PFD G3X 10\u201d & 7 inch touch screens",
+          "Garmin 507 Auto pilot system",
+          "Garmin GTN 650XI",
+          "Garmin GNC 355",
+          "Garmin Nav/Comm radio",
+          "Garmin 245 Audio Panel",
+          "Garmin Transponder"
+        ],
+        "text": "Garmin MFD & PFD G3X 10\u201d & 7 inch touch screens Garmin 507 Auto pilot system Garmin GTN 650XI Garmin GNC 355 Garmin Nav/Comm radio Garmin 245 Audio Panel Garmin Transponder"
+      },
+      "Additional Equipment": {
+        "items": [
+          "Internal USB power for charging personal devices",
+          "Luxury heated leather seats",
+          "Cabin heat",
+          "Canopy/Window Shade",
+          "Two fresh air vents for excellent cabin air circulation.",
+          "Pull handles and footstep for easy in and out access to cockpit",
+          "Over the shoulder and lap safety belts",
+          "Spinner to tail warranty"
+        ],
+        "text": "Internal USB power for charging personal devices Luxury heated leather seats Cabin heat Canopy/Window Shade Two fresh air vents for excellent cabin air circulation. Pull handles and footstep for easy in and out access to cockpit Over the shoulder and lap safety belts Spinner to tail warranty"
+      },
+      "Sting S4 Design Features/Safety": {
+        "items": [],
+        "text": "The Sting S4 is an all-composite technology lending to a strong and light airframe that exceeds structural standards. The use of modern CAD/CAM technology is used throughout for an airframe that contains 85% carbon for maximum strength and weight savings. The wing skin and fuselage is a sandwich of carbon and foam core, glued together with epoxy glue. The coating is then evacuated and cured in an oven. Highly stressed parts are made in an autoclave high safety carbon frame with ROPS ensure crew safety, even in the case of the aircraft being overturned. Ballistic parachute recovery system installed in each aircraft as standard equipment."
+      },
+      "Interior": {
+        "items": [
+          "Number of seats: 2",
+          "You can order your aircraft with leather or fabric heated seats",
+          "Your interior is complete with smooth finishes to give it that polished appearance, which will consist of leather side walls and leather covered glareshield",
+          "You have different options for color choices for your interior package"
+        ],
+        "text": "Number of seats: 2 You can order your aircraft with leather or fabric heated seats Your interior is complete with smooth finishes to give it that polished appearance, which will consist of leather side walls and leather covered glareshield You have different options for color choices for your interior package"
+      },
+      "Exterior": {
+        "items": [],
+        "text": "Exterior you can choose from custom colors for the Aircraft with a wide variety of different decal packages and colors. Complete the Aircraft with a custom registration number."
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Are you ready to turn heads? The sleek and stunning TL 2000 Sting S4 is a custom built to order aircraft. TL Aircraft has been building Aircraft since 1989. Let us build a new Sting S4 for you! You will find options for the aircraft in the listing. We are available and ready to assist you with any questions. Contact us now!",
+    "description_full": "Are you ready to turn heads? The sleek and stunning TL 2000 Sting S4 is a custom built to order aircraft. TL Aircraft has been building Aircraft since 1989. Let us build a new Sting S4 for you! You will find options for the aircraft in the listing. We are available and ready to assist you with any questions. Contact us now!",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(804) 400-8008",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38081&name=Hembree+Aviation+Sales",
+    "engines_raw": [
+      {
+        "make": "Rotax",
+        "model": "912ULS"
+      }
+    ],
+    "engine_count": 1,
+    "avionics_notes": "Garmin MFD & PFD G3X 10\u201d & 7 inch touch screens, Garmin 507 Auto pilot system, Garmin GTN 650XI, Garmin GNC 355, Garmin Nav/Comm radio, Garmin 245 Audio Panel, Garmin Transponder",
+    "maintenance_condition": "Location (nearest city): Charleston, SC USA (KDYB) | Flight Rules: VFR or IFR equipped",
+    "additional_equipment": "Internal USB power for charging personal devices | Luxury heated leather seats | Cabin heat | Canopy/Window Shade | Two fresh air vents for excellent cabin air circulation. | Pull handles and footstep for easy in and out access to cockpit | Over the shoulder and lap safety belts | Spinner to tail warranty",
+    "interior_details": "Number of seats: 2 | You can order your aircraft with leather or fabric heated seats | Your interior is complete with smooth finishes to give it that polished appearance, which will consist of leather side walls and leather covered glareshield | You have different options for color choices for your interior package",
+    "exterior_details": "Exterior you can choose from custom colors for the Aircraft with a wide variety of different decal packages and colors. Complete the Aircraft with a custom registration number.",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/193956/1001%20-%20Sting-clouds-e1648772091572_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1002%20-%20sting-5-1_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1003%20-%20sting-main_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1004%20-%20DSC02648-scaled_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1005%20-%20DSC02641-scaled_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1006%20-%20DSC02631-scaled_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1007%20-%20DSC02717-scaled_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1008%20-%20avionics-sting2_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193956/1009%20-%20cockpit-sting_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1010%20-%20cockpit-sting2_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1012%20-%20sting-cockpit_sp.jpeg",
+      "https://www.aso.com/uploads/acImages/193956/1011%20-%20DSC02757-scaled_sp.jpeg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193956&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Light Sport Aircraft Engines Make Model Rotax 912ULS Rotax 912ULS, 912iS, and 914 turbo for incredible performance and efficiency. The edge performance fuel injection package can be added to the 912ULS as well to increase fuel efficiency and performance. Props Three Blade DUC Swirl Prop"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Location (nearest city): Charleston, SC USA (KDYB)",
+              "Flight Rules: VFR or IFR equipped"
+            ],
+            "text": "Location (nearest city): Charleston, SC USA (KDYB) Flight Rules: VFR or IFR equipped"
+          },
+          "Weight and Balance": {
+            "items": [
+              "Baggage Compartment: 55 lbs max weight",
+              "1,320 is the max gross weight",
+              "Take off weight and useful load will very based on equipment Installed in the aircraft. Call for for details"
+            ],
+            "text": "Baggage Compartment: 55 lbs max weight 1,320 is the max gross weight Take off weight and useful load will very based on equipment Installed in the aircraft. Call for for details"
+          },
+          "Technical Data": {
+            "items": [
+              "Length: 20\u2019 4\u201d",
+              "Wing Span: 29\u2019 11\u201d",
+              "Cabin Width: 3\u2019 8\u201d (44\u201d)",
+              "Cruising speed: 138 mph",
+              "VNE:155 kts",
+              "VSO: 44 kts",
+              "Glide ratio: 12:1",
+              "Fuel Consumption 4.8",
+              "Fuel Capacity: 32.3 gallons",
+              "Flying Range: 850 miles",
+              "1250 FPM Climb"
+            ],
+            "text": "Length: 20\u2019 4\u201d Wing Span: 29\u2019 11\u201d Cabin Width: 3\u2019 8\u201d (44\u201d) Cruising speed: 138 mph VNE:155 kts VSO: 44 kts Glide ratio: 12:1 Fuel Consumption 4.8 Fuel Capacity: 32.3 gallons Flying Range: 850 miles 1250 FPM Climb"
+          },
+          "Avionics": {
+            "items": [
+              "Garmin MFD & PFD G3X 10\u201d & 7 inch touch screens",
+              "Garmin 507 Auto pilot system",
+              "Garmin GTN 650XI",
+              "Garmin GNC 355",
+              "Garmin Nav/Comm radio",
+              "Garmin 245 Audio Panel",
+              "Garmin Transponder"
+            ],
+            "text": "Garmin MFD & PFD G3X 10\u201d & 7 inch touch screens Garmin 507 Auto pilot system Garmin GTN 650XI Garmin GNC 355 Garmin Nav/Comm radio Garmin 245 Audio Panel Garmin Transponder"
+          },
+          "Additional Equipment": {
+            "items": [
+              "Internal USB power for charging personal devices",
+              "Luxury heated leather seats",
+              "Cabin heat",
+              "Canopy/Window Shade",
+              "Two fresh air vents for excellent cabin air circulation.",
+              "Pull handles and footstep for easy in and out access to cockpit",
+              "Over the shoulder and lap safety belts",
+              "Spinner to tail warranty"
+            ],
+            "text": "Internal USB power for charging personal devices Luxury heated leather seats Cabin heat Canopy/Window Shade Two fresh air vents for excellent cabin air circulation. Pull handles and footstep for easy in and out access to cockpit Over the shoulder and lap safety belts Spinner to tail warranty"
+          },
+          "Sting S4 Design Features/Safety": {
+            "items": [],
+            "text": "The Sting S4 is an all-composite technology lending to a strong and light airframe that exceeds structural standards. The use of modern CAD/CAM technology is used throughout for an airframe that contains 85% carbon for maximum strength and weight savings. The wing skin and fuselage is a sandwich of carbon and foam core, glued together with epoxy glue. The coating is then evacuated and cured in an oven. Highly stressed parts are made in an autoclave high safety carbon frame with ROPS ensure crew safety, even in the case of the aircraft being overturned. Ballistic parachute recovery system installed in each aircraft as standard equipment."
+          },
+          "Interior": {
+            "items": [
+              "Number of seats: 2",
+              "You can order your aircraft with leather or fabric heated seats",
+              "Your interior is complete with smooth finishes to give it that polished appearance, which will consist of leather side walls and leather covered glareshield",
+              "You have different options for color choices for your interior package"
+            ],
+            "text": "Number of seats: 2 You can order your aircraft with leather or fabric heated seats Your interior is complete with smooth finishes to give it that polished appearance, which will consist of leather side walls and leather covered glareshield You have different options for color choices for your interior package"
+          },
+          "Exterior": {
+            "items": [],
+            "text": "Exterior you can choose from custom colors for the Aircraft with a wide variety of different decal packages and colors. Complete the Aircraft with a custom registration number."
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 12,
+        "captured_at": "2026-03-14T07:46:39.660920+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_193703",
+    "source_listing_id": "aso_193703",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193703&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193703&listingType=true",
+    "aso_adv_id": "193703",
+    "title": "2025 TL Ultralight Sparker",
+    "year": 2025,
+    "make": "TL",
+    "model": "Ultralight Sparker",
+    "aircraft_type": "jet",
+    "asking_price": null,
+    "price_asking": null,
+    "price_text": "$: Inquire",
+    "n_number": "",
+    "serial_number": "",
+    "total_time_airframe": 0,
+    "ttaf_raw": "0",
+    "location_raw": "SC, US",
+    "state": "SC",
+    "seller_name": "Hembree Aviation Sa...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/193703/1_111.jpg",
+    "scraped_at": "2026-03-14T07:44:54.828643+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Light Sport Aircraft Props Power Max Three Blade Hydraulic Inflight Adjustable Propeller"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Flight Rules: VFR or IFR Equipped"
+        ],
+        "text": "Flight Rules: VFR or IFR Equipped"
+      },
+      "Engine": {
+        "items": [],
+        "text": "The Sparker can be ordered with different engine options: Rotax 912ULS, Rotax 915iS and the new 916iS for incredible performance and efficiency."
+      },
+      "Avionics/Radios/Equipment": {
+        "items": [],
+        "text": "Full Garmin glass panel with 3 10\u201d G3X displays, Garmin GMC 507 autopilot, Garmin 245R ADSB in and out, Garmin radios, and an option for IFR flight with the Garmin GTN 650 avionics package. An AOA indicator is also incorporated into the G3X system for added warning against stalls."
+      },
+      "Additional Equipment": {
+        "items": [],
+        "text": "Internal USB power for charging personal devices. And an Iphone or Mini Ipad holder that slides in and out of the dash to allow for up to 5 screens in the cockpit. Luxury heated leather seats and in cabin heat."
+      },
+      "Sparker Design Features/Safety": {
+        "items": [],
+        "text": "Hydraulic retractable landing gear.Trailing link main gear for robust performance on tarmac and grass fields. Carbon composite skin technology with Kevlar encased cockpit for added safety. Ergonomic side-stick controls with electronic aileron and elevator trim. The Sparker offers the Stratos Magnum 601 ballistic recovery chute. The design of the Sparker also incorporates a Kevlar wrapped cockpit. TL has engineered the Stream and the Sparker to have crumple zones not dissimilar to an automobile. The Kevlar keeps the carbon from shattering and the crumple zones help to absorb impact in the unfortunate event of a collision."
+      },
+      "Performance/Efficiency": {
+        "items": [],
+        "text": "Wide and versatile flight envelope. Cruise speeds of 165-175 kts (916iS) with a stall speed of 44 kts and up to 2000 fpm climb. This wide envelope is due in part to the electric slotted fowler flaps which prove very effective at slowing the aircraft down. Incredible efficiency with an estimated 7 gph fuel burn at cruise. The Sparker was designed with efficiency in mind. The Rotax gives an expected range of 900 to1000 miles depending on the power plant."
+      },
+      "Exterior/Interior": {
+        "items": [],
+        "text": "The largest cabin in the UL/LSA category with a 49.5 in. wide cabin that allows for greater comfort even with two larger passengers. It can also accommodate up to a 6\u20196\u201d pilots. Electric adjustable pedals make it easy to find the perfect fit."
+      },
+      "Interior": {
+        "items": [
+          "Number of Seats: 2",
+          "Baggage Compartment: Two Luggage Compartments with Exterior Luggage Doors. Front is .5 Cubic Feet and the Rear is 24 Cubic Feet",
+          "To put Things into Perspective, it can even Accommodate Two Golf Bags"
+        ],
+        "text": "Number of Seats: 2 Baggage Compartment: Two Luggage Compartments with Exterior Luggage Doors. Front is .5 Cubic Feet and the Rear is 24 Cubic Feet To put Things into Perspective, it can even Accommodate Two Golf Bags"
+      },
+      "Weight and Balance": {
+        "items": [],
+        "text": "Increased MTOW to 1653 lbs or 750kg. With this new weight limit you will have a no compromise weight and balance sheet. You can accommodate up to two 220lb pilots, full fuel (36 gallons), and the max luggage allowance. An empty weight of around 910 lbs."
+      },
+      "Comments": {
+        "items": [],
+        "text": "TL spent over three years developing the Sparker. Breaking new ground in luxury and performance. The Sparker is the culmination of over 30 years of design excellence. The latest technology in CAD and 3D modeling was utilized to create a truly luxurious platform with amazing visibility and dynamic flight characteristics. Combining these features, and amenities with the latest in avionics, TL created an unparalleled aircraft that satisfies pilots who want an immersive and exhilarating flight experience in a roomy and relaxed cockpit. The Sparker is available for order today! Contact us now to schedule a demo flight in a Sparker with the Rotax 915iS."
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Attending EAA Oshkosh AirVenture 2023?\nStop by and see us at #306, #307, #318!",
+    "description_full": "Attending EAA Oshkosh AirVenture 2023?\nStop by and see us at #306, #307, #318!",
+    "remarks": "TL spent over three years developing the Sparker. Breaking new ground in luxury and performance. The Sparker is the culmination of over 30 years of design excellence. The latest technology in CAD and 3D modeling was utilized to create a truly luxurious platform with amazing visibility and dynamic flight characteristics. Combining these features, and amenities with the latest in avionics, TL created an unparalleled aircraft that satisfies pilots who want an immersive and exhilarating flight experience in a roomy and relaxed cockpit. The Sparker is available for order today! Contact us now to schedule a demo flight in a Sparker with the Rotax 915iS.",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(804) 400-8008",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38081&name=Hembree+Aviation+Sales",
+    "maintenance_condition": "Flight Rules: VFR or IFR Equipped",
+    "additional_equipment": "Internal USB power for charging personal devices. And an Iphone or Mini Ipad holder that slides in and out of the dash to allow for up to 5 screens in the cockpit. Luxury heated leather seats and in cabin heat.",
+    "interior_details": "Number of Seats: 2 | Baggage Compartment: Two Luggage Compartments with Exterior Luggage Doors. Front is .5 Cubic Feet and the Rear is 24 Cubic Feet | To put Things into Perspective, it can even Accommodate Two Golf Bags",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/193703/1_111.jpg",
+      "https://www.aso.com/uploads/acImages/193703/1_111_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/2_106.jpg",
+      "https://www.aso.com/uploads/acImages/193703/2_106_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/3_108.jpg",
+      "https://www.aso.com/uploads/acImages/193703/3_108_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/4_104.jpg",
+      "https://www.aso.com/uploads/acImages/193703/4_104_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/5_101.jpg",
+      "https://www.aso.com/uploads/acImages/193703/5_101_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/6_100.jpg",
+      "https://www.aso.com/uploads/acImages/193703/6_100_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/7_89.jpg",
+      "https://www.aso.com/uploads/acImages/193703/7_89_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/8_82.jpg",
+      "https://www.aso.com/uploads/acImages/193703/8_82_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/9_75.jpg",
+      "https://www.aso.com/uploads/acImages/193703/9_75_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/10_75.jpg",
+      "https://www.aso.com/uploads/acImages/193703/10_75_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/11_71.jpg",
+      "https://www.aso.com/uploads/acImages/193703/11_71_sp.jpg",
+      "https://www.aso.com/uploads/acImages/193703/12_66.jpg",
+      "https://www.aso.com/uploads/acImages/193703/12_66_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=193703&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Light Sport Aircraft Props Power Max Three Blade Hydraulic Inflight Adjustable Propeller"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Flight Rules: VFR or IFR Equipped"
+            ],
+            "text": "Flight Rules: VFR or IFR Equipped"
+          },
+          "Engine": {
+            "items": [],
+            "text": "The Sparker can be ordered with different engine options: Rotax 912ULS, Rotax 915iS and the new 916iS for incredible performance and efficiency."
+          },
+          "Avionics/Radios/Equipment": {
+            "items": [],
+            "text": "Full Garmin glass panel with 3 10\u201d G3X displays, Garmin GMC 507 autopilot, Garmin 245R ADSB in and out, Garmin radios, and an option for IFR flight with the Garmin GTN 650 avionics package. An AOA indicator is also incorporated into the G3X system for added warning against stalls."
+          },
+          "Additional Equipment": {
+            "items": [],
+            "text": "Internal USB power for charging personal devices. And an Iphone or Mini Ipad holder that slides in and out of the dash to allow for up to 5 screens in the cockpit. Luxury heated leather seats and in cabin heat."
+          },
+          "Sparker Design Features/Safety": {
+            "items": [],
+            "text": "Hydraulic retractable landing gear.Trailing link main gear for robust performance on tarmac and grass fields. Carbon composite skin technology with Kevlar encased cockpit for added safety. Ergonomic side-stick controls with electronic aileron and elevator trim. The Sparker offers the Stratos Magnum 601 ballistic recovery chute. The design of the Sparker also incorporates a Kevlar wrapped cockpit. TL has engineered the Stream and the Sparker to have crumple zones not dissimilar to an automobile. The Kevlar keeps the carbon from shattering and the crumple zones help to absorb impact in the unfortunate event of a collision."
+          },
+          "Performance/Efficiency": {
+            "items": [],
+            "text": "Wide and versatile flight envelope. Cruise speeds of 165-175 kts (916iS) with a stall speed of 44 kts and up to 2000 fpm climb. This wide envelope is due in part to the electric slotted fowler flaps which prove very effective at slowing the aircraft down. Incredible efficiency with an estimated 7 gph fuel burn at cruise. The Sparker was designed with efficiency in mind. The Rotax gives an expected range of 900 to1000 miles depending on the power plant."
+          },
+          "Exterior/Interior": {
+            "items": [],
+            "text": "The largest cabin in the UL/LSA category with a 49.5 in. wide cabin that allows for greater comfort even with two larger passengers. It can also accommodate up to a 6\u20196\u201d pilots. Electric adjustable pedals make it easy to find the perfect fit."
+          },
+          "Interior": {
+            "items": [
+              "Number of Seats: 2",
+              "Baggage Compartment: Two Luggage Compartments with Exterior Luggage Doors. Front is .5 Cubic Feet and the Rear is 24 Cubic Feet",
+              "To put Things into Perspective, it can even Accommodate Two Golf Bags"
+            ],
+            "text": "Number of Seats: 2 Baggage Compartment: Two Luggage Compartments with Exterior Luggage Doors. Front is .5 Cubic Feet and the Rear is 24 Cubic Feet To put Things into Perspective, it can even Accommodate Two Golf Bags"
+          },
+          "Weight and Balance": {
+            "items": [],
+            "text": "Increased MTOW to 1653 lbs or 750kg. With this new weight limit you will have a no compromise weight and balance sheet. You can accommodate up to two 220lb pilots, full fuel (36 gallons), and the max luggage allowance. An empty weight of around 910 lbs."
+          },
+          "Comments": {
+            "items": [],
+            "text": "TL spent over three years developing the Sparker. Breaking new ground in luxury and performance. The Sparker is the culmination of over 30 years of design excellence. The latest technology in CAD and 3D modeling was utilized to create a truly luxurious platform with amazing visibility and dynamic flight characteristics. Combining these features, and amenities with the latest in avionics, TL created an unparalleled aircraft that satisfies pilots who want an immersive and exhilarating flight experience in a roomy and relaxed cockpit. The Sparker is available for order today! Contact us now to schedule a demo flight in a Sparker with the Rotax 915iS."
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: (804) 400-8008 P.O. Box 763 Quinton, VA 23141 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 24,
+        "captured_at": "2026-03-14T07:46:49.377267+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_155804",
+    "source_listing_id": "aso_155804",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=155804&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=155804&listingType=true",
+    "aso_adv_id": "155804",
+    "title": "1964 Piper Twin Comanche PA-30",
+    "year": 1964,
+    "make": "Piper",
+    "model": "Twin Comanche PA-30",
+    "aircraft_type": "multi_engine_piston",
+    "asking_price": 12500,
+    "price_asking": 12500,
+    "price_text": "$12,500",
+    "n_number": "N7317Y",
+    "serial_number": "30-0360",
+    "total_time_airframe": 6523,
+    "ttaf_raw": "6523",
+    "location_raw": "CO, US",
+    "state": "CO",
+    "seller_name": "Matt Weller",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/uploads/acImages/155804/Picture_003[1]_1.jpg",
+    "scraped_at": "2026-03-14T07:46:53.192672+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Engines Loc. TSN L 2273 R 1494 Props Prop Gov O/H: 2102 / 512, Prop Dyn Balance: 564 / 564, Heater OH: 3/2003 12/1000"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Factory Corrosion Proofing",
+          "A Really Great Flying Twin!",
+          "Colorado based"
+        ],
+        "text": "Hangared: Yes Complete Logs: Yes Damage History: No Factory Corrosion Proofing A Really Great Flying Twin! Colorado based"
+      },
+      "Avionics": {
+        "items": [
+          "Narco CP136M Three Light Marker/Audio Panel",
+          "Narco ADF 841",
+          "Narco MK12D with Localizer/VOR and Glide Slope",
+          "Narco MK12D with Localizer/VOR",
+          "Narco DME890 with Priority Switch",
+          "Bendix/King KT76A Transponder/AR850 Encoder",
+          "Four Place Intercom",
+          "Push to Talk",
+          "Avionics Master"
+        ],
+        "text": "Narco CP136M Three Light Marker/Audio Panel Narco ADF 841 Narco MK12D with Localizer/VOR and Glide Slope Narco MK12D with Localizer/VOR Narco DME890 with Priority Switch Bendix/King KT76A Transponder/AR850 Encoder Four Place Intercom Push to Talk Avionics Master"
+      },
+      "Optional Equipment": {
+        "items": [
+          "One Piece Windshield STC",
+          "Whelan Strobes STC",
+          "Bogert STC Battery Box/Copper Cables",
+          "Brackett STC Air Filters",
+          "Webco STC Upper Door Latch",
+          "INTERAV Alternators STC",
+          "Harlan STC Small Nose Tire",
+          "Morelli STC Front Shoulder Harnesses",
+          "Modern Style Wingtips",
+          "Heated Pitot",
+          "Thermal Windshield Covers",
+          "Scott Oxygen System 4 Place"
+        ],
+        "text": "One Piece Windshield STC Whelan Strobes STC Bogert STC Battery Box/Copper Cables Brackett STC Air Filters Webco STC Upper Door Latch INTERAV Alternators STC Harlan STC Small Nose Tire Morelli STC Front Shoulder Harnesses Modern Style Wingtips Heated Pitot Thermal Windshield Covers Scott Oxygen System 4 Place"
+      },
+      "Interior": {
+        "items": [
+          "Maroon Leather and Fabric 1998 (8+/10)"
+        ],
+        "text": "Maroon Leather and Fabric 1998 (8+/10)"
+      },
+      "Exterior": {
+        "items": [
+          "Modern White with Two-tone Red Stripes in 1998 (8+/10)"
+        ],
+        "text": "Modern White with Two-tone Red Stripes in 1998 (8+/10)"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Matt Weller Phone: (303) 908-7165 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Beautiful! NDH. Always Hangared! Clean, fuel efficient (15 GPH total), fast light twin. Last annual completed 07/2013. Factory corrosion proofing, complete Logbooks! A really great looking, great flying Twin! Call or email with any questions.\nSeeking additional partners of 1/5 shares at $12,500 USD per share (i.e. seeking 4 partners to fly/own/enjoy/operate this aircraft with). Only two shares remaining.",
+    "description_full": "Beautiful! NDH. Always Hangared! Clean, fuel efficient (15 GPH total), fast light twin. Last annual completed 07/2013. Factory corrosion proofing, complete Logbooks! A really great looking, great flying Twin! Call or email with any questions.\nSeeking additional partners of 1/5 shares at $12,500 USD per share (i.e. seeking 4 partners to fly/own/enjoy/operate this aircraft with). Only two shares remaining.",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Matt Weller Phone: (303) 908-7165 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(303) 908-7165",
+    "engines_raw": [
+      {
+        "loc.": "L",
+        "tsn": "2273",
+        "tsn_hours": 2273
+      },
+      {
+        "loc.": "R",
+        "tsn": "1494",
+        "tsn_hours": 1494
+      }
+    ],
+    "engine_count": 2,
+    "time_since_overhaul": 2273,
+    "engine_time_since_overhaul": 2273,
+    "second_engine_time_since_overhaul": 1494,
+    "avionics_notes": "Narco CP136M Three Light Marker/Audio Panel, Narco ADF 841, Narco MK12D with Localizer/VOR and Glide Slope, Narco MK12D with Localizer/VOR, Narco DME890 with Priority Switch, Bendix/King KT76A Transponder/AR850 Encoder, Four Place Intercom, Push to Talk, Avionics Master",
+    "maintenance_condition": "Factory Corrosion Proofing | A Really Great Flying Twin! | Colorado based",
+    "interior_details": "Maroon Leather and Fabric 1998 (8+/10)",
+    "exterior_details": "Modern White with Two-tone Red Stripes in 1998 (8+/10)",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/155804/Picture_003[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_003[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_002[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_002[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_001[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_001[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_007[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_007[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_006[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_006[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_005[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_005[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_012[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_012[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_010[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_010[1]_1_sp.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_011[1]_1.jpg",
+      "https://www.aso.com/uploads/acImages/155804/Picture_011[1]_1_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=155804&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Engines Loc. TSN L 2273 R 1494 Props Prop Gov O/H: 2102 / 512, Prop Dyn Balance: 564 / 564, Heater OH: 3/2003 12/1000"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Factory Corrosion Proofing",
+              "A Really Great Flying Twin!",
+              "Colorado based"
+            ],
+            "text": "Hangared: Yes Complete Logs: Yes Damage History: No Factory Corrosion Proofing A Really Great Flying Twin! Colorado based"
+          },
+          "Avionics": {
+            "items": [
+              "Narco CP136M Three Light Marker/Audio Panel",
+              "Narco ADF 841",
+              "Narco MK12D with Localizer/VOR and Glide Slope",
+              "Narco MK12D with Localizer/VOR",
+              "Narco DME890 with Priority Switch",
+              "Bendix/King KT76A Transponder/AR850 Encoder",
+              "Four Place Intercom",
+              "Push to Talk",
+              "Avionics Master"
+            ],
+            "text": "Narco CP136M Three Light Marker/Audio Panel Narco ADF 841 Narco MK12D with Localizer/VOR and Glide Slope Narco MK12D with Localizer/VOR Narco DME890 with Priority Switch Bendix/King KT76A Transponder/AR850 Encoder Four Place Intercom Push to Talk Avionics Master"
+          },
+          "Optional Equipment": {
+            "items": [
+              "One Piece Windshield STC",
+              "Whelan Strobes STC",
+              "Bogert STC Battery Box/Copper Cables",
+              "Brackett STC Air Filters",
+              "Webco STC Upper Door Latch",
+              "INTERAV Alternators STC",
+              "Harlan STC Small Nose Tire",
+              "Morelli STC Front Shoulder Harnesses",
+              "Modern Style Wingtips",
+              "Heated Pitot",
+              "Thermal Windshield Covers",
+              "Scott Oxygen System 4 Place"
+            ],
+            "text": "One Piece Windshield STC Whelan Strobes STC Bogert STC Battery Box/Copper Cables Brackett STC Air Filters Webco STC Upper Door Latch INTERAV Alternators STC Harlan STC Small Nose Tire Morelli STC Front Shoulder Harnesses Modern Style Wingtips Heated Pitot Thermal Windshield Covers Scott Oxygen System 4 Place"
+          },
+          "Interior": {
+            "items": [
+              "Maroon Leather and Fabric 1998 (8+/10)"
+            ],
+            "text": "Maroon Leather and Fabric 1998 (8+/10)"
+          },
+          "Exterior": {
+            "items": [
+              "Modern White with Two-tone Red Stripes in 1998 (8+/10)"
+            ],
+            "text": "Modern White with Two-tone Red Stripes in 1998 (8+/10)"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Matt Weller Phone: (303) 908-7165 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 18,
+        "captured_at": "2026-03-14T07:47:04.112983+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201095",
+    "source_listing_id": "aso_201095",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201095&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201095&listingType=true",
+    "aso_adv_id": "201095",
+    "title": "1974 Cessna 414",
+    "year": 1974,
+    "make": "Cessna",
+    "model": "414",
+    "aircraft_type": "multi_engine_piston",
+    "asking_price": null,
+    "price_asking": null,
+    "price_text": "$: Inquire",
+    "n_number": "N22NR",
+    "serial_number": "4140497",
+    "total_time_airframe": 7040,
+    "ttaf_raw": "7040",
+    "location_raw": "OH, US",
+    "state": "OH",
+    "seller_name": "Sean Reusch Tel",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201095/IMG_0755.jpg",
+    "scraped_at": "2026-03-14T07:46:53.192672+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Engines Loc. SMOH L 60 R 60 TSIO 520 KCN/ECN Props Loc. SMOH L 60 R 60 McCauley 3 Blade Prop Overhauled"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Flight Rules: IFR",
+          "Annual Inspection Due March 31, 2026"
+        ],
+        "text": "Complete Logs: Yes Flight Rules: IFR Annual Inspection Due March 31, 2026"
+      },
+      "Airframe": {
+        "items": [
+          "Vortex Generators for Decreased Stall Speeds and Increased Control Surface Effectiveness",
+          "New Cabin Door Seal",
+          "New Emergency Exit Seal",
+          "New Ice Boots on All Surfaces",
+          "New Flex Duct Installed",
+          "Ram Synchrophaser",
+          "New Battery Installed 3/25",
+          "New Tires 3/25",
+          "New Windshields Installed",
+          "New Pilot Side Window",
+          "New Pilot Side Storm Window",
+          "Rosen Sun Visors",
+          "Re-Built Brakes"
+        ],
+        "text": "Vortex Generators for Decreased Stall Speeds and Increased Control Surface Effectiveness New Cabin Door Seal New Emergency Exit Seal New Ice Boots on All Surfaces New Flex Duct Installed Ram Synchrophaser New Battery Installed 3/25 New Tires 3/25 New Windshields Installed New Pilot Side Window New Pilot Side Storm Window Rosen Sun Visors Re-Built Brakes"
+      },
+      "Engines / Mods / Prop": {
+        "items": [
+          "Stock 310 HP For Maximum Life Expectancy",
+          "American Aviation Intercoolers for Increased Performance",
+          "All New Hoses",
+          "New Exhaust System and Components",
+          "American Aviation Intercooler Modification",
+          "New Lightweight Skytech Starters",
+          "Propeller Dynamically Balanced",
+          "All New Engine Baffling"
+        ],
+        "text": "Stock 310 HP For Maximum Life Expectancy American Aviation Intercoolers for Increased Performance All New Hoses New Exhaust System and Components American Aviation Intercooler Modification New Lightweight Skytech Starters Propeller Dynamically Balanced All New Engine Baffling"
+      },
+      "Avionics / Equipment": {
+        "items": [
+          "STEC 3100 Autopilot with Level Button and IAS Modes",
+          "Avidyne 550 NAV/COMM with Synthetic Vision",
+          "Avidyne 540 NAV/COMM with Radio Station Identifier",
+          "Jeppesen Charts Available on Avidyne Navigators",
+          "Lynx L3 9000 Transponder with ADS-B In & Out",
+          "Dual Electronics International Engine Monitors with Fuel Totalizer",
+          "Avidyne Audio Panel with Bluetooth Connectivity",
+          "6 Aspen Flight Displays with Revisionary Modes 3 Pilot/3 Co-pilot",
+          "Avidyne Navigators Capable of Visual Approach Mode"
+        ],
+        "text": "STEC 3100 Autopilot with Level Button and IAS Modes Avidyne 550 NAV/COMM with Synthetic Vision Avidyne 540 NAV/COMM with Radio Station Identifier Jeppesen Charts Available on Avidyne Navigators Lynx L3 9000 Transponder with ADS-B In & Out Dual Electronics International Engine Monitors with Fuel Totalizer Avidyne Audio Panel with Bluetooth Connectivity 6 Aspen Flight Displays with Revisionary Modes 3 Pilot/3 Co-pilot Avidyne Navigators Capable of Visual Approach Mode"
+      },
+      "Interior": {
+        "items": [
+          "Year: 2021",
+          "# of Seats: 7",
+          "Interior Renovation Completed in 2021",
+          "Passenger USB Ports",
+          "Dual Pull Out Tables",
+          "Reclining Seat",
+          "Pilot And Co-pilot Seats in Sheep Wool",
+          "Ultraleather Light Grey Passenger Seating",
+          "Belted Potty Seat",
+          "2 Crew and 5 Passenger Seats",
+          "8/10 Interior Rating"
+        ],
+        "text": "Year: 2021 # of Seats: 7 Interior Renovation Completed in 2021 Passenger USB Ports Dual Pull Out Tables Reclining Seat Pilot And Co-pilot Seats in Sheep Wool Ultraleather Light Grey Passenger Seating Belted Potty Seat 2 Crew and 5 Passenger Seats 8/10 Interior Rating"
+      },
+      "Exterior": {
+        "items": [
+          "Year Painted: 2009",
+          "8/10 Exterior Rating"
+        ],
+        "text": "Year Painted: 2009 8/10 Exterior Rating"
+      },
+      "Remarks": {
+        "items": [],
+        "text": "This aircraft must be seen to be fully appreciated. Over 3 years of restoration has been done to make this a turnkey ride. No details have been overlooked, to make this a reliable time machine. Fly comfortably knowing how much time and efforts have been applied to the aircraft. This is a great platform to build twin time and bring all of your gear in. Call us today to inquire on N22NR, We look forward to speaking with you!"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Contact: Sean Reusch Tel: 330-416-0283 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "This aircraft has undergone an extensive three year period of maintenance and restoration, that includes new engine frame structure, canted bulkheads, spar inspection panels, engine beam replacement, new windshields, new ice boots, upgraded avionics, new exhaust, turbos, overhauled engines, upgraded American Aviation intercoolers, A/C system fixes, overhauled janitrol heater, overhauled props, updated interior, new skytech starters, new tires, and also is the only known fixed wing aircraft in North America with six Aspen screens!\nAll logbooks are complete and no known major damage history.  This is truly an example of an aircraft that has had many sets of scrutinizing eyes on it over the course of restoration.  Rest assured that you will be flying a safe and comfortable plane that has room for the family and all of their belongings.  For the cost of a used Cirrus SR22 you can fly in pressurized comfort with the whole family!\nCall us today to set up a demonstration of this one of a kind 414!  Located at Wayne County, Ohio (KBJJ)",
+    "description_full": "This aircraft has undergone an extensive three year period of maintenance and restoration, that includes new engine frame structure, canted bulkheads, spar inspection panels, engine beam replacement, new windshields, new ice boots, upgraded avionics, new exhaust, turbos, overhauled engines, upgraded American Aviation intercoolers, A/C system fixes, overhauled janitrol heater, overhauled props, updated interior, new skytech starters, new tires, and also is the only known fixed wing aircraft in North America with six Aspen screens!\nAll logbooks are complete and no known major damage history.  This is truly an example of an aircraft that has had many sets of scrutinizing eyes on it over the course of restoration.  Rest assured that you will be flying a safe and comfortable plane that has room for the family and all of their belongings.  For the cost of a used Cirrus SR22 you can fly in pressurized comfort with the whole family!\nCall us today to set up a demonstration of this one of a kind 414!  Located at Wayne County, Ohio (KBJJ)",
+    "remarks": "This aircraft must be seen to be fully appreciated. Over 3 years of restoration has been done to make this a turnkey ride. No details have been overlooked, to make this a reliable time machine. Fly comfortably knowing how much time and efforts have been applied to the aircraft. This is a great platform to build twin time and bring all of your gear in. Call us today to inquire on N22NR, We look forward to speaking with you!",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Contact: Sean Reusch Tel: 330-416-0283 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "330-416-0283",
+    "engines_raw": [
+      {
+        "loc.": "L",
+        "smoh": "60"
+      },
+      {
+        "loc.": "R",
+        "smoh": "60"
+      }
+    ],
+    "engine_count": 2,
+    "props_raw": [
+      {
+        "loc.": "L",
+        "smoh": "60"
+      },
+      {
+        "loc.": "R",
+        "smoh": "60"
+      }
+    ],
+    "maintenance_condition": "Flight Rules: IFR | Annual Inspection Due March 31, 2026",
+    "interior_details": "Year: 2021 | # of Seats: 7 | Interior Renovation Completed in 2021 | Passenger USB Ports | Dual Pull Out Tables | Reclining Seat | Pilot And Co-pilot Seats in Sheep Wool | Ultraleather Light Grey Passenger Seating | Belted Potty Seat | 2 Crew and 5 Passenger Seats | 8/10 Interior Rating",
+    "exterior_details": "Year Painted: 2009 | 8/10 Exterior Rating",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201095/IMG_0755.jpg",
+      "https://www.aso.com/uploads/acImages/201095/IMG_0755_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201095&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Engines Loc. SMOH L 60 R 60 TSIO 520 KCN/ECN Props Loc. SMOH L 60 R 60 McCauley 3 Blade Prop Overhauled"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Flight Rules: IFR",
+              "Annual Inspection Due March 31, 2026"
+            ],
+            "text": "Complete Logs: Yes Flight Rules: IFR Annual Inspection Due March 31, 2026"
+          },
+          "Airframe": {
+            "items": [
+              "Vortex Generators for Decreased Stall Speeds and Increased Control Surface Effectiveness",
+              "New Cabin Door Seal",
+              "New Emergency Exit Seal",
+              "New Ice Boots on All Surfaces",
+              "New Flex Duct Installed",
+              "Ram Synchrophaser",
+              "New Battery Installed 3/25",
+              "New Tires 3/25",
+              "New Windshields Installed",
+              "New Pilot Side Window",
+              "New Pilot Side Storm Window",
+              "Rosen Sun Visors",
+              "Re-Built Brakes"
+            ],
+            "text": "Vortex Generators for Decreased Stall Speeds and Increased Control Surface Effectiveness New Cabin Door Seal New Emergency Exit Seal New Ice Boots on All Surfaces New Flex Duct Installed Ram Synchrophaser New Battery Installed 3/25 New Tires 3/25 New Windshields Installed New Pilot Side Window New Pilot Side Storm Window Rosen Sun Visors Re-Built Brakes"
+          },
+          "Engines / Mods / Prop": {
+            "items": [
+              "Stock 310 HP For Maximum Life Expectancy",
+              "American Aviation Intercoolers for Increased Performance",
+              "All New Hoses",
+              "New Exhaust System and Components",
+              "American Aviation Intercooler Modification",
+              "New Lightweight Skytech Starters",
+              "Propeller Dynamically Balanced",
+              "All New Engine Baffling"
+            ],
+            "text": "Stock 310 HP For Maximum Life Expectancy American Aviation Intercoolers for Increased Performance All New Hoses New Exhaust System and Components American Aviation Intercooler Modification New Lightweight Skytech Starters Propeller Dynamically Balanced All New Engine Baffling"
+          },
+          "Avionics / Equipment": {
+            "items": [
+              "STEC 3100 Autopilot with Level Button and IAS Modes",
+              "Avidyne 550 NAV/COMM with Synthetic Vision",
+              "Avidyne 540 NAV/COMM with Radio Station Identifier",
+              "Jeppesen Charts Available on Avidyne Navigators",
+              "Lynx L3 9000 Transponder with ADS-B In & Out",
+              "Dual Electronics International Engine Monitors with Fuel Totalizer",
+              "Avidyne Audio Panel with Bluetooth Connectivity",
+              "6 Aspen Flight Displays with Revisionary Modes 3 Pilot/3 Co-pilot",
+              "Avidyne Navigators Capable of Visual Approach Mode"
+            ],
+            "text": "STEC 3100 Autopilot with Level Button and IAS Modes Avidyne 550 NAV/COMM with Synthetic Vision Avidyne 540 NAV/COMM with Radio Station Identifier Jeppesen Charts Available on Avidyne Navigators Lynx L3 9000 Transponder with ADS-B In & Out Dual Electronics International Engine Monitors with Fuel Totalizer Avidyne Audio Panel with Bluetooth Connectivity 6 Aspen Flight Displays with Revisionary Modes 3 Pilot/3 Co-pilot Avidyne Navigators Capable of Visual Approach Mode"
+          },
+          "Interior": {
+            "items": [
+              "Year: 2021",
+              "# of Seats: 7",
+              "Interior Renovation Completed in 2021",
+              "Passenger USB Ports",
+              "Dual Pull Out Tables",
+              "Reclining Seat",
+              "Pilot And Co-pilot Seats in Sheep Wool",
+              "Ultraleather Light Grey Passenger Seating",
+              "Belted Potty Seat",
+              "2 Crew and 5 Passenger Seats",
+              "8/10 Interior Rating"
+            ],
+            "text": "Year: 2021 # of Seats: 7 Interior Renovation Completed in 2021 Passenger USB Ports Dual Pull Out Tables Reclining Seat Pilot And Co-pilot Seats in Sheep Wool Ultraleather Light Grey Passenger Seating Belted Potty Seat 2 Crew and 5 Passenger Seats 8/10 Interior Rating"
+          },
+          "Exterior": {
+            "items": [
+              "Year Painted: 2009",
+              "8/10 Exterior Rating"
+            ],
+            "text": "Year Painted: 2009 8/10 Exterior Rating"
+          },
+          "Remarks": {
+            "items": [],
+            "text": "This aircraft must be seen to be fully appreciated. Over 3 years of restoration has been done to make this a turnkey ride. No details have been overlooked, to make this a reliable time machine. Fly comfortably knowing how much time and efforts have been applied to the aircraft. This is a great platform to build twin time and bring all of your gear in. Call us today to inquire on N22NR, We look forward to speaking with you!"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Contact: Sean Reusch Tel: 330-416-0283 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 2,
+        "captured_at": "2026-03-14T07:47:13.309135+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_199907",
+    "source_listing_id": "aso_199907",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199907&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199907&listingType=true",
+    "aso_adv_id": "199907",
+    "title": "1968 Beech Baron D55 / IO-550C",
+    "year": 1968,
+    "make": "Beech",
+    "model": "Baron D55 / IO-550C",
+    "aircraft_type": "multi_engine_piston",
+    "asking_price": 79000,
+    "price_asking": 79000,
+    "price_text": "$79,000",
+    "n_number": "N18MD",
+    "serial_number": "TE-455",
+    "total_time_airframe": 5334,
+    "ttaf_raw": "5334",
+    "location_raw": "CA, US",
+    "state": "CA",
+    "seller_name": "Mike Brannigan Phone",
+    "seller_type": null,
+    "primary_image_url": "https://www.aso.com/uploads/acImages/199907/1_47.jpg",
+    "scraped_at": "2026-03-14T07:46:53.192672+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Engines Loc. Make Model Serial# SMOH L CMI IO-550C 684240 428 R 271786-R 0 Fresh RHE by Western Skyways Jan 2026. Under 3 Year Warranty. Props Make Model Hartzell OEM"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Click here for Additional Information"
+        ],
+        "text": "Annual Inspection Due: 2/7/2025 Hangared: Yes Complete Logs: Yes Click here for Additional Information"
+      },
+      "Avionics": {
+        "items": [
+          "Garmin GNS-530W WAAS GPS/NAV/COMM",
+          "Dual Garmin GI-275 ADI/HSI+AP in Backup Configuration",
+          "Garmin GTX 330ES ADS-B Out Mode S Transponder",
+          "Shadin Digiflo-L Twin Fuel Totalizer with 530 W Interface",
+          "Garmin Flightstream 210",
+          "Stratux ADS-B In Permanently Mounted/Hardwired",
+          "PS Engineering PMA6000 Audio Panel",
+          "Century III Autopilot with GPSS, Glideslope Auto-capture, and Auto-trim",
+          "Monroy Traffic Watch ATD-300",
+          "Artex 406Mhz ELT",
+          "TKM MX-170C NAV/COMM",
+          "BF Goodrich WX-900 Stormscope",
+          "JPI 790 Color Twin Engine Monitor + FF + GPS",
+          "AirGizmo Dock with Garmin 496 Hardwired to Aircraft (power + XM Audio)",
+          "Astro-tech LC2 Digital Chronometer",
+          "Dual Yoke with Co-pilot PTT Switch"
+        ],
+        "text": "Garmin GNS-530W WAAS GPS/NAV/COMM Dual Garmin GI-275 ADI/HSI+AP in Backup Configuration Garmin GTX 330ES ADS-B Out Mode S Transponder Shadin Digiflo-L Twin Fuel Totalizer with 530 W Interface Garmin Flightstream 210 Stratux ADS-B In Permanently Mounted/Hardwired PS Engineering PMA6000 Audio Panel Century III Autopilot with GPSS, Glideslope Auto-capture, and Auto-trim Monroy Traffic Watch ATD-300 Artex 406Mhz ELT TKM MX-170C NAV/COMM BF Goodrich WX-900 Stormscope JPI 790 Color Twin Engine Monitor + FF + GPS AirGizmo Dock with Garmin 496 Hardwired to Aircraft (power + XM Audio) Astro-tech LC2 Digital Chronometer Dual Yoke with Co-pilot PTT Switch"
+      },
+      "Optional Equipment": {
+        "items": [
+          "BAS 4-Point Inertial-reel Shoulder Harnesses",
+          "3/8\" Speedslope Windshield",
+          "Alcohol Propeller System",
+          "Onboard 5-Place Oxygen",
+          "Fluorosilicone Fuel Cap O-rings",
+          "GAMIjector Fuel Injectors",
+          "LED Taxi and Landing Lights",
+          "Tail and Belly Strobes"
+        ],
+        "text": "BAS 4-Point Inertial-reel Shoulder Harnesses 3/8\" Speedslope Windshield Alcohol Propeller System Onboard 5-Place Oxygen Fluorosilicone Fuel Cap O-rings GAMIjector Fuel Injectors LED Taxi and Landing Lights Tail and Belly Strobes"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Contact: Mike Brannigan Phone: 503-395-8380 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "1968 D55 Baron with IO-550C Raw Power STC Upgrade\nGNS530W, 2 x GI-275, GTX330ES, Century 3, JPI-790, GAMIjectors, and more\nNear 2,000# Useful load. 136 gallon fuel. ~200 kt cruise",
+    "description_full": "1968 D55 Baron with IO-550C Raw Power STC Upgrade\nGNS530W, 2 x GI-275, GTX330ES, Century 3, JPI-790, GAMIjectors, and more\nNear 2,000# Useful load. 136 gallon fuel. ~200 kt cruise",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Contact: Mike Brannigan Phone: 503-395-8380 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "503-395-8380",
+    "engines_raw": [
+      {
+        "loc.": "L",
+        "make": "CMI",
+        "model": "IO-550C",
+        "serial#": "684240",
+        "smoh": "428"
+      },
+      {
+        "loc.": "L",
+        "make": "CMI",
+        "model": "R",
+        "serial#": "271786-R",
+        "smoh": "0"
+      }
+    ],
+    "engine_count": 2,
+    "props_raw": [
+      {
+        "make": "Hartzell",
+        "model": "OEM"
+      }
+    ],
+    "avionics_notes": "Garmin GNS-530W WAAS GPS/NAV/COMM, Dual Garmin GI-275 ADI/HSI+AP in Backup Configuration, Garmin GTX 330ES ADS-B Out Mode S Transponder, Shadin Digiflo-L Twin Fuel Totalizer with 530 W Interface, Garmin Flightstream 210, Stratux ADS-B In Permanently Mounted/Hardwired, PS Engineering PMA6000 Audio Panel, Century III Autopilot with GPSS, Glideslope Auto-capture, and Auto-trim, Monroy Traffic Watch ATD-300, Artex 406Mhz ELT, TKM MX-170C NAV/COMM, BF Goodrich WX-900 Stormscope, JPI 790 Color Twin Engine Monitor + FF + GPS, AirGizmo Dock with Garmin 496 Hardwired to Aircraft (power + XM Audio), Astro-tech LC2 Digital Chronometer, Dual Yoke with Co-pilot PTT Switch",
+    "maintenance_condition": "Click here for Additional Information",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/199907/1_47.jpg",
+      "https://www.aso.com/uploads/acImages/199907/1_47_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/2_47.jpg",
+      "https://www.aso.com/uploads/acImages/199907/2_47_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/3_49.jpg",
+      "https://www.aso.com/uploads/acImages/199907/3_49_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/4_46.jpg",
+      "https://www.aso.com/uploads/acImages/199907/4_46_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/5_45.jpg",
+      "https://www.aso.com/uploads/acImages/199907/5_45_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/6_46.jpg",
+      "https://www.aso.com/uploads/acImages/199907/6_46_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/7_43.jpg",
+      "https://www.aso.com/uploads/acImages/199907/7_43_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/8_41.jpg",
+      "https://www.aso.com/uploads/acImages/199907/8_41_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/9_39.jpg",
+      "https://www.aso.com/uploads/acImages/199907/9_39_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/10_36.jpg",
+      "https://www.aso.com/uploads/acImages/199907/10_36_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/11_32.jpg",
+      "https://www.aso.com/uploads/acImages/199907/11_32_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199907/12_27.jpg",
+      "https://www.aso.com/uploads/acImages/199907/12_27_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199907&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Engines Loc. Make Model Serial# SMOH L CMI IO-550C 684240 428 R 271786-R 0 Fresh RHE by Western Skyways Jan 2026. Under 3 Year Warranty. Props Make Model Hartzell OEM"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Click here for Additional Information"
+            ],
+            "text": "Annual Inspection Due: 2/7/2025 Hangared: Yes Complete Logs: Yes Click here for Additional Information"
+          },
+          "Avionics": {
+            "items": [
+              "Garmin GNS-530W WAAS GPS/NAV/COMM",
+              "Dual Garmin GI-275 ADI/HSI+AP in Backup Configuration",
+              "Garmin GTX 330ES ADS-B Out Mode S Transponder",
+              "Shadin Digiflo-L Twin Fuel Totalizer with 530 W Interface",
+              "Garmin Flightstream 210",
+              "Stratux ADS-B In Permanently Mounted/Hardwired",
+              "PS Engineering PMA6000 Audio Panel",
+              "Century III Autopilot with GPSS, Glideslope Auto-capture, and Auto-trim",
+              "Monroy Traffic Watch ATD-300",
+              "Artex 406Mhz ELT",
+              "TKM MX-170C NAV/COMM",
+              "BF Goodrich WX-900 Stormscope",
+              "JPI 790 Color Twin Engine Monitor + FF + GPS",
+              "AirGizmo Dock with Garmin 496 Hardwired to Aircraft (power + XM Audio)",
+              "Astro-tech LC2 Digital Chronometer",
+              "Dual Yoke with Co-pilot PTT Switch"
+            ],
+            "text": "Garmin GNS-530W WAAS GPS/NAV/COMM Dual Garmin GI-275 ADI/HSI+AP in Backup Configuration Garmin GTX 330ES ADS-B Out Mode S Transponder Shadin Digiflo-L Twin Fuel Totalizer with 530 W Interface Garmin Flightstream 210 Stratux ADS-B In Permanently Mounted/Hardwired PS Engineering PMA6000 Audio Panel Century III Autopilot with GPSS, Glideslope Auto-capture, and Auto-trim Monroy Traffic Watch ATD-300 Artex 406Mhz ELT TKM MX-170C NAV/COMM BF Goodrich WX-900 Stormscope JPI 790 Color Twin Engine Monitor + FF + GPS AirGizmo Dock with Garmin 496 Hardwired to Aircraft (power + XM Audio) Astro-tech LC2 Digital Chronometer Dual Yoke with Co-pilot PTT Switch"
+          },
+          "Optional Equipment": {
+            "items": [
+              "BAS 4-Point Inertial-reel Shoulder Harnesses",
+              "3/8\" Speedslope Windshield",
+              "Alcohol Propeller System",
+              "Onboard 5-Place Oxygen",
+              "Fluorosilicone Fuel Cap O-rings",
+              "GAMIjector Fuel Injectors",
+              "LED Taxi and Landing Lights",
+              "Tail and Belly Strobes"
+            ],
+            "text": "BAS 4-Point Inertial-reel Shoulder Harnesses 3/8\" Speedslope Windshield Alcohol Propeller System Onboard 5-Place Oxygen Fluorosilicone Fuel Cap O-rings GAMIjector Fuel Injectors LED Taxi and Landing Lights Tail and Belly Strobes"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Contact: Mike Brannigan Phone: 503-395-8380 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 24,
+        "captured_at": "2026-03-14T07:47:21.623711+00:00"
+      }
+    }
+  }
+]

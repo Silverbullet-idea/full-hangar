@@ -27,6 +27,18 @@ except Exception:  # pragma: no cover
     def parse_description(text: str, observed_price: int | float | None = None) -> dict[str, Any]:
         return {}
 
+try:
+    from registration_parser import apply_registration_fields
+except Exception:  # pragma: no cover
+    def apply_registration_fields(
+        target: dict[str, Any],
+        raw_value: str | None,
+        fallback_text: str | None = None,
+        *,
+        keep_existing_n_number: bool = True,
+    ) -> dict[str, Any]:
+        return target
+
 SOURCE_SITE = "globalair"
 ROOT_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = ROOT_DIR / "scraper" / "logs"
@@ -135,6 +147,26 @@ def normalize_row(raw: dict[str, Any], existing: set[str]) -> tuple[dict[str, An
         row["price_asking"] = row.get("asking_price")
     if row.get("asking_price") is None and row.get("price_asking") is not None:
         row["asking_price"] = row.get("price_asking")
+
+    # Normalize registration fields on ingest to maximize US/non-US coverage.
+    reg_seed = str(row.get("registration_raw") or row.get("n_number") or "").strip()
+    fallback_parts = [
+        row.get("title"),
+        row.get("description"),
+        row.get("description_full"),
+        row.get("specs_text"),
+        row.get("location_raw"),
+        row.get("serial_number"),
+        row.get("engine_model"),
+    ]
+    fallback_text = " ".join(str(v or "") for v in fallback_parts).strip()
+    apply_registration_fields(
+        row,
+        raw_value=reg_seed,
+        fallback_text=fallback_text if fallback_text else None,
+        keep_existing_n_number=True,
+    )
+
     normalized = {
         k: v
         for k, v in row.items()

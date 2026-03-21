@@ -1,11 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Full Hangar Harvester",
+  "name": "Full Hangar Unified Harvester",
   "version": "1.0.0",
-  "description": "Full Hangar - Controller.com listing harvester.",
+  "description": "Full Hangar unified harvester for Controller, GlobalAir, Trade-A-Plane, and AeroTrader.",
   "permissions": ["activeTab", "tabs", "storage"],
   "host_permissions": [
     "https://www.controller.com/*",
+    "https://www.globalair.com/*",
+    "https://www.trade-a-plane.com/*",
+    "https://www.aerotrader.com/*",
     "http://localhost:8765/*"
   ],
   "background": {
@@ -16,6 +19,24 @@
     {
       "matches": ["https://www.controller.com/*"],
       "js": ["content_script.js"],
+      "css": ["content_style.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.globalair.com/*"],
+      "js": ["globalair_content_script.js"],
+      "css": ["content_style.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.trade-a-plane.com/*"],
+      "js": ["tap_content_script.js"],
+      "css": ["content_style.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.aerotrader.com/*"],
+      "js": ["aerotrader_content_script.js"],
       "css": ["content_style.css"],
       "run_at": "document_idle"
     }

@@ -363,6 +363,26 @@ def sanitize_engine_model(value: str | None) -> str | None:
     if earliest_cut is not None and earliest_cut > 8:
         text = text[:earliest_cut].strip(" -:;,")
 
+    # Normalize common malformed engine tokens before downstream matching.
+    text = re.sub(r"\bTI0(?=[-\s]?\d)", "TIO", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bTSI0(?=[-\s]?\d)", "TSIO", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bI0(?=[-\s]?\d)", "IO", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b0-(\d{3,4})\b", r"O-\1", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(?:SERIES|SER)\b", "", text, flags=re.IGNORECASE).strip(" -:;,")
+    text = re.sub(r"\bO&VO-(\d{3,4})\b", r"O-\1", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\b((?:TSIO|TIO|IO|O|AEIO|GO|LTSIO|PT6A|PT6T|JT15D|FJ44|TFE731|AS907))\s+(\d{3,4}[A-Z0-9-]*)\b",
+        r"\1-\2",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r"\b((?:TSIO|TIO|IO|O|AEIO|GO|LTSIO))(\d{3,4}[A-Z0-9-]*)\b",
+        r"\1-\2",
+        text,
+        flags=re.IGNORECASE,
+    )
+
     if len(text) > 110:
         sentence_cut = re.search(r"[.;]", text[40:])
         if sentence_cut:
@@ -374,11 +394,13 @@ def sanitize_engine_model(value: str | None) -> str | None:
         return None
     has_engine_token = bool(
         re.search(
-            r"\b(?:lycoming|continental|pratt\s*&\s*whitney|rotax|tsio|tio|io[\- ]\d|o[\- ]\d|aeio|go[\- ]\d|l?tsio|pt6|rr)\b",
+            r"\b(?:lycoming|continental|pratt\s*&\s*whitney|rotax|tsio|tio|io[\- ]\d|o[\- ]\d|aeio|go[\- ]\d|l?tsio|pt6|rr|jt15d|pw\d{3,4}|fj44|tfe\d{3}|as907|htf\d{4}|250[\- ]c\d{2,3})\b",
             text,
             flags=re.IGNORECASE,
         )
     )
+    if re.fullmatch(r"time\s+\d{1,5}", text, flags=re.IGNORECASE):
+        return None
     if not has_engine_token and re.search(
         r"\b(?:interior|exterior|avionics|useful\s*load|top\s*overhaul|cylinders|annual)\b",
         text,
@@ -386,6 +408,16 @@ def sanitize_engine_model(value: str | None) -> str | None:
     ):
         return None
     if re.fullmatch(r"(unknown|n/?a|none|-+)", text, flags=re.IGNORECASE):
+        return None
+    # Reject frequent narrative tokens that leak into engine_model fields.
+    if re.fullmatch(
+        r"(out|one|our|original|operation|operations|offers?|ownership|overhaul|outstanding|optional|gold)",
+        text,
+        flags=re.IGNORECASE,
+    ):
+        return None
+    # Analyzer/autopilot text is avionics noise, not an engine model.
+    if re.search(r"\banalyzer\b|\bautopilot\b", text, flags=re.IGNORECASE):
         return None
     return text
 

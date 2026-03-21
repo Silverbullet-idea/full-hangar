@@ -1159,8 +1159,10 @@ export async function getListingFilterOptions(): Promise<ListingFilterOption[]> 
     }
   }
 
-  if (lastError) return [];
-  return [];
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error("getListingFilterOptions: exhausted retries without a successful read");
 }
 
 export async function getListingById(id: string) {

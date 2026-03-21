@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 import time
 import json
+import os
 import random
 import logging
 import argparse
@@ -30,6 +31,7 @@ try:
         gallery_count,
         load_source_ids_file,
     )
+    from registration_parser import apply_registration_fields, extract_registration_from_text
     from schema import validate_listing
     from scraper_base import (
         compute_listing_fingerprint,
@@ -51,6 +53,7 @@ except ImportError:  # pragma: no cover
         gallery_count,
         load_source_ids_file,
     )
+    from .registration_parser import apply_registration_fields, extract_registration_from_text
     from .schema import validate_listing
     from .scraper_base import (
         compute_listing_fingerprint,
@@ -78,10 +81,14 @@ STATE_DIR = Path(__file__).resolve().parent / "state"
 CATEGORIES = [
     {"path": "/aircraft/single-piston",          "type": "single_engine_piston", "label": "Single Engine Piston"},
     {"path": "/aircraft/twin-piston",            "type": "multi_engine_piston",  "label": "Twin Engine Piston"},
+    {"path": "/aircraft/light",                  "type": "light_sport",          "label": "Light Sport Aircraft"},
     {"path": "/aircraft/private-jets/light",     "type": "jet",                  "label": "Light Jets"},
     {"path": "/aircraft/private-jets/mid-size",  "type": "jet",                  "label": "Mid-Size Jets"},
     {"path": "/aircraft/private-jets/large",     "type": "jet",                  "label": "Large Jets"},
+    {"path": "/aircraft/private-jets",           "type": "jet",                  "label": "Private Jets (All)"},
     {"path": "/aircraft/turboprops",             "type": "turboprop",            "label": "Turboprops"},
+    {"path": "/aircraft/military-classic-vintage", "type": "warbird",           "label": "Warbirds"},
+    {"path": "/aircraft/helicopter",             "type": "helicopter",           "label": "Helicopters (All)"},
     {"path": "/aircraft/helicopter/turbine",     "type": "helicopter",           "label": "Turbine Helicopters"},
     {"path": "/aircraft/helicopter/piston",      "type": "helicopter",           "label": "Piston Helicopters"},
 ]
@@ -108,6 +115,21 @@ REQUEST_HEADERS = {
 
 NO_PRICE_PHRASES = ("make offer", "please call", "price on request", "contact")
 SUPPORTED_CURRENCY_CODES = {"USD", "ARS", "AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "INR", "NZD", "ZAR"}
+DEFAULT_USD_CONVERSION_RATES = {
+    # Approximate fallback rates. Override via AVBUYER_USD_RATES_JSON.
+    "USD": 1.0,
+    "EUR": 1.09,
+    "GBP": 1.28,
+    "AUD": 0.66,
+    "CAD": 0.74,
+    "CHF": 1.11,
+    "CNY": 0.14,
+    "INR": 0.012,
+    "NZD": 0.61,
+    "ZAR": 0.055,
+    "BRL": 0.20,
+    "ARS": 0.0011,
+}
 _MONEY_RE = re.compile(
     r"(?:(?P<code>USD|ARS|AUD|BRL|CAD|CHF|CNY|EUR|GBP|INR|NZD|ZAR)\s*)?"
     r"(?P<symbol>US\$|A\$|C\$|\$|€|£|R)?\s*"
@@ -276,32 +298,42 @@ def _parse_make_links(soup: BeautifulSoup, cat_path: str) -> list[dict]:
     """
     makes = []
     seen  = set()
+    cat_parts = [p for p in cat_path.strip("/").split("/") if p]
     for a in soup.find_all("a", href=True):
-        href = a["href"]
+        href = a["href"] or ""
+        parsed = urlparse(href)
+        path = parsed.path or ""
+        if not path:
+            continue
+        path_parts = [p for p in path.strip("/").split("/") if p]
+        if len(path_parts) < len(cat_parts) + 1:
+            continue
+        if path_parts[:len(cat_parts)] != cat_parts:
+            continue
+
+        # Keep only make-level links under this category and skip non-make utility paths.
+        tail_parts = path_parts[len(cat_parts):]
+        if len(tail_parts) != 1:
+            continue
+        slug = tail_parts[0].strip().lower()
+        if not slug or slug.startswith("page-") or slug in {"browse-by-model", "search-results-page"}:
+            continue
+
         m = re.search(r'[?&]make=(\d+)', href)
-        if not m:
-            continue
-        make_id = m.group(1)
-        if make_id in seen:
-            continue
-
-        # Extract make name from link text or slug
-        name = a.get_text(strip=True)
-        if not name or len(name) > 50:
+        make_id = m.group(1) if m else ""
+        dedupe_key = make_id or slug
+        if dedupe_key in seen:
             continue
 
-        # Derive make slug from href path
-        path = urlparse(href).path
-        slug = path.rstrip("/").split("/")[-1]
+        # Extract make name from link text or slug.
+        name = a.get_text(strip=True) or slug.replace("-", " ").title()
+        if not name or len(name) > 80:
+            continue
 
-        # Build canonical URL
-        url = (
-            f"{BASE_URL}{cat_path}/{slug}"
-            f"?make={make_id}&include_wo_price=Y"
-        )
-
+        query = f"make={make_id}&include_wo_price=Y" if make_id else "include_wo_price=Y"
+        url = f"{BASE_URL}{cat_path}/{slug}?{query}"
         makes.append({"name": name, "id": make_id, "slug": slug, "url": url})
-        seen.add(make_id)
+        seen.add(dedupe_key)
     return makes
 
 
@@ -367,6 +399,10 @@ def parse_card(card, aircraft_type: str, category_path: str) -> Optional[dict]:
         parsed_price, parsed_currency, _ = _parse_price_and_currency(price_text)
         if parsed_price is not None and parsed_currency == "USD":
             asking_price = parsed_price
+        elif parsed_price is not None and parsed_currency:
+            converted = _convert_to_usd(parsed_price, parsed_currency)
+            if converted is not None:
+                asking_price = converted
 
     # ── Year / S/N / Total Time ───────────────────────────────────────────────
     # ul.fa-no-bullet.clearfix > li items (confirmed in DevTools)
@@ -430,7 +466,7 @@ def parse_card(card, aircraft_type: str, category_path: str) -> Optional[dict]:
     para_el = card.find("div", class_="list-item-para")
     description = para_el.get_text(separator=" ", strip=True)[:1000] if para_el else None
 
-    return {
+    listing = {
         "source_site":         SOURCE_SITE,
         "listing_source":      SOURCE_SITE,
         "source_id":           f"ab_{listing_id}",
@@ -449,6 +485,7 @@ def parse_card(card, aircraft_type: str, category_path: str) -> Optional[dict]:
         "location_raw":        location_raw,
         "location_city":       location_city,
         "location_state":      location_state,
+        "state":               location_state,
         "seller_name":         seller_name,
         "seller_type":         seller_type,
         "primary_image_url":   photo_url,
@@ -472,6 +509,15 @@ def parse_card(card, aircraft_type: str, category_path: str) -> Optional[dict]:
         "engine_time_since_overhaul": None,
         "time_since_overhaul": None,
     }
+    card_text = card.get_text(" ", strip=True)
+    inferred_registration = extract_registration_from_text(card_text)
+    apply_registration_fields(
+        listing,
+        raw_value=inferred_registration,
+        fallback_text=card_text,
+        keep_existing_n_number=True,
+    )
+    return listing
 
 
 def _parse_year_sn_tt(text: str) -> tuple[Optional[int], Optional[str], Optional[int]]:
@@ -530,10 +576,58 @@ def _split_location(location: str | None) -> tuple[Optional[str], Optional[str]]
     text = re.sub(r"\s+", " ", location).strip()
     if not text:
         return None, None
-    if re.match(r"^.+,\s*[A-Z]{2}$", text):
-        city, state = [part.strip() for part in text.rsplit(",", 1)]
-        return city, state.upper()
-    return text, _extract_state(text)
+    # Common form: "City, ST" / "City, State" / "Country"
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if len(parts) >= 2:
+        city = ", ".join(parts[:-1]).strip()
+        region_raw = parts[-1]
+        region_code = _normalize_region_token(region_raw)
+        return city or text, region_code
+    return text, _normalize_region_token(text) or _extract_state(text)
+
+
+_REGION_ALIASES = {
+    # US states
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
+    "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA",
+    "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA",
+    "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD",
+    "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO",
+    "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH",
+    "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC",
+    "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT",
+    "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY",
+    # Canada provinces/territories
+    "alberta": "AB", "british columbia": "BC", "manitoba": "MB", "new brunswick": "NB",
+    "newfoundland and labrador": "NL", "nova scotia": "NS", "ontario": "ON", "prince edward island": "PE",
+    "quebec": "QC", "saskatchewan": "SK", "northwest territories": "NT", "nunavut": "NU", "yukon": "YT",
+}
+
+
+def _normalize_region_token(value: str | None) -> Optional[str]:
+    token = re.sub(r"\s+", " ", str(value or "").strip())
+    if not token:
+        return None
+    if re.fullmatch(r"[A-Za-z]{2}", token):
+        return token.upper()
+    mapped = _REGION_ALIASES.get(token.lower())
+    if mapped:
+        return mapped
+    # Keep a short country/region token rather than dropping it completely.
+    return token.title() if len(token) <= 24 else None
+
+
+def _extract_int_hours(text: str | None) -> Optional[int]:
+    if not text:
+        return None
+    m = re.search(r"(\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?", text)
+    if not m:
+        return None
+    try:
+        return int(float(m.group(1).replace(",", "")))
+    except Exception:
+        return None
 
 
 def _extract_price_segment(text: str) -> str:
@@ -592,6 +686,44 @@ def _parse_price_and_currency(text: str) -> tuple[Optional[int], Optional[str], 
         return value, code, segment
 
     return None, None, segment
+
+
+def _load_usd_conversion_rates() -> dict[str, float]:
+    rates = dict(DEFAULT_USD_CONVERSION_RATES)
+    env_json = os.getenv("AVBUYER_USD_RATES_JSON", "").strip()
+    if not env_json:
+        return rates
+    try:
+        parsed = json.loads(env_json)
+    except Exception:
+        log.warning("Invalid AVBUYER_USD_RATES_JSON; using defaults")
+        return rates
+    if not isinstance(parsed, dict):
+        return rates
+    for code, rate in parsed.items():
+        try:
+            code_norm = str(code).upper().strip()
+            rate_norm = float(rate)
+        except Exception:
+            continue
+        if code_norm and rate_norm > 0:
+            rates[code_norm] = rate_norm
+    return rates
+
+
+_USD_CONVERSION_RATES = _load_usd_conversion_rates()
+
+
+def _convert_to_usd(amount: Optional[int], currency: Optional[str]) -> Optional[int]:
+    if amount is None:
+        return None
+    code = (currency or "USD").upper().strip()
+    if code == "USD":
+        return amount
+    rate = _USD_CONVERSION_RATES.get(code)
+    if rate is None:
+        return None
+    return int(round(float(amount) * rate))
 
 
 def _extract_usd_price_with_playwright(
@@ -738,9 +870,8 @@ def parse_detail(
             _map_spec(label, value, extra)
 
     # ── Price ─────────────────────────────────────────────────────────────────
-    price_el = soup.find(class_=re.compile(r'dtl-price', re.I))
-    if price_el:
-        price_text = price_el.get_text(" ", strip=True)
+    price_text = _extract_detail_price_text(soup)
+    if price_text:
         parsed_price, parsed_currency, parsed_segment = _parse_price_and_currency(price_text)
         if parsed_price is not None and parsed_currency == "USD":
             extra["asking_price"] = parsed_price
@@ -763,12 +894,25 @@ def parse_detail(
                 extra["asking_price"] = usd_price
                 extra["price_asking"] = usd_price
             else:
-                log.info(
-                    "Non-USD AvBuyer price skipped (%s) for %s: %s",
-                    parsed_currency,
-                    listing_id or detail_url,
-                    parsed_segment,
-                )
+                converted = _convert_to_usd(parsed_price, parsed_currency)
+                if converted is not None:
+                    extra["asking_price"] = converted
+                    extra["price_asking"] = converted
+                    log.info(
+                        "Converted non-USD AvBuyer price (%s) for %s using rate %.6f: %s -> USD %s",
+                        parsed_currency,
+                        listing_id or detail_url,
+                        _USD_CONVERSION_RATES.get(parsed_currency, 0.0),
+                        parsed_segment,
+                        converted,
+                    )
+                else:
+                    log.info(
+                        "Non-USD AvBuyer price skipped (%s) for %s: %s",
+                        parsed_currency,
+                        listing_id or detail_url,
+                        parsed_segment,
+                    )
 
     # ── Location ──────────────────────────────────────────────────────────────
     loc_el = soup.find(class_=re.compile(r'list-item-location', re.I))
@@ -779,6 +923,7 @@ def parse_detail(
             city, state = _split_location(loc)
             extra["location_city"] = city
             extra["location_state"] = state
+            extra["state"] = state
 
     # ── Description bullets ───────────────────────────────────────────────────
     desc_div = soup.find("div", class_=re.compile(r'\bexpanded\b'))
@@ -809,11 +954,18 @@ def parse_detail(
             elif "engine" in header:
                 extra["engine_notes"] = content
                 # SMOH
-                sm = re.search(r'(?:SMOH|TSMOH|since\s+overhaul)\s*[:\-]?\s*([\d,]+)', content, re.I)
+                sm = re.search(r'(?:SMOH|TSMOH|TSOH|since\s+overhaul)\s*[:\-]?\s*([\d,]+(?:\.\d+)?)', content, re.I)
                 if sm:
-                    tso = int(sm.group(1).replace(",", ""))
-                    extra["time_since_overhaul"] = tso
-                    extra["engine_time_since_overhaul"] = tso
+                    tso = _extract_int_hours(sm.group(1))
+                    if tso is not None:
+                        extra["time_since_overhaul"] = tso
+                        extra["engine_time_since_overhaul"] = tso
+            elif "prop" in header:
+                prop_match = re.search(r'(?:SPOH|TSPOH|prop(?:eller)?\s*(?:since\s+overhaul|soh|smoh)?)\s*[:\-]?\s*([\d,]+(?:\.\d+)?)', content, re.I)
+                if prop_match:
+                    spoh = _extract_int_hours(prop_match.group(1))
+                    if spoh is not None:
+                        extra["time_since_prop_overhaul"] = spoh
             elif "avionics" in header or "avionics" in content.lower():
                 extra["avionics_notes"] = content
             elif "interior" in header or "exterior" in header:
@@ -855,6 +1007,29 @@ def parse_detail(
         value = raw.replace(heading.get_text(strip=True), "", 1).strip()
         if value and len(value) >= 20:
             extra[matched_key] = value[:2000]
+
+    # Text-wide maintenance timing fallback for layouts that don't expose structured blocks.
+    if extra.get("time_since_overhaul") is None and extra.get("engine_time_since_overhaul") is None:
+        full_text = soup.get_text(" ", strip=True)
+        eng_match = re.search(
+            r"(?:engine(?:\s+\d+)?\s*)?(?:smoh|tsoh|tsmoh|since\s+overhaul)\s*[:\-]?\s*([\d,]+(?:\.\d+)?)",
+            full_text,
+            re.I,
+        )
+        eng_hours = _extract_int_hours(eng_match.group(1)) if eng_match else None
+        if eng_hours is not None:
+            extra["time_since_overhaul"] = eng_hours
+            extra["engine_time_since_overhaul"] = eng_hours
+    if extra.get("time_since_prop_overhaul") is None:
+        full_text = soup.get_text(" ", strip=True)
+        prop_match = re.search(
+            r"(?:prop(?:eller)?(?:\s+\d+)?\s*)?(?:spoh|tspoh|since\s+overhaul)\s*[:\-]?\s*([\d,]+(?:\.\d+)?)",
+            full_text,
+            re.I,
+        )
+        prop_hours = _extract_int_hours(prop_match.group(1)) if prop_match else None
+        if prop_hours is not None:
+            extra["time_since_prop_overhaul"] = prop_hours
 
     gallery_urls = _extract_gallery_urls(soup)
     if gallery_urls:
@@ -928,17 +1103,49 @@ def _map_spec(label: str, value: str, target: dict):
             pass
     elif "s/n" in label or "serial" in label:
         target["serial_number"] = value
-    elif "reg" in label or "registration" in label:
-        target["n_number"] = value
+    elif "reg" in label or "registration" in label or "tail number" in label or "n-number" in label:
+        apply_registration_fields(target, raw_value=value, fallback_text=value, keep_existing_n_number=True)
     elif "tt" == label or "total time" in label:
         digits = re.sub(r'[^\d]', '', value)
         if digits:
             target["total_time_airframe"] = int(digits)
+    elif "spoh" in label or ("prop" in label and "overhaul" in label):
+        hours = _extract_int_hours(value)
+        if hours is not None:
+            target["time_since_prop_overhaul"] = hours
+    elif "smoh" in label or "tsoh" in label or ("engine" in label and "overhaul" in label):
+        hours = _extract_int_hours(value)
+        if hours is not None:
+            target["time_since_overhaul"] = hours
+            target["engine_time_since_overhaul"] = hours
     elif "location" in label:
         target["location_raw"] = value
         city, state = _split_location(value)
         target["location_city"] = city
         target["location_state"] = state
+        target["state"] = state
+
+
+def _extract_detail_price_text(soup: BeautifulSoup) -> str:
+    selectors = [
+        ".dtl-price",
+        ".price",
+        "[class*='dtl-price']",
+        "[class*='listing-price']",
+        "[data-price]",
+    ]
+    for selector in selectors:
+        node = soup.select_one(selector)
+        if not node:
+            continue
+        text = node.get_text(" ", strip=True)
+        if text and re.search(r"(\$|US\$|USD|€|£|R)\s*\d", text, re.I):
+            return text
+
+    # Fallback: find a nearby text fragment containing "Price" and a currency amount.
+    full_text = soup.get_text(" ", strip=True)
+    m = re.search(r"(Price[^.]{0,120}(?:USD|US\$|\$|EUR|€|GBP|£|ZAR|R)\s*[\d,]+)", full_text, re.I)
+    return m.group(1) if m else ""
 
 
 # ─── Scrape one make ──────────────────────────────────────────────────────────
@@ -956,8 +1163,11 @@ def scrape_make(
     existing_ids: set = None,
     output_listings: list = None,
     pw_page=None,
+    new_only_mode: bool = False,
+    run_seen_ids: set[str] | None = None,
 ) -> int:
     existing_ids = existing_ids or set()
+    run_seen_ids = run_seen_ids or set()
     name = make_info["name"]
     url  = make_info["url"]
 
@@ -991,7 +1201,14 @@ def scrape_make(
 
         for card in cards:
             lst = parse_card(card, aircraft_type, "")
-            if not lst or lst["source_id"] in existing_ids:
+            if not lst:
+                continue
+            sid = str(lst.get("source_id") or "")
+            if not sid:
+                continue
+            if sid in run_seen_ids:
+                continue
+            if sid in existing_ids and not new_only_mode:
                 continue
             if model_filter:
                 needle = model_filter.strip().lower()
@@ -1000,6 +1217,8 @@ def scrape_make(
                 if needle not in title_text and needle not in model_text:
                     continue
             all_listings.append(lst)
+            run_seen_ids.add(sid)
+            existing_ids.add(sid)
 
         page_num += 1
         if len(cards) < LISTINGS_PER_PAGE:
@@ -1043,8 +1262,37 @@ def scrape_make(
                         if not lst.get("primary_image_url"):
                             lst["primary_image_url"] = value
                         continue
-                    if not lst.get(key):
+                    current = lst.get(key)
+                    if current in (None, "", []):
                         lst[key] = value
+                        continue
+
+                    # Prefer richer detail fields over card-level snippets.
+                    if key in {
+                        "description",
+                        "description_full",
+                        "airframe_notes",
+                        "engine_notes",
+                        "avionics_notes",
+                        "maintenance_notes",
+                        "interior_notes",
+                        "location_raw",
+                        "location_city",
+                        "location_state",
+                        "state",
+                        "serial_number",
+                        "total_time_airframe",
+                        "asking_price",
+                        "price_asking",
+                        "time_since_overhaul",
+                        "engine_time_since_overhaul",
+                        "time_since_prop_overhaul",
+                    }:
+                        if isinstance(value, str) and isinstance(current, str):
+                            if len(value.strip()) > len(current.strip()):
+                                lst[key] = value
+                        else:
+                            lst[key] = value
 
     # Save
     if dry_run:
@@ -1053,7 +1301,7 @@ def scrape_make(
         for lst in all_listings[:2]:
             print(json.dumps(lst, indent=2, default=str))
     elif supabase and all_listings:
-        saved = _upsert_batch(supabase, all_listings)
+        saved = _upsert_batch(supabase, all_listings, new_only=new_only_mode)
         log.info(f"  Saved {saved}/{len(all_listings)}")
 
     return len(all_listings)
@@ -1075,6 +1323,7 @@ def _upsert_batch(
     listings: list[dict[str, Any]],
     *,
     skip_unchanged_writes: bool = True,
+    new_only: bool = False,
 ) -> int:
     if not listings:
         return 0
@@ -1115,6 +1364,7 @@ def _upsert_batch(
 
         cleaned["source_site"] = SOURCE_SITE
         cleaned["listing_source"] = SOURCE_SITE
+        cleaned["source"] = SOURCE_SITE
         sid = str(cleaned.get("source_id") or "")
         if cleaned.get("source_listing_id") is None and sid:
             cleaned["source_listing_id"] = sid
@@ -1132,6 +1382,9 @@ def _upsert_batch(
             cleaned["asking_price"] = cleaned["price_asking"]
 
         existing = existing_map.get(sid)
+        if new_only and existing:
+            unchanged_source_ids.append(sid)
+            continue
         cleaned["first_seen_date"] = today_iso if not existing else existing.get("first_seen_date")
         cleaned["last_seen_date"] = today_iso
         cleaned["is_active"] = True
@@ -1194,8 +1447,8 @@ def _upsert_batch(
         supabase=supabase,
         table="aircraft_listings",
         rows=normalized_rows,
-        on_conflict="source_site,source_id",
-        fallback_match_keys=["source_site", "source_id"],
+        on_conflict="source_site,source_listing_id",
+        fallback_match_keys=["source_site", "source_listing_id"],
         logger=log,
     )
     return saved + refreshed_unchanged
@@ -1224,6 +1477,7 @@ def run(args):
 
     supabase     = None
     existing_ids: set[str] = set()
+    run_seen_ids: set[str] = set()
 
     if not args.dry_run:
         supabase = get_supabase()
@@ -1313,6 +1567,8 @@ def run(args):
                     existing_ids=existing_ids,
                     output_listings=all_listings,
                     pw_page=pw_page_obj,
+                    new_only_mode=args.new_only,
+                    run_seen_ids=run_seen_ids,
                 )
                 grand_total += count
 
@@ -1468,6 +1724,11 @@ def main():
     parser.add_argument("--dry-run",    action="store_true")
     parser.add_argument("--no-detail",  action="store_true", help="Skip detail pages")
     parser.add_argument("--resume",     action="store_true", help="Skip IDs already in DB")
+    parser.add_argument(
+        "--new-only",
+        action="store_true",
+        help="Monitor mode: crawl all listings, insert only unseen IDs, refresh seen dates for existing rows.",
+    )
     parser.add_argument("--playwright", action="store_true", help="Force Playwright (default: plain requests)")
     parser.add_argument("--headless",   default="true")
     parser.add_argument("--verbose",    action="store_true")

@@ -17,6 +17,19 @@ from supabase import Client, create_client
 SOURCE_SITE = "aerotrader"
 
 
+def looks_like_challenge_html(html: str) -> bool:
+    low = str(html or "").lower()
+    markers = (
+        "geo.captcha-delivery.com",
+        "ct.captcha-delivery.com",
+        "please enable js and disable any ad blocker",
+        "var dd=",
+        "datadome",
+        "captcha-delivery",
+    )
+    return any(marker in low for marker in markers)
+
+
 def setup_logging(verbose: bool) -> logging.Logger:
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.INFO,
@@ -118,9 +131,7 @@ def main() -> None:
 
     title, html = fetch_listing_html(detail_url, headless=headless, timeout_ms=max(10000, args.timeout_ms))
     photos = collect_photo_urls(html)
-    blocked_tokens = ["captcha", "forbidden", "blocked", "verify", "challenge", "aerotrader.com"]
-    html_lower = html.lower()
-    challenge_detected = any(token in html_lower for token in blocked_tokens) and len(photos) == 0
+    challenge_detected = looks_like_challenge_html(html) and len(photos) == 0
 
     result = {
         "source_id": source_id,

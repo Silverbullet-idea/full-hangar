@@ -74,6 +74,8 @@
     "extension:bridge:globalair": "powershell -File scripts/run-extension-bridge-globalair.ps1",
     "extension:bridge:globalair:dryrun": "powershell -File scripts/run-extension-bridge-globalair.ps1 --dry-run",
     "test:smoke:listings": "playwright test tests/smoke/listings-smoke.spec.js --reporter=line",
+    "test:smoke:listings-options": "playwright test tests/smoke/listings-options-no-loop.spec.js --reporter=line",
+    "test:smoke:listings-all": "playwright test tests/smoke/listings-smoke.spec.js tests/smoke/listings-options-no-loop.spec.js --reporter=line",
     "admin:seed-user": "node ./seed-admin-user.mjs",
     "build": "next build",
     "start": "next start",

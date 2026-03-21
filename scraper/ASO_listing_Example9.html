@@ -1,0 +1,2298 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" style="height:100%;">
+<head><script type="text/javascript">window.NREUM||(NREUM={});NREUM.info = {"beacon":"bam.nr-data.net","errorBeacon":"bam.nr-data.net","licenseKey":"c15f60cfd5","applicationID":"8468243","transactionName":"b1dRNxFYChFSWxFdVlYdcjAzFgULQVsXVV9MbVUMEWYXA19dS1VKSEo=","queueTime":0,"applicationTime":31,"agent":"","atts":""}</script><script type="text/javascript">(window.NREUM||(NREUM={})).init={ajax:{deny_list:["bam.nr-data.net"]},feature_flags:["soft_nav"]};(window.NREUM||(NREUM={})).loader_config={licenseKey:"c15f60cfd5",applicationID:"8468243",browserID:"8468252"};window.NREUM||(NREUM={}),__nr_require=function(t,e,n){function r(n){if(!e[n]){var i=e[n]={exports:{}};t[n][0].call(i.exports,function(e){var i=t[n][1][e];return r(i||e)},i,i.exports)}return e[n].exports}if("function"==typeof __nr_require)return __nr_require;for(var i=0;i<n.length;i++)r(n[i]);return r}({1:[function(t,e,n){function r(){}function i(t,e,n,r){return function(){return s.recordSupportability("API/"+e+"/called"),o(t+e,[u.now()].concat(c(arguments)),n?null:this,r),n?void 0:this}}var o=t("handle"),a=t(9),c=t(10),f=t("ee").get("tracer"),u=t("loader"),s=t(4),d=NREUM;"undefined"==typeof window.newrelic&&(newrelic=d);var p=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],l="api-",v=l+"ixn-";a(p,function(t,e){d[e]=i(l,e,!0,"api")}),d.addPageAction=i(l,"addPageAction",!0),d.setCurrentRouteName=i(l,"routeName",!0),e.exports=newrelic,d.interaction=function(){return(new r).get()};var m=r.prototype={createTracer:function(t,e){var n={},r=this,i="function"==typeof e;return o(v+"tracer",[u.now(),t,n],r),function(){if(f.emit((i?"":"no-")+"fn-start",[u.now(),r,i],n),i)try{return e.apply(this,arguments)}catch(t){throw f.emit("fn-err",[arguments,this,t],n),t}finally{f.emit("fn-end",[u.now()],n)}}}};a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(t,e){m[e]=i(v,e)}),newrelic.noticeError=function(t,e){"string"==typeof t&&(t=new Error(t)),s.recordSupportability("API/noticeError/called"),o("err",[t,u.now(),!1,e])}},{}],2:[function(t,e,n){function r(t){if(NREUM.init){for(var e=NREUM.init,n=t.split("."),r=0;r<n.length-1;r++)if(e=e[n[r]],"object"!=typeof e)return;return e=e[n[n.length-1]]}}e.exports={getConfiguration:r}},{}],3:[function(t,e,n){var r=!1;try{var i=Object.defineProperty({},"passive",{get:function(){r=!0}});window.addEventListener("testPassive",null,i),window.removeEventListener("testPassive",null,i)}catch(o){}e.exports=function(t){return r?{passive:!0,capture:!!t}:!!t}},{}],4:[function(t,e,n){function r(t,e){var n=[a,t,{name:t},e];return o("storeMetric",n,null,"api"),n}function i(t,e){var n=[c,t,{name:t},e];return o("storeEventMetrics",n,null,"api"),n}var o=t("handle"),a="sm",c="cm";e.exports={constants:{SUPPORTABILITY_METRIC:a,CUSTOM_METRIC:c},recordSupportability:r,recordCustom:i}},{}],5:[function(t,e,n){function r(){return c.exists&&performance.now?Math.round(performance.now()):(o=Math.max((new Date).getTime(),o))-a}function i(){return o}var o=(new Date).getTime(),a=o,c=t(11);e.exports=r,e.exports.offset=a,e.exports.getLastTimestamp=i},{}],6:[function(t,e,n){function r(t,e){var n=t.getEntries();n.forEach(function(t){"first-paint"===t.name?l("timing",["fp",Math.floor(t.startTime)]):"first-contentful-paint"===t.name&&l("timing",["fcp",Math.floor(t.startTime)])})}function i(t,e){var n=t.getEntries();if(n.length>0){var r=n[n.length-1];if(u&&u<r.startTime)return;var i=[r],o=a({});o&&i.push(o),l("lcp",i)}}function o(t){t.getEntries().forEach(function(t){t.hadRecentInput||l("cls",[t])})}function a(t){var e=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(e)return e.type&&(t["net-type"]=e.type),e.effectiveType&&(t["net-etype"]=e.effectiveType),e.rtt&&(t["net-rtt"]=e.rtt),e.downlink&&(t["net-dlink"]=e.downlink),t}function c(t){if(t instanceof y&&!w){var e=Math.round(t.timeStamp),n={type:t.type};a(n),e<=v.now()?n.fid=v.now()-e:e>v.offset&&e<=Date.now()?(e-=v.offset,n.fid=v.now()-e):e=v.now(),w=!0,l("timing",["fi",e,n])}}function f(t){"hidden"===t&&(u=v.now(),l("pageHide",[u]))}if(!("init"in NREUM&&"page_view_timing"in NREUM.init&&"enabled"in NREUM.init.page_view_timing&&NREUM.init.page_view_timing.enabled===!1)){var u,s,d,p,l=t("handle"),v=t("loader"),m=t(8),g=t(3),y=NREUM.o.EV;if("PerformanceObserver"in window&&"function"==typeof window.PerformanceObserver){s=new PerformanceObserver(r);try{s.observe({entryTypes:["paint"]})}catch(h){}d=new PerformanceObserver(i);try{d.observe({entryTypes:["largest-contentful-paint"]})}catch(h){}p=new PerformanceObserver(o);try{p.observe({type:"layout-shift",buffered:!0})}catch(h){}}if("addEventListener"in document){var w=!1,b=["click","keydown","mousedown","pointerdown","touchstart"];b.forEach(function(t){document.addEventListener(t,c,g(!1))})}m(f)}},{}],7:[function(t,e,n){function r(t,e){if(!i)return!1;if(t!==i)return!1;if(!e)return!0;if(!o)return!1;for(var n=o.split("."),r=e.split("."),a=0;a<r.length;a++)if(r[a]!==n[a])return!1;return!0}var i=null,o=null,a=/Version\/(\S+)\s+Safari/;if(navigator.userAgent){var c=navigator.userAgent,f=c.match(a);f&&c.indexOf("Chrome")===-1&&c.indexOf("Chromium")===-1&&(i="Safari",o=f[1])}e.exports={agent:i,version:o,match:r}},{}],8:[function(t,e,n){function r(t){function e(){t(c&&document[c]?document[c]:document[o]?"hidden":"visible")}"addEventListener"in document&&a&&document.addEventListener(a,e,i(!1))}var i=t(3);e.exports=r;var o,a,c;"undefined"!=typeof document.hidden?(o="hidden",a="visibilitychange",c="visibilityState"):"undefined"!=typeof document.msHidden?(o="msHidden",a="msvisibilitychange"):"undefined"!=typeof document.webkitHidden&&(o="webkitHidden",a="webkitvisibilitychange",c="webkitVisibilityState")},{}],9:[function(t,e,n){function r(t,e){var n=[],r="",o=0;for(r in t)i.call(t,r)&&(n[o]=e(r,t[r]),o+=1);return n}var i=Object.prototype.hasOwnProperty;e.exports=r},{}],10:[function(t,e,n){function r(t,e,n){e||(e=0),"undefined"==typeof n&&(n=t?t.length:0);for(var r=-1,i=n-e||0,o=Array(i<0?0:i);++r<i;)o[r]=t[e+r];return o}e.exports=r},{}],11:[function(t,e,n){e.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],ee:[function(t,e,n){function r(){}function i(t){function e(t){return t&&t instanceof r?t:t?u(t,f,a):a()}function n(n,r,i,o,a){if(a!==!1&&(a=!0),!l.aborted||o){t&&a&&t(n,r,i);for(var c=e(i),f=m(n),u=f.length,s=0;s<u;s++)f[s].apply(c,r);var p=d[w[n]];return p&&p.push([b,n,r,c]),c}}function o(t,e){h[t]=m(t).concat(e)}function v(t,e){var n=h[t];if(n)for(var r=0;r<n.length;r++)n[r]===e&&n.splice(r,1)}function m(t){return h[t]||[]}function g(t){return p[t]=p[t]||i(n)}function y(t,e){l.aborted||s(t,function(t,n){e=e||"feature",w[n]=e,e in d||(d[e]=[])})}var h={},w={},b={on:o,addEventListener:o,removeEventListener:v,emit:n,get:g,listeners:m,context:e,buffer:y,abort:c,aborted:!1};return b}function o(t){return u(t,f,a)}function a(){return new r}function c(){(d.api||d.feature)&&(l.aborted=!0,d=l.backlog={})}var f="nr@context",u=t("gos"),s=t(9),d={},p={},l=e.exports=i();e.exports.getOrSetContext=o,l.backlog=d},{}],gos:[function(t,e,n){function r(t,e,n){if(i.call(t,e))return t[e];var r=n();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(t,e,{value:r,writable:!0,enumerable:!1}),r}catch(o){}return t[e]=r,r}var i=Object.prototype.hasOwnProperty;e.exports=r},{}],handle:[function(t,e,n){function r(t,e,n,r){i.buffer([t],r),i.emit(t,e,n)}var i=t("ee").get("handle");e.exports=r,r.ee=i},{}],id:[function(t,e,n){function r(t){var e=typeof t;return!t||"object"!==e&&"function"!==e?-1:t===window?0:a(t,o,function(){return i++})}var i=1,o="nr@id",a=t("gos");e.exports=r},{}],loader:[function(t,e,n){function r(){if(!M++){var t=T.info=NREUM.info,e=m.getElementsByTagName("script")[0];if(setTimeout(u.abort,3e4),!(t&&t.licenseKey&&t.applicationID&&e))return u.abort();f(x,function(e,n){t[e]||(t[e]=n)});var n=a();c("mark",["onload",n+T.offset],null,"api"),c("timing",["load",n]);var r=m.createElement("script");0===t.agent.indexOf("http://")||0===t.agent.indexOf("https://")?r.src=t.agent:r.src=l+"://"+t.agent,e.parentNode.insertBefore(r,e)}}function i(){"complete"===m.readyState&&o()}function o(){c("mark",["domContent",a()+T.offset],null,"api")}var a=t(5),c=t("handle"),f=t(9),u=t("ee"),s=t(7),d=t(2),p=t(3),l=d.getConfiguration("ssl")===!1?"http":"https",v=window,m=v.document,g="addEventListener",y="attachEvent",h=v.XMLHttpRequest,w=h&&h.prototype,b=!1;NREUM.o={ST:setTimeout,SI:v.setImmediate,CT:clearTimeout,XHR:h,REQ:v.Request,EV:v.Event,PR:v.Promise,MO:v.MutationObserver};var E=""+location,x={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-1216.min.js"},O=h&&w&&w[g]&&!/CriOS/.test(navigator.userAgent),T=e.exports={offset:a.getLastTimestamp(),now:a,origin:E,features:{},xhrWrappable:O,userAgent:s,disabled:b};if(!b){t(1),t(6),m[g]?(m[g]("DOMContentLoaded",o,p(!1)),v[g]("load",r,p(!1))):(m[y]("onreadystatechange",i),v[y]("onload",r)),c("mark",["firstbyte",a.getLastTimestamp()],null,"api");var M=0}},{}],"wrap-function":[function(t,e,n){function r(t,e){function n(e,n,r,f,u){function nrWrapper(){var o,a,s,p;try{a=this,o=d(arguments),s="function"==typeof r?r(o,a):r||{}}catch(l){i([l,"",[o,a,f],s],t)}c(n+"start",[o,a,f],s,u);try{return p=e.apply(a,o)}catch(v){throw c(n+"err",[o,a,v],s,u),v}finally{c(n+"end",[o,a,p],s,u)}}return a(e)?e:(n||(n=""),nrWrapper[p]=e,o(e,nrWrapper,t),nrWrapper)}function r(t,e,r,i,o){r||(r="");var c,f,u,s="-"===r.charAt(0);for(u=0;u<e.length;u++)f=e[u],c=t[f],a(c)||(t[f]=n(c,s?f+r:r,i,f,o))}function c(n,r,o,a){if(!v||e){var c=v;v=!0;try{t.emit(n,r,o,e,a)}catch(f){i([f,n,r,o],t)}v=c}}return t||(t=s),n.inPlace=r,n.flag=p,n}function i(t,e){e||(e=s);try{e.emit("internal-error",t)}catch(n){}}function o(t,e,n){if(Object.defineProperty&&Object.keys)try{var r=Object.keys(t);return r.forEach(function(n){Object.defineProperty(e,n,{get:function(){return t[n]},set:function(e){return t[n]=e,e}})}),e}catch(o){i([o],n)}for(var a in t)l.call(t,a)&&(e[a]=t[a]);return e}function a(t){return!(t&&t instanceof Function&&t.apply&&!t[p])}function c(t,e){var n=e(t);return n[p]=t,o(t,n,s),n}function f(t,e,n){var r=t[e];t[e]=c(r,n)}function u(){for(var t=arguments.length,e=new Array(t),n=0;n<t;++n)e[n]=arguments[n];return e}var s=t("ee"),d=t(10),p="nr@original",l=Object.prototype.hasOwnProperty,v=!1;e.exports=r,e.exports.wrapFunction=c,e.exports.wrapInPlace=f,e.exports.argsToArray=u},{}]},{},["loader"]);</script><link id="ctl00_ext_css" href="/WebResource.axd?d=T5XJpK7XfL83lWLYvoS6mViSalWu34BwZuEFVw4qW7UhvUB4w09iR6-YcjiMjwrRMuRBcUWH1dydbVxg4i6o6WMWLkjnya9LZCEkrj9ugu8xx6pVi5A1sOnbOgyQdeiZIf1BPw2&amp;t=636014114320000000" rel="stylesheet" media="all" type="text/css" /><title>
+	ASO
+</title><link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" /><link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" /><link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" /><link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" /><link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" /><link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" /><link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" /><link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" /><link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" /><link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png" /><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" /><link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" /><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" /><link rel="manifest" href="/manifest.json" /><meta name="msapplication-TileColor" content="#ffffff" /><meta name="msapplication-TileImage" content="/ms-icon-144x144.png" /><meta name="theme-color" content="#ffffff" /><meta name="google-site-verification" content="v1hxoGubRHX1lytV2wnrDqBIDE4brOC54Ts0Vtcg5Us" /><link id="ctl00_asoCss" type="text/css" rel="stylesheet" href="/WebResource.axd?d=Y5ZGX42ttXZ95qkDigYcDG2p-TOTmwXmsn2IbXIufvpw9NAsuExRyJdnf4XJv6wyeL7OBZZ3M2UMQxNLw0M2ilab5IQ8ApBjEInCjpwoDcry9n2IDvbhVlirUr3SKa733k2LDA2&amp;t=638928575500000000" /><link rel="canonical" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=turbine_helicopters" />
+    <style type="text/css">
+        .ext-el-mask
+        {
+            background-color: Black;
+            opacity: 0.2;
+        }
+    </style>
+<script type="text/javascript" src="/WebResource.axd?d=KF-gB3SQKqlA_4KzGFUhB5vLXFZCiNdGpT7nwS5xumfrwFF4LVpA9yP0mtJ17rGtu4BzVF5u5KHUHmr9vw9I56m1OmIoSkr0C3vVb9TIIYDQ_5vr0&amp;t=636014114320000000"></script><script type="text/javascript">var Page = {}; Ext.lib.Event.on(window, 'unload', function(){ if(Page.destroy) Page.destroy(); })</script><script type="text/javascript" src="/WebResource.axd?d=dk9QJRLjGyihV0ZQs_Zam_5O1TWjZZeBireUy_YpACCWBnfVHS6WXPZT58-G9HI4OkvvPBXD55fo9CqNBSFg7UddcPLUWxCwQvUQPs_h_tLIX3jj0&amp;t=636014114320000000"></script><script type="text/javascript" src="/WebResource.axd?d=HoVzkx5S3wpIEmHbItXHx_tFRgrR-pnNpdXqqVPZoaksSa2rPZSpgGN4PoS038D7VEhRfm4QI4NLp3NmjhTD17uQa5bgMdQG1sSgZVKFWd3I0rK30&amp;t=636014114320000000"></script><script type="text/javascript" src="/WebResource.axd?d=tTPgGZG9O2z4RUPZqH_AoV6y6yrmjaXAZbrbePe5Tew-8c-oENtgS3Xwb6y_0-OAKDZKV4Za1gZfj7jlp9qr9qz4Htu4C9IJ-8MMZyVmClm5Qdvf0&amp;t=636014114320000000"></script><script type="text/javascript" src="/WebResource.axd?d=t8e5-8Ossq2cTmEq8TQD54D-YWEGOyqd0HCSh2DrkpyZZ9kLawDtU2XdgpMk_ovARK6XMZ4p_X-owOuF1qhNcoFI72biEY-koFpu0180YHeMdtWN0&amp;t=636014114320000000"></script><script type="text/javascript" src="/WebResource.axd?d=w1P_MCaRyQd8CRObDw_gcElRFXN-hTyXquoXbbGNcGDF_xr1E91uOu0pgaY5S7kqGGnxEpgr04GkiUpMZjHCVKSJidKvXVT72VqqYP_7UXh9J4Gf0&amp;t=636014114320000000"></script></head>
+
+<body id="ctl00_mBody" style="margin: 0px; text-align: center; font-family: Arial; font-size: 12px;
+    padding: 0px; height:100%">
+    
+    <form method="post" action="/Aircraft_For_Sale.aspx?act_id=Turbine_Helicopters" id="aspnetForm" style="min-height:100%; position: relative; margin-bottom:-45px;">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="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" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['aspnetForm'];
+if (!theForm) {
+    theForm = document.aspnetForm;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+
+<script type="text/javascript">
+//<![CDATA[
+var BooleanSearchQuery = {"__type":"BooleanSearchQuery","Operator":0,"Queries":[],"QueryType":"BooleanSearchQuery","IsAircraftSpecQueryExist":false,"IsAircraftTagQueryExist":false,"IsAircraftTypeQueryExist":false,"IsDealerQueryExist":false,"IsFilterQueryExist":false,"IsFullTextQueryExist":false,"IsGeographicalLocationQueryExist":false,"IsListingQueryExist":false,"IsMakeQueryExist":false,"IsModelGroupQueryExist":false,"IsModelQueryExist":false,"IsOwnershipTypeQueryExist":false,"IsPhotoAdQueryExist":false,"IsSavedQueryExist":false,"IsSearchContextQueryExist":false,"IsFilterSelectedQueryExist":false};//]]>
+</script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="F4148E61" />
+</div>
+        <div id="master-div" style="margin: 0em auto; width: 960px;">
+            
+            <script type="text/javascript">
+            
+                var headerClientID = 'ctl00_HeaderControl1';
+                var applicationPath = '/';
+                if (applicationPath == '/') applicationPath = '';
+                var rawUrl = '%2fAircraft_For_Sale.aspx%3fact_id%3dTurbine_Helicopters';
+                var AOPA_INSURANCE_AD_NUMBER = '999986';
+                var CAMP_SYSTEMS_AD_NUMBER = '999985';
+                var ReturnURL = '';
+                var ShowMsg = '';
+                var PageUrl = '/Aircraft_For_Sale.aspx';
+                var AuthenticationUrl = applicationPath + '/httpHandlers/LoginRegisterHandler.ashx';
+                if (!window.userAlerts) {
+                    window.userAlerts = [];
+                }
+            
+                Ext.QuickTips.init();
+                /* This is a hack do not remove this line .. or this image*/
+                Ext.BLANK_IMAGE_URL = applicationPath + "/images/s.gif";
+            </script>
+        <script type="text/javascript" src="aso-common.js?v=1.4.8.1"></script>
+
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-N3W2T7D3E9"></script>            
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', 'G-N3W2T7D3E9', { cookie_flags: 'samesite=none;secure' });
+           
+            function trackGoogleAnalytics(virtualPageName) {
+                if (true == true) {
+                    gtag('event', 'page_view', { page_path: virtualPageName });
+                }
+            }
+        </script>
+
+        
+
+<script type="text/javascript">
+    Page['ctl00_HeaderControl1'] = new Camp.ASO.HeaderCtrlUCTL({
+        showMMASIntro: 'false',
+        mmasUrl: 'https://www.aso.com/MyASO/ManageMyAircraftSearch.aspx'
+    });
+    function ShowIntroDivOrRedirect() {
+        var ctrl = Page['ctl00_HeaderControl1'];
+        if (ctrl != null && 'false' == "true") {
+            return !ctrl.showMMASIntroWindow();
+        }
+    }
+</script>
+
+<div class="header">
+<div id="UserDiv" style="display:none">
+    <span id="ctl00_HeaderControl1_userLog">Login</span>
+</div>
+    <table border="0" cellspacing="0" cellpadding="0">
+        <tbody>
+            <tr>
+                <td valign="top">
+                    <div style="height: 58px;">
+                        <a id="ctl00_HeaderControl1_lnkHome" title="Aircraft Shopper Online - The Aircraft Market in Real Time. Find the most current Aircraft For Sale listings." href="https://www.aso.com"><img title="Aircraft Shopper Online - The Aircraft Market in Real Time. Find the most current Aircraft For Sale listings." src="https://www.aso.com/WebResource.axd?d=tZXBmtcq2BczuDRdGEMxrscXUMAtiUwvUciEN-GkhZk7WknfHA3fK2qwJOiqidDCvWBjbpcnUiBXCKmAwcDItNrBm_TNBfp1Lc3RuYJFY5PvCm-it8JGi31bRMaGJYkrGD5p_gN4PSX64R3nrtvNyicMsUA1&amp;t=638928575500000000" alt="Aircraft Shopper Online - The Aircraft Market in Real Time. Find the most current Aircraft For Sale listings." /></a>
+                    </div>
+                </td>
+                <td valign="middle">
+                    <div style="width: 635px; vertical-align: middle;">                        
+                        <div style="width: 75px; float:right; margin-bottom: 3px;">
+                                <a class="facebook-icon-20" style="width:20px; height:20px" title="Like ASO on Facebook" onclick="window.open('http://www.facebook.com/pages/ASO-Aircraft-Shopper-Online/156470554434174', '_blank');" ></a>
+                                <a class="twitter-icon-20" title="Follow ASO on Twitter" onclick="window.open('http://twitter.com/#!/AircraftShopper', '_blank');" ></a>
+                                <a class="youtube-icon-20" title="Subscribe ASO on YouTube" onclick="window.open('http://www.youtube.com/user/ASOAircraft', '_blank');" ></a>
+                        </div>
+                        <div id="ctl00_HeaderControl1_timeDiv" class="welcomeText" style="float: left; height: 18px;
+                            padding-left: 14px;">March 14, 03:29 AM US EDT</div>
+                        <div class="welcomeText" style="float: right; width: 380px; text-align:right; vertical-align:middle">
+                            <span id="ctl00_HeaderControl1_lblWelcome">Welcome Guest</span>
+                            <span id="ctl00_HeaderControl1_spanLoginRegister" style="display:inline;">
+                                <a id="ctl00_HeaderControl1_linkBtnLogin" class="loginLogoutLink" href="javascript:__doPostBack(&#39;ctl00$HeaderControl1$linkBtnLogin&#39;,&#39;&#39;)">Login</a>
+                                <span id="ctl00_HeaderControl1_lblSeperator">/</span>
+                                <a id="ctl00_HeaderControl1_linkBtnRegister" class="loginLogoutLink" href="javascript:__doPostBack(&#39;ctl00$HeaderControl1$linkBtnRegister&#39;,&#39;&#39;)">Register</a>                            
+                            </span>
+                            <span id="ctl00_HeaderControl1_spanLogout" style="display:none;">
+                                <a id="ctl00_HeaderControl1_linkBtnLogout" class="loginLogoutLink" href="javascript:__doPostBack(&#39;ctl00$HeaderControl1$linkBtnLogout&#39;,&#39;&#39;)">Logout</a>
+                            </span>
+                        </div>
+
+                        <div style="display: none;" id="headerMenuDiv">
+                            
+
+<div class="toolbar menu" id="headerMenubar" style="float: right;">
+    <div class="menuLeft"></div>
+    <div class="menuCenter" style="vertical-align: middle; overflow: hidden;">
+        <table cellspacing="0" cellpadding="0" border="0" style="height: 26px;">
+            <tbody>
+                <tr>
+                    <td valign="middle" class="aso_menu buy" style="width: 151px;">
+                        <span class="menuText">Buy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    </td>
+                    <td valign="middle">
+                        <div class="menuSeparator">
+                            &nbsp;</div>
+                    </td>
+                    <td valign="middle" class="aso_menu sell">
+                        <span class="menuText">Sell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    </td>
+                    <td valign="middle">
+                        <div class="menuSeparator">
+                            &nbsp;</div>
+                    </td>
+                    <td valign="middle" class="aso_menu learn">
+                        <span class="menuText">Learn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    </td>
+                    <td valign="middle">
+                        <div class="menuSeparator">
+                            &nbsp;</div>
+                    </td>
+                    <td valign="middle" class="aso_menu myaso" style="width: 148px;">
+                        <span class="menuText">MyASO&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="menuRight"></div>
+</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <noscript>
+                        <div style="margin-bottom: 5px;">
+                            
+<div style="text-align: left; font-size: 11px;">
+    <table cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="noscript-menu-style" style="width: 0px; text-align: center; color: #192D46;
+                border-bottom: none;">
+                <b>You currently have JavaScript disabled on your browser. Please use the links below
+                    to browse ASO.com</b>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="0" cellspacing="0" style="width: 960px;">
+                    <tr style="background-color: #548ECE; color: White; font-size: 12px;">
+                        <th class="noscript-menu-style" style="border-bottom: none;">
+                            <b>Buy</b>
+                        </th>
+                        <th class="noscript-menu-style" style="border-bottom: none; border-left: none;">
+                            <b>Find an Aircraft Dealer</b>
+                        </th>
+                        <th class="noscript-menu-style" style="border-bottom: none; border-left: none;">
+                            <b>Sell</b>
+                        </th>
+                        <th class="noscript-menu-style" style="border-bottom: none; border-left: none;">
+                            <b>Other</b>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Single_Engine_Pistons" title="Single Engine Aircraft for Sale on ASO &#8211; Cessna 182, Beech Bonanza, Cessna 172, Piper Cherokee, Mooney Aircraft, Piper Archer, Piper Malibu Airplanes">
+                                Single Engine Prop</a>
+                        </td>
+                        <td class="noscript-menu-style" style="width: 175px; border-bottom: none; border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/BrokerDealer/USDealers.aspx" title="Find an Aircraft Broker or Aircraft Dealer - US List by State: ASO.com">
+                                US Dealers / Brokers</a>
+                        </td>
+                        <td class="noscript-menu-style" style="border-bottom: none; border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Sell/BrokerDealerAdvertising/AircraftDealerRates.aspx" title="Aircraft Advertising Rates - Brokers &amp; Dealers: ASO.com">
+                                Broker / Dealer Rates</a>
+                        </td>
+                        <td class="noscript-menu-style" rowspan="12" valign="top" style="border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Learn/IndustryLinksandServicesDirectory.aspx" title="ASO Industry Links and Services Directory">
+                                Industry Links and Services</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Multi_Engine_Pistons" title="Twin  Engine Aircraft for Sale on ASO &amp;#8211; Cessna 340, Beech Baron, Cessna 421, Piper Seneca, Twin Comanche Airplanes">
+                                Multi Engine Prop</a>
+                        </td>
+                        <td class="noscript-menu-style" style="width: 175px; border-bottom: none; border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/BrokerDealer/InternationalDealers.aspx" title="Find an Aircraft Broker or Aircraft Dealer - Worldwide List by Country: ASO.com">
+                                International Dealers / Brokers</a>
+                        </td>
+                        <td class="noscript-menu-style" rowspan="11" valign="top" style="border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Sell/ForSaleByOwnerAdvertising/AircraftOwnerRates.aspx" title="Aircraft Advertising Rates - Aircraft Owners: ASO.com">
+                                For Sale By Owner Rates</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Business_Jets" title="Jets for Sale on ASO &amp;#8211; Cessna Citation, Hawker, Learjet, Falcon Jet, Challenger, Gulfstream Jet">
+                                Business Jet</a>
+                        </td>
+                        <td class="noscript-menu-style" rowspan="10" valign="top" style="width: 175px; border-left: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/BrokerDealer/AlphabeticalDealerPage.aspx" title="Find an Aircraft Broker or Aircraft Dealer - Worldwide Alphabetical List: ASO.com">
+                                Alphabetical list of Dealers / Brokers</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Business_TurboProps" title="Turboprop Aircraft for Sale on ASO &#8211; King Air, Socata, Cessna Caravan, Piper Cheyenne, Twin Commander Airplanes">
+                                Business Turbo Prop</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Turbine_Helicopters" title="Helicopters for Sale on ASO  &#8211; Bell, Sikorsky, Agusta, Eurocopter, Enstrom">
+                                Turbine Helicopter</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Piston_Helicopters" title="Helicopters for Sale on ASO  &#8211; Enstrom, Schweizer, Robinson, Hughes">
+                                Piston Helicopter</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?AC_TAG_ID=Amphibian_Float" title="Amphibian and Float Aircraft for Sale on ASO &#8211; Lake Aircraft, Cessna, Piper, DeHavilland Aircraft, Aviat">
+                                Amphibian & Float</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?AC_TAG_ID=LSA_Experimental" title="LSA and Experimental Aircraft for Sale on ASO &#8211; RV 6, Lancair Aircraft">
+                                LSA & Experimental</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?AC_TAG_ID=Warbird_Classic" title="Warbirds for Sale on ASO &#8211; Yak Aircraft, Stearman, Beech Staggerwing, SIAI Marchetti, Focke Wulf, North American, Stinson Aircraft">
+                                Warbirds & Classic</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/Aircraft_For_Sale.aspx?AC_TAG_ID=Commercial" title="Commercial Jets, Regional Jets, and Commercial Turboprop Aircraft For Sale on ASO.com">
+                                Commercial Jet/TProp</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="noscript-menu-style" style="border-bottom: none;">
+                            <a class="noscript-menu-anchor" href="https://www.aso.com/listings/AircraftListings.aspx?pl=true" title="Aircraft for sale on ASO.com by Brokers and Dealers, for sale by owner Aircraft for sale">
+                                Partnership Listings</a>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+                        </div>
+                    </noscript>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                        <tbody>
+                            <tr>
+                                <td align="left">
+                                    
+
+<table cellpadding="0" cellspacing="0" border="0" class="toolbar search">
+    <tbody>
+        <tr>
+            <td>
+                <div class="searchLeft">
+                </div>
+            </td>
+            <td>
+                <div class="searchCenter searchText" style="vertical-align: middle;">
+                    <table border="0" cellspacing="0" cellpadding="0" style="height: 27px; width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td id="search-td" valign="middle" style="width: 46px; vertical-align: middle;">
+                                    
+                                    <span id="search-text" style="width: 54px; cursor: default;">Search</span>
+                                </td>
+                                <td valign="middle">
+                                    
+                                    <input type="hidden" name="searchTypeValue" id="searchTypeValue" value="Within results" />
+                                </td>
+                                <td valign="middle">
+                                    <input name="ctl00$HeaderControl1$searchToolbar$txtSearch" type="text" id="ctl00_HeaderControl1_searchToolbar_txtSearch" class="marker-global-search-fts searchText asoInputText" style="width:292px;margin-left: 5px; margin-top: 2px; text-align: left; float:left" />
+                                    <div style="padding-left: 3px; padding-right: 5px; float: left">
+                                        <input type="image" name="ctl00$HeaderControl1$searchToolbar$btnSearch" id="ctl00_HeaderControl1_searchToolbar_btnSearch" class="searchBtn-new" Text="       " UseSubmitBehavior="false" src="/WebResource.axd?d=MR4n7Y7xD6P4PU8Q18WKbb6E-lp1Uti-MDUGNcrVJZNXU-RudSZIKZNdijrleL3AVI4t7EXeb8UNsXWVFhSbcAGBx-Z7Hbl1dp0kEMNxdHMgzjBmJJldNtLKnCM3HA7gG35aNldOBnOsS1oWA210CTu_zgw1&amp;t=638928575500000000" />
+                                         <input name="ctl00$HeaderControl1$searchToolbar$hdnSearchId" type="hidden" id="ctl00_HeaderControl1_searchToolbar_hdnSearchId" />
+                                    </div>    
+                                </td>
+                                
+                                <td>
+                                    
+                                    <div id="ctl00_HeaderControl1_searchToolbar_divRunSavedSearchesText" class="runSavedSearches" style="background-color:White;" onclick="return showHideMessageDiv();">
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+            <td>
+                <div class="searchRight">
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<input name="ctl00$HeaderControl1$searchToolbar$hdnDivSSearchLoginMsgShowed" type="hidden" id="ctl00_HeaderControl1_searchToolbar_hdnDivSSearchLoginMsgShowed" value="false" />
+<div id="ctl00_HeaderControl1_searchToolbar_divSSearchLoginMsg" style="left:562px;z-index:1000;float:left;position:absolute;top:81px;display:none;background-color:White;padding:3px;border:1px solid black;">
+    Please <a href='https://www.aso.com/Login.aspx'>log in</a> to access your Saved Searches.
+</div>
+<input name="ctl00$HeaderControl1$searchToolbar$hdnDivSSearchMsgShowed" type="hidden" id="ctl00_HeaderControl1_searchToolbar_hdnDivSSearchMsgShowed" value="false" />
+<div id="ctl00_HeaderControl1_searchToolbar_divSSearchMsg" style="left:562px;z-index:1000;float:left;position:absolute;top:81px;display:none;background-color:White;padding:3px;border:1px solid black;">
+    There are no Saved Searches yet for this user account.
+</div>
+
+<script type="text/javascript">
+
+function showHideMessageDiv()
+{
+    var user_id = '';
+    var saved_search_count = '0';
+    
+    if(user_id == '' || user_id == 0)
+    {
+        var savedSearchLoginMsgCtrl = document.getElementById("ctl00_HeaderControl1_searchToolbar_divSSearchLoginMsg");
+        var hdnDivSSearchLoginMsgShowed = document.getElementById("ctl00_HeaderControl1_searchToolbar_hdnDivSSearchLoginMsgShowed");
+        if(savedSearchLoginMsgCtrl)
+        {
+            if(hdnDivSSearchLoginMsgShowed && hdnDivSSearchLoginMsgShowed.value == 'false')
+            {
+                savedSearchLoginMsgCtrl.style.display = 'block';
+                hdnDivSSearchLoginMsgShowed.value='true';
+
+                hideMessageDiv.defer(5000);
+            }
+            else
+            {
+                savedSearchLoginMsgCtrl.style.display = 'none';
+                hdnDivSSearchLoginMsgShowed.value='false';
+            }
+        }
+    }
+    else if(saved_search_count == 0)
+    {
+        var savedSearchMsgCtrl = document.getElementById("ctl00_HeaderControl1_searchToolbar_divSSearchMsg");
+        var hdnDivSSearchMsgShowed = document.getElementById("ctl00_HeaderControl1_searchToolbar_hdnDivSSearchMsgShowed");
+        if(savedSearchMsgCtrl)
+        {
+            if(hdnDivSSearchMsgShowed && hdnDivSSearchMsgShowed.value == 'false')
+            {
+                savedSearchMsgCtrl.style.display = 'block';
+                hdnDivSSearchMsgShowed.value='true';
+
+                hideMessageDiv.defer(5000);
+            }
+            else
+            {
+                savedSearchMsgCtrl.style.display = 'none';
+                hdnDivSSearchMsgShowed.value='false';
+            }
+        }
+    }
+    return false;
+}
+
+function hideMessageDiv()
+{
+    var user_id = '';
+    var saved_search_count = '0';
+    if(user_id == '' || user_id == 0)
+    {
+        var savedSearchLoginMsgCtrl = document.getElementById("ctl00_HeaderControl1_searchToolbar_divSSearchLoginMsg");
+        var hdnDivSSearchLoginMsgShowed = document.getElementById("ctl00_HeaderControl1_searchToolbar_hdnDivSSearchLoginMsgShowed");
+
+        if(savedSearchLoginMsgCtrl)
+        {
+            if(hdnDivSSearchLoginMsgShowed && hdnDivSSearchLoginMsgShowed.value == 'true')
+            {
+                savedSearchLoginMsgCtrl.style.display = 'none';
+                hdnDivSSearchLoginMsgShowed.value='false';
+            }
+        }
+    }
+    else if(saved_search_count == 0)
+    {
+        var savedSearchMsgCtrl = document.getElementById("ctl00_HeaderControl1_searchToolbar_divSSearchMsg");
+        var hdnDivSSearchMsgShowed = document.getElementById("ctl00_HeaderControl1_searchToolbar_hdnDivSSearchMsgShowed");
+        if(savedSearchMsgCtrl)
+        {
+            if(hdnDivSSearchMsgShowed && hdnDivSSearchMsgShowed.value == 'true')
+            {
+                savedSearchMsgCtrl.style.display = 'none';
+                hdnDivSSearchMsgShowed.value='false';
+            }
+        }
+    }
+}
+
+(function(){    
+    var ddlSearchTypeEl = Ext.getDom('ctl00_HeaderControl1_searchToolbar_ddlSearchType');
+    if(ddlSearchTypeEl != null)
+    {
+        Ext.fly(ddlSearchTypeEl).on('change', function(){
+            Ext.getDom('searchTypeValue').value = ddlSearchTypeEl.value;
+        });
+    }
+           
+    function OnEnterPressed(){
+        __doPostBack('ctl00$HeaderControl1$searchToolbar$btnSearch','');
+    }
+    
+    Ext.onReady(function(){
+        Camp.Aso.SearchToolBar.Init_Form('search-new', 'search-text',  'search-td', 
+            'ctl00_HeaderControl1_searchToolbar_txtSearch', OnEnterPressed);
+        var el = Ext.getDom('ctl00_HeaderControl1_searchToolbar_hdnSearchId');
+        if(typeof searchId !== 'undefined'){
+             el.value = searchId;              
+        }                
+    });
+})();
+</script>
+
+                                    
+                                </td>
+                                <td align="right">
+                                    <div class="toolbar misc" style="padding-left: 8px;">
+                                        <table cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td>
+                                                    <div class="toolbarMiscLeft">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="toolbarMiscCenter searchText">
+                                                        <table cellspacing="0" cellpadding="0" border="0" style="height: 26px;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td valign="middle" style="width: 100px; height: 26px;">
+                                                                        <a href="https://www.aso.com/listings/AircraftListings.aspx?ll=true" id="ctl00_HeaderControl1_headerAnchorLeft" class="miscToolbarText financeSectionService dynamic-data-link">
+                                                                        Latest Listings</a>
+                                                                    </td>
+                                                                    <td valign="middle">
+                                                                         <div class="miscSeparator" style="width: 3px;">
+                                                                            &nbsp;</div>
+                                                                    </td>
+                                                                    <td valign="middle" style="width: 150px;">
+                                                                        <a class="miscToolbarText financeSectionService dynamic-data-link" href="https://www.aso.com/listings/AircraftListings.aspx?rva=true">
+                                                                        Recently Viewed Aircraft</a>                                                                        
+                                                                    </td>
+                                                                    <td valign="middle">
+                                                                        <div class="miscSeparator" style="width: 3px;">
+                                                                            &nbsp;</div>
+                                                                    </td>
+                                                                    <td valign="middle" style="width: 120px;">
+                                                                        <a href="https://www.aso.com/Learn/AboutASO/CompanyOverview.aspx" id="ctl00_HeaderControl1_headerAnchor" class="miscToolbarText financeSectionService dynamic-data-link" onclick="javascript:return ShowIntroDivOrRedirect();">Company Overview</a>
+                                                                    </td>
+                                                                    
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="toolbarMiscRight">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script type="text/javascript">
+    document.getElementById('headerMenuDiv').style.display = "block";
+
+    Ext.onReady(function () {
+        Ext.namespace('Camp.Aso.Page');
+        Camp.Aso.Page.Header = new Camp.Aso.Page.HeaderClass('ctl00_HeaderControl1_lblWelcome',
+            'ctl00_HeaderControl1_spanLoginRegister', 'ctl00_HeaderControl1_spanLogout');
+    });
+</script>
+
+        
+        <noscript id="ctl00_noscripttag" style="display: none">
+            
+              <table width="100%"><tr><td>
+                <div id="ctl00_jsDisabledMsgDiv" style="background-color: #FF7644; text-align: center;">
+                    <a style="text-decoration: underline; color: Black" href="https://www.aso.com/help/browser/ie6plus.html">You are not experiencing the full functionality of ASO due to a particular
+                    setting in your browser. Click here to learn how to fix this issue.</a>
+                </div>
+              </td></tr></table>
+        </noscript>
+             
+            <div id="master-main-content-div">
+            
+  <script type="text/javascript">
+      Ext.onReady(function () {
+          Camp.Aso.Common.setHeight('leftFeatureAds', 'makeModelsControl', 'rightSideAds');
+          // Do not track google analytics here as they are already being tracked by the generic tracker in master page - ASO# 809
+          //            trackGoogleAnalytics('/Aircraft_Type/TurbineHelicopter');
+            Page["__Page"] = new Camp.ASO.ACForSale({
+                manageMyACPostBackFn: function () {
+                    __doPostBack('ctl00$ContentPlaceHolder1$MMASBtn','')
+                },
+                MMASBtn: 'ctl00_ContentPlaceHolder1_MMASBtn'
+            });
+        });
+
+        function setFlashSize(divid, newW, newH) {
+            Ext.onReady(function () {
+                document.getElementById(divid).style.width = newW + "px";
+                document.getElementById(divid).style.height = newH + "px";
+            });
+        }
+
+        function ShowMySearchDivOrRedirect() {
+            var pageCtrl = Page["__Page"];
+            if (pageCtrl != null) {
+                pageCtrl.showMMASIntroWindowOrRedirect();
+            }
+        }
+  </script>
+    <table class="mmgHeader" cellpadding="0" cellspacing="0" border="0" width="960">
+        <tr>
+            <td align="left">
+                <div style="float: left; padding-left: 3px; width: 190px;">
+                    <span id="ctl00_ContentPlaceHolder1_lblHdrDescription">Turbine Helicopter</span>
+                </div>
+            </td>
+            <td align="left">
+                <div id="flashResizer" style="float: none; padding-left: 45px; height: 75px; z-index: 1;
+                    overflow: hidden;">
+                    
+<script>
+    function jssiInit400_75($) {
+        var jssiWidget = JSSIGIF.tag($("#aso400_75"), {
+            userId: "",
+            referId: "13",
+            size: "400-75"
+        });
+    }
+
+    function cddBanner_OnClick() {
+        var bannerId = "1385";
+        trackGoogleAnalytics('/ViewAd/GroupPageBanner/' + bannerId);
+        Camp.Aso.Common.recordFeaturedBannerStatistics(bannerId, Camp.Aso.Common.AdType.BannerAdv, Camp.Aso.Common.StatType.Click);
+    }
+</script>
+<script async defer src="https://jssi-universal-dashboard-prod.azurewebsites.net/api/Product/aso-400-75.js?code=AvIV8XKmEwPFafGTpYz6WtohoGW5fzQehs0rvLNPXdPANtuJndZCrQ==&callback=jssiInit400_75">
+</script>
+
+
+
+
+
+
+
+
+<div id="ctl00_ContentPlaceHolder1_groupPageBannerAd_conklinAd" style="padding-left:0px;padding-top:8px;" onclick="cddBanner_OnClick()">
+    <div id="aso400_75"></div>
+</div>
+                </div>
+            </td>
+            <td align="center">
+                <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn hover-text'><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_ContentPlaceHolder1_MMASBtn' id='ctl00_ContentPlaceHolder1_MMASBtn' onclick='ShowMySearchDivOrRedirect();' type='button' value='Manage My Aircraft Search' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+            </td>
+        </tr>
+    </table>
+  <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td style="vertical-align: top; margin-top: 6px;">
+                <div style="height: 3px; margin-top: 0px; font-size: 0px; clear: both;">
+                </div>
+                <div id="leftFeatureAds" style="float: left; width: 170px; background-color: #5296cc;">
+                    
+<div class="makeModelGroupsLeft" style="background-color: transparent;">
+    <div style="height: 5px; background-color: #5296cc;">
+    </div>
+    <div style="color: White; text-decoration: underline; font-weight: bold;">Featured Aircraft For Sale</div>
+</div>
+<div id="mmgItemsId" style="text-align: left; float: left;">
+    
+            <table border="0" cellpadding="0" cellspacing="10">
+        
+            <tr>
+                <td style="width: 150px; background-color: White;">
+                    <div align="center">
+                        
+
+
+
+<script type="text/javascript">
+    function AddBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('listings-fadv-border');
+    }
+
+    function RemoveBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('listings-fadv-border');
+    }
+
+    function ChangeBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('fadv-hover');
+    }
+
+    function ResetBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('fadv-hover');
+    }
+</script>
+
+<div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_fAdv" onmouseover="javascript:ChangeBackground(this);" onmouseout="javascript:ResetBackground(this);" title="2014 Bell 407 54497 N712FS">
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_fadvTop"></div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdDiv" style="border:solid 1px white;width:150px;height:93px;cursor:pointer;">
+        <a href="/listings/spec/ViewAd.aspx?id=200796&fAdvId=50511" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdLnk" style="text-decoration: none; color: Black;" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/International Aviation Marketing Ltd._200796_N712FS&#39;);" title="2014 Bell 407">
+            <img id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_imgFeatureAd" title="2014 Bell 407 54497 N712FS" Width="150" Height="93" src="/uploads/acImages/200796/B407GX%20-%20Sn%2054497-NWEB_fAd.jpg" alt="2014 Bell 407 54497 N712FS" />
+        </a>
+    </div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdText">
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdModelDescription" class="listingsFeatureAdModelDescription">
+            <a href="/listings/spec/ViewAd.aspx?id=200796&fAdvId=50511" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdTextLnk" style="text-decoration: none;" class="feature-ad-text" title="2014 Bell 407" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/International Aviation Marketing Ltd._200796_N712FS&#39;);">2014 Bell 407</a>
+        </div>
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_featureAdCompanyDescription" class="listingsFeatureAdCompanyDescription">
+            <span id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl01_featureAd_lblCompany">International Aviation M...</span>
+        </div>
+    </div>
+</div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td style="width: 150px; background-color: White;">
+                    <div align="center">
+                        
+
+
+
+<script type="text/javascript">
+    function AddBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('listings-fadv-border');
+    }
+
+    function RemoveBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('listings-fadv-border');
+    }
+
+    function ChangeBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('fadv-hover');
+    }
+
+    function ResetBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('fadv-hover');
+    }
+</script>
+
+<div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_fAdv" onmouseover="javascript:ChangeBackground(this);" onmouseout="javascript:ResetBackground(this);" title="2019 Agusta AW119 14968 N522NM">
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_fadvTop"></div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdDiv" style="border:solid 1px white;width:150px;height:89px;cursor:pointer;">
+        <a href="/listings/spec/ViewAd.aspx?id=201229&fAdvId=50512" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdLnk" style="text-decoration: none; color: Black;" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/Guardian Jet, LLC_201229_N522NM&#39;);" title="2019 Agusta AW119">
+            <img id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_imgFeatureAd" title="2019 Agusta AW119 14968 N522NM" Width="150" Height="89" src="/uploads/acImages/201229/1_62_fAd.jpg" alt="2019 Agusta AW119 14968 N522NM" />
+        </a>
+    </div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdText">
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdModelDescription" class="listingsFeatureAdModelDescription">
+            <a href="/listings/spec/ViewAd.aspx?id=201229&fAdvId=50512" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdTextLnk" style="text-decoration: none;" class="feature-ad-text" title="2019 Agusta AW119" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/Guardian Jet, LLC_201229_N522NM&#39;);">2019 Agusta AW119</a>
+        </div>
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_featureAdCompanyDescription" class="listingsFeatureAdCompanyDescription">
+            <span id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl02_featureAd_lblCompany">Guardian Jet, LLC</span>
+        </div>
+    </div>
+</div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td style="width: 150px; background-color: White;">
+                    <div align="center">
+                        
+
+
+
+<script type="text/javascript">
+    function AddBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('listings-fadv-border');
+    }
+
+    function RemoveBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('listings-fadv-border');
+    }
+
+    function ChangeBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('fadv-hover');
+    }
+
+    function ResetBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('fadv-hover');
+    }
+</script>
+
+<div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_fAdv" onmouseover="javascript:ChangeBackground(this);" onmouseout="javascript:ResetBackground(this);" title="2012 Eurocopter EC225 2835 PR-OMW">
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_fadvTop"></div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdDiv" style="border:solid 1px white;width:150px;height:100px;cursor:pointer;">
+        <a href="/listings/spec/ViewAd.aspx?id=201522&fAdvId=50513" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdLnk" style="text-decoration: none; color: Black;" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/Aero Asset Inc._201522_PR-OMW&#39;);" title="2012 Eurocopter EC225">
+            <img id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_imgFeatureAd" title="2012 Eurocopter EC225 2835 PR-OMW" Width="150" Height="100" src="/uploads/acImages/201522/1_4_fAd.jpg" alt="2012 Eurocopter EC225 2835 PR-OMW" />
+        </a>
+    </div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdText">
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdModelDescription" class="listingsFeatureAdModelDescription">
+            <a href="/listings/spec/ViewAd.aspx?id=201522&fAdvId=50513" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdTextLnk" style="text-decoration: none;" class="feature-ad-text" title="2012 Eurocopter EC225" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/Aero Asset Inc._201522_PR-OMW&#39;);">2012 Eurocopter EC225</a>
+        </div>
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_featureAdCompanyDescription" class="listingsFeatureAdCompanyDescription">
+            <span id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl03_featureAd_lblCompany">Aero Asset Inc.</span>
+        </div>
+    </div>
+</div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td style="width: 150px; background-color: White;">
+                    <div align="center">
+                        
+
+
+
+<script type="text/javascript">
+    function AddBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('listings-fadv-border');
+    }
+
+    function RemoveBorder(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('listings-fadv-border');
+    }
+
+    function ChangeBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.addClass('fadv-hover');
+    }
+
+    function ResetBackground(obj) {
+        var fadEl = Ext.get(obj);
+        fadEl.removeClass('fadv-hover');
+    }
+</script>
+
+<div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_fAdv" onmouseover="javascript:ChangeBackground(this);" onmouseout="javascript:ResetBackground(this);" title="2009 Agusta AW139 41219 ">
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_fadvTop"></div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdDiv" style="border:solid 1px white;width:150px;height:96px;cursor:pointer;">
+        <a href="/listings/spec/ViewAd.aspx?id=201194&fAdvId=50514" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdLnk" style="text-decoration: none; color: Black;" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/The VanAllen Group, Inc._201194_&#39;);" title="2009 Agusta AW139">
+            <img id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_imgFeatureAd" title="2009 Agusta AW139 41219 " Width="150" Height="96" src="/uploads/acImages/201194/1_31_fAd.jpg" alt="2009 Agusta AW139 41219 " />
+        </a>
+    </div>
+    <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdText">
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdModelDescription" class="listingsFeatureAdModelDescription">
+            <a href="/listings/spec/ViewAd.aspx?id=201194&fAdvId=50514" id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdTextLnk" style="text-decoration: none;" class="feature-ad-text" title="2009 Agusta AW139" onclick="javascript: trackGoogleAnalytics(&#39;/Featured_Ads/Turbine Helicopter/The VanAllen Group, Inc._201194_&#39;);">2009 Agusta AW139</a>
+        </div>
+        <div id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_featureAdCompanyDescription" class="listingsFeatureAdCompanyDescription">
+            <span id="ctl00_ContentPlaceHolder1_listingsFeatures_featureAdv_ctl04_featureAd_lblCompany">The VanAllen Group, Inc.</span>
+        </div>
+    </div>
+</div>
+                    </div>
+                </td>
+            </tr>
+        
+            </table>
+        
+</div>
+
+                </div>
+            </td>
+            <td style="vertical-align: top;">
+                <div id="makeModelGroupBody" style="margin-top: 3px;">
+                    <div id="makeModelsControl" style="width: 618px; margin-left: 6px; float: left; background-color: #edeeef;
+                        overflow: auto;">
+                        
+
+<script type="text/javascript">
+    var allTags = [];
+    Camp.Aso.Common.GetAllAircraftTags(allTags);
+
+    Ext.onReady(function() {
+        Camp.Aso.MakeModelInit('.makemodellisting', '.mmgResultsItemDesc', '.makerow', '.makeModelRow_', 
+            '.modelgrouprow', 'makeModelListing', 'modelSelectionTabs');
+    });
+    
+    function showListingsClicked() {
+        return Camp.Aso.showListingsClicked('.makemodellisting', '.makeModelRow', '.modelgrouprow', '.makerow', 6,  
+            '', 'ctl00_ContentPlaceHolder1_makeModelGroup_hdnSearchCriteria', this.allTags);
+    }
+    
+    function tabClicked(el){
+        document.getElementById('ctl00_ContentPlaceHolder1_makeModelGroup_hdnTabIndex').value = el.getAttribute('tabnumber');
+    }
+
+</script>
+
+<input name="ctl00$ContentPlaceHolder1$makeModelGroup$hdnSearchCriteria" type="hidden" id="ctl00_ContentPlaceHolder1_makeModelGroup_hdnSearchCriteria" />
+<input name="ctl00$ContentPlaceHolder1$makeModelGroup$hdnTabIndex" type="hidden" id="ctl00_ContentPlaceHolder1_makeModelGroup_hdnTabIndex" />
+
+<div id="modelSelectionTabs" style="background-color: White; overflow-x: auto;">
+    <div style="float:left;">
+    <table id='ctl00_ContentPlaceHolder1_makeModelGroup_tabSingleSelect' class='homeTabStrip selected curvedLabel defaultText' tabnumber=1 cellspacing='0' onclick="tabClicked(this);__doPostBack('ctl00$ContentPlaceHolder1$makeModelGroup$tabSingleSelect','');" cellpadding='0' border='0'><tbody><tr><td><div class='curvedLabelLeft'>&nbsp;</div></td><td class='curvedLabelCenter'>Single Model Select</td><td><div class='curvedLabelRight'>&nbsp;</div></td></tr></tbody></table>
+    </div>
+    <div style="float:left;">
+    <table id='ctl00_ContentPlaceHolder1_makeModelGroup_tabMultiSelect' class='homeTabStrip curvedLabel defaultText' tabnumber=2 cellspacing='0' onclick="tabClicked(this);__doPostBack('ctl00$ContentPlaceHolder1$makeModelGroup$tabMultiSelect','');" cellpadding='0' border='0'><tbody><tr><td><div class='curvedLabelLeft'>&nbsp;</div></td><td class='curvedLabelCenter'>Multi Model Select</td><td><div class='curvedLabelRight'>&nbsp;</div></td></tr></tbody></table>
+    </div>
+</div>
+
+<div id="makeModelListing" class="makemodellisting" style="clear:both;background-color: White; overflow: hidden; width: 618px; border-bottom: solid 1px white;">
+    
+            <div class="mmgResultsHeader" style="width: 614px;">
+                <div style="width: 300px; padding: 4px 4px 4px 0px;" align="center">
+                    <span id="ctl00_ContentPlaceHolder1_makeModelGroup_repeaterMakeModel_ctl00_resultHdrLabel">Select a Make or Model Group below</span>
+                </div>
+            </div>
+            <div  style="width: 618px;">
+                <div class="mmgResultsColHeaderDesc">
+                    <div style="padding-top:6px;">
+                         <!--PostBackUrl="~/listings/AircraftListings.aspx"-->
+                    </div>
+                </div>
+                <div class="mmgResultsColHeaderOther"><span style="position:relative; top:9px;">Min($)</span></div>
+                <div class="mmgResultsColHeaderOther"><span style="position:relative; top:9px;">Max($)</span></div>
+                <div class="mmgResultsColHeaderNarrow"><span style="position:relative; top:9px;">Trend</span></div>
+                <div class="mmgResultsColHeaderNarrow"><span style="position:relative; top:9px;">Oldest</span></div>
+                <div class="mmgResultsColHeaderNarrow"><span style="position:relative; top:9px;">Newest</span></div>
+            </div>
+        
+            <div class="makeModelRow makeModelRow_5">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=5&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Agusta</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta A109 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=517&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">A109</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,495,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">7,500,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1992</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2025</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta A119/AW119 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=516&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">A119/AW119</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,000,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,200,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2019</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta AB139 / AW139 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=518&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">AB139 / AW139</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2008</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2026</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta AW109SP Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=1008&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">AW109SP</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">3,250,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">3,650,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2011</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Agusta AW169 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=899&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">AW169</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">6,895,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">6,895,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2016</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2016</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_71">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=71&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Airbus</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2025</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2025</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_353">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=353&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Airbus Helicopters</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters ACH145 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=1126&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">ACH145</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2026</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2026</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters H125 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=875&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">H125</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2014</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2014</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters H130 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=934&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">H130</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">4,295,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">4,295,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2023</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2025</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters H145  Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=900&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">H145 </span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2024</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2024</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Airbus Helicopters H225 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=901&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">H225</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2015</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2015</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_15">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=15&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Bell</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 204 / 205 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=529&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">204 / 205</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,295,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,295,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1968</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1970</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 206 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=527&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">206</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">350,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,075,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1970</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1995</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 212 / 412 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=530&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">212 / 412</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,870,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,100,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1978</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2014</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 222 / 230 / 430 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=531&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">222 / 230 / 430</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1987</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2001</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 407 / 427 / 429 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=532&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">407 / 427 / 429</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,295,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,950,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1996</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2021</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Bell 505 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=759&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">505</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2022</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2025</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_25">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Enstrom Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=25&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Enstrom</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">395,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">395,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_26">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=26&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Eurocopter</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter AS350 / AS355 / EC130  Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=536&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">AS350 / AS355 / EC130 </span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">869,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,800,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1979</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter AS365 / EC155 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=537&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">AS365 / EC155</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1998</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1998</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter BK117 / EC145 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=538&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">BK117 / EC145</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,300,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,300,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1993</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2011</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter EC120 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=540&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">EC120</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span class="adSpecView-header-Price-Trend_Button" title="Click to Show Asking Price Trend for EC120" onclick="Camp.ASO.BuyerResearch.AskingPrice.TrendIconClicked(&#39;540&#39;, null, &#39;month&#39;, &#39;9/14/2025 12:00:00 AM&#39;)">&nbsp;</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2005</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter EC135 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=541&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">EC135</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,800,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,800,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1999</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2010</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Eurocopter EC225 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=851&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">EC225</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">11,200,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">11,200,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_117">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Kawasaki Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=117&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Kawasaki</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,200,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,200,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1984</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1984</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_405">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Leonardo Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=405&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Leonardo</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2012</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_42">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="McDonnell Douglas Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=42&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">McDonnell Douglas</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="McDonnell Douglas MD500 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=547&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">MD500</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">699,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2,250,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1970</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2014</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="McDonnell Douglas MD600 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=548&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">MD600</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,250,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,250,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_84">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Mil Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=84&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Mil</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2011</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2011</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_54">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Robinson Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=54&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Robinson</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">835,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">835,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2016</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2020</span>
+	</div>
+</div>
+        
+            <div class="makeModelRow makeModelRow_59">
+	<div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Sikorsky Turbine Helicopter Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?m_id=59&amp;act_id=6&amp;mmg=true"><span style="margin-left:10px;">Sikorsky</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;"></span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Sikorsky S-61 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=550&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">S-61</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1980</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1980</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Sikorsky S-76 Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=552&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">S-76</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,400,000</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1,850,000</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">1991</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2014</span>
+	</div><div class="mmgResultsItemDesc" style="height:18px; font-size:11px;">
+		<a class="mmg-results-item-desc" title="Sikorsky UH-60L Black Hawk Aircraft For Sale on ASO.com" href="/listings/AircraftListings.aspx?mg_id=1036&amp;act_id=6&amp;mmg=true"><span style="margin-left:25px;">UH-60L Black Hawk</span></a>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemOther" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">Inquire</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:3px;">N/A</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div><div class="mmgResultsItemNarrow" style="height:18px; font-size:11px">
+		<span style="position:relative;top:2px;">2006</span>
+	</div>
+</div>
+        
+</div>
+                    </div>
+                </div>
+            </td>
+            <td style="vertical-align: top;">
+                <div style="height: 3px; margin-top: 0px; font-size: 0px; clear: both;">
+                </div>
+                <div id="rightSideAds" style="float: right; margin-left: 5px; width: 160px; background-color: #5296cc;">
+                    <div id="rightBannerAds" style="float: right; margin-left: 5px; width: 160px; background-color: #5296cc;">
+                        
+        <table border="0" cellpadding="0" cellspacing="10">
+    
+        <tr>
+            <td class="groupPageBannerAdDesign">
+                <div id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl01_bannerAd_bannerAds">
+    
+    <div id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl01_bannerAd_normalBannerAd" style="width:135px;height:140px;cursor:pointer;" onclick="javascript: trackGoogleAnalytics(&#39;/Tile_Ads/Turbine Helicopter/Aircraft Shopper Online_1443&#39;);window.open(&#39;/uctls/BannerAds/BannerAdvStatistic.aspx?baid=1443&amp;pageId=7&#39;);">
+        <img id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl01_bannerAd_imgNormalBannerAd" Width="135" Height="140" src="/uploads/baImages/1443/2-ASO-eBlast-Side-Banner-Ad-2.png" />
+        <script type="text/javascript">
+            // Keep this line here to record banner stats when cache is enabled on page response. 
+            Camp.Aso.Common.recordStatisticsForBannerAd("1443", "NormalBannerAd");
+
+            /* changeset rolled back on 4/8/14: Bombardier no longer needs the click tracker
+            // cus 356 bombardier click tracking
+            function BombardierClickTrack() {
+                var url = "http://bs.serving-sys.com/BurstingPipe/adServer.bs?cn=tf&c=20&mc=click&pli=9413853&PluID=0&ord=[timestamp]";
+                var curTime = Math.round(+new Date() / 1000);
+                url = url.replace('[timestamp]', curTime.toString());
+                var m = document.createElement("img");
+                m.src = url;
+                m.id = "Cus356_ClickTracking_HiddenImg";
+                m.style.visibility = "hidden";
+                document.body.appendChild(m);
+            };
+            */
+        </script>
+    </div>
+    
+    
+</div>
+
+            </td>
+        </tr>
+    
+        <tr>
+            <td class="groupPageBannerAdDesign">
+                <div id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl02_bannerAd_bannerAds">
+    
+    <div id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl02_bannerAd_normalBannerAd" style="width:135px;height:140px;cursor:pointer;" onclick="javascript: trackGoogleAnalytics(&#39;/Tile_Ads/Turbine Helicopter/Corridor Aviation Service_1406&#39;);window.open(&#39;/uctls/BannerAds/BannerAdvStatistic.aspx?baid=1406&amp;pageId=7&#39;);">
+        <img id="ctl00_ContentPlaceHolder1_listingsBanners_bannerAdv_ctl02_bannerAd_imgNormalBannerAd" Width="135" Height="140" src="/uploads/baImages/1406/sale_corridor_turbine-heli.gif" />
+        <script type="text/javascript">
+            // Keep this line here to record banner stats when cache is enabled on page response. 
+            Camp.Aso.Common.recordStatisticsForBannerAd("1406", "NormalBannerAd");
+
+            /* changeset rolled back on 4/8/14: Bombardier no longer needs the click tracker
+            // cus 356 bombardier click tracking
+            function BombardierClickTrack() {
+                var url = "http://bs.serving-sys.com/BurstingPipe/adServer.bs?cn=tf&c=20&mc=click&pli=9413853&PluID=0&ord=[timestamp]";
+                var curTime = Math.round(+new Date() / 1000);
+                url = url.replace('[timestamp]', curTime.toString());
+                var m = document.createElement("img");
+                m.src = url;
+                m.id = "Cus356_ClickTracking_HiddenImg";
+                m.style.visibility = "hidden";
+                document.body.appendChild(m);
+            };
+            */
+        </script>
+    </div>
+    
+    
+</div>
+
+            </td>
+        </tr>
+    
+        </table>
+    
+                    </div>
+                    <div id="ctl00_ContentPlaceHolder1_rightAdSenseAds" style="float: right; margin-left: 0px; width: 160px; background-color: #5296cc;">
+                        
+<!--
+-->
+<div id="ctl00_ContentPlaceHolder1_adSenseBanners_adsenseAd1" style="padding:5px;vertical-align:middle;margin-bottom:0px;">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- ListPageSideBanner_1 -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:120px;height:240px"
+     data-ad-client="ca-pub-3598630092630969"
+     data-ad-slot="8773435931"></ins>
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+<div id="ctl00_ContentPlaceHolder1_adSenseBanners_adsenseAd2" style="padding:5px;vertical-align:middle;margin-bottom:0px;">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- ListPageSideBanner_2 -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:120px;height:240px"
+     data-ad-client="ca-pub-3598630092630969"
+     data-ad-slot="1250169138"></ins>
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+<div id="ctl00_ContentPlaceHolder1_adSenseBanners_adsenseAd3" style="padding:5px;vertical-align:middle;margin-bottom:0px;">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- ListPageSideBanner_3 -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:120px;height:240px"
+     data-ad-client="ca-pub-3598630092630969"
+     data-ad-slot="2726902338"></ins>
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+                    </div>
+                 </div>
+                <div style="height: 5px; margin-top: 0px; font-size: 0px; clear: both;">
+                </div>
+            </td>
+        </tr>
+    </table>
+
+        </div>
+            <div id="ctl00_dummyCtrlDiv" style="display: none;"><div id="ctl00_mySearchCtrl_introContentUctl_introMainDiv" style="display: none;">
+    <div id="ctl00_mySearchCtrl_introContentUctl_introMainDivBody" style="width: 700px;">
+        <div id="ctl00_mySearchCtrl_introContentUctl_manageMyAircraftIntro" class="manage-my-ac-search-intro">
+            <div id="ctl00_mySearchCtrl_introContentUctl_viewVdoDiv" class="mysearch-learn-about-this-tool-demo" style="cursor: pointer; position: absolute; top: 322px; left: 260px;"></div>
+        </div>
+        <div style="width: 700px; height: 85px; background-color: #84b9ed;">
+            <div id="ctl00_mySearchCtrl_introContentUctl_freeRegistrationDiv" style="color: #636363; font-size: 12px; text-align: left; margin-left: 20px; padding-top: 10px;">Note: You must be logged in to your MyASO account to use Manage My Aircraft Search (<a style="color: #636363; text-decoration: underline; cursor: pointer;" onclick="trackGoogleAnalytics('Reg_From_MMAS_Description');window.location.href='https://www.aso.com/Login.aspx?from=register';">Free Registration</a>)</div>
+            <div style="margin: 0em auto; padding-top: 18px; width: 75px;">
+                <span id='ctl00_mySearchCtrl_introContentUctl_CloseIntroWinBtn'></span>
+<script type="text/javascript">
+	(function(){
+		function init(){
+			var cfg = {
+				xtype: 'camp-button',
+				clickAction: 'click',
+				applyTo: 'ctl00_mySearchCtrl_introContentUctl_CloseIntroWinBtn',
+				cls: 'aso-ext-btn-default', width: 75, 
+				text: 'Continue',
+				name: 'ctl00$mySearchCtrl$introContentUctl$CloseIntroWinBtn',
+				shortName: 'CloseIntroWinBtn',
+				id: 'ctl00_mySearchCtrl_introContentUctl_CloseIntroWinBtn'
+			};
+			Page.ctl00_mySearchCtrl_introContentUctl_CloseIntroWinBtn = Ext.ComponentMgr.create(cfg);
+		} // init
+		Ext.onReady(init);
+	})();
+
+</script>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    (function () {
+        Ext.onReady(function () {
+            Ext.ns('Page');
+            Page['ctl00_mySearchCtrl_introContentUctl'] = new Camp.ASO.ManageMyAcSearchIntroContent({
+                introMainDivId: 'ctl00_mySearchCtrl_introContentUctl_introMainDiv',
+                introMainDivBodyId: 'ctl00_mySearchCtrl_introContentUctl_introMainDivBody',
+                PageFormId: 'aspnetForm',
+                CloseIntroWinBtnID: 'ctl00_mySearchCtrl_introContentUctl_CloseIntroWinBtn',
+                viewVdoDiv: 'ctl00_mySearchCtrl_introContentUctl_viewVdoDiv',
+                htmlVdoSrc: 'https://www.aso.com/MyAircraftSearchDemo/MyACSearchDemo.aspx',
+                showDivAsPopUp: 'true'
+            });
+        });
+    })();
+</script>
+
+<script type="text/javascript">
+    Ext.onReady(function () {
+        Page["ctl00_mySearchCtrl"] = new Camp.ASO.ManageMyAcSearchIntro({
+            introContent: Page["ctl00_mySearchCtrl_introContentUctl"],
+            openWinOnClick: "true",
+            showDivAsPopUp: "false"
+        });
+    });
+</script>
+</div>
+            <script type="text/javascript">
+
+                // Fixed Extjs issue on IE9 browser
+                if ((typeof Range !== "undefined") && !Range.prototype.createContextualFragment) {
+                    Range.prototype.createContextualFragment = function (html) {
+                        var frag = document.createDocumentFragment(),
+                            div = document.createElement("div");
+                        frag.appendChild(div);
+                        div.outerHTML = html;
+                        return frag;
+                    };
+                }
+                // Fixed Extjs issue on IE9 browser
+
+                Ext.onReady(function() {
+                    new Camp.ASO.MasterPageHelper({
+                        PageControlId: '__Page',
+                        HeaderControl: 'ctl00_HeaderControl1',
+                        ManageMyACSearchIntro: 'ctl00_mySearchCtrl'
+                    });
+                });
+            </script>
+            
+
+<div class="login-popup-new defaultText" id="loginPopupMain" style="background-color: White; width: 580px;
+    border: 1px solid gray; padding: 10px;">
+    <div id="ctl00_loginPopupCtrl_cookieDisabledMsgDiv" style="color: red;text-align: center; display: none;padding-bottom: 10px;" class="cookie-disbld-msg">
+        <a style="text-decoration: underline; color: red;" href="https://www.aso.com/help/browser/cookies.html">You are not experiencing the full functionality of ASO due to a particular
+         setting in your browser. Click here to learn how to fix this issue.</a>
+    </div>
+    <div class="login-popup-header">
+        <div class="loginIcon" style="float: left;">
+        </div>
+        <div class="defaultText" style="float: left; margin-left: 10px; margin-top: 3px;"
+            id="LoginRegisterTitle">
+            Login/Register</div>
+        <div id="divIconClose" class="closeIcon" style="float: right;">
+        </div>
+    </div>
+    <div id="divLoginMessage" style="color: red; font-size: 11px; padding-top: 2px;">
+        You have requested a feature that requires you to be logged in to your MyASO Account.
+    </div>
+    <div class="login-popup-new-body" style="padding: 5px;">
+        <div style="text-align: left; height: 20px;">
+            <table cellpadding="0" cellspacing="3">
+                <tr>
+                    <td>
+                        <input value="radioExistingAccnt" name="ctl00$loginPopupCtrl$loginRadio" type="radio" id="ctl00_loginPopupCtrl_radioExistingAccnt" class="radio-existing-account" style="cursor: pointer;" checked="checked" />
+                    </td>
+                    <td>
+                        <label for="ctl00_loginPopupCtrl_radioExistingAccnt" style="cursor: pointer;">
+                            I have an existing MyASO account</label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="text-align: left; height: 20px;">
+            <table cellpadding="0" cellspacing="3">
+                <tr>
+                    <td>
+                        <input value="radioNewAccnt" name="ctl00$loginPopupCtrl$loginRadio" type="radio" id="ctl00_loginPopupCtrl_radioNewAccnt" class="radio-new-account" style="cursor: pointer;" />
+                    </td>
+                    <td>
+                        <label for="ctl00_loginPopupCtrl_radioNewAccnt" style="cursor: pointer;">
+                            I do not have a MyASO account</label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="ctl00_loginPopupCtrl_pnlLogin" onkeypress="javascript:return WebForm_FireDefaultButton(event, &#39;ctl00_loginPopupCtrl_asoBtnSignIn&#39;)">
+	
+            <div id="divExistingAccount" style="text-align: left; margin-top: 5px;">
+                <div style="margin-left: 150px;">
+                    <span>Login ID (email address)</span>
+                    <input name="ctl00$loginPopupCtrl$txtLoginUserName" type="text" id="ctl00_loginPopupCtrl_txtLoginUserName" class="login-user-name" style="width:180px;margin-left: 20px;" />
+                </div>
+                <div style="margin-left: 150px; margin-top: 5px;">
+                    <span style="margin-right: 92px">Password</span>
+                    
+
+<script type="text/javascript">
+    var OpenEyeKey = 'openEye';
+    var ClosedEyeKey = 'closedEye';
+    var ShowPwdTitle = "Show Password";
+    var HidePwdTitle = "Hide Password";
+    var PasswordMode = "password";
+    var TextMode = "text";
+
+    function addListener_txtLoginPasswordImg() {
+        var pwdImg =  document.getElementById('ctl00_loginPopupCtrl_ctl00_txtLoginPasswordImg');
+        pwdImg.addEventListener('click', ShowPassword_txtLoginPassword, false);
+    }
+    
+    function ShowPassword_txtLoginPassword() {
+        var imgs = document.getElementsByClassName("password-img");
+
+        Array.from(imgs).forEach(img => {
+            img.src = img.src.includes(OpenEyeKey) ? img.src.replace(OpenEyeKey, ClosedEyeKey) : img.src.replace(ClosedEyeKey, OpenEyeKey);
+            img.title = img.title === ShowPwdTitle ? HidePwdTitle : ShowPwdTitle;
+        }); 
+
+        var pwdFields = document.getElementsByClassName("password-textbox");
+
+        Array.from(pwdFields).forEach(pwdField => {
+            pwdField.type = pwdField.type === TextMode ? PasswordMode : TextMode;});
+    }
+</script>
+
+<span style="position: relative; width:auto">
+    <input name="ctl00$loginPopupCtrl$ctl00$txtLoginPassword" type="password" id="ctl00_loginPopupCtrl_ctl00_txtLoginPassword" class="password-textbox login-password" autocomplete="off" style="width:180px;" />
+    <img src="images/openEye.gif" id="ctl00_loginPopupCtrl_ctl00_txtLoginPasswordImg" title="Show Password" class="password-img" style="height: 16px; position: absolute; right: 5px; top: -3px;" />
+</span>
+
+                </div>
+           
+            <div style="height: 25px; margin-top: 10px; margin-left: 225px;">
+                <div style="float: left; text-align: -moz-right; !text-align: right;">
+                    <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn login-popup-signin-btn'><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_loginPopupCtrl_asoBtnSignIn' id='ctl00_loginPopupCtrl_asoBtnSignIn' onclick='' type='button' value='Sign In' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+                </div>
+                <div style="float: left; text-align: left; margin-left: 15px;">
+                    <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn login-popup-signin-cancel-btn'><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_loginPopupCtrl_asoBtnCancel' id='ctl00_loginPopupCtrl_asoBtnCancel' onclick='' type='button' value='Cancel' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+                </div>
+            </div>
+            </div>
+        
+</div>
+
+        <div id="ctl00_loginPopupCtrl_pnlRegister" onkeypress="javascript:return WebForm_FireDefaultButton(event, &#39;ctl00_loginPopupCtrl_AsoButton1&#39;)">
+	
+            <span id="ctl00_loginPopupCtrl_RegisterAntiAbuseLbl" class="register-captcha" hidden="true" style="color:Red;">qabk</span>
+            <div id="divNewAccount" style="margin-top: 10px;">
+                <div style="height: 160px;">
+                <div style="margin-right: 150px; text-align: right; height: 18px;">
+                    <span>Email : </span>
+                    <input name="ctl00$loginPopupCtrl$txtRegisterEmail" type="text" id="ctl00_loginPopupCtrl_txtRegisterEmail" class="register-email" style="height:18px;width:180px;" />
+                    <span style="color: Red;">*</span>
+                </div>
+                <div style="margin-right: 150px; margin-top: 7px; text-align: right; height: 18px;">
+                    <span>Confirm Email : </span>
+                    <input name="ctl00$loginPopupCtrl$txtRegisterConfirmEmail" type="text" id="ctl00_loginPopupCtrl_txtRegisterConfirmEmail" class="register-confirm-email" style="height:18px;width:180px;" />
+                    <span style="color: Red;">*</span>
+                </div>
+                <div style="margin-right: 150px; margin-top: 7px; text-align: right; height: 18px;">
+                    <span>First Name : </span>
+                    <input name="ctl00$loginPopupCtrl$txtRegisterFirstName" type="text" id="ctl00_loginPopupCtrl_txtRegisterFirstName" class="register-first-name" style="height:18px;width:180px;" />
+                    <span style="color: Red;">*</span>
+                </div>
+                <div style="margin-right: 150px; margin-top: 7px; text-align: right; height: 18px;">
+                    <span>Last Name : </span>
+                    <input name="ctl00$loginPopupCtrl$txtRegisterLastName" type="text" id="ctl00_loginPopupCtrl_txtRegisterLastName" class="register-last-name" style="height:18px;width:180px;" />
+                    <span style="color: Red;">*</span>
+                </div>
+                <div style="margin-right: 150px; margin-top: 7px; text-align: right; height: 18px;">
+                    <span>Password : </span>
+                    
+
+<script type="text/javascript">
+    var OpenEyeKey = 'openEye';
+    var ClosedEyeKey = 'closedEye';
+    var ShowPwdTitle = "Show Password";
+    var HidePwdTitle = "Hide Password";
+    var PasswordMode = "password";
+    var TextMode = "text";
+
+    function addListener_txtRegisterPasswordImg() {
+        var pwdImg =  document.getElementById('ctl00_loginPopupCtrl_ctl01_txtRegisterPasswordImg');
+        pwdImg.addEventListener('click', ShowPassword_txtRegisterPassword, false);
+    }
+    
+    function ShowPassword_txtRegisterPassword() {
+        var imgs = document.getElementsByClassName("password-img");
+
+        Array.from(imgs).forEach(img => {
+            img.src = img.src.includes(OpenEyeKey) ? img.src.replace(OpenEyeKey, ClosedEyeKey) : img.src.replace(ClosedEyeKey, OpenEyeKey);
+            img.title = img.title === ShowPwdTitle ? HidePwdTitle : ShowPwdTitle;
+        }); 
+
+        var pwdFields = document.getElementsByClassName("password-textbox");
+
+        Array.from(pwdFields).forEach(pwdField => {
+            pwdField.type = pwdField.type === TextMode ? PasswordMode : TextMode;});
+    }
+</script>
+
+<span style="position: relative; width:auto">
+    <input name="ctl00$loginPopupCtrl$ctl01$txtRegisterPassword" type="password" id="ctl00_loginPopupCtrl_ctl01_txtRegisterPassword" class="password-textbox register-password" autocomplete="off" style="width:180px;" />
+    <img src="images/openEye.gif" id="ctl00_loginPopupCtrl_ctl01_txtRegisterPasswordImg" title="Show Password" class="password-img" style="height: 16px; position: absolute; right: 5px; top: -3px;" />
+</span>
+
+                    <span style="color: Red;">*</span>
+                </div>
+                <div style="margin-right: 150px; margin-top: 7px; text-align: right; height: 18px;">
+                    <span>Confirm Password : </span>
+                    
+
+<script type="text/javascript">
+    var OpenEyeKey = 'openEye';
+    var ClosedEyeKey = 'closedEye';
+    var ShowPwdTitle = "Show Password";
+    var HidePwdTitle = "Hide Password";
+    var PasswordMode = "password";
+    var TextMode = "text";
+
+    function addListener_txtRegisterConfirmPasswordImg() {
+        var pwdImg =  document.getElementById('ctl00_loginPopupCtrl_ctl02_txtRegisterConfirmPasswordImg');
+        pwdImg.addEventListener('click', ShowPassword_txtRegisterConfirmPassword, false);
+    }
+    
+    function ShowPassword_txtRegisterConfirmPassword() {
+        var imgs = document.getElementsByClassName("password-img");
+
+        Array.from(imgs).forEach(img => {
+            img.src = img.src.includes(OpenEyeKey) ? img.src.replace(OpenEyeKey, ClosedEyeKey) : img.src.replace(ClosedEyeKey, OpenEyeKey);
+            img.title = img.title === ShowPwdTitle ? HidePwdTitle : ShowPwdTitle;
+        }); 
+
+        var pwdFields = document.getElementsByClassName("password-textbox");
+
+        Array.from(pwdFields).forEach(pwdField => {
+            pwdField.type = pwdField.type === TextMode ? PasswordMode : TextMode;});
+    }
+</script>
+
+<span style="position: relative; width:auto">
+    <input name="ctl00$loginPopupCtrl$ctl02$txtRegisterConfirmPassword" type="password" id="ctl00_loginPopupCtrl_ctl02_txtRegisterConfirmPassword" class="password-textbox register-confirm-password" autocomplete="off" style="width:180px;" />
+    <img src="images/openEye.gif" id="ctl00_loginPopupCtrl_ctl02_txtRegisterConfirmPasswordImg" title="Show Password" class="password-img" style="height: 16px; position: absolute; right: 5px; top: -3px;" />
+</span>
+
+                    <span style="color: Red;">*</span>
+                </div></div>
+                <br/>
+                <div style="text-align: left; margin-left: 120px; line-height: 1.3; border: white 1px; color: #f1e6e6">
+                    Password must meet the following requirements:
+                    <ul style="list-style: disc;margin-left: 13px">
+                        <li>Must contain at least 14 characters</li>
+                        <li>Must not contain more than two repetitions of a character such as aaa, bbb</li>
+                        <li>Satisfy any three of these 
+                            <ul style="list-style: circle;margin-left: 20px">
+                                <li>Must contain at least one number</li>
+                                <li>Must contain at least one upper case character</li>
+                                <li>Must contain at least one lower case  character</li>
+                                <li>Must contain at least one special character like !@#$%^&*</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <br/>
+                
+
+                <table style="margin-left:90px">
+                    <tr>
+                        <td>
+                            <span align="right" style="color: white; display: table; width: 130px">Please enter the characters shown below :</span>
+                        </td>
+                        <td>   
+                            <span><input name="ctl00$loginPopupCtrl$SecurityTxt" type="text" id="ctl00_loginPopupCtrl_SecurityTxt" class="security-textfield" autocomplete="off" /></span>
+                            <span style="color: Red;">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <img id="ctl00_loginPopupCtrl_imgBuyerRespSecurityBG" src="/GetCaptchaImage.aspx?securitytext=%2fwEWAh4LU2VjdXJpdHlLZXkFBHFhYmsdIXBGNqPKZ0ybe7tOPsWjipLx3Q%3d%3d" />
+                            <a style="text-decoration: underline; float: right; margin: 10px 0 0 10px; cursor: pointer; color: white;" class="email-friend-whats-this" onclick="showWhatsThisWindow(event)">
+                                    What's this?</a>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin-left: 5px; margin-top: 5px; text-align: left;"
+                    id="marketingMailsChkBoxDivGeneric">
+                    <input name="ctl00$loginPopupCtrl$marketingMailsChk" type="checkbox" id="ctl00_loginPopupCtrl_marketingMailsChk" style="cursor: pointer;" checked="checked" class="chk-marketing-mails" />
+                    <label for="ctl00_loginPopupCtrl_marketingMailsChk" style="cursor: pointer;">
+                        Receive ASO Newsletter and Updates</label>
+                </div>
+                <div style="margin-left: 5px; margin-top: 5px; text-align: left; display: none; height: 57px;"
+                    id="marketingMailsChkBxDivSub">
+                    <div style="margin-left: 5px;  height: 18px; text-align: left;">
+                        <input name="ctl00$loginPopupCtrl$weeklyEmailsChk" type="checkbox" id="ctl00_loginPopupCtrl_weeklyEmailsChk" style="cursor: pointer;" class="chk-weekly-Mkt-mails" checked="checked" />
+                        <label id="ctl00_loginPopupCtrl_lblWeeklyEmail" for="&lt;%=weeklyEmailsChk.ClientID %>" style="cursor: pointer;">Receive Weekly Latest Aircraft Listings Update</label>
+                    </div>
+                    <div style="margin-left: 5px; text-align: left; height: 18px;">
+                        <input name="ctl00$loginPopupCtrl$monthlyEmailChk" type="checkbox" id="ctl00_loginPopupCtrl_monthlyEmailChk" style="cursor: pointer;" class="chk-monthly-Mkt-mails" checked="checked" />
+                        <label id="ctl00_loginPopupCtrl_lblMonthlyEmail" for="&lt;%=monthlyEmailChk.ClientID %>" style="cursor: pointer;">Receive ASO Notes (monthly market info publication)</label>
+                    </div>
+                    <div style="margin-left: 5px;  height: 18px; text-align: left;">
+                        <input name="ctl00$loginPopupCtrl$yearlyEmailChk" type="checkbox" id="ctl00_loginPopupCtrl_yearlyEmailChk" style="cursor: pointer;" class="chk-yearly-Mkt-mails" checked="checked" />
+                        <label id="ctl00_loginPopupCtrl_lblPeriodicEmail" for="&lt;%=yearlyEmailChk.ClientID %>" style="cursor: pointer;">Receive Periodic News/Updates from ASO</label>
+                    </div>
+                </div>
+                <div style="margin: 5px 12px 0px 12px; text-align: left;">
+                    Note: At ASO, we hate SPAM as much as you do. We will never share your information
+                    with any 3<sup>rd</sup> party, and we will always adhere to your wishes regarding
+                    the types of email you wish you receive from us.
+                </div>
+                <div style="height: 25px; margin-top: 10px; margin-left: 225px;">
+                    <div style="float: left; text-align: -moz-right; text-align: right;">
+                        <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn login-popup-regsiter-btn'><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_loginPopupCtrl_AsoButton1' id='ctl00_loginPopupCtrl_AsoButton1' onclick='' type='button' value='Register' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+                    </div>
+                    <div style="float: left; text-align: left; margin-left: 15px;">
+                        <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn login-popup-register-cancel-btn'><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_loginPopupCtrl_AsoButton2' id='ctl00_loginPopupCtrl_AsoButton2' onclick='' type='button' value='Cancel' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+                    </div>
+                </div>
+                <div style="color: Red;">
+                    * Fields are Mandatory</div>
+            </div>
+        
+</div>
+    </div>
+    <div style="margin-top: 5px; text-align: center; color: #005995;">
+        <span id="ctl00_loginPopupCtrl_spanShowPswdHint" style="cursor: pointer;" class="show-pswd-hint dynamic-data-link" onclick="showForgotPasswordDiv()">Forgot my Password</span> <span style="margin: 0px 5px 0px 5px;
+                width: 1px; background-color: #045596; height: 16px; display: inline-block; vertical-align: middle;">
+            </span><span style="cursor: pointer;" class="dynamic-data-link" onclick="window.location.href='https://www.aso.com/MyASO/LearnMore.aspx';">
+                Learn about the benefits of MyASO</span> <span style="margin: 0px 5px 0px 5px; width: 1px;
+                    background-color: #045596; height: 16px; display: inline-block; vertical-align: middle;">
+                </span><span style="cursor: pointer;" class="dynamic-data-link" onclick="window.location.href='https://www.aso.com/Learn/AboutASO/Privacy.aspx';">
+                    Privacy Policy</span>
+    </div>
+
+    <div id="ctl00_loginPopupCtrl_forgotPasswordDiv" style="width: 500px; display: none; left: 200px; top: 100px;
+        position: absolute;">
+        <div id="ctl00_loginPopupCtrl_forgotPasswordDivheader" style="width: 520px; background-color: #005696;
+        height: 26px; font-size: 11px;">
+        <div style="float: left; margin-top: 6px; width: 500px; text-align: center; font-size: 12px;">
+            Forgot Password</div>
+        <div id="ctl00_loginPopupCtrl_forgotPasswordDivCloseIcon" class="loanCalculatorIconClose">
+        </div>
+    </div>
+        <div id="ctl00_loginPopupCtrl_forgotPasswordDivBody" style="width: 500px; margin: 10px;">
+        <div style="padding-top: 2px; margin-left: 30px;">
+            <div id="ctl00_loginPopupCtrl_invalidEmailMsgDiv" style="display:none; color: Red; font-size: 10px; font-family:Arial; text-align:center;">Please enter a valid email address</div>
+        </div>
+        <div style="width: 500px; text-align: left; height: 20px;">
+            <div style="float: left; font-size: 12px; width: 270px; color: #005995; margin-top: 3px;">
+                Enter the email address of your MyASO Account: 
+            </div>
+            <div id="emailDiv" style="width: 200px; font-size: 12px; float: left;">
+                <input name="ctl00$loginPopupCtrl$emailText" type="text" id="ctl00_loginPopupCtrl_emailText" style="width: 200px;" />
+            </div>
+        </div>
+        <div style="width: 500px; text-align: left;">
+            <table style="width: 100%">
+                <tr>
+                    <td style="width: 62%;" align="right">
+                        <div style="margin-top: 15px;"><table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn '><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00$loginPopupCtrl$sendPassword' id='ctl00_loginPopupCtrl_sendPassword' onclick='return validateEmail();;' type='submit' value='Send Reset Password Link' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table></div>
+                    </td>
+                    <td style="width: 38%;" align="left">
+                        <div style="margin-top: 15px; margin-left: 10px;">
+                            <table style='width:auto;' border='0' cellpadding='0' cellspacing='0' class='aso-btn-wrap aso-btn '><tbody><tr><td class='aso-btn-left'><i>&#160;</i></td><td class='aso-btn-center'><em unselectable='on'><input class='aso-btn-text' name='ctl00_loginPopupCtrl_AsoButton3' id='ctl00_loginPopupCtrl_AsoButton3' onclick='return hideForgotPasswordDiv();__doPostBack("ctl00$loginPopupCtrl$AsoButton3","");' type='button' value='Close' /></em></td><td class='aso-btn-right'><i>&#160;</i></td></tr></tbody></table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="font-size: 10px; text-align: left; margin-top: 10px;">
+            <div style="color: #005995;">
+            Note: If you forgot your email address of your MyASO account, please
+            contact ASO Customer Service: </div>
+            <div>
+                <br />
+                <table align="center">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div style="margin-left: 30px;">
+                                    Mon-Fri</div>
+                            </td>
+                            <td>
+                                8:00am - 6:00pm ET
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="margin-top: 5px;">
+                                    US Tel:
+                                </div>
+                            </td>
+                            <td>
+                                <div style="margin-top: 5px;">
+                                    888-992-9276
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Int'l Tel:
+                            </td>
+                            <td>
+                                732-704-9561
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 10px;">
+                <table align="center">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Service:
+                            </td>
+                            <td>
+                                <a style="text-decoration: underline" class="StaticContentHeader" href="mailto:service@aso.com">
+                                    service@aso.com</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="ctl00_loginPopupCtrl_ResetPwdConfirmDiv" style="width: 400px; display: none; left: 200px;
+        top: 100px; position: absolute;">
+        <div id="ctl00_loginPopupCtrl_ResetPwdConfirmDivheader" style="width: 420px; background-color: #005696; height: 26px; font-size: 11px;">
+            <div style="float: left; margin-top: 6px; width: 400px; text-align: center; font-size: 12px;">
+                Forgot Password Email Link Confirmation</div>
+            <div id="ctl00_loginPopupCtrl_ResetPwdConfirmDivCloseIcon" class="loanCalculatorIconClose">
+            </div>
+        </div>
+        <div id="ctl00_loginPopupCtrl_ResetPwdConfirmDivBody" style="width: 400px; margin: 10px;">
+            <div style="text-align: center; font-size: 12px; font-weight: bold; color: #005995; padding-left: 30px; padding-right: 30px; padding-top: 15px;">
+                If this email address matches an account in our system, you will receive an email shortly. 
+                <br /><br /> <span id="ctl00_loginPopupCtrl_EmailAddressSpan"></span>. 
+                <br /><br />Please open this email, click on the link and follow instructions
+                to reset your password. 
+            </div>
+            <div style="text-align: center; font-size: 10px; font-weight: bold; color: #005995; padding-left: 30px; padding-right: 30px; padding-top: 25px;">
+               If you do not receive this email, please check your junk email folder and/or add accounts@aso.com to your safe senders list.
+            </div>
+            <div style="padding-top: 10px; text-align: left; margin-left: 175px;">
+                <span id='ctl00_loginPopupCtrl_resetOkBtn'></span>
+<script type="text/javascript">
+	(function(){
+		function init(){
+			var cfg = {
+				xtype: 'camp-button',
+				applyTo: 'ctl00_loginPopupCtrl_resetOkBtn',
+				text: 'OK',
+				name: 'ctl00$loginPopupCtrl$resetOkBtn',
+				shortName: 'resetOkBtn',
+				id: 'ctl00_loginPopupCtrl_resetOkBtn'
+			};
+			Page.ctl00_loginPopupCtrl_resetOkBtn = Ext.ComponentMgr.create(cfg);
+		} // init
+		Ext.onReady(init);
+	})();
+
+</script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ctl00_loginPopupCtrl_whatsThisWin" style="display:none;">
+    <div id="ctl00_loginPopupCtrl_WhatsThisHeader" style="width: 330px; background-color: #005696; height: 26px;">
+        <div style="float: left; text-align: center; width: 310px; margin-top: 6px;">
+            What's this?</div>
+        <div class="loanCalculatorIconClose" id="whatsThisCloseIcon" onclick="closeWhatIsWin()">
+        </div>
+    </div>
+    <!-- Whats This Window Body -->
+    <div id="ctl00_loginPopupCtrl_whatsThisBody">
+        <div id="ctl00_loginPopupCtrl_WhatsThisDiv" style="color: Black; height: 120px; text-align: left; color: #6d6e71; padding: 10px;">          
+            To help prevent abuse of the ASO BuyerResponse<sup>SM</sup> system, we require users
+            to enter the 4 dynamic characters displayed on the response form before submitting
+            a message. This simple measure greatly reduces the ability of automated programs
+            to enable abuse of the ASO website. While we cannot prevent all abuse, we constantly
+            strive to ensure that the BuyerResponse<sup>SM</sup> system is as valuable as possible
+            to our customers.
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var forgotPasswordWindow;
+    var emailText = document.getElementById('ctl00_loginPopupCtrl_emailText');
+    var whatsThisWindow = null;
+
+    var ResetPwdConfirmWindow = Camp.Aso.Common.getRenderDivAsPopUp('ctl00_loginPopupCtrl_ResetPwdConfirmDivCloseIcon',
+                'ctl00_loginPopupCtrl_ResetPwdConfirmDiv', 'ctl00_loginPopupCtrl_ResetPwdConfirmDivheader',
+                'ctl00_loginPopupCtrl_ResetPwdConfirmDivBody', 'aspnetForm');
+
+    Ext.onReady(function () {
+        forgotPasswordWindow = Camp.Aso.Common.getRenderDivAsPopUp('ctl00_loginPopupCtrl_forgotPasswordDivCloseIcon',
+            'ctl00_loginPopupCtrl_forgotPasswordDiv', 'ctl00_loginPopupCtrl_forgotPasswordDivheader',
+            'ctl00_loginPopupCtrl_forgotPasswordDivBody', 'aspnetForm');
+        var resetOkBtn = Page['ctl00_loginPopupCtrl_resetOkBtn'];
+        if (resetOkBtn) {
+            resetOkBtn.on('click', function () {
+                ResetPwdConfirmWindow.closeDiv();
+            });
+        }
+
+        whatsThisWindow = new Ext.Window({
+            renderTo: document.body,
+            header: true,
+            border: false,
+            bodyBorder: false,
+            resizable: false,
+            closable: false,
+            width: 340,
+            cls: 'x-aso-float-win',
+            modal: true
+        });
+
+        var forgotPasswordEmailInput = document.getElementById('ctl00_loginPopupCtrl_emailText');
+
+        forgotPasswordEmailInput.addEventListener("keydown", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById('ctl00_loginPopupCtrl_sendPassword').click();
+            }
+        });
+    });
+
+    function validateEmail() {
+        return Camp.Aso.LoginPopupControlValidateEmail('ctl00_loginPopupCtrl_emailText', 'ctl00_loginPopupCtrl_invalidEmailMsgDiv');
+    }
+
+    function showForgotPasswordDiv() {
+        emailText.value = '';
+        forgotPasswordWindow.showDiv();
+    }
+
+    function hideForgotPasswordDiv() {
+        forgotPasswordWindow.closeDiv();
+        emailText.value = '';
+    }
+
+    function showWhatsThisWindow(event) {
+        var whatsThisDiv = document.getElementById('ctl00_loginPopupCtrl_whatsThisWin');
+        var clickedEl = Ext.fly(event.target);
+        var pos = clickedEl.getCenterXY();
+
+        whatsThisWindow.setPosition(pos[0]-100, pos[1] + 50);
+        
+        whatsThisDiv.style.display = "block";
+        
+        whatsThisWindow.body.appendChild(whatsThisDiv);
+        
+        whatsThisWindow.show();
+     }
+
+    function closeWhatIsWin() {
+        whatsThisWindow.hide();
+    }
+</script>
+            
+            
+<!-- most popular searches begin -->
+
+<!-- most popular searches end -->
+<div class="most-popular-searches" style="text-align:left;margin-top:18px;;">
+	<div class="defaultText most-popular-search-header">
+		> Most Popular Searches
+	</div><table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+		<tr class="most-popular-searche-links">
+			<td class='most-popular-search-column1' style='width:16.6%'><a href='https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Turbine_Helicopters'>Turbine Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/HelicoptersForSale.aspx'>Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/HelicoptersForSale.aspx'>Buy a Helicopter</a></td><td class='most-popular-search-column1' style='width:16.6%'><a href='https://www.aso.com/MostPopularSearches/SikorskyHelicoptersForSale.aspx'>Sikorsky Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/BellHelicoptersForSale.aspx'>Bell Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/AgustaHelicoptersForSale.aspx'>Agusta Helicopters for sale</a></td><td class='most-popular-search-column1' style='width:16.6%'><a href='https://www.aso.com/MostPopularSearches/McDonnellDouglasHelicoptersForSale.aspx'>McDonnell Douglas Helicopters</a><a href='https://www.aso.com/MostPopularSearches/MDHelicoptersForSale.aspx'>MD Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/EurocopterHelicoptersForSale.aspx'>Eurocopter Helicopters for sale</a></td><td class='most-popular-search-column1' style='width:16.6%'><a href='https://www.aso.com/MostPopularSearches/HughesHelicoptersForSale.aspx'>Hughes Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/AgustaA109ForSale.aspx'>Agusta A109 for sale</a><a href='https://www.aso.com/MostPopularSearches/AS350HelicoptersForSale.aspx'>AS 350 for sale</a></td><td class='most-popular-search-column1' style='width:16.6%'><a href='https://www.aso.com/MostPopularSearches/Bell206ForSale.aspx'>Bell 206 for sale</a><a href='https://www.aso.com/MostPopularSearches/EC120ForSale.aspx'>EC 120 for sale</a><a href='https://www.aso.com/MostPopularSearches/SikorskyS76HelicoptersForSale.aspx'>Sikorsky S-76 for sale</a></td><td class='most-popular-search-column1' style='width:17%'><a href='https://www.aso.com/Aircraft_For_Sale.aspx?act_id=Business_TurboProps'>Used Turbine Helicopters</a><a href='https://www.aso.com/MostPopularSearches/UsedHelicoptersForSale.aspx'>Used Helicopters for sale</a><a href='https://www.aso.com/MostPopularSearches/UsedHelicoptersForSale.aspx'>Buy Used Helicopter</a></td>
+		</tr>
+	</table>
+</div>            
+            
+        </div>
+        
+        <script type="text/javascript">
+            if (location.href.indexOf("Login.aspx") == -1 && location.href.indexOf("ManageMyAircraftSearch.aspx") != -1) {
+                if (screen.width >= 1280) {
+                    Ext.onReady(function () {
+                        var masterDiv = Ext.fly('master-div');
+                        masterDiv.setWidth(screen.width * 960 / 1024);
+                        masterDiv.applyStyles("text-align: left;");
+                    });
+                }
+            }
+        </script> 
+        <div style="height: 45px; clear:both;"></div>            
+    
+<script src="/WebResource.axd?d=pynGkmcFUV13He1Qd6_TZItUc7uOXVQ_JJSF3nqWHTssVf86I8T6DdUK_rt6gpBWQGLL6g2&amp;t=637291348013172226" type="text/javascript"></script>
+
+
+<script type="text/javascript">
+//<![CDATA[
+addListener_txtLoginPasswordImg();addListener_txtRegisterPasswordImg();addListener_txtRegisterConfirmPasswordImg();//]]>
+</script>
+</form>
+    <div  style=" position:relative; margin: 0em auto; width: 960px;">
+        
+
+<script type="text/javascript">
+    function updateGuidanceBannerDisplay(isGuidanceAccepted) {
+        var guidanceBanner = document.getElementById("cookieGuidance");
+
+        if (!isGuidanceAccepted) {
+            guidanceBanner.style.display = 'block';
+        } else {
+            guidanceBanner.style.display = 'none';
+        }
+    }
+
+    function acceptCookieGuidance() {
+        Ext.Ajax.request({
+            url: applicationPath + '/httpHandlers/CommonHandler.ashx',
+            params: {
+                _action: 'AcceptCookieGuidance'
+            },
+            method: 'GET',
+            callback: callBack,
+            scope: this
+        });
+
+        function callBack(options, success, response) {
+            if (success && !!response.responseText) {
+                var result = Ext.decode(response.responseText);
+
+                updateGuidanceBannerDisplay(result.GuidanceAccepted);
+            }
+        }
+    }
+
+    (function() {
+        function isCookieGuidanceAccepted () {
+            Ext.Ajax.request({
+                url: applicationPath + '/httpHandlers/CommonHandler.ashx',
+                params: {
+                    _action: 'IsCookieGuidanceAccepted'
+                },
+                method: 'GET',
+                callback: callBack,
+                scope: this
+            });
+
+            function callBack(options, success, response) {
+                if (success && !!response.responseText) {
+                    var result = Ext.decode(response.responseText);
+
+                    updateGuidanceBannerDisplay(result.GuidanceAccepted);
+                }
+            }
+        };
+
+        Ext.onReady(isCookieGuidanceAccepted);
+    })();
+</script>
+
+<!-- footer begin -->
+<div class="footer">
+  <hr />
+  <div class="footer-strip" style="vertical-align: middle">
+    <table width="960px">
+      <tr><td>
+        <span class="defaultText">
+            <a class="sitemap-lnk" id="lnkPrivacy" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/Privacy.aspx" rel="nofollow">Privacy Policy</a> 
+            | <a class="sitemap-lnk" id="lnkPrivacy" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/Privacy.aspx#CAPrivaryRights" rel="nofollow">CA Notice at Collection</a>
+            | <a class="sitemap-lnk" id="lnkPrivacy" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/Privacy.aspx#CAPractices" rel="nofollow">Your CA Privacy Rights/Shine the Light</a>
+            | <a class="sitemap-lnk" id="lnkTermsOfUse" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/TermsOfUse.aspx"  rel="nofollow">Terms of Use</a> 
+            | <a class="sitemap-lnk" id="lnkPressCenter" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/PressReleases/ASOPressReleasesHome.aspx" rel="nofollow">Press Center</a> 
+            | <a class="sitemap-lnk" id="lnkSiteMap" style="cursor: pointer;" href="https://www.aso.com/Learn/AboutASO/ASOSiteMap.aspx" rel="nofollow">Site Map</a>
+        </span>
+        <span class="defaultText" style="display: block; line-height: 12px;">Aircraft Shopper
+            Online, ASO, The ASO Logo, and The Aircraft Market in Real Time are registered United
+            States Trademarks</span>
+            </td>                
+        </tr>
+    </table>
+  </div>
+    <div id="cookieGuidance" class="footer-bottom-banner">
+        <div class="footer-guidance-text">We and certain third parties use cookies to make this site available
+            to you, and to improve and analyze your experience on our site.
+            Please review our <a href="https://www.aso.com/Learn/AboutASO/Privacy.aspx" rel="nofollow" target="_blank">Privacy Notice</a> for more information about the
+            types of cookies we use and third parties can deploy and how to
+            limit cookies.</div>
+        <div>
+            <input type="button" id="acceptGuideline" onclick="acceptCookieGuidance()" value="Ok" class="footer-btn-accept-guidance" />
+        </div>
+    </div>
+</div>
+
+<!-- footer end -->
+
+    </div>
+    
+</body>
+</html>

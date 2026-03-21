@@ -1,0 +1,461 @@
+[
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201001",
+    "source_listing_id": "aso_201001",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "aso_adv_id": "201001",
+    "title": "2013 Xtremeair XA42",
+    "year": 2013,
+    "make": "Xtremeair",
+    "model": "XA42",
+    "aircraft_type": "multi_engine_piston",
+    "asking_price": 220000,
+    "price_asking": 220000,
+    "price_text": "$220,000",
+    "n_number": "ZS-AXA",
+    "serial_number": "120",
+    "total_time_airframe": 310,
+    "ttaf_raw": "310",
+    "location_raw": "ZA",
+    "state": null,
+    "seller_name": "Airvan Africa Pty L...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+    "scraped_at": "2026-03-14T07:41:35.744666+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Show Room Condition"
+        ],
+        "text": "Show Room Condition"
+      },
+      "Avionics": {
+        "items": [
+          "2 COMs",
+          "Garmin Aera 660 GPS"
+        ],
+        "text": "2 COMs Garmin Aera 660 GPS"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "description_full": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+(27) 46 624 4899",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38362&name=Airvan+Africa+Pty+Ltd",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "AEIO-580-B1A",
+        "serial#": "333-79E"
+      },
+      {
+        "loc.": "C",
+        "make": "MT",
+        "model": "MTV-9-B-C",
+        "serial#": "180445",
+        "tsn": "120",
+        "tsn_hours": 120
+      }
+    ],
+    "engine_count": 2,
+    "second_engine_time_since_overhaul": 120,
+    "avionics_notes": "2 COMs, Garmin Aera 660 GPS",
+    "maintenance_condition": "Show Room Condition",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33_sp.jpg",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33%20(1",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg&#39;,&#39;File_Name&#39;:&#39;PHOTO-2025-11-07-10-34-33.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:true,&#39;Original_Graphic_Id&#39;:3061234},"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Show Room Condition"
+            ],
+            "text": "Show Room Condition"
+          },
+          "Avionics": {
+            "items": [
+              "2 COMs",
+              "Garmin Aera 660 GPS"
+            ],
+            "text": "2 COMs Garmin Aera 660 GPS"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 6,
+        "captured_at": "2026-03-14T07:42:24.834560+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_199625",
+    "source_listing_id": "aso_199625",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+    "aso_adv_id": "199625",
+    "title": "2001 Wag-Aero Acro Cub",
+    "year": 2001,
+    "make": "Wag-Aero",
+    "model": "Acro Cub",
+    "aircraft_type": "multi_engine_piston",
+    "asking_price": 69900,
+    "price_asking": 69900,
+    "price_text": "$69,900",
+    "n_number": "N320AK",
+    "serial_number": "3841",
+    "total_time_airframe": 160,
+    "ttaf_raw": "160",
+    "location_raw": "CA, US",
+    "state": "CA",
+    "seller_name": "Skywagons.com, LLC",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/199625/1_6.jpg",
+    "scraped_at": "2026-03-14T07:41:35.744666+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming 0-320 160 160 HP Props Loc. TSN C 160"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Annual Due: March 2026",
+          "Useful Load: 700 Lbs.",
+          "Click here for Aircraft Logbook"
+        ],
+        "text": "Complete Logs: Yes Damage History: No Annual Due: March 2026 Useful Load: 700 Lbs. Click here for Aircraft Logbook"
+      },
+      "Airframe": {
+        "items": [
+          "Fully Aerobatic",
+          "27 Gallons of Fuel in Two Tanks",
+          "Electric Start",
+          "Metal Floors",
+          "Solo from Rear",
+          "Toe Brakes",
+          "Clipped Wings",
+          "No Flaps",
+          "Long Ailerons",
+          "Supercub Rear Fuselage and Tail",
+          "Shoulder Harness",
+          "Skylight",
+          "850 Main Tires",
+          "12 Volt Power Outlet"
+        ],
+        "text": "Fully Aerobatic 27 Gallons of Fuel in Two Tanks Electric Start Metal Floors Solo from Rear Toe Brakes Clipped Wings No Flaps Long Ailerons Supercub Rear Fuselage and Tail Shoulder Harness Skylight 850 Main Tires 12 Volt Power Outlet"
+      },
+      "Avionics": {
+        "items": [
+          "Airspeed Indicator",
+          "Altimeter",
+          "Turn and Bank",
+          "Tachometer",
+          "Oil Pressure Gauge",
+          "Oil Temp Gauge",
+          "Cylinder Head Temp Gauge",
+          "Volt Meter",
+          "Magnetic Compass",
+          "Space on Panel for Ipad Mini with Foreflight",
+          "12 Volt Power Outlet"
+        ],
+        "text": "Airspeed Indicator Altimeter Turn and Bank Tachometer Oil Pressure Gauge Oil Temp Gauge Cylinder Head Temp Gauge Volt Meter Magnetic Compass Space on Panel for Ipad Mini with Foreflight 12 Volt Power Outlet"
+      },
+      "Interior": {
+        "items": [
+          "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+        ],
+        "text": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+      },
+      "Exterior": {
+        "items": [
+          "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+        ],
+        "text": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+      },
+      "History": {
+        "items": [],
+        "text": "Built in 2001 and flown little. Sold into a Southern California desert hangared collection and not flown much. Then sold into a Bakersfield multi plane owner collection and not flown much. Then traded to Skywagons LLC for another plane. This Wag Aero Acro-Cub is literally like a 160 HP, solo-from-the-back, J3 with electric start and clipped wings with a fully aerobatic capability. And it is like new throughout. Complete logs. No damage history. Almost a new plane."
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Annual Due: March 2026\nUseful Load: 700 Lbs.\nClick here for\nAircraft Logbook",
+    "description_full": "Annual Due: March 2026\nUseful Load: 700 Lbs.\nClick here for\nAircraft Logbook",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "(530) 642-2806",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=267&name=Skywagons.com%2c+LLC",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "0-320",
+        "tsn": "160",
+        "tsn_hours": 160
+      },
+      {
+        "loc.": "C",
+        "tsn": "160",
+        "tsn_hours": 160
+      }
+    ],
+    "engine_count": 2,
+    "time_since_overhaul": 160,
+    "engine_time_since_overhaul": 160,
+    "second_engine_time_since_overhaul": 160,
+    "avionics_notes": "Airspeed Indicator, Altimeter, Turn and Bank, Tachometer, Oil Pressure Gauge, Oil Temp Gauge, Cylinder Head Temp Gauge, Volt Meter, Magnetic Compass, Space on Panel for Ipad Mini with Foreflight, 12 Volt Power Outlet",
+    "maintenance_condition": "Annual Due: March 2026 | Useful Load: 700 Lbs. | Click here for Aircraft Logbook",
+    "interior_details": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10",
+    "exterior_details": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/199625/1_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/1_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/2_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/2_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/3_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/3_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/4_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/4_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/5_6.jpg",
+      "https://www.aso.com/uploads/acImages/199625/5_6_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/6_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/6_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/7_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/7_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/8_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/8_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/9_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/9_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/10_4.jpg",
+      "https://www.aso.com/uploads/acImages/199625/10_4_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/11_4.jpg",
+      "https://www.aso.com/uploads/acImages/199625/11_4_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/12_5.jpg",
+      "https://www.aso.com/uploads/acImages/199625/12_5_sp.jpg",
+      "https://www.aso.com/uploads/acImages/199625/1_6.jpg&#39;,&#39;File_Name&#39;:&#39;1_6.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/1_6_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:true,&#39;Original_Graphic_Id&#39;:3083529},",
+      "https://www.aso.com/uploads/acImages/199625/2_6.jpg&#39;,&#39;File_Name&#39;:&#39;2_6.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/2_6_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083530},",
+      "https://www.aso.com/uploads/acImages/199625/3_6.jpg&#39;,&#39;File_Name&#39;:&#39;3_6.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/3_6_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083531},",
+      "https://www.aso.com/uploads/acImages/199625/4_6.jpg&#39;,&#39;File_Name&#39;:&#39;4_6.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/4_6_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083532},",
+      "https://www.aso.com/uploads/acImages/199625/5_6.jpg&#39;,&#39;File_Name&#39;:&#39;5_6.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/5_6_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083533},",
+      "https://www.aso.com/uploads/acImages/199625/6_5.jpg&#39;,&#39;File_Name&#39;:&#39;6_5.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/6_5_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083534},",
+      "https://www.aso.com/uploads/acImages/199625/7_5.jpg&#39;,&#39;File_Name&#39;:&#39;7_5.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/7_5_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083535},",
+      "https://www.aso.com/uploads/acImages/199625/8_5.jpg&#39;,&#39;File_Name&#39;:&#39;8_5.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/199625/8_5_sp.jpg&#39;,&#39;Twidth&#39;:267,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:3083536},"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Experimental Engines Loc. Make Model TSN C Lycoming 0-320 160 160 HP Props Loc. TSN C 160"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Annual Due: March 2026",
+              "Useful Load: 700 Lbs.",
+              "Click here for Aircraft Logbook"
+            ],
+            "text": "Complete Logs: Yes Damage History: No Annual Due: March 2026 Useful Load: 700 Lbs. Click here for Aircraft Logbook"
+          },
+          "Airframe": {
+            "items": [
+              "Fully Aerobatic",
+              "27 Gallons of Fuel in Two Tanks",
+              "Electric Start",
+              "Metal Floors",
+              "Solo from Rear",
+              "Toe Brakes",
+              "Clipped Wings",
+              "No Flaps",
+              "Long Ailerons",
+              "Supercub Rear Fuselage and Tail",
+              "Shoulder Harness",
+              "Skylight",
+              "850 Main Tires",
+              "12 Volt Power Outlet"
+            ],
+            "text": "Fully Aerobatic 27 Gallons of Fuel in Two Tanks Electric Start Metal Floors Solo from Rear Toe Brakes Clipped Wings No Flaps Long Ailerons Supercub Rear Fuselage and Tail Shoulder Harness Skylight 850 Main Tires 12 Volt Power Outlet"
+          },
+          "Avionics": {
+            "items": [
+              "Airspeed Indicator",
+              "Altimeter",
+              "Turn and Bank",
+              "Tachometer",
+              "Oil Pressure Gauge",
+              "Oil Temp Gauge",
+              "Cylinder Head Temp Gauge",
+              "Volt Meter",
+              "Magnetic Compass",
+              "Space on Panel for Ipad Mini with Foreflight",
+              "12 Volt Power Outlet"
+            ],
+            "text": "Airspeed Indicator Altimeter Turn and Bank Tachometer Oil Pressure Gauge Oil Temp Gauge Cylinder Head Temp Gauge Volt Meter Magnetic Compass Space on Panel for Ipad Mini with Foreflight 12 Volt Power Outlet"
+          },
+          "Interior": {
+            "items": [
+              "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+            ],
+            "text": "Grey Fabric Seats. Gray Painted Trim. Like New Throughout. Rated 9.5 Out of 10"
+          },
+          "Exterior": {
+            "items": [
+              "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+            ],
+            "text": "Overall Typical \"Cub\" Yellow with Black Accents in Traditional Cub Scheme"
+          },
+          "History": {
+            "items": [],
+            "text": "Built in 2001 and flown little. Sold into a Southern California desert hangared collection and not flown much. Then sold into a Bakersfield multi plane owner collection and not flown much. Then traded to Skywagons LLC for another plane. This Wag Aero Acro-Cub is literally like a 160 HP, solo-from-the-back, J3 with electric start and clipped wings with a fully aerobatic capability. And it is like new throughout. Complete logs. No damage history. Almost a new plane."
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: (530) 642-2806 Tel: (800) 759-9466 Fax: (530) 642-9375 3501 Airport Road, Hanger# 2 Placerville, California 95667 All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 48,
+        "captured_at": "2026-03-14T07:42:35.052084+00:00"
+      }
+    }
+  },
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_189943",
+    "source_listing_id": "aso_189943",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+    "aso_adv_id": "189943",
+    "title": "1942 Waco YMF",
+    "year": 1942,
+    "make": "Waco",
+    "model": "YMF",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 275000,
+    "price_asking": 275000,
+    "price_text": "$275,000",
+    "n_number": "",
+    "serial_number": "",
+    "total_time_airframe": 650,
+    "ttaf_raw": "650",
+    "location_raw": "AU",
+    "state": null,
+    "seller_name": "Airvan Africa Pty L...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/189943/Waco",
+    "scraped_at": "2026-03-14T07:41:35.745618+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model TSN STOH C Jacobs R-755B2M 950 15"
+      },
+      "Avionics": {
+        "items": [
+          "Garmin GNS530/430 Nav/Com/GPS",
+          "GTX327 transponder",
+          "Sandel",
+          "EDM700"
+        ],
+        "text": "Garmin GNS530/430 Nav/Com/GPS GTX327 transponder Sandel EDM700"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "Garmin GNS530/430 Nav/Com/GPS\nGTX327 transponder\nSandel\nEDM700",
+    "description_full": "Garmin GNS530/430 Nav/Com/GPS\nGTX327 transponder\nSandel\nEDM700",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+(27) 46 624 4899",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38362&name=Airvan+Africa+Pty+Ltd",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Jacobs",
+        "model": "R-755B2M",
+        "tsn": "950",
+        "stoh": "15",
+        "tsn_hours": 950
+      }
+    ],
+    "engine_count": 1,
+    "time_since_overhaul": 950,
+    "engine_time_since_overhaul": 950,
+    "avionics_notes": "Garmin GNS530/430 Nav/Com/GPS, GTX327 transponder, Sandel, EDM700",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/189943/Waco",
+      "https://www.aso.com/uploads/acImages/189943/Waco.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco_sp.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco%20ext_sp.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco.jpg&#39;,&#39;File_Name&#39;:&#39;Waco.jpg&#39;,&#39;Alias&#39;:null,&#39;Caption&#39;:null,&#39;Graphic_File_Type&#39;:&#39;.jpg",
+      "https://www.aso.com/uploads/acImages/189943/Waco_sp.jpg&#39;,&#39;Twidth&#39;:133,&#39;Theight&#39;:200,&#39;Is_Default&#39;:false,&#39;Original_Graphic_Id&#39;:2484383}]"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Antique/Classic Engines Loc. Make Model TSN STOH C Jacobs R-755B2M 950 15"
+          },
+          "Avionics": {
+            "items": [
+              "Garmin GNS530/430 Nav/Com/GPS",
+              "GTX327 transponder",
+              "Sandel",
+              "EDM700"
+            ],
+            "text": "Garmin GNS530/430 Nav/Com/GPS GTX327 transponder Sandel EDM700"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 6,
+        "captured_at": "2026-03-14T07:42:43.901865+00:00"
+      }
+    }
+  }
+]

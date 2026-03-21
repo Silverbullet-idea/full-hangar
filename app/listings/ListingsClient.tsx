@@ -184,6 +184,7 @@ export default function ListingsClient({
   const [sortBy, setSortBy] = useState<SortOption>(initialSortBy)
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
   const hasSkippedInitialFetch = useRef(false)
+  const filterOptionsFetchCompletedRef = useRef(false)
 
   const mobileActiveFilterCount = useMemo(() => {
     let count = 0
@@ -234,7 +235,20 @@ export default function ListingsClient({
     hasSkippedInitialFetch.current = false
     setListings(Array.isArray(initialListings) ? initialListings : [])
     setTotalFiltered(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
-    setFilterOptions(initialFilterOptions)
+    setFilterOptions((prev) => {
+      const hasIncoming =
+        initialFilterOptions.makes.length > 0 ||
+        initialFilterOptions.models.length > 0 ||
+        initialFilterOptions.states.length > 0 ||
+        initialFilterOptions.modelPairs.length > 0
+      if (hasIncoming) return initialFilterOptions
+      const hasPrev =
+        prev.makes.length > 0 ||
+        prev.models.length > 0 ||
+        prev.states.length > 0 ||
+        prev.modelPairs.length > 0
+      return hasPrev ? prev : initialFilterOptions
+    })
     setAppliedSearchTerm(initialSearchTerm)
     setCurrentPage(Math.max(1, initialPage))
     setPageSize(Math.min(48, Math.max(12, initialPageSize)))
@@ -313,7 +327,13 @@ export default function ListingsClient({
       filterOptions.models.length > 0 ||
       filterOptions.states.length > 0 ||
       filterOptions.modelPairs.length > 0
-    ) return
+    ) {
+      return
+    }
+    if (filterOptionsFetchCompletedRef.current) {
+      return
+    }
+    filterOptionsFetchCompletedRef.current = true
 
     const loadFilterOptions = async () => {
       try {

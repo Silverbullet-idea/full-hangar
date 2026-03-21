@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import ListingsClient from './ListingsClient'
-import { getListingsPage } from '../../lib/db/listingsRepository'
+import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
 import {
   buildListingsCanonicalPath,
   buildListingsPageDescription,
@@ -269,6 +269,13 @@ export default async function ListingsPage({
     console.error("[listings/page] failed to load initial listings", error)
   }
 
+  let initialFilterOptionRows: Awaited<ReturnType<typeof getListingFilterOptions>> = []
+  try {
+    initialFilterOptionRows = await getListingFilterOptions()
+  } catch (error) {
+    console.error("[listings/page] failed to load filter options", error)
+  }
+
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -315,7 +322,7 @@ export default async function ListingsPage({
       <ListingsClient
         initialListings={initialPageData.rows}
         initialTotalFiltered={initialPageData.total}
-        initialFilterOptions={buildFilterOptions([])}
+        initialFilterOptions={buildFilterOptions(initialFilterOptionRows)}
         initialSearchTerm={initialSearchTerm}
         initialCategoryFilter={initialCategoryFilter}
         initialDealFilter={initialDealFilter}

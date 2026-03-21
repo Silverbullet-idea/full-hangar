@@ -1,0 +1,491 @@
+# BACKEND Task: Score Distribution Fix + public_listings View Gap Closure
+
+## Read First
+Read `AGENTS.md` completely before starting. This is a **BACKEND** lane task.
+Project root: `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`
+Python runtime: `.venv312\Scripts\python.exe`
+
+## ⚠️ CRITICAL CONSTRAINT — DO NOT IGNORE
+`scraper/backfill_scores.py --all --compute-comps` is **currently running** in a separate
+terminal. Do NOT start a new backfill, do NOT terminate the running process, do NOT touch
+`scraper/backfill_scores.py` execution in any way. All scoring changes you make in this
+task will be deployed via a new backfill run AFTER the current one completes. Ryan will
+trigger that run manually.
+
+---
+
+## Context: What We Are Fixing
+
+### Problem 1 — Score Clustering
+From `HYBRID_CUTOVER_REPORT.md`, the scoring population after v1.8.0 shows:
+- Most common `value_score`: **51.70**, shared by **28.6%** of all listings (~2,500 aircraft)
+- **0 listings** at LOW risk level
+- Risk mix: LOW 0 / MODERATE 883 / HIGH 87 / CRITICAL 29
+
+This is a broken UX. When a third of inventory shares the same score the number is
+meaningless to users. The root cause: when listings are sparse on data (no SMOH, no
+avionics, no comps), component scores default to a neutral midpoint and the final
+assembly lands near the same value every time.
+
+The fix is **percentile-based score normalization** applied as a final pass after
+component assembly. This maps the raw score output to a true 0–100 distribution anchored
+against the actual population, and adds minimum-population enforcement per risk tier.
+
+### Problem 2 — public_listings View Gaps
+`PUBLIC_LISTINGS_VIEW.md` Section 5 documents 20+ columns used in the frontend detail
+page that are missing from the view. The UI is silently falling back to degraded states
+for accident display, FAA panel, and new scoring fields. We will close the highest-impact
+subset in this task.
+
+---
+
+## Task A — Diagnose Score Clustering Before Touching Any Code
+
+### Step A1 — Audit the current scoring assembly
+Read these files completely before writing a single line:
+- `core/intelligence/aircraft_intelligence.py` — find `INTELLIGENCE_VERSION`, the final
+  score assembly function, the risk level assignment logic, and any hardcoded default
+  score constants (look for values near 50–58 in fallback paths)
+- `scraper/validate_scores.py` — understand what it measures
+- `scraper/backfill_scores.py` — read the `listing_for_intelligence()` function and the
+  score write-back section (do not run it)
+
+### Step A2 — Write a diagnostic script first
+Create `scraper/audit_score_distribution.py`:
+```python
+"""
+Audit script — reads the current score distribution from Supabase and prints a report.
+Run BEFORE and AFTER the scoring fix to validate the improvement.
+Safe to run at any time — read-only, no writes.
+
+Usage:
+  .venv312\Scripts\python.exe scraper\audit_score_distribution.py
+"""
+
+import os, json
+from collections import Counter
+from dotenv import load_dotenv
+load_dotenv(dotenv_path="scraper/.env")
+
+from supabase import create_client
+
+url = os.environ["SUPABASE_URL"]
+key = os.environ["SUPABASE_SERVICE_KEY"]
+sb  = create_client(url, key)
+
+# Pull all scores
+rows = sb.table("aircraft_listings") \
+         .select("value_score,risk_level,intelligence_version,engine_score,avionics_score,prop_score") \
+         .eq("is_active", True) \
+         .execute().data
+
+scores = [r["value_score"] for r in rows if r.get("value_score") is not None]
+risk_counts = Counter(r.get("risk_level") for r in rows if r.get("risk_level"))
+version_counts = Counter(r.get("intelligence_version") for r in rows)
+
+# Distribution buckets 0-9, 10-19, ... 90-100
+buckets = Counter()
+for s in scores:
+    bucket = min(int(s // 10) * 10, 90)
+    buckets[bucket] += 1
+
+most_common = Counter(round(s, 2) for s in scores).most_common(10)
+null_score_count = sum(1 for r in rows if r.get("value_score") is None)
+
+print(f"\n=== Score Distribution Audit ===")
+print(f"Total active listings: {len(rows)}")
+print(f"Scored listings: {len(scores)}")
+print(f"Null value_score: {null_score_count}")
+print(f"\nScore buckets (0-9, 10-19, ...):")
+for bucket in range(0, 100, 10):
+    count = buckets.get(bucket, 0)
+    pct = count / len(scores) * 100 if scores else 0
+    bar = "█" * int(pct / 2)
+    print(f"  {bucket:2d}-{bucket+9:2d}: {count:5d}  ({pct:5.1f}%)  {bar}")
+print(f"\nTop 10 most common exact scores:")
+for score, count in most_common:
+    pct = count / len(scores) * 100 if scores else 0
+    print(f"  {score:6.2f}: {count:5d} ({pct:.1f}%)")
+print(f"\nRisk level distribution:")
+for level in ["LOW", "MODERATE", "HIGH", "CRITICAL"]:
+    print(f"  {level:8s}: {risk_counts.get(level, 0)}")
+print(f"\nIntelligence version distribution (top 5):")
+for ver, count in version_counts.most_common(5):
+    print(f"  {ver}: {count}")
+print()
+```
+
+Run it now and paste the output into a comment at the top of the next file you create.
+This is your baseline — you need it to prove the fix works later.
+```
+.venv312\Scripts\python.exe scraper\audit_score_distribution.py
+```
+
+Write the output to `scraper/score_distribution_audit_pre_fix.txt`.
+
+---
+
+## Task B — Implement Score Distribution Fix
+
+### Step B1 — Read the existing scoring assembly in full
+Find and carefully read the final score assembly in `core/intelligence/aircraft_intelligence.py`.
+Specifically locate:
+- The function that produces the final `value_score` (likely called something like
+  `score_listing`, `compute_value_score`, or `assemble_score`)
+- Where `risk_level` is assigned (LOW / MODERATE / HIGH / CRITICAL thresholds)
+- Any hardcoded default/fallback score values in the 45–60 range
+- The current `INTELLIGENCE_VERSION` constant
+
+### Step B2 — Implement percentile normalization helper
+Add a new function `_apply_percentile_normalization(raw_score, data_confidence)` to
+`core/intelligence/aircraft_intelligence.py` using the logic below.
+
+**Design principles:**
+- The percentile normalization should produce a spread distribution even for sparse data
+- Listings with `data_confidence == 'high'` (SMOH known, avionics matched, comps
+  available) should be able to score across the full 0–100 range
+- Listings with `data_confidence == 'low'` (most data missing) should land in 30–65 —
+  not clustered at one point, but honest about uncertainty
+- The function does NOT hit the database — it uses the component scores already computed
+  in the same scoring pass as inputs to determine spread
+
+**Implementation approach:**
+Replace the linear sum assembly with a **weighted component scoring system** where each
+component that is PRESENT contributes its actual signal, and components that are ABSENT
+contribute a **neutral-but-varied default** based on aircraft type and age rather than a
+fixed midpoint.
+
+Specifically:
+1. Identify when a component score is "imputed" (we had no data) vs "measured" (we had
+   real data). Add a `_components_measured` count to the score output dict.
+2. For imputed components, scale the default based on `year` — older aircraft get a
+   slightly lower imputed engine/maintenance default (age penalty), newer aircraft get
+   slightly higher. This alone breaks the cluster because aircraft of different years
+   will land at different default scores.
+3. For the risk level assignment, enforce a minimum population floor:
+   - LOW must be achievable: anything scoring >= 78 with no CRITICAL flags → LOW
+   - MODERATE: 45–77
+   - HIGH: 25–44 (widen this band)
+   - CRITICAL: < 25 OR hard safety overrides (FAA alert, LLP unairworthy, severe NTSB)
+4. Add a small `listing_age_tiebreaker` nudge (±2 points based on `days_on_market > 90`
+   as a mild stale-listing signal) to further differentiate identical-component listings.
+
+### Step B3 — Bump INTELLIGENCE_VERSION
+Find the `INTELLIGENCE_VERSION` constant in `core/intelligence/aircraft_intelligence.py`.
+
+Read the current value first. Then bump it to the next minor version (e.g. if current is
+`1.9.1`, set it to `1.9.2`). Do NOT skip to 2.0.0 — Ryan controls major version bumps.
+
+Add a comment documenting what changed:
+```python
+# v1.9.2 — Score distribution fix: age-differentiated imputed defaults,
+# widened risk tier bands (LOW threshold 78, HIGH band 25-44),
+# days_on_market tiebreaker nudge, _components_measured tracking.
+```
+
+### Step B4 — Write a targeted validation test
+Create or extend `scraper/tests/test_intelligence.py` with at least these 4 cases that
+specifically verify the distribution fix works:
+```
+Case 1: Sparse listing (no SMOH, no avionics, year=1968)
+  → value_score should NOT be in range 50.0–53.0
+  → risk_level should be MODERATE or HIGH (not CRITICAL for a clean aircraft)
+
+Case 2: Sparse listing (no SMOH, no avionics, year=2005)
+  → value_score should be HIGHER than Case 1 (year spread is working)
+  → value_score should NOT equal Case 1's score
+
+Case 3: High-data listing (SMOH=200, TBO=2000, avionics_value>15000, comps available)
+  → value_score should be >= 70
+  → risk_level should be LOW or MODERATE
+
+Case 4: Hard safety override listing (faa_registration_alert set, LLP expired)
+  → risk_level must be CRITICAL regardless of other scores
+  → value_score must be <= 25
+```
+
+Run the tests:
+```
+.venv312\Scripts\python.exe -m pytest scraper\tests\test_intelligence.py -v
+```
+
+All 4 new cases must pass before proceeding. Fix any failures before moving on.
+
+### Step B5 — Write a bounded dry-run validation (DO NOT RUN FULL BACKFILL)
+Create `scraper/validate_score_distribution_fix.py` — a targeted validation that scores
+a sample of 50 listings from the database using the new code WITHOUT writing results back
+to the DB. This lets Ryan verify the distribution is correct before triggering the real
+backfill after the current one finishes.
+```python
+"""
+Dry-run validator for score distribution fix.
+Loads 50 active listings from DB, scores them with the NEW logic, prints a distribution
+report. Does NOT write any changes to the database.
+
+Run after the current backfill completes (Ryan will do this manually):
+  .venv312\Scripts\python.exe scraper\validate_score_distribution_fix.py
+
+Then if distribution looks good, run:
+  .venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
+"""
+```
+
+The script should:
+- Pull 50 active listings spanning a range of years (mix of 1960s–2010s)
+- Run them through the intelligence engine in dry-run mode (no DB writes)
+- Print the same bucket distribution as `audit_score_distribution.py`
+- Show how many unique score values appear in the 50-listing sample
+- Print risk level distribution
+- Print average `_components_measured` count
+
+Write the output format to match `audit_score_distribution.py` so the before/after
+comparison is easy.
+
+---
+
+## Task C — public_listings View Gap Closure
+
+### Step C1 — Read these files first
+- `PUBLIC_LISTINGS_VIEW.md` — read all 7 sections completely
+- `supabase/migrations/` — list the directory and identify the highest sequential
+  migration number currently present. The new migration must use the NEXT number.
+
+### Step C2 — Verify columns exist on aircraft_listings before adding to view
+For each column group below, query `aircraft_listings` via the Supabase client to confirm
+the column exists before adding it to the view. Use this pattern:
+```python
+# Quick column existence check — run once, paste output as comment in migration file
+result = sb.table("aircraft_listings").select(",".join(COLS_TO_CHECK)).limit(1).execute()
+print("Columns confirmed:", list(result.data[0].keys()) if result.data else "no rows")
+```
+
+Check these column groups:
+
+**Group 1 — Accident / NTSB fields** (from Section 5 of PUBLIC_LISTINGS_VIEW.md):
+`accident_count`, `most_recent_accident_date`, `most_severe_damage`, `has_accident_history`
+
+**Group 2 — FAA panel fields**:
+`faa_matched`, `faa_owner`, `faa_status`, `faa_cert_date`, `faa_type_aircraft`
+
+**Group 3 — New scoring fields** (added by intelligence v1.9.x work):
+`investment_score`, `market_opportunity_score`, `execution_score`, `condition_score`,
+`pricing_confidence`, `comp_selection_tier`, `comp_universe_size`,
+`comp_exact_count`, `comp_family_count`, `comp_make_count`,
+`comp_median_price`, `comp_p25_price`, `comp_p75_price`, `mispricing_zscore`
+
+**Group 4 — Attribution fields**:
+`deal_comparison_source`, `manufacturer_tier`
+
+If a column does NOT exist on `aircraft_listings`, do NOT add it to the view — skip it
+and note it in the migration file comment as `-- SKIPPED: column not present on table`.
+
+### Step C3 — Create the migration
+Create a new file:
+```
+supabase/migrations/[NEXT_TIMESTAMP]_add_missing_fields_to_public_listings_view.sql
+```
+
+Use today's date for the timestamp prefix: `20260320` + next sequential number.
+
+The migration must:
+1. Start with a comment block listing every column being added and which group it belongs
+   to, plus any columns that were skipped because they don't exist on the table yet
+2. Use `CREATE OR REPLACE VIEW` — never DROP VIEW
+3. Include the COMPLETE view SQL from `PUBLIC_LISTINGS_VIEW.md` Section 3 as the base,
+   then ADD the verified new columns at the end of the SELECT list
+4. Follow the exact same casting pattern already used in the view for each type:
+   - `text` columns: `NULLIF(j ->> 'column_name', '') AS column_name`
+   - `numeric` columns: full `CASE WHEN ~ regex THEN cast ELSE NULL END` pattern
+   - `boolean` columns: full `CASE WHEN LOWER(...) IN ('true','false') THEN cast ELSE NULL END` pattern
+   - `integer` columns: full `CASE WHEN ~ regex THEN cast ELSE NULL END` pattern
+   - `date` columns: full `CASE WHEN ~ date-regex THEN cast ELSE NULL END` pattern
+   - `jsonb` columns: full `CASE WHEN jsonb_typeof = 'array' THEN ... ELSE '[]'::jsonb END` pattern
+5. End with the same `WHERE` clause already in the view:
+   `WHERE NULLIF(j ->> 'value_score', '') ~ '^-?\d+(\.\d+)?$'`
+6. After the view SQL, add GRANT statement:
+   `GRANT SELECT ON public.public_listings TO anon, authenticated;`
+
+### Step C4 — Apply the migration
+```
+npx supabase db push
+```
+
+If `db push` fails for any reason, try:
+```
+npx supabase migration up
+```
+
+Do not proceed to Step C5 if the migration fails — stop and report the error.
+
+### Step C5 — Verify the migration applied correctly
+Run this quick verification:
+```
+.venv312\Scripts\python.exe -c "
+import os; from dotenv import load_dotenv; load_dotenv('scraper/.env')
+from supabase import create_client
+sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_KEY'])
+row = sb.table('public_listings').select('*').limit(1).execute().data
+if row:
+    cols = sorted(row[0].keys())
+    print(f'Total columns in public_listings: {len(cols)}')
+    # Check for key newly-added columns
+    check = ['has_accident_history','faa_owner','investment_score','deal_comparison_source']
+    for c in check:
+        print(f'  {c}: {\"PRESENT\" if c in cols else \"MISSING\"}'  )
+else:
+    print('No rows returned - check RLS / permissions')
+"
+```
+
+All 4 check columns that were confirmed to exist on `aircraft_listings` in Step C2 must
+show PRESENT. If any show MISSING, the migration did not apply correctly — stop and debug.
+
+### Step C6 — Update PUBLIC_LISTINGS_VIEW.md
+After a successful migration:
+
+1. **Section 2 — Column Inventory**: Add new table rows for every column successfully
+   added. Use the same table format as the existing rows.
+
+2. **Section 3 — Canonical View SQL**: Replace the SQL block with the exact SQL from
+   your migration (the complete view definition). This is the new canonical reference.
+
+3. **Section 5 — Known Gaps**: Remove every column from the gaps table that was
+   successfully added in this migration. For any columns that were SKIPPED because they
+   don't yet exist on the underlying table, move them to a new sub-section:
+```
+   ### Deferred (column not yet on aircraft_listings table)
+```
+   with a note about what migration would need to create them first.
+
+4. **Section 6 — Migration History**: Add a new row:
+```
+   | `20260320XXXXXX_add_missing_fields_to_public_listings_view.sql` | Added accident/NTSB fields, FAA panel fields, new scoring fields (investment_score etc.), attribution fields |
+```
+
+5. **Section 7 — Live Verification Snapshot**: Update the date and note the new column
+   count.
+
+---
+
+## Task D — Run TypeScript Build Check
+```
+npm run build
+```
+
+This must complete without errors. If new columns were added to the view, TypeScript may
+surface type mismatches in `lib/types.ts` or `lib/db/listingsRepository.ts` where
+callers reference fields that now exist but weren't typed. Fix any TypeScript errors that
+relate to the new columns — add them to the relevant type definitions following existing
+patterns. Do NOT change any business logic, only add missing type declarations.
+
+If the build was already failing before you started (due to the in-progress backfill or
+unrelated issues), document the pre-existing error and confirm your changes did not
+introduce new ones.
+
+---
+
+## Task E — Create Cutover Runbook
+
+Create `SCORE_DISTRIBUTION_FIX_RUNBOOK.md` in the project root:
+```markdown
+# Score Distribution Fix — Deployment Runbook
+
+## Status: READY TO DEPLOY (pending current backfill completion)
+
+## Background
+Intelligence v[NEW_VERSION] fixes score clustering (28.6% of listings at identical score
+51.70, 0 listings at LOW risk). Changes:
+- Age-differentiated imputed component defaults break the single-cluster pattern
+- Widened risk tier bands: LOW >= 78, MODERATE 45-77, HIGH 25-44, CRITICAL < 25
+- days_on_market tiebreaker nudge (±2 pts)
+- _components_measured tracking in score output
+
+## Pre-deployment checks (Ryan runs these)
+[ ] Current backfill (`scraper/backfill_scores.py --all --compute-comps`) has completed
+[ ] Run dry-run validator and confirm distribution is spread:
+    .venv312\Scripts\python.exe scraper\validate_score_distribution_fix.py
+[ ] Confirm unique score count in 50-listing sample is >= 40 (not clustered)
+[ ] Confirm at least 1 listing scores >= 78 (LOW tier reachable)
+
+## Deployment
+.venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
+
+## Post-deployment verification
+.venv312\Scripts\python.exe scraper\audit_score_distribution.py
+→ Save output to: scraper/score_distribution_audit_post_fix.txt
+→ Confirm: most common score < 5% of population (was 28.6%)
+→ Confirm: LOW risk count > 0
+→ Confirm: value_score IS NULL = 0
+
+.venv312\Scripts\python.exe scraper\validate_scores.py
+
+## Rollback (if distribution regresses)
+1. In `core/intelligence/aircraft_intelligence.py`:
+   Revert INTELLIGENCE_VERSION to prior value
+   Revert the scoring assembly changes (use git diff to identify exact lines)
+2. .venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
+3. .venv312\Scripts\python.exe scraper\audit_score_distribution.py
+```
+
+---
+
+## Task F — Update AGENTS.md
+
+At the end of your work, update `AGENTS.md`:
+
+**In "Completed Recently" → "Intelligence and Scoring"**, add:
+```
+- Score distribution fix implemented in `core/intelligence/aircraft_intelligence.py`
+  (v[OLD] → v[NEW]): age-differentiated imputed defaults, widened risk tier bands
+  (LOW >= 78, HIGH 25-44), days_on_market tiebreaker, _components_measured tracking.
+  Pre-deployment validation tooling at `scraper/validate_score_distribution_fix.py`
+  and `scraper/audit_score_distribution.py`. Deployment runbook at
+  `SCORE_DISTRIBUTION_FIX_RUNBOOK.md`. Awaiting current backfill completion before
+  deploying.
+```
+
+**In "Completed Recently" → "Backend, Pipeline, and Data Sources"**, add:
+```
+- public_listings view gap closure migration applied
+  (`20260320XXXXXX_add_missing_fields_to_public_listings_view.sql`): added accident/NTSB
+  fields, FAA panel fields (faa_owner/status/cert_date/type), new scoring fields
+  (investment_score, market_opportunity_score, execution_score, pricing_confidence,
+  comp_selection_tier, comp band fields), deal_comparison_source, manufacturer_tier.
+  `PUBLIC_LISTINGS_VIEW.md` updated to reflect new canonical view SQL.
+```
+
+**In "Open Work" → High Priority**, remove or check off:
+- Any existing item about public_listings view gaps
+- Add: `**Score distribution deployment (ready):** run \`validate_score_distribution_fix.py\` then trigger new backfill per \`SCORE_DISTRIBUTION_FIX_RUNBOOK.md\` once current backfill completes.`
+
+---
+
+## Completion Checklist
+
+Before closing this agent session, confirm every item:
+```
+[ ] scraper/audit_score_distribution.py created and executed — baseline output saved
+    to scraper/score_distribution_audit_pre_fix.txt
+[ ] core/intelligence/aircraft_intelligence.py modified:
+    - INTELLIGENCE_VERSION bumped with change comment
+    - Age-differentiated imputed defaults implemented
+    - Risk tier thresholds widened (LOW >= 78, HIGH 25-44)
+    - days_on_market tiebreaker added
+    - _components_measured field added to score output dict
+[ ] scraper/tests/test_intelligence.py: 4 new distribution test cases, all passing
+[ ] scraper/validate_score_distribution_fix.py created (dry-run, no DB writes)
+[ ] public_listings view migration created and applied via `npx supabase db push`
+[ ] Migration verification passed (all checked columns present)
+[ ] PUBLIC_LISTINGS_VIEW.md updated: Section 2, 3, 5, 6, 7
+[ ] npm run build passes (no new TypeScript errors)
+[ ] SCORE_DISTRIBUTION_FIX_RUNBOOK.md created in project root
+[ ] AGENTS.md updated
+[ ] git commit: "fix(scoring): v[X.X.X] score distribution fix + public_listings view gap closure"
+```
+
+## Scope Boundary — DO NOT TOUCH
+- `scraper/backfill_scores.py` — no execution, no logic changes (only read it)
+- `scraper/compute_market_comps.py` — do not run or modify
+- Any frontend files in `app/` — FRONTEND lane owns those
+- `scraper/avionics_*` files — not in scope for this task
+- `.env` or `.env.local` files — do not modify credentials

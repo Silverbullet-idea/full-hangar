@@ -36,6 +36,7 @@ try:
     from description_parser import parse_description, sanitize_engine_model
     from env_check import env_check
     from media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
+    from registration_parser import apply_registration_fields, extract_registration_from_text, normalize_us_n_number
     from schema import validate_listing
     from scraper_base import (
         compute_listing_fingerprint,
@@ -49,6 +50,7 @@ except ImportError:  # pragma: no cover
     from .description_parser import parse_description, sanitize_engine_model
     from .env_check import env_check
     from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
+    from .registration_parser import apply_registration_fields, extract_registration_from_text, normalize_us_n_number
     from .schema import validate_listing
     from .scraper_base import (
         compute_listing_fingerprint,
@@ -206,8 +208,8 @@ def _extract_year_make(sub_title_text: str) -> tuple[Optional[int], Optional[str
 def _extract_n_number(stock_text: str) -> Optional[str]:
     if not stock_text:
         return None
-    match = re.search(r"\b(N\d{1,5}[A-Z]{0,2})\b", stock_text, re.IGNORECASE)
-    return match.group(1).upper() if match else None
+    registration = extract_registration_from_text(stock_text)
+    return normalize_us_n_number(registration)
 
 
 # Full state name to 2-letter abbreviation map
@@ -440,6 +442,39 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
                     specs[label] = value
 
         log.debug(f"Detail specs parsed: {list(specs.keys())}")
+        if specs:
+            # Preserve all parsed Controller label/value pairs for downstream analysis.
+            extra["controller_specs_flat"] = specs
+
+        def _spec_text(*keys: str) -> str | None:
+            for key in keys:
+                value = specs.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            return None
+
+        def _spec_int(*keys: str) -> int | None:
+            value = _spec_text(*keys)
+            if not value:
+                return None
+            match = re.search(r"[\d,]+", value)
+            if not match:
+                return None
+            try:
+                return int(match.group().replace(",", ""))
+            except Exception:
+                return None
+
+        def _spec_bool(*keys: str) -> bool | None:
+            value = _spec_text(*keys)
+            if not value:
+                return None
+            lowered = value.lower()
+            if lowered in {"yes", "y", "true"}:
+                return True
+            if lowered in {"no", "n", "false"}:
+                return False
+            return None
 
         # General
         if "manufacturer" in specs:
@@ -455,18 +490,33 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
             val = specs["serial number"].strip()
             if val.lower() not in ("n/a", "serial number", ""):
                 extra["serial_number"] = val
-        if "registration #" in specs:
-            match = re.search(r"([A-Z]\d{1,5}[A-Z]{0,2})", specs["registration #"], re.I)
-            if match:
-                extra["n_number"] = match.group(1).upper()
+        for reg_key in ("registration #", "registration", "reg #", "tail number", "n-number"):
+            if reg_key in specs:
+                apply_registration_fields(
+                    extra,
+                    raw_value=specs[reg_key],
+                    fallback_text=specs.get("description") or "",
+                    keep_existing_n_number=True,
+                )
+                if extra.get("registration_normalized") or extra.get("n_number"):
+                    break
         if "description" in specs:
             extra["description"] = html_module.unescape(specs["description"]).strip()
+        if "condition" in specs:
+            extra["listing_condition"] = specs["condition"].strip()
+        if "flightrules" in specs:
+            extra["flight_rules"] = specs["flightrules"].strip()
+        if "based at" in specs:
+            extra["based_at"] = specs["based at"].strip()
 
         # Airframe
         if "total time" in specs:
             val = re.search(r"[\d,]+", specs["total time"])
             if val:
                 extra["total_time_airframe"] = int(val.group().replace(",", ""))
+        complete_logs = _spec_bool("complete logs")
+        if complete_logs is not None:
+            extra["complete_logs"] = complete_logs
         if "useful load" in specs:
             val = re.search(r"[\d,]+", specs["useful load"])
             if val:
@@ -482,27 +532,148 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
                 cleaned_engine_model = sanitize_engine_model(specs[key].strip())
                 if cleaned_engine_model:
                     extra["engine_model"] = cleaned_engine_model
+                    extra["engine_1_model"] = cleaned_engine_model
                 break
         for key in ("engine 1 time", "engine time", "smoh", "time since overhaul"):
             if key in specs:
                 val = re.search(r"[\d,]+", specs[key])
                 if val:
-                    extra["engine_time_since_overhaul"] = int(val.group().replace(",", ""))
+                    parsed = int(val.group().replace(",", ""))
+                    extra["engine_time_since_overhaul"] = parsed
+                    extra["engine_1_time_hours"] = parsed
+                    extra["engine_1_time_text"] = specs[key].strip()
                     break
         if "engine tbo" in specs:
             val = re.search(r"[\d,]+", specs["engine tbo"])
             if val:
-                extra["engine_tbo_hours"] = int(val.group().replace(",", ""))
+                parsed = int(val.group().replace(",", ""))
+                extra["engine_tbo_hours"] = parsed
+                extra["engine_1_tbo_hours"] = parsed
+        engine_1_tbo = _spec_int("engine 1 tbo")
+        if engine_1_tbo is not None:
+            extra["engine_1_tbo_hours"] = engine_1_tbo
+            if not extra.get("engine_tbo_hours"):
+                extra["engine_tbo_hours"] = engine_1_tbo
+        engine_1_notes = _spec_text("engine 1 notes", "engine notes")
+        if engine_1_notes:
+            extra["engine_1_notes"] = engine_1_notes
+            extra["engine_notes"] = engine_1_notes
+
+        engine_2_model = _spec_text("engine 2 make/model")
+        if engine_2_model:
+            extra["engine_2_model"] = sanitize_engine_model(engine_2_model) or engine_2_model
+        engine_2_time_text = _spec_text("engine 2 time")
+        if engine_2_time_text:
+            extra["engine_2_time_text"] = engine_2_time_text
+            engine_2_time = _spec_int("engine 2 time")
+            if engine_2_time is not None:
+                extra["engine_2_time_hours"] = engine_2_time
+        engine_2_tbo = _spec_int("engine 2 tbo")
+        if engine_2_tbo is not None:
+            extra["engine_2_tbo_hours"] = engine_2_tbo
+        engine_2_notes = _spec_text("engine 2 notes")
+        if engine_2_notes:
+            extra["engine_2_notes"] = engine_2_notes
+
+        prop_1_mfr = _spec_text("prop 1 manufacturer", "prop manufacturer")
+        if prop_1_mfr:
+            extra["prop_1_manufacturer"] = prop_1_mfr
+        prop_1_model = _spec_text("prop 1 model", "prop model")
+        if prop_1_model:
+            extra["prop_1_model"] = prop_1_model
+            extra["prop_model"] = prop_1_model
+        prop_1_time_text = _spec_text("prop 1 time", "prop time")
+        if prop_1_time_text:
+            extra["prop_1_time_text"] = prop_1_time_text
+            prop_1_time = _spec_int("prop 1 time", "prop time")
+            if prop_1_time is not None:
+                extra["prop_1_time_hours"] = prop_1_time
+                extra["time_since_prop_overhaul"] = prop_1_time
+        prop_2_mfr = _spec_text("prop 2 manufacturer")
+        if prop_2_mfr:
+            extra["prop_2_manufacturer"] = prop_2_mfr
+        prop_2_model = _spec_text("prop 2 model")
+        if prop_2_model:
+            extra["prop_2_model"] = prop_2_model
+        prop_2_time_text = _spec_text("prop 2 time")
+        if prop_2_time_text:
+            extra["prop_2_time_text"] = prop_2_time_text
+            prop_2_time = _spec_int("prop 2 time")
+            if prop_2_time is not None:
+                extra["prop_2_time_hours"] = prop_2_time
+        prop_blades = _spec_int("number of blades")
+        if prop_blades is not None:
+            extra["prop_blade_count"] = prop_blades
+        prop_notes = _spec_text("prop notes")
+        if prop_notes:
+            extra["prop_notes"] = prop_notes
 
         # Avionics
         for key in ("flight deck manufacturer/model", "avionics/radios", "avionics"):
             if key in specs:
                 extra["avionics_description"] = html_module.unescape(specs[key]).strip()
                 break
+        avionics_flight_deck = _spec_text("flight deck manufacturer/model")
+        if avionics_flight_deck:
+            extra["avionics_flight_deck"] = avionics_flight_deck
+        avionics_waas = _spec_bool("waas")
+        if avionics_waas is not None:
+            extra["avionics_waas"] = avionics_waas
+        avionics_svt = _spec_bool("svt")
+        if avionics_svt is not None:
+            extra["avionics_svt"] = avionics_svt
+        avionics_traffic = _spec_bool("active traffic")
+        if avionics_traffic is not None:
+            extra["avionics_active_traffic"] = avionics_traffic
+        avionics_terrain = _spec_bool("terrain warning system")
+        if avionics_terrain is not None:
+            extra["avionics_terrain_warning"] = avionics_terrain
+
+        additional_equipment = _spec_text("additional equipment")
+        if additional_equipment:
+            extra["additional_equipment_text"] = additional_equipment
+        oxygen_system = _spec_bool("oxygen system")
+        if oxygen_system is not None:
+            extra["oxygen_system"] = oxygen_system
+        fiki = _spec_bool("flight into known icing (fiki)")
+        if fiki is not None:
+            extra["flight_into_known_icing"] = fiki
+        inadvertent_ice = _spec_bool("inadvertent ice protection")
+        if inadvertent_ice is not None:
+            extra["inadvertent_ice_protection"] = inadvertent_ice
+        has_air_conditioning = _spec_bool("a/c")
+        if has_air_conditioning is not None:
+            extra["has_air_conditioning"] = has_air_conditioning
+
+        year_painted = _spec_int("year painted")
+        if year_painted is not None:
+            extra["year_painted"] = year_painted
+        year_interior = _spec_int("year interior")
+        if year_interior is not None:
+            extra["year_interior"] = year_interior
+        interior_config = _spec_text("configuration")
+        if interior_config:
+            extra["interior_configuration"] = interior_config
+        interior_notes = _spec_text("interior notes")
+        if interior_notes:
+            extra["interior_notes"] = interior_notes
 
         # Inspection
         if "airworthy" in specs:
             extra["is_airworthy"] = specs["airworthy"].strip().lower() == "yes"
+        inspection_status = _spec_text("inspection status")
+        if inspection_status:
+            extra["inspection_status"] = inspection_status
+
+        if not extra.get("registration_normalized") and not extra.get("n_number"):
+            inferred_registration = extract_registration_from_text(soup.get_text(" ", strip=True))
+            if inferred_registration:
+                apply_registration_fields(
+                    extra,
+                    raw_value=inferred_registration,
+                    fallback_text=soup.get_text(" ", strip=True),
+                    keep_existing_n_number=True,
+                )
 
     except Exception as exc:
         log.warning(f"Detail page fetch failed for {listing_url}: {exc}")
@@ -687,6 +858,7 @@ def parse_listing_card(card, default_aircraft_type: str = "single_engine_piston"
             "description": description or None,
             "aircraft_type": default_aircraft_type,
         }
+        apply_registration_fields(listing, raw_value=n_number, fallback_text=stock_text, keep_existing_n_number=True)
         return listing
     except Exception as exc:
         log.warning(f"Error parsing listing card: {exc}")

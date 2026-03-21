@@ -1,0 +1,115 @@
+{
+  "computed_at": "2026-03-13T22:06:01.391986+00:00",
+  "total_active_listings": 8257,
+  "overall": {
+    "with_n_number": 5256,
+    "pct_with_n_number": 63.66,
+    "with_any_registration": 6090,
+    "pct_with_any_registration": 73.76,
+    "registration_class_breakdown": {
+      "US_N": 4769,
+      "NON_US": 1321,
+      "UNKNOWN": 2167
+    }
+  },
+  "source_breakdown": [
+    {
+      "source": "tradaplane",
+      "active_listings": 3344,
+      "with_n_number": 2595,
+      "pct_with_n_number": 77.6,
+      "with_any_registration": 2947,
+      "pct_with_any_registration": 88.13,
+      "registration_class_breakdown": {
+        "US_N": 2595,
+        "NON_US": 352,
+        "UNKNOWN": 397
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "globalair",
+      "active_listings": 1711,
+      "with_n_number": 621,
+      "pct_with_n_number": 36.29,
+      "with_any_registration": 956,
+      "pct_with_any_registration": 55.87,
+      "registration_class_breakdown": {
+        "US_N": 621,
+        "NON_US": 335,
+        "UNKNOWN": 755
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "controller",
+      "active_listings": 1702,
+      "with_n_number": 710,
+      "pct_with_n_number": 41.72,
+      "with_any_registration": 864,
+      "pct_with_any_registration": 50.76,
+      "registration_class_breakdown": {
+        "US_N": 710,
+        "NON_US": 154,
+        "UNKNOWN": 838
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "avbuyer",
+      "active_listings": 641,
+      "with_n_number": 161,
+      "pct_with_n_number": 25.12,
+      "with_any_registration": 519,
+      "pct_with_any_registration": 80.97,
+      "registration_class_breakdown": {
+        "US_N": 161,
+        "NON_US": 358,
+        "UNKNOWN": 122
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "aso",
+      "active_listings": 602,
+      "with_n_number": 508,
+      "pct_with_n_number": 84.39,
+      "with_any_registration": 574,
+      "pct_with_any_registration": 95.35,
+      "registration_class_breakdown": {
+        "US_N": 508,
+        "NON_US": 66,
+        "UNKNOWN": 28
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "aerotrader",
+      "active_listings": 245,
+      "with_n_number": 173,
+      "pct_with_n_number": 70.61,
+      "with_any_registration": 223,
+      "pct_with_any_registration": 91.02,
+      "registration_class_breakdown": {
+        "US_N": 173,
+        "NON_US": 50,
+        "UNKNOWN": 22
+      },
+      "unresolved_top_tokens": []
+    },
+    {
+      "source": "barnstormers",
+      "active_listings": 12,
+      "with_n_number": 1,
+      "pct_with_n_number": 8.33,
+      "with_any_registration": 7,
+      "pct_with_any_registration": 58.33,
+      "registration_class_breakdown": {
+        "US_N": 1,
+        "NON_US": 6,
+        "UNKNOWN": 5
+      },
+      "unresolved_top_tokens": []
+    }
+  ]
+}

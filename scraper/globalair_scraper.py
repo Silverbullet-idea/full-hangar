@@ -21,6 +21,7 @@ try:
     from config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
     from description_parser import parse_description
     from env_check import env_check
+    from registration_parser import apply_registration_fields, extract_registration_from_text
     from schema import validate_listing
     from scraper_base import (
         compute_listing_fingerprint,
@@ -36,6 +37,7 @@ except ImportError:  # pragma: no cover
     from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description
     from .env_check import env_check
+    from .registration_parser import apply_registration_fields, extract_registration_from_text
     from .schema import validate_listing
     from .scraper_base import (
         compute_listing_fingerprint,
@@ -679,6 +681,9 @@ def parse_card(card: Any, aircraft_type: str, model_name: str) -> Optional[dict[
 
     serial_number = _extract_icon_field(card, "serialnumber")
     n_number = _extract_icon_field(card, "registrationnumber")
+    card_text = card.get_text(" ", strip=True)
+    inferred_registration = extract_registration_from_text(card_text)
+    registration_candidate = n_number or inferred_registration
     tt_from_icon = _extract_icon_field(card, "totaltime")
     if ttaf is None and tt_from_icon:
         match = re.search(r"(\d[\d,]+)", tt_from_icon)
@@ -701,7 +706,7 @@ def parse_card(card: Any, aircraft_type: str, model_name: str) -> Optional[dict[
             image_url = src if src.startswith("http") else urljoin(BASE_URL, src)
 
     sid = f"ga_{listing_id}"
-    return {
+    listing = {
         "source_site": SOURCE_SITE,
         "listing_source": SOURCE_SITE,
         "source_id": sid,
@@ -736,6 +741,13 @@ def parse_card(card: Any, aircraft_type: str, model_name: str) -> Optional[dict[
         "engine_time_since_overhaul": None,
         "time_since_overhaul": None,
     }
+    apply_registration_fields(
+        listing,
+        raw_value=registration_candidate,
+        fallback_text=card_text,
+        keep_existing_n_number=True,
+    )
+    return listing
 
 
 def scrape_model_page(pw_page: Any, url: str, rl: RateLimiter, aircraft_type: str, model_name: str) -> list[dict[str, Any]]:
@@ -813,8 +825,8 @@ def scrape_detail(pw_page: Any, url: str, rl: RateLimiter) -> dict[str, Any]:
             extra["location_state"] = state
         elif "serial" in label:
             extra["serial_number"] = value
-        elif "registration" in label:
-            extra["n_number"] = value
+        elif "registration" in label or "tail number" in label:
+            apply_registration_fields(extra, raw_value=value, fallback_text=value, keep_existing_n_number=True)
         elif "total time" in label or label == "tt":
             digits = re.sub(r"[^\d]", "", value)
             if digits:
@@ -863,6 +875,15 @@ def scrape_detail(pw_page: Any, url: str, rl: RateLimiter) -> dict[str, Any]:
         extra["description_full"] = summary
 
     full_text = soup.get_text(" ").upper()
+    if not extra.get("registration_normalized") and not extra.get("n_number"):
+        inferred_registration = extract_registration_from_text(full_text)
+        if inferred_registration:
+            apply_registration_fields(
+                extra,
+                raw_value=inferred_registration,
+                fallback_text=full_text,
+                keep_existing_n_number=True,
+            )
     smoh = re.search(r"(?:SMOH|TSMOH|TSO|SOH|SINCE\s+(?:MAJOR\s+)?O/?H)\s*[:\-]?\s*([\d,]+)", full_text)
     if smoh:
         try:
@@ -934,14 +955,25 @@ def scrape_detail_http(session: requests.Session, url: str, rl: RateLimiter) -> 
             extra["location_state"] = state
         elif "serial" in label:
             extra["serial_number"] = value
-        elif "registration" in label:
-            extra["n_number"] = value
+        elif "registration" in label or "tail number" in label:
+            apply_registration_fields(extra, raw_value=value, fallback_text=value, keep_existing_n_number=True)
         elif "total time" in label or label == "tt":
             digits = re.sub(r"[^\d]", "", value)
             if digits:
                 extra["total_time_airframe"] = int(digits)
         elif "manufacturer" in label:
             extra["make"] = value
+
+    full_text = soup.get_text(" ").upper()
+    if not extra.get("registration_normalized") and not extra.get("n_number"):
+        inferred_registration = extract_registration_from_text(full_text)
+        if inferred_registration:
+            apply_registration_fields(
+                extra,
+                raw_value=inferred_registration,
+                fallback_text=full_text,
+                keep_existing_n_number=True,
+            )
 
     summary_candidates: list[str] = []
     for div in soup.find_all("div", class_=re.compile(r"^(col|row|mb|mt|pt|pb)[-\d]", re.I)):

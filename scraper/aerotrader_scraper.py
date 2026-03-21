@@ -7,13 +7,14 @@ import argparse
 import html as html_module
 import json
 import logging
+import os
 import random
 import re
 import time
 from datetime import date
 from pathlib import Path
 from typing import Any, Optional, TYPE_CHECKING
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import parse_qsl, quote, unquote, urlencode, urljoin, urlparse, urlunparse
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -56,13 +57,25 @@ load_dotenv()
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://www.aerotrader.com"
-SEARCH_ZIP = "10001"
-SEARCH_RADIUS = "10000"
-MAKES_BROWSE_URL = f"{BASE_URL}/aircraft-for-sale?zip={SEARCH_ZIP}&radius={SEARCH_RADIUS}"
-MAKES_VIEW_URL = f"{BASE_URL}/aircraft-for-sale/make?zip={SEARCH_ZIP}&radius={SEARCH_RADIUS}"
+DEFAULT_SEARCH_ZIP = "83854"
+DEFAULT_SEARCH_RADIUS = "10000"
 LISTINGS_PER_PAGE = 25
 SOURCE_SITE = "aerotrader"
 CHECKPOINT_FILE = Path("scraper/state/aerotrader_checkpoint.json")
+KNOWN_TYPE_QUERIES = {
+    "single-engine-prop": "Single Engine Prop|5976093",
+    "single engine prop": "Single Engine Prop|5976093",
+    "multi-engine-prop": "Multi Engine Prop|5976097",
+    "multi engine prop": "Multi Engine Prop|5976097",
+    "helicopter": "Helicopter|5976153",
+    "jet": "Jet|5976107",
+    "turbo-prop": "Turbo Prop|113398242",
+    "turbo prop": "Turbo Prop|113398242",
+    "experimental-homebuilt": "Experimental/Homebuilt|5976145",
+    "experimental/homebuilt": "Experimental/Homebuilt|5976145",
+    "war-plane": "War Plane|5976127",
+    "war plane": "War Plane|5976127",
+}
 
 
 def _build_browser(headless: bool) -> tuple[Playwright, Browser, BrowserContext, Page]:
@@ -121,13 +134,59 @@ def _compute_backoff(attempt: int, base_delay: float = 8.0, max_delay: float = 1
     return min(delay + jitter, max_delay)
 
 
+def _resolve_search_context(search_zip: str | None, search_radius: str | None) -> tuple[str, str]:
+    resolved_zip = str(search_zip or os.getenv("AEROTRADER_SEARCH_ZIP") or DEFAULT_SEARCH_ZIP).strip()
+    resolved_radius = str(search_radius or os.getenv("AEROTRADER_SEARCH_RADIUS") or DEFAULT_SEARCH_RADIUS).strip()
+    if not resolved_zip:
+        resolved_zip = DEFAULT_SEARCH_ZIP
+    if not resolved_radius:
+        resolved_radius = DEFAULT_SEARCH_RADIUS
+    return resolved_zip, resolved_radius
+
+
+def _with_search_context(url: str, *, search_zip: str, search_radius: str) -> str:
+    parsed = urlparse(url)
+    pairs = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k.lower() not in {"zip", "radius"}]
+    pairs.extend([("zip", search_zip), ("radius", search_radius)])
+    return urlunparse(parsed._replace(query=urlencode(pairs, doseq=True)))
+
+
+def _make_discovery_urls(search_zip: str, search_radius: str) -> tuple[str, str]:
+    browse = _with_search_context(f"{BASE_URL}/aircraft-for-sale", search_zip=search_zip, search_radius=search_radius)
+    view = _with_search_context(f"{BASE_URL}/aircraft-for-sale/make", search_zip=search_zip, search_radius=search_radius)
+    return browse, view
+
+
+def _looks_like_challenge_html(html_text: str) -> bool:
+    low = str(html_text or "").lower()
+    challenge_markers = (
+        "geo.captcha-delivery.com",
+        "ct.captcha-delivery.com",
+        "please enable js and disable any ad blocker",
+        "var dd=",
+        "datadome",
+        "captcha-delivery",
+    )
+    return any(marker in low for marker in challenge_markers)
+
+
 def _fetch_page_soup(page: Page, url: str, label: str = "", max_retries: int = 5) -> Optional[BeautifulSoup]:
     for attempt in range(max_retries):
         try:
             response = page.goto(url, wait_until="domcontentloaded", timeout=40000)
             status = response.status if response else None
             if status == 200:
-                return BeautifulSoup(page.content(), "html.parser")
+                html_text = page.content()
+                if _looks_like_challenge_html(html_text):
+                    wait = _compute_backoff(attempt)
+                    log.warning(
+                        "[%s] Challenge-like HTML detected on HTTP 200; waiting %.1fs before retry.",
+                        label or "fetch",
+                        wait,
+                    )
+                    time.sleep(wait)
+                    continue
+                return BeautifulSoup(html_text, "html.parser")
             if status in (403, 429, 503):
                 wait = _compute_backoff(attempt)
                 log.warning("[%s] HTTP %s blocked/challenged; waiting %.1fs", label or "fetch", status, wait)
@@ -142,7 +201,7 @@ def _fetch_page_soup(page: Page, url: str, label: str = "", max_retries: int = 5
     return None
 
 
-def _extract_make_links(soup: BeautifulSoup) -> list[dict[str, str]]:
+def _extract_make_links(soup: BeautifulSoup, *, search_zip: str, search_radius: str) -> list[dict[str, str]]:
     makes: list[dict[str, str]] = []
     seen: set[str] = set()
     for anchor in soup.find_all("a", href=True):
@@ -158,24 +217,63 @@ def _extract_make_links(soup: BeautifulSoup) -> list[dict[str, str]]:
         if key in seen:
             continue
         seen.add(key)
-        make_url = (
-            f"{BASE_URL}/{raw_name}/aircraft-for-sale"
-            f"?make={raw_name}%7C{make_id}&zip={SEARCH_ZIP}&radius={SEARCH_RADIUS}"
+        make_url = _with_search_context(
+            f"{BASE_URL}/{raw_name}/aircraft-for-sale?make={quote(raw_name, safe='')}%7C{make_id}",
+            search_zip=search_zip,
+            search_radius=search_radius,
         )
         makes.append({"name": raw_name, "id": make_id, "url": make_url})
     return makes
 
 
-def discover_makes(page: Page) -> list[dict[str, str]]:
-    soup = _fetch_page_soup(page, MAKES_VIEW_URL, label="makes-view")
-    makes = _extract_make_links(soup) if soup else []
+def _build_seed_make_infos(seed_urls: list[str], *, search_zip: str, search_radius: str) -> list[dict[str, str]]:
+    infos: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for idx, raw_url in enumerate(seed_urls, start=1):
+        normalized = _with_search_context(str(raw_url).strip(), search_zip=search_zip, search_radius=search_radius)
+        if not normalized or normalized in seen_urls:
+            continue
+        seen_urls.add(normalized)
+        parsed = urlparse(normalized)
+        params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        label = (
+            params.get("make")
+            or params.get("type")
+            or Path(parsed.path).name
+            or f"seed-{idx}"
+        )
+        infos.append({"name": str(label), "id": "", "url": normalized})
+    return infos
+
+
+def discover_makes(
+    page: Page,
+    *,
+    search_zip: str,
+    search_radius: str,
+    seed_urls: Optional[list[str]] = None,
+) -> list[dict[str, str]]:
+    makes_browse_url, makes_view_url = _make_discovery_urls(search_zip, search_radius)
+
+    soup = _fetch_page_soup(page, makes_view_url, label="makes-view")
+    makes = _extract_make_links(soup, search_zip=search_zip, search_radius=search_radius) if soup else []
     if makes:
         log.info("Discovered %s makes via view page", len(makes))
         return makes
 
-    soup = _fetch_page_soup(page, MAKES_BROWSE_URL, label="makes-browse")
-    makes = _extract_make_links(soup) if soup else []
+    soup = _fetch_page_soup(page, makes_browse_url, label="makes-browse")
+    makes = _extract_make_links(soup, search_zip=search_zip, search_radius=search_radius) if soup else []
     log.info("Discovered %s makes via browse page", len(makes))
+    if makes:
+        return makes
+    if seed_urls:
+        fallback = _build_seed_make_infos(seed_urls, search_zip=search_zip, search_radius=search_radius)
+        if fallback:
+            log.warning(
+                "Make discovery unavailable; using %s fallback seed URL(s).",
+                len(fallback),
+            )
+            return fallback
     return makes
 
 
@@ -213,7 +311,7 @@ def _build_page_url(make_url: str, page: int) -> str:
     return f"{make_url}{separator}page={page}"
 
 
-def _build_make_info_from_arg(raw_make: str) -> dict[str, str]:
+def _build_make_info_from_arg(raw_make: str, *, search_zip: str, search_radius: str) -> dict[str, str]:
     """
     Support --make values in two formats:
       1) "Cessna"
@@ -230,13 +328,48 @@ def _build_make_info_from_arg(raw_make: str) -> dict[str, str]:
         return {
             "name": safe_name,
             "id": safe_id,
-            "url": f"{BASE_URL}/{safe_name}/aircraft-for-sale?make={encoded_name}%7C{safe_id}&zip={SEARCH_ZIP}&radius={SEARCH_RADIUS}",
+            "url": _with_search_context(
+                f"{BASE_URL}/{safe_name}/aircraft-for-sale?make={encoded_name}%7C{safe_id}",
+                search_zip=search_zip,
+                search_radius=search_radius,
+            ),
         }
     return {
         "name": raw,
         "id": "",
-        "url": f"{BASE_URL}/{raw}/aircraft-for-sale?make={raw}&zip={SEARCH_ZIP}&radius={SEARCH_RADIUS}",
+        "url": _with_search_context(
+            f"{BASE_URL}/{raw}/aircraft-for-sale?make={quote(raw, safe='')}",
+            search_zip=search_zip,
+            search_radius=search_radius,
+        ),
     }
+
+
+def _build_type_seed_urls(
+    raw_types: list[str],
+    *,
+    search_zip: str,
+    search_radius: str,
+) -> list[str]:
+    seed_urls: list[str] = []
+    seen_urls: set[str] = set()
+    tokens: list[str] = []
+    for raw in raw_types:
+        parts = [chunk.strip() for chunk in str(raw or "").split(",")]
+        tokens.extend([chunk for chunk in parts if chunk])
+    for token in tokens:
+        norm = re.sub(r"[\s_]+", "-", token.strip().lower())
+        type_query = KNOWN_TYPE_QUERIES.get(norm) or KNOWN_TYPE_QUERIES.get(token.strip().lower()) or token.strip()
+        url = _with_search_context(
+            f"{BASE_URL}/aircraft-for-sale?{urlencode({'type': type_query})}",
+            search_zip=search_zip,
+            search_radius=search_radius,
+        )
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        seed_urls.append(url)
+    return seed_urls
 
 
 def _parse_hours(text: str) -> dict[str, int]:
@@ -1155,6 +1288,14 @@ def _scrape_make(
 def main() -> None:
     parser = argparse.ArgumentParser(description="AeroTrader scraper aligned to Full Hangar conventions")
     parser.add_argument("--make", nargs="+", help="One or more makes to scrape")
+    parser.add_argument("--types", nargs="+", help="Optional AeroTrader type filter(s), e.g. 'Jet|5976107' or 'jet'")
+    parser.add_argument("--seed-url", nargs="+", help="Optional search URL(s) to use when make discovery is blocked")
+    parser.add_argument("--search-zip", default=None, help=f"Search ZIP (default env AEROTRADER_SEARCH_ZIP or {DEFAULT_SEARCH_ZIP})")
+    parser.add_argument(
+        "--search-radius",
+        default=None,
+        help=f"Search radius miles (default env AEROTRADER_SEARCH_RADIUS or {DEFAULT_SEARCH_RADIUS}; 10000 behaves as nationwide)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Parse and print rows; do not write DB")
     parser.add_argument("--no-detail", action="store_true", help="Skip detail-page enrichment")
     parser.add_argument("--resume", action="store_true", help="Resume from checkpoint and/or skip already-scraped makes")
@@ -1198,6 +1339,12 @@ def main() -> None:
     if not checkpoint_data:
         clear_checkpoint(checkpoint_file)
 
+    search_zip, search_radius = _resolve_search_context(args.search_zip, args.search_radius)
+    log.info("[%s] Search context zip=%s radius=%s", SOURCE_SITE, search_zip, search_radius)
+    seed_urls = [str(item).strip() for item in (args.seed_url or []) if str(item).strip()]
+    if args.types:
+        seed_urls.extend(_build_type_seed_urls(args.types, search_zip=search_zip, search_radius=search_radius))
+
     headless = str(args.headless).strip().lower() not in {"false", "0", "no"}
     playwright, browser, context, page = _build_browser(headless=headless)
     supabase = None if args.dry_run else get_supabase()
@@ -1220,13 +1367,23 @@ def main() -> None:
 
         if args.make:
             # Use explicit makes directly to avoid discovery preflight blocks.
-            makes = [_build_make_info_from_arg(name) for name in args.make]
+            makes = [
+                _build_make_info_from_arg(name, search_zip=search_zip, search_radius=search_radius)
+                for name in args.make
+            ]
         else:
-            discovered = discover_makes(page)
+            discovered = discover_makes(
+                page,
+                search_zip=search_zip,
+                search_radius=search_radius,
+                seed_urls=seed_urls,
+            )
             makes = discovered
 
         if not makes:
-            raise SystemExit("No AeroTrader makes discovered; run with --make to target a known make.")
+            raise SystemExit(
+                "No AeroTrader makes discovered; run with --make or provide --seed-url/--types when discovery is challenged."
+            )
 
         if checkpoint_data and checkpoint_data.get("make"):
             checkpoint_make = str(checkpoint_data["make"]).lower()

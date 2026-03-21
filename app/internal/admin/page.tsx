@@ -15,6 +15,21 @@ function statValue(value: number | string) {
   return value;
 }
 
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    Promise.resolve(promiseLike)
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
 function summarizeFailure(reason: unknown): string {
   const raw = String(reason ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
   if (!raw) return "request failed";
@@ -101,11 +116,11 @@ const EMPTY_AVIONICS = {
 
 export default async function InternalAdminPage() {
   const [platformResult, qualityResult, buyerResult, invitesResult, avionicsResult] = await Promise.allSettled([
-    computePlatformStats(),
-    computeDataQuality(),
-    computeBuyerIntelligence(),
-    listInvitesWithSessions(),
-    computeAvionicsIntelligence({ days: 90, top: 30 }),
+    withTimeout(computePlatformStats(), 9000, "platform stats"),
+    withTimeout(computeDataQuality(), 9000, "data quality"),
+    withTimeout(computeBuyerIntelligence(), 9000, "buyer intelligence"),
+    withTimeout(listInvitesWithSessions(), 9000, "invites"),
+    withTimeout(computeAvionicsIntelligence({ days: 90, top: 30 }), 9000, "avionics intelligence"),
   ]);
 
   if (platformResult.status === "rejected") {
@@ -152,8 +167,11 @@ export default async function InternalAdminPage() {
   const avgValueScore = platform.listings.total_active
     ? Math.round((platform.deals.high_score_listings / platform.listings.total_active) * 100)
     : 0;
-  const sourceOrder = ["aerotrader", "controller", "tradaplane", "barnstormers", "aso", "afs", "globalair", "avbuyer", "unknown"];
-  const sourceCounts = Object.entries(platform.listings.by_source ?? {}).sort((a, b) => {
+  const hiddenSources = new Set(["unknown", "unkown"]);
+  const sourceOrder = ["aerotrader", "controller", "tradaplane", "barnstormers", "aso", "afs", "globalair", "avbuyer"];
+  const sourceCounts = Object.entries(platform.listings.by_source ?? {})
+    .filter(([source]) => !hiddenSources.has(String(source).toLowerCase()))
+    .sort((a, b) => {
     const ai = sourceOrder.indexOf(a[0]);
     const bi = sourceOrder.indexOf(b[0]);
     if (ai === -1 && bi === -1) return b[1] - a[1];
@@ -161,7 +179,9 @@ export default async function InternalAdminPage() {
     if (bi === -1) return -1;
     return ai - bi;
   });
-  const freshnessBySource = platform.listings.source_freshness ?? [];
+  const freshnessBySource = (platform.listings.source_freshness ?? []).filter(
+    (row) => !hiddenSources.has(String(row.source).toLowerCase())
+  );
 
   return (
     <main className="space-y-4 p-4 md:p-6">
@@ -173,12 +193,20 @@ export default async function InternalAdminPage() {
               Operational command center for platform health, data quality, and buyer intelligence.
             </p>
           </div>
-          <Link
-            href="/internal/deal-desk"
-            className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-zinc-950 whitespace-nowrap hover:bg-brand-burn hover:!text-zinc-950"
-          >
-            🧮 Open Deal Desk
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/internal/market-intel"
+              className="rounded border border-brand-dark px-3 py-2 text-sm text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+            >
+              📈 Market Intel
+            </Link>
+            <Link
+              href="/internal/deal-desk"
+              className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-zinc-950 whitespace-nowrap hover:bg-brand-burn hover:!text-zinc-950"
+            >
+              🧮 Open Deal Desk
+            </Link>
+          </div>
         </div>
         {failedPanels.length > 0 ? (
           <p className="mt-3 rounded border border-brand-dark bg-[#161616] px-3 py-2 text-xs text-brand-orange">

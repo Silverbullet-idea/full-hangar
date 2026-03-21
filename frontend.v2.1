@@ -1,0 +1,343 @@
+# FRONTEND Task: Mobile Responsiveness — Filter Drawer, Listing UX, Deal Desk
+
+## Read First
+Read `AGENTS.md` completely before starting. This is a **FRONTEND** lane task.
+Project root: `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`
+Dev server: `http://localhost:3001`
+
+## Lane Boundary — DO NOT TOUCH
+- `scraper/` — BACKEND lane, do not modify
+- `app/api/` — BACKEND lane, do not modify
+- `core/intelligence/` — BACKEND lane, do not modify
+- `supabase/migrations/` — BACKEND lane, do not modify
+- No new npm packages without checking `package.json` first — use what's already installed
+
+---
+
+## Context: What We Are Fixing
+
+The platform was built desktop-first. Three areas are broken or severely degraded on
+mobile (tested at 390px viewport width, which is iPhone 14/15 standard):
+
+1. **Listings sidebar filter panel** — a wide sidebar with 10+ filter sections
+   (price range, year range, total time, deal type, maintenance burden, etc.) renders
+   as a collapsed or overflow state on mobile. Users cannot practically filter inventory
+   on a phone.
+
+2. **Listing detail page** — the detail page has 6–8 stacked panels (score summary,
+   Comp & Cost chart, Engine Value, FAA snapshot, Avionics, Aircraft Details). The comps
+   chart in particular likely overflows its container on narrow viewports. The panel
+   stacking order on mobile should prioritize the most important information first.
+
+3. **Deal Desk** — the 9-section P&L tool with a 3×3 sensitivity grid is the most
+   complex page. The sensitivity grid requires horizontal scrolling on mobile at minimum
+   and is functionally unusable without specific treatment.
+
+---
+
+## Step 0 — Audit First (Read-Only)
+
+Before writing a single line of code, open the browser dev tools on `localhost:3001`
+and toggle to 390px width for each of these routes. Document what you see:
+
+- `/listings` — does the filter sidebar collapse? overflow? disappear?
+- `/listings/[any-id]` — does the comps chart overflow? which panels stack well?
+- `/internal/deal-desk` — does the sensitivity grid overflow? can you scroll to it?
+
+Also read these files completely before touching them:
+- `app/listings/page.tsx` — find the sidebar filter section and its responsive classes
+- `app/listings/[id]/page.tsx` — find the panel layout and chart section
+- `app/internal/deal-desk/page.tsx` — find the sensitivity grid section
+- `app/layout.tsx` — check what global CSS/Tailwind config is in use
+- `tailwind.config.ts` or `tailwind.config.js` — check breakpoint definitions
+
+Note the existing Tailwind breakpoints. The standard Tailwind `sm:` is 640px, `md:` is
+768px. For phone-sized work, you will be styling for the DEFAULT (no prefix) state
+and using `md:` or `lg:` to add desktop layout back in.
+
+---
+
+## Task 1 — Mobile Filter Drawer for `/listings`
+
+### Goal
+On mobile (< 768px), replace the sidebar filter panel with a bottom-sheet drawer that
+slides up from the bottom of the screen when the user taps a "Filters" button. The
+filter content is identical — same fields, same state, same URL params — just presented
+in a mobile-friendly overlay.
+
+### Implementation
+
+**Step 1.1 — Add a `FilterDrawer` component**
+
+Create `app/components/FilterDrawer.tsx`.
+
+This component:
+- Accepts the same filter props/state as the current sidebar (make, model, price range,
+  year range, total time, deal type, maintenance burden, priced-only toggle, etc.)
+- Renders as a fixed-position overlay that slides up from the bottom of the screen
+- Has a visible handle bar at the top (a short horizontal pill/line — standard mobile
+  drawer pattern)
+- Has a clear "Apply" button and an "×" or "Done" close button
+- Has a "Clear all filters" link
+- Uses `overflow-y: auto` so the filter content scrolls inside the drawer if tall
+- The drawer backdrop (behind the drawer) should be a semi-transparent dark overlay;
+  tapping it closes the drawer
+- The drawer should be max-height 85vh so it never covers the full screen
+- Must work in both dark and light themes — use the existing CSS variables/tokens from
+  the theme system already in the codebase (do not hardcode colors)
+- Must NOT use any new npm package — implement with CSS transforms and React state only.
+  Use `translate-y-full` / `translate-y-0` with a Tailwind transition for the
+  slide animation.
+
+**Step 1.2 — Add the "Filters" trigger button to the mobile listings header**
+
+In `app/listings/page.tsx`:
+- On mobile (default / no breakpoint prefix), show a sticky "Filters" button in the
+  listings header bar. Show an active-filter badge count on the button when any
+  non-default filters are applied (e.g. "Filters (3)").
+- On desktop (`md:` and above), hide this button — the sidebar is visible instead.
+- The sidebar itself should be `hidden md:block` (hidden on mobile, visible on desktop).
+- Tapping "Filters" opens the `FilterDrawer`.
+
+**Step 1.3 — Preserve all filter state and URL params**
+The drawer must use the exact same URL param handling and filter state as the desktop
+sidebar. Do not create a separate state system. The drawer is purely a presentation
+layer over the existing filter logic. When the user taps "Apply" or changes a filter,
+the URL updates exactly as it does on desktop.
+
+**Step 1.4 — Verify**
+- At 390px width: "Filters" button is visible, tapping it opens the drawer, filters
+  work, closing the drawer returns to the listings view.
+- At 768px+ width: sidebar is visible, "Filters" button is hidden, behavior unchanged.
+- URL params update correctly in both modes.
+- Dark and light themes both look correct.
+
+---
+
+## Task 2 — Listing Detail Page Mobile Polish
+
+### Goal
+The listing detail page should be fully readable and functional on a 390px viewport.
+No horizontal overflow. Panels in the right priority order.
+
+### Step 2.1 — Fix the Comps chart overflow
+In `app/listings/[id]/page.tsx` (or its `CompsChartPanel.tsx` sub-component):
+- The chart container must have `w-full overflow-x-hidden` and the chart itself
+  must use `width: '100%'` rather than a fixed pixel width.
+- The Price-vs-Year / Price-vs-Time toggle tabs should stack or truncate gracefully
+  at 390px — use `flex-wrap` if needed.
+- The comps data table below the chart: on mobile, hide the less critical columns.
+  Keep: Make/Model, Year, Price. Hide on mobile (add `hidden md:table-cell`): TT, SMOH,
+  Days on Market. The table must not cause horizontal scroll on the page.
+
+### Step 2.2 — Verify panel stacking order on mobile
+On mobile, panels should stack in this priority order (top to bottom):
+1. Aircraft header (title, score badge, asking price)
+2. Score summary / value score panel
+3. Comp & Cost panel (chart)
+4. Engine Value panel
+5. FAA snapshot
+6. Avionics
+7. Aircraft Details / description
+8. Gallery images
+
+If the current order differs from this on mobile, adjust the flex/grid column ordering
+using CSS `order` utilities (`order-1`, `order-2` etc.) applied at the default/mobile
+level, with desktop order restored at `md:` breakpoint. Do NOT restructure the DOM
+order if it would break desktop layout — use CSS order utilities exclusively.
+
+### Step 2.3 — Image gallery mobile treatment
+The gallery images (if rendered as a horizontal row) should become a swipeable
+horizontal scroll container on mobile:
+```tsx
+<div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 md:grid md:grid-cols-3 md:overflow-visible">
+  {images.map(img => (
+    <div className="flex-shrink-0 w-72 snap-start md:w-auto" key={img}>
+      ...
+    </div>
+  ))}
+</div>
+```
+This requires no new packages — CSS scroll snap is native browser behavior.
+
+### Step 2.4 — Touch targets
+Any button, tab, or interactive element on the listing detail page that is smaller than
+44×44px on mobile should have its padding increased via `min-h-[44px] min-w-[44px]`
+to meet touch target guidelines. Check: score tier tabs, chart toggle buttons, sort
+toggles in the comps table.
+
+---
+
+## Task 3 — Deal Desk Mobile Treatment
+
+### Goal
+The Deal Desk must be usable on mobile for reviewing a deal, even if some advanced
+features are desktop-only. The critical path on mobile is: see the aircraft, see P&L
+summary, see if it's a good deal. The sensitivity grid is explicitly desktop-only.
+
+### Step 3.1 — Sensitivity grid: desktop-only
+In `app/internal/deal-desk/page.tsx`, find the 3×3 sensitivity grid section.
+Wrap it with:
+```tsx
+<div className="hidden md:block">
+  {/* sensitivity grid */}
+</div>
+```
+On mobile, replace it with a simple text summary:
+```tsx
+<div className="block md:hidden rounded-lg border border-border p-4 text-sm text-muted-foreground">
+  <p className="font-medium text-foreground mb-1">Sensitivity Analysis</p>
+  <p>Open on desktop to view the full price × cost sensitivity grid.</p>
+</div>
+```
+
+### Step 3.2 — Section stacking
+The Deal Desk 9 sections currently likely render in a multi-column grid on desktop.
+On mobile they should all be single-column, full-width stacked sections.
+Find any `grid-cols-2` or `grid-cols-3` layouts in the Deal Desk and ensure they have
+`grid-cols-1 md:grid-cols-2` (or similar) so mobile always gets single column.
+
+### Step 3.3 — Input fields
+All numeric input fields in the Deal Desk should have `inputMode="numeric"` or
+`type="number"` so mobile keyboards show the number pad automatically.
+Scan the Deal Desk form inputs and add this attribute where missing.
+
+### Step 3.4 — Sticky summary bar
+On mobile, add a sticky bar at the bottom of the viewport that shows the current
+deal P&L summary at a glance: Est. Profit / ROI / Deal Grade. This should update
+reactively as inputs change.
+```tsx
+{/* Mobile sticky P&L summary bar */}
+<div className="fixed bottom-0 left-0 right-0 z-40 block md:hidden
+                bg-background border-t border-border px-4 py-3
+                flex items-center justify-between shadow-lg">
+  <div className="text-sm">
+    <span className="text-muted-foreground">Est. Profit</span>
+    <span className="ml-2 font-semibold text-foreground">{formatCurrency(estProfit)}</span>
+  </div>
+  <div className="text-sm">
+    <span className="text-muted-foreground">ROI</span>
+    <span className="ml-2 font-semibold text-foreground">{roiPct}%</span>
+  </div>
+  <div className="text-sm">
+    <span className={`font-bold ${dealGradeColor}`}>{dealGrade}</span>
+  </div>
+</div>
+```
+
+Wire this to the same state already driving the existing P&L summary section. On mobile
+also add `pb-20` to the main Deal Desk content container so the sticky bar doesn't
+overlap the last section.
+
+---
+
+## Task 4 — Global Mobile Header Polish
+
+### Step 4.1 — Header overflow check
+In `app/layout.tsx` or the Header component, check that the header doesn't overflow
+or create horizontal scroll at 390px. The search bar + nav items + theme toggle should
+either fit or collapse gracefully. If the header has items that wrap badly, add a
+hamburger / collapse pattern for secondary nav items at mobile width. Keep it simple —
+this is not a full nav redesign, just ensuring nothing overflows.
+
+### Step 4.2 — Back navigation on listing detail
+On mobile, a "← Back to listings" link at the top of the listing detail page is
+standard UX and eliminates needing to use the browser back button. Check if this
+already exists. If not, add it:
+```tsx
+<Link href="/listings" className="block md:hidden text-sm text-muted-foreground
+  hover:text-foreground mb-4 flex items-center gap-1">
+  ← Back to listings
+</Link>
+```
+Place it just below the header, above the aircraft title.
+
+---
+
+## Task 5 — Dark/Light Theme Verification on Mobile
+
+All new mobile components (FilterDrawer, sticky Deal Desk bar, mobile back nav) must
+work correctly in both dark and light themes. Specifically:
+- FilterDrawer backdrop overlay: `bg-black/50` works in both themes
+- FilterDrawer panel: must use `bg-background` (CSS variable), not hardcoded white/black
+- Sticky bar: `bg-background border-border` (CSS variables)
+- All text: `text-foreground` / `text-muted-foreground` (CSS variables)
+
+Do NOT use hardcoded `bg-white`, `bg-gray-900`, `text-black`, or `text-white` anywhere
+in new mobile components.
+
+---
+
+## Task 6 — Build and Smoke Check
+```bash
+npm run build
+```
+
+Fix any TypeScript errors before proceeding. Then start the dev server and manually
+verify at 390px viewport width:
+```
+[ ] /listings: "Filters" button visible, tapping opens drawer, filters apply
+[ ] /listings: sidebar hidden on mobile, visible on desktop — no layout break
+[ ] /listings: listing cards render without horizontal overflow
+[ ] /listings/[any-id]: no horizontal page overflow
+[ ] /listings/[any-id]: comps chart fills container width, no overflow
+[ ] /listings/[any-id]: comps table doesn't cause horizontal scroll
+[ ] /listings/[any-id]: gallery images scroll horizontally with snap
+[ ] /internal/deal-desk: sensitivity grid hidden, replaced with desktop message
+[ ] /internal/deal-desk: all sections single-column on mobile
+[ ] /internal/deal-desk: sticky P&L bar visible at bottom
+[ ] /internal/deal-desk: number inputs trigger numeric keyboard
+[ ] Dark theme: all new components look correct
+[ ] Light theme: all new components look correct
+[ ] Desktop (1280px): all existing desktop layouts unchanged
+```
+
+---
+
+## Task 7 — Update AGENTS.md
+
+In **"Completed Recently" → "Frontend Product and UX"**, add:
+```
+- Mobile responsiveness pass shipped: listings page now has a bottom-sheet filter
+  drawer on mobile (< 768px) with active-filter badge count, replacing the sidebar;
+  listing detail page comps chart fixed for narrow viewport overflow, comps table
+  columns hide on mobile, gallery images use CSS snap horizontal scroll, touch targets
+  audited to 44px minimum; Deal Desk sensitivity grid is desktop-only with mobile
+  fallback message, all 9 sections are single-column on mobile, number inputs have
+  inputMode="numeric", sticky P&L summary bar added for mobile; global header overflow
+  verified; back-nav link added to listing detail on mobile. Full dark/light theme
+  parity maintained throughout.
+```
+
+In **"Open Work" → "Low Priority / Future"**, update the mobile polish item:
+```
+- **User-facing roadmap:** auth/saved searches, marketing home page, pre-buy export.
+  Mobile polish: ✅ core pass complete — next: performance (ISR + image optimization).
+```
+
+---
+
+## Completion Checklist
+```
+[ ] Audit completed — existing mobile state documented before any changes
+[ ] FilterDrawer component created at app/components/FilterDrawer.tsx
+[ ] FilterDrawer uses existing filter state/URL params (no duplicate state)
+[ ] "Filters" button with active count on mobile listings header
+[ ] Sidebar hidden on mobile, FilterDrawer hidden on desktop
+[ ] Listing detail comps chart: no overflow, responsive width
+[ ] Listing detail comps table: columns hidden on mobile
+[ ] Listing detail gallery: CSS snap horizontal scroll
+[ ] Listing detail touch targets: 44px minimum
+[ ] Deal Desk sensitivity grid: hidden on mobile, desktop-only message shown
+[ ] Deal Desk sections: single-column on mobile
+[ ] Deal Desk inputs: inputMode="numeric" on number fields
+[ ] Deal Desk sticky P&L bar: renders correctly on mobile
+[ ] Header: no horizontal overflow at 390px
+[ ] Listing detail back-nav link: visible on mobile only
+[ ] Dark theme: all new components verified
+[ ] Light theme: all new components verified
+[ ] Desktop layout: no regressions at 1280px
+[ ] npm run build: passes with no new errors
+[ ] AGENTS.md updated
+[ ] git commit: "feat(mobile): filter drawer, listing detail polish, deal desk mobile treatment"
+```

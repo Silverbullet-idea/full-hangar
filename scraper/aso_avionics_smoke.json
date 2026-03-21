@@ -1,0 +1,254 @@
+[
+  {
+    "source": "aso_avionics_from_aircraft",
+    "source_site": "aso",
+    "source_listing_id": "aso_201001",
+    "listing_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "aircraft_title": "2013 Xtremeair XA42",
+    "year": 2013,
+    "make": "Xtremeair",
+    "model": "XA42",
+    "aircraft_type": "single_engine_piston",
+    "source_category": "single_engine",
+    "avionics_items": [
+      "2 COMs",
+      "Garmin Aera 660 GPS"
+    ],
+    "avionics_text": "2 COMs Garmin Aera 660 GPS",
+    "avionics_mentions": [
+      {
+        "raw_item": "2 COMs",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Garmin Aera 660 GPS",
+        "manufacturer": "Garmin",
+        "model": null
+      }
+    ],
+    "scraped_at": "2026-03-14T07:56:32Z"
+  },
+  {
+    "source": "aso_avionics_from_aircraft",
+    "source_site": "aso",
+    "source_listing_id": "aso_199625",
+    "listing_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=199625&listingType=true",
+    "aircraft_title": "2001 Wag-Aero Acro Cub",
+    "year": 2001,
+    "make": "Wag-Aero",
+    "model": "Acro Cub",
+    "aircraft_type": "single_engine_piston",
+    "source_category": "single_engine",
+    "avionics_items": [
+      "Airspeed Indicator",
+      "Altimeter",
+      "Turn and Bank",
+      "Tachometer",
+      "Oil Pressure Gauge",
+      "Oil Temp Gauge",
+      "Cylinder Head Temp Gauge",
+      "Volt Meter",
+      "Magnetic Compass",
+      "Space on Panel for Ipad Mini with Foreflight",
+      "12 Volt Power Outlet"
+    ],
+    "avionics_text": "Airspeed Indicator Altimeter Turn and Bank Tachometer Oil Pressure Gauge Oil Temp Gauge Cylinder Head Temp Gauge Volt Meter Magnetic Compass Space on Panel for Ipad Mini with Foreflight 12 Volt Power Outlet",
+    "avionics_mentions": [
+      {
+        "raw_item": "Airspeed Indicator",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Altimeter",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Turn and Bank",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Tachometer",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Oil Pressure Gauge",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Oil Temp Gauge",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Cylinder Head Temp Gauge",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Volt Meter",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Magnetic Compass",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Space on Panel for Ipad Mini with Foreflight",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "12 Volt Power Outlet",
+        "manufacturer": null,
+        "model": null
+      }
+    ],
+    "scraped_at": "2026-03-14T07:56:35Z"
+  },
+  {
+    "source": "aso_avionics_from_aircraft",
+    "source_site": "aso",
+    "source_listing_id": "aso_189943",
+    "listing_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=189943&listingType=true",
+    "aircraft_title": "1942 Waco YMF",
+    "year": 1942,
+    "make": "Waco",
+    "model": "YMF",
+    "aircraft_type": "single_engine_piston",
+    "source_category": "single_engine",
+    "avionics_items": [
+      "Garmin GNS530/430 Nav/Com/GPS",
+      "GTX327 transponder",
+      "Sandel",
+      "EDM700"
+    ],
+    "avionics_text": "Garmin GNS530/430 Nav/Com/GPS GTX327 transponder Sandel EDM700",
+    "avionics_mentions": [
+      {
+        "raw_item": "Garmin GNS530/430 Nav/Com/GPS",
+        "manufacturer": "Garmin",
+        "model": "GNS 530"
+      },
+      {
+        "raw_item": "GTX327 transponder",
+        "manufacturer": null,
+        "model": "GTX 327"
+      },
+      {
+        "raw_item": "Sandel",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "EDM700",
+        "manufacturer": null,
+        "model": null
+      }
+    ],
+    "scraped_at": "2026-03-14T07:56:42Z"
+  },
+  {
+    "source": "aso_avionics_from_aircraft",
+    "source_site": "aso",
+    "source_listing_id": "aso_201733",
+    "listing_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201733&listingType=true",
+    "aircraft_title": "1933 Waco UIC",
+    "year": 1933,
+    "make": "Waco",
+    "model": "UIC",
+    "aircraft_type": "single_engine_piston",
+    "source_category": "single_engine",
+    "avionics_items": [
+      "Garmin GNX 375 COM/NAV/GPS/Transponder",
+      "Garmin GA35 WAAS GPS Antenna",
+      "Dual Uavionix AV-30 HSI/EFD",
+      "Becker VHF Transceiver"
+    ],
+    "avionics_text": "Garmin GNX 375 COM/NAV/GPS/Transponder Garmin GA35 WAAS GPS Antenna Dual Uavionix AV-30 HSI/EFD Becker VHF Transceiver",
+    "avionics_mentions": [
+      {
+        "raw_item": "Garmin GNX 375 COM/NAV/GPS/Transponder",
+        "manufacturer": "Garmin",
+        "model": "GNX 375"
+      },
+      {
+        "raw_item": "Garmin GA35 WAAS GPS Antenna",
+        "manufacturer": "Garmin",
+        "model": null
+      },
+      {
+        "raw_item": "Dual Uavionix AV-30 HSI/EFD",
+        "manufacturer": "uAvionix",
+        "model": null
+      },
+      {
+        "raw_item": "Becker VHF Transceiver",
+        "manufacturer": null,
+        "model": null
+      }
+    ],
+    "scraped_at": "2026-03-14T07:56:48Z"
+  },
+  {
+    "source": "aso_avionics_from_aircraft",
+    "source_site": "aso",
+    "source_listing_id": "aso_201255",
+    "listing_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201255&listingType=true",
+    "aircraft_title": "2007 Vans RV-9A",
+    "year": 2007,
+    "make": "Vans",
+    "model": "RV-9A",
+    "aircraft_type": "single_engine_piston",
+    "source_category": "single_engine",
+    "avionics_items": [
+      "Dynon Skyview HDX Touch Displays",
+      "Dynon Skyview Digital Autopilot",
+      "Dynon ADS-B In/Out Transponder",
+      "Garmin GTN 750Xi Touch GPS",
+      "Garmin GMA 245 Audio Panel",
+      "Icom IC-A220 COM Radio"
+    ],
+    "avionics_text": "Dynon Skyview HDX Touch Displays Dynon Skyview Digital Autopilot Dynon ADS-B In/Out Transponder Garmin GTN 750Xi Touch GPS Garmin GMA 245 Audio Panel Icom IC-A220 COM Radio",
+    "avionics_mentions": [
+      {
+        "raw_item": "Dynon Skyview HDX Touch Displays",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Dynon Skyview Digital Autopilot",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Dynon ADS-B In/Out Transponder",
+        "manufacturer": null,
+        "model": null
+      },
+      {
+        "raw_item": "Garmin GTN 750Xi Touch GPS",
+        "manufacturer": "Garmin",
+        "model": "GTN 750XI"
+      },
+      {
+        "raw_item": "Garmin GMA 245 Audio Panel",
+        "manufacturer": "Garmin",
+        "model": "GMA 245"
+      },
+      {
+        "raw_item": "Icom IC-A220 COM Radio",
+        "manufacturer": null,
+        "model": null
+      }
+    ],
+    "scraped_at": "2026-03-14T07:56:55Z"
+  }
+]

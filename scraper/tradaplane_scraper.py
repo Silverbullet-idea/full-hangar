@@ -37,6 +37,11 @@ try:
     from env_check import env_check
     from media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
     from schema import validate_listing
+    from registration_parser import (
+        apply_registration_fields,
+        extract_registration_from_text,
+        normalize_us_n_number,
+    )
     from scraper_base import (
         compute_listing_fingerprint,
         get_supabase,
@@ -50,6 +55,11 @@ except ImportError:  # pragma: no cover
     from .env_check import env_check
     from .media_refresh_utils import apply_media_update, fetch_refresh_rows, load_source_ids_file
     from .schema import validate_listing
+    from .registration_parser import (
+        apply_registration_fields,
+        extract_registration_from_text,
+        normalize_us_n_number,
+    )
     from .scraper_base import (
         compute_listing_fingerprint,
         get_supabase,
@@ -79,18 +89,15 @@ DEFAULT_HEADERS = {
     "Connection": "keep-alive",
 }
 
-N_NUMBER_PATTERN = re.compile(r"\bN[\s\-]*([0-9]{1,5}[A-HJ-NP-Z]{0,2})\b", re.I)
-
-
-def build_make_url(make: str, page: int = 1) -> str:
+def build_make_url(make: str, page: int = 1, category_level1: str | None = None, s_type: str = "aircraft") -> str:
     """
-    Build Trade-A-Plane search URL for piston single by make.
+    Build Trade-A-Plane search URL by make/category.
     """
-    params: dict[str, str] = {
-        "category_level1": "Single Engine Piston",
-        "make": make.upper(),
-        "s-type": "aircraft",
-    }
+    params: dict[str, str] = {"s-type": s_type}
+    if category_level1:
+        params["category_level1"] = category_level1
+    if make:
+        params["make"] = make.upper()
     if page > 1:
         params["page"] = str(page)
     return f"{BASE_URL}{SEARCH_PATH}?{urlencode(params)}"
@@ -126,25 +133,14 @@ def _extract_price_text(text: str) -> Optional[str]:
 
 
 def _normalize_n_number(raw_value: str | None) -> Optional[str]:
-    if not raw_value:
-        return None
-    compact = re.sub(r"[^A-Za-z0-9]", "", raw_value).upper()
-    if not compact:
-        return None
-    if not compact.startswith("N"):
-        compact = f"N{compact}"
-    if re.fullmatch(r"N[0-9]{1,5}[A-HJ-NP-Z]{0,2}", compact):
-        return compact
-    return None
+    return normalize_us_n_number(raw_value)
 
 
 def _extract_n_number(text: str) -> Optional[str]:
     if not text:
         return None
-    match = N_NUMBER_PATTERN.search(text.upper())
-    if not match:
-        return None
-    return _normalize_n_number(f"N{match.group(1)}")
+    registration = extract_registration_from_text(text)
+    return _normalize_n_number(registration)
 
 
 def _extract_listing_numeric_id(listing_url: str) -> Optional[str]:
@@ -203,6 +199,99 @@ def _extract_year_make_model(title_text: str) -> tuple[Optional[int], Optional[s
     make_val = parts[0].title() if parts else None
     model_val = parts[1].strip() if len(parts) > 1 else None
     return year_val, make_val, model_val
+
+
+def _normalize_key(value: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", " ", (value or "").strip().lower())
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _extract_label_value_text(block, label_el) -> str:
+    clone = BeautifulSoup(str(block), "html.parser")
+    for label in clone.select("label"):
+        label.extract()
+    text = html_module.unescape(clone.get_text(" ", strip=True))
+    text = re.sub(r"\s+", " ", text).strip(" :|-")
+    if text:
+        return text
+    fallback = html_module.unescape(block.get_text(" ", strip=True))
+    fallback = re.sub(r"\s+", " ", fallback).strip()
+    if label_el:
+        label_text = label_el.get_text(" ", strip=True)
+        if fallback.lower().startswith(label_text.lower()):
+            fallback = fallback[len(label_text) :].strip(" :|-")
+    return fallback
+
+
+def _extract_labeled_values(soup: BeautifulSoup) -> dict[str, list[str]]:
+    values: dict[str, list[str]] = {}
+
+    def _append(key_raw: str, value_raw: str) -> None:
+        key = _normalize_key(key_raw)
+        value = re.sub(r"\s+", " ", html_module.unescape(value_raw or "")).strip()
+        if not key or not value:
+            return
+        bucket = values.setdefault(key, [])
+        if value not in bucket:
+            bucket.append(value)
+
+    for block in soup.select("#info-list-seller li, #general_specs p, #additional_classifications p"):
+        label_el = block.select_one("label")
+        if not label_el:
+            continue
+        key_text = label_el.get_text(" ", strip=True).strip(":")
+        value_text = _extract_label_value_text(block, label_el)
+        _append(key_text, value_text)
+
+    for dt in soup.select("dt"):
+        dd = dt.find_next_sibling("dd")
+        if not dd:
+            continue
+        _append(dt.get_text(" ", strip=True), dd.get_text(" ", strip=True))
+
+    return values
+
+
+def _first_value(values: dict[str, list[str]], *keys: str) -> Optional[str]:
+    for key in keys:
+        bucket = values.get(_normalize_key(key))
+        if bucket:
+            return bucket[0]
+    return None
+
+
+def _parse_int_from_text(text: str | None) -> Optional[int]:
+    if not text:
+        return None
+    m = re.search(r"(\d[\d,]*(?:\.\d+)?)", text)
+    if not m:
+        return None
+    try:
+        return int(float(m.group(1).replace(",", "")))
+    except ValueError:
+        return None
+
+
+def _infer_aircraft_type(category_text: str | None) -> Optional[str]:
+    if not category_text:
+        return None
+    normalized = _normalize_key(category_text)
+    if "single engine piston" in normalized:
+        return "piston_single"
+    if "multi engine piston" in normalized:
+        return "piston_multi"
+    if "turboprop" in normalized:
+        return "turboprop"
+    if "jet" in normalized:
+        return "jet"
+    if "helicopter" in normalized or "rotor" in normalized:
+        return "rotorcraft"
+    return None
+
+
+def _is_placeholder_value(value: str | None) -> bool:
+    normalized = _normalize_key(value or "")
+    return normalized in {"not listed", "n a", "na", "none", "unknown"}
 
 
 def _looks_like_block_page(html_text: str) -> bool:
@@ -531,6 +620,11 @@ def _collect_specs_from_soup(soup: BeautifulSoup) -> dict[str, str]:
         if key and value and key not in specs:
             specs[key] = value
 
+    labeled_values = _extract_labeled_values(soup)
+    for key, values in labeled_values.items():
+        if values and key not in specs:
+            specs[key] = values[0]
+
     return specs
 
 
@@ -543,6 +637,7 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     raw_text = soup.get_text(" ", strip=True)
     sections = _extract_detail_sections(soup)
+    labeled_values = _extract_labeled_values(soup)
 
     # Price
     price_text = None
@@ -614,6 +709,14 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
         seller = seller_el.get_text(" ", strip=True)
         if seller:
             extra["seller_name"] = seller
+    phone_numbers: list[str] = []
+    for phone_link in soup.select("a.click_to_call[data-phone-original], a[href^='tel:']"):
+        phone = (phone_link.get("data-phone-original") or phone_link.get_text(" ", strip=True) or "").strip()
+        phone = re.sub(r"\s+", " ", phone)
+        if phone and phone not in phone_numbers:
+            phone_numbers.append(phone)
+    if phone_numbers:
+        extra["tap_phone_numbers"] = phone_numbers
 
     desc_el = soup.select_one(".description, #description, .listing-description, .remarks")
     if desc_el:
@@ -646,11 +749,18 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
         if description_full:
             extra["description_full"] = description_full
 
+    if sections:
+        extra["tap_detail_sections"] = sections
+
     n_number = _extract_n_number(raw_text)
 
     specs = _collect_specs_from_soup(soup)
+    for key, values in labeled_values.items():
+        if key not in specs and values:
+            specs[key] = values[0]
     if specs:
         log.debug("Detail specs parsed: %s", list(specs.keys()))
+        extra["tap_specs_flat"] = specs
 
     if not n_number:
         for key in (
@@ -680,6 +790,32 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
 
     if "model" in specs:
         extra["model"] = specs["model"].strip()
+    location_from_specs = specs.get("location") or specs.get("location city")
+    if location_from_specs:
+        city, state = _split_city_state(location_from_specs)
+        if city:
+            extra["location_city"] = city
+        if state:
+            extra["location_state"] = state
+
+    category_value = (
+        _first_value(labeled_values, "category")
+        or _first_value(labeled_values, "classification")
+        or (soup.select_one("input#category").get("value") if soup.select_one("input#category") else None)
+    )
+    if category_value:
+        extra["tap_category_level1"] = category_value
+        inferred_type = _infer_aircraft_type(category_value)
+        if inferred_type:
+            extra["aircraft_type"] = inferred_type
+
+    sale_status = _first_value(labeled_values, "sale status")
+    if sale_status:
+        extra["tap_sale_status"] = sale_status
+
+    serial_number = _first_value(labeled_values, "serial #", "serial number")
+    if serial_number and not _is_placeholder_value(serial_number):
+        extra["serial_number"] = serial_number
 
     for key in ("total time", "ttaf", "airframe time"):
         if key in specs:
@@ -708,6 +844,38 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
                 extra["engine_time_since_overhaul"] = int(m.group(1).replace(",", ""))
                 break
 
+    engine_1_time_text = _first_value(labeled_values, "engine 1 time")
+    if engine_1_time_text:
+        extra["engine_1_time_text"] = engine_1_time_text
+        engine_1_hours = _parse_int_from_text(engine_1_time_text)
+        if engine_1_hours is not None:
+            extra["engine_1_time_hours"] = engine_1_hours
+            if "engine_time_since_overhaul" not in extra:
+                extra["engine_time_since_overhaul"] = engine_1_hours
+
+    engine_2_time_text = _first_value(labeled_values, "engine 2 time")
+    if engine_2_time_text:
+        extra["engine_2_time_text"] = engine_2_time_text
+        engine_2_hours = _parse_int_from_text(engine_2_time_text)
+        if engine_2_hours is not None:
+            extra["engine_2_time_hours"] = engine_2_hours
+
+    prop_1_time_text = _first_value(labeled_values, "prop 1 time")
+    if prop_1_time_text:
+        extra["prop_1_time_text"] = prop_1_time_text
+        prop_1_hours = _parse_int_from_text(prop_1_time_text)
+        if prop_1_hours is not None:
+            extra["prop_1_time_hours"] = prop_1_hours
+            if "time_since_prop_overhaul" not in extra:
+                extra["time_since_prop_overhaul"] = prop_1_hours
+
+    prop_2_time_text = _first_value(labeled_values, "prop 2 time")
+    if prop_2_time_text:
+        extra["prop_2_time_text"] = prop_2_time_text
+        prop_2_hours = _parse_int_from_text(prop_2_time_text)
+        if prop_2_hours is not None:
+            extra["prop_2_time_hours"] = prop_2_hours
+
     for key in ("engine", "engine model", "engine make/model", "powerplant"):
         if key in specs:
             cleaned_engine_model = sanitize_engine_model(specs[key].strip())
@@ -724,8 +892,160 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
         if avionics_block:
             extra["avionics_description"] = avionics_block
 
-    if n_number:
-        extra["n_number"] = n_number
+    aircraft_type_input = soup.select_one("input#category")
+    if aircraft_type_input and aircraft_type_input.get("value"):
+        extra.setdefault("tap_category_level1", aircraft_type_input.get("value"))
+
+    list_id_input = soup.select_one("input#listing_id")
+    if list_id_input and list_id_input.get("value"):
+        extra["tap_listing_id"] = list_id_input.get("value")
+
+    useful_load_text = _first_value(labeled_values, "useful load")
+    if useful_load_text:
+        useful_load_lbs = _parse_int_from_text(useful_load_text)
+        if useful_load_lbs is not None:
+            extra["useful_load_lbs"] = useful_load_lbs
+
+    seats_text = _first_value(labeled_values, "# of seats", "seats")
+    if seats_text:
+        seats_count = _parse_int_from_text(seats_text)
+        if seats_count is not None:
+            extra["seats"] = seats_count
+
+    condition = _first_value(labeled_values, "condition")
+    if condition:
+        extra["condition"] = condition
+    flight_rules = _first_value(labeled_values, "flight rules")
+    if flight_rules:
+        extra["flight_rules"] = flight_rules
+    year_painted = _parse_int_from_text(_first_value(labeled_values, "year painted"))
+    if year_painted is not None:
+        extra["year_painted"] = year_painted
+    interior_year = _parse_int_from_text(_first_value(labeled_values, "interior year"))
+    if interior_year is not None:
+        extra["interior_year"] = interior_year
+
+    engines_block = sections.get("engines / mods / prop", "") or ""
+    engine_line_pattern = re.compile(
+        r"^(?P<slot>RH|LH|RIGHT|LEFT|ENGINE\s*1|ENGINE\s*2)\s+"
+        r"(?P<model>[A-Z0-9\-/ ]{3,}?)\s+"
+        r"(?:TSMO|SMOH|TSOH|TIME)\s*:\s*(?P<hours>[\d,.]+)",
+        flags=re.I,
+    )
+    prop_line_pattern = re.compile(
+        r"^(?P<slot>RH|LH|RIGHT|LEFT|PROP\s*1|PROP\s*2)\s+"
+        r"(?P<model>[A-Z0-9\-/ ]{3,}?)\s+"
+        r"(?:TSMO|SPOH|SOH|TSOH|TIME)\s*:\s*(?P<hours>[\d,.]+)",
+        flags=re.I,
+    )
+
+    for raw_line in (engines_block.splitlines() if engines_block else []):
+        line = re.sub(r"\s+", " ", raw_line).strip()
+        if not line:
+            continue
+        engine_match = engine_line_pattern.search(line)
+        if engine_match:
+            slot = engine_match.group("slot").upper().replace(" ", "")
+            idx = 1 if slot in {"RH", "RIGHT", "ENGINE1"} else 2
+            model_text = sanitize_engine_model(engine_match.group("model").strip()) or engine_match.group("model").strip()
+            hours = _parse_int_from_text(engine_match.group("hours"))
+            extra[f"engine_{idx}_model"] = model_text
+            if hours is not None:
+                extra[f"engine_{idx}_time_hours"] = hours
+                extra[f"engine_{idx}_time_text"] = f"{hours} SMOH"
+            continue
+        prop_match = prop_line_pattern.search(line)
+        if prop_match:
+            slot = prop_match.group("slot").upper().replace(" ", "")
+            idx = 1 if slot in {"RH", "RIGHT", "PROP1"} else 2
+            model_text = prop_match.group("model").strip()
+            hours = _parse_int_from_text(prop_match.group("hours"))
+            extra[f"prop_{idx}_model"] = model_text
+            if hours is not None:
+                extra[f"prop_{idx}_time_hours"] = hours
+                extra[f"prop_{idx}_time_text"] = f"{hours} SPOH"
+
+    if extra.get("engine_1_model") and not extra.get("engine_model"):
+        extra["engine_model"] = extra["engine_1_model"]
+
+    registration_candidate = n_number
+    if not registration_candidate:
+        registration_candidate = (
+            specs.get("registration")
+            or specs.get("registration #")
+            or specs.get("n-number")
+            or specs.get("tail number")
+            or specs.get("tail #")
+            or specs.get("reg #")
+            or specs.get("aircraft registration")
+        )
+    apply_registration_fields(
+        extra,
+        raw_value=registration_candidate,
+        fallback_text=raw_text,
+        keep_existing_n_number=True,
+    )
+
+    standardized_keys = {
+        "price_asking",
+        "primary_image_url",
+        "image_urls",
+        "logbook_urls",
+        "location_city",
+        "location_state",
+        "seller_name",
+        "description",
+        "description_full",
+        "year",
+        "make",
+        "model",
+        "total_time_airframe",
+        "engine_time_since_overhaul",
+        "engine_model",
+        "avionics_description",
+        "aircraft_type",
+        "n_number",
+        "registration_raw",
+        "registration_normalized",
+        "registration_scheme",
+        "registration_country_code",
+        "registration_confidence",
+        "serial_number",
+        "time_since_prop_overhaul",
+    }
+    top_level_extra_keys = {
+        "engine_1_model",
+        "engine_1_time_text",
+        "engine_1_time_hours",
+        "engine_2_model",
+        "engine_2_time_text",
+        "engine_2_time_hours",
+        "prop_1_model",
+        "prop_1_time_text",
+        "prop_1_time_hours",
+        "prop_2_model",
+        "prop_2_time_text",
+        "prop_2_time_hours",
+    }
+    keep_keys = standardized_keys | top_level_extra_keys
+    tap_unmapped = {k: v for k, v in extra.items() if k not in keep_keys}
+    for key in tap_unmapped:
+        extra.pop(key, None)
+    powerplant_structured = {k: extra.get(k) for k in sorted(top_level_extra_keys) if extra.get(k) not in (None, "", [])}
+    if tap_unmapped:
+        extra["raw_data"] = {
+            "tap_unmapped": tap_unmapped,
+            "tap_unmapped_keys": sorted(tap_unmapped.keys()),
+            "tap_powerplant_structured": powerplant_structured,
+            "tap_source_url": listing_url,
+            "tap_captured_at": datetime.now(timezone.utc).isoformat(),
+        }
+    elif powerplant_structured:
+        extra["raw_data"] = {
+            "tap_powerplant_structured": powerplant_structured,
+            "tap_source_url": listing_url,
+            "tap_captured_at": datetime.now(timezone.utc).isoformat(),
+        }
 
     return extra
 
@@ -752,6 +1072,12 @@ def parse_listing_card(card) -> Optional[dict]:
             return None
 
         source_id = _extract_source_id(listing_url)
+        parsed_link = urlparse(listing_url)
+        query = parse_qs(parsed_link.query)
+        category_from_url = (query.get("category_level1") or [None])[0]
+        category_from_card = card.get("data-cat")
+        category_value = (category_from_card or category_from_url or "").strip() or None
+        inferred_aircraft_type = _infer_aircraft_type(category_value)
 
         title_el = (
             card.select_one("a#title")
@@ -796,7 +1122,7 @@ def parse_listing_card(card) -> Optional[dict]:
             if description:
                 description = re.sub(r"\s*more\s+info\s*$", "", description, flags=re.I).strip()
 
-        return {
+        listing = {
             "source_site": "trade_a_plane",
             "listing_source": "trade_a_plane",
             "source_id": source_id,
@@ -811,8 +1137,12 @@ def parse_listing_card(card) -> Optional[dict]:
             "primary_image_url": primary_image_url,
             "description": description,
             "n_number": n_number,
-            "aircraft_type": "piston_single",
+            "aircraft_type": inferred_aircraft_type or "piston_single",
         }
+        if category_value:
+            listing["tap_category_level1"] = category_value
+        apply_registration_fields(listing, raw_value=n_number, fallback_text=card_text, keep_existing_n_number=True)
+        return listing
     except Exception as exc:
         log.warning("Error parsing listing card: %s", exc)
         return None
@@ -838,6 +1168,7 @@ def scrape_make(
     fetcher: HtmlFetcher,
     make: str,
     limit: Optional[int] = None,
+    category_level1: Optional[str] = None,
     start_page: int = 1,
     on_page_complete: Optional[Callable[[int, list[dict]], None]] = None,
     supabase: Optional["Client"] = None,
@@ -849,7 +1180,7 @@ def scrape_make(
     listings: list[dict] = []
     seen_source_ids: set[str] = set()
     page_num = max(1, start_page)
-    page_url = build_make_url(make, page=page_num)
+    page_url = build_make_url(make, page=page_num, category_level1=category_level1, s_type="aircraft")
 
     while True:
         if session_deadline_epoch and time.time() >= session_deadline_epoch:
@@ -1197,6 +1528,31 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
     if not rows:
         return 0
 
+    allowed_columns: set[str] = set()
+    try:
+        sample = supabase.table("aircraft_listings").select("*").limit(1).execute().data or []
+        if sample:
+            allowed_columns = {str(k) for k in sample[0].keys()}
+    except Exception as exc:
+        log.warning("Could not fetch aircraft_listings columns; proceeding without column filter: %s", exc)
+
+    if allowed_columns:
+        for row in rows:
+            unknown_keys = [k for k in list(row.keys()) if k not in allowed_columns]
+            if not unknown_keys:
+                continue
+            unknown_payload = {k: row.pop(k, None) for k in unknown_keys}
+            if "raw_data" in allowed_columns:
+                existing_raw = row.get("raw_data")
+                raw_data = dict(existing_raw) if isinstance(existing_raw, dict) else {}
+                tap_unmapped = dict(raw_data.get("tap_unmapped") or {})
+                tap_unmapped.update({k: v for k, v in unknown_payload.items() if v not in (None, "", [])})
+                if tap_unmapped:
+                    raw_data["tap_unmapped"] = tap_unmapped
+                    raw_data["tap_unmapped_keys"] = sorted(tap_unmapped.keys())
+                    raw_data["tap_captured_at"] = datetime.now(timezone.utc).isoformat()
+                    row["raw_data"] = raw_data
+
     # PostgREST requires matching object keys for bulk upsert payloads.
     if rows:
         all_keys: set[str] = set()
@@ -1218,11 +1574,29 @@ def upsert_listings(supabase: "Client", listings: list[dict]) -> int:
     except Exception as exc:
         log.error("Batch upsert failed: %s", exc)
         saved = 0
+
+    if saved == 0 and rows:
+        log.warning("safe_upsert_with_fallback saved 0/%s rows; retrying with source_id update/insert fallback.", len(rows))
+        missing_col_pattern = re.compile(r"Could not find the '([^']+)' column", re.IGNORECASE)
         for row in rows:
             try:
                 supabase.table("aircraft_listings").upsert(row, on_conflict="source_site,source_id").execute()
                 saved += 1
+                continue
             except Exception as row_exc:
+                missing_col_match = missing_col_pattern.search(str(row_exc))
+                if missing_col_match:
+                    missing_col = missing_col_match.group(1)
+                    if missing_col in row:
+                        retry_row = dict(row)
+                        retry_row.pop(missing_col, None)
+                        try:
+                            supabase.table("aircraft_listings").upsert(retry_row, on_conflict="source_site,source_id").execute()
+                            saved += 1
+                            continue
+                        except Exception as retry_exc:
+                            row_exc = retry_exc
+                            row = retry_row
                 if "42P10" in str(row_exc):
                     source_id = row.get("source_id")
                     if source_id:
@@ -1370,6 +1744,11 @@ def main() -> None:
         help="Manufacturer tiers to scrape: 1, 2, 3, or all (default: all)",
     )
     parser.add_argument(
+        "--category-level1",
+        default=None,
+        help="Optional TAP category filter (example: 'Single Engine Piston'). Defaults to all aircraft categories.",
+    )
+    parser.add_argument(
         "--failed-file",
         default=str(FAILED_URLS_FILE),
         help=f"Failed URL file path (default: {FAILED_URLS_FILE})",
@@ -1404,6 +1783,10 @@ def main() -> None:
         makes = list(makes)
         random.shuffle(makes)
     log.info("Makes to scrape: %s", makes)
+    if args.category_level1:
+        log.info("Category filter: %s", args.category_level1)
+    else:
+        log.info("Category filter: ALL AIRCRAFT")
     checkpoint_file = Path(args.checkpoint_file)
     failed_file = Path(args.failed_file)
     checkpoint_data = load_checkpoint(checkpoint_file) if args.resume else None
@@ -1539,6 +1922,7 @@ def main() -> None:
             fetcher=fetcher,
             make=make,
             limit=make_limit,
+            category_level1=args.category_level1,
             start_page=start_page,
             on_page_complete=on_page_complete,
             supabase=supabase,
@@ -1599,8 +1983,17 @@ def main() -> None:
         )
     elif failed_file.exists() and not args.retry_failed:
         save_failed_entries(failed_file, [])
-    if supabase and not args.make:
+    should_mark_inactive = (
+        supabase is not None
+        and not args.make
+        and args.max_listings is None
+        and not args.session_budget_minutes
+        and not args.category_level1
+    )
+    if should_mark_inactive:
         mark_inactive_listings(supabase, "trade_a_plane")
+    elif supabase and not args.make:
+        log.info("Skipping mark_inactive_listings for bounded/partial run.")
     if supabase and not args.dry_run:
         session_ended = datetime.now(timezone.utc)
         delay_samples = session_stats.get("delay_samples", [])

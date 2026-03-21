@@ -1,0 +1,115 @@
+[
+  {
+    "source": "aso",
+    "source_site": "aso",
+    "listing_source": "aso",
+    "source_id": "aso_201001",
+    "source_listing_id": "aso_201001",
+    "source_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+    "aso_adv_id": "201001",
+    "title": "2013 Xtremeair XA42",
+    "year": 2013,
+    "make": "Xtremeair",
+    "model": "XA42",
+    "aircraft_type": "single_engine_piston",
+    "asking_price": 220000,
+    "price_asking": 220000,
+    "price_text": "$220,000",
+    "n_number": "ZS-AXA",
+    "serial_number": "120",
+    "total_time_airframe": 310,
+    "ttaf_raw": "310",
+    "location_raw": "ZA",
+    "state": null,
+    "seller_name": "Airvan Africa Pty L...",
+    "seller_type": "dealer",
+    "primary_image_url": "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+    "scraped_at": "2026-03-14T07:43:34.700942+00:00",
+    "condition": "used",
+    "aso_sections_raw": {
+      "Airframe & Power Systems Information": {
+        "items": [],
+        "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+      },
+      "Maintenance Condition": {
+        "items": [
+          "Show Room Condition"
+        ],
+        "text": "Show Room Condition"
+      },
+      "Avionics": {
+        "items": [
+          "2 COMs",
+          "Garmin Aera 660 GPS"
+        ],
+        "text": "2 COMs Garmin Aera 660 GPS"
+      },
+      "Contact Information": {
+        "items": [],
+        "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+      }
+    },
+    "description": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "description_full": "2013 Xtreme Air XA42\nUnlimited Aerobatic Fun",
+    "contact_raw": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice",
+    "seller_phone": "+(27) 46 624 4899",
+    "seller_website": "https://www.aso.com/DealerPages/Dealer.aspx?dealerid=38362&name=Airvan+Africa+Pty+Ltd",
+    "engines_raw": [
+      {
+        "loc.": "C",
+        "make": "Lycoming",
+        "model": "AEIO-580-B1A",
+        "serial#": "333-79E"
+      }
+    ],
+    "engine_count": 1,
+    "props_raw": [
+      {
+        "loc.": "C",
+        "make": "MT",
+        "model": "MTV-9-B-C",
+        "serial#": "180445",
+        "tsn": "120",
+        "tsn_hours": 120
+      }
+    ],
+    "time_since_prop_overhaul": 120,
+    "avionics_notes": "2 COMs, Garmin Aera 660 GPS",
+    "maintenance_condition": "Show Room Condition",
+    "image_urls": [
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33.jpg",
+      "https://www.aso.com/uploads/acImages/201001/PHOTO-2025-11-07-10-34-33_sp.jpg"
+    ],
+    "raw_data": {
+      "aso_detail": {
+        "detail_url": "https://www.aso.com/listings/spec/ViewAd.aspx?id=201001&listingType=true",
+        "sections": {
+          "Airframe & Power Systems Information": {
+            "items": [],
+            "text": "Aircraft Configuration / Use Aerobatic Engines Loc. Make Model Serial# C Lycoming AEIO-580-B1A 333-79E Immaculate Props Loc. Make Model Serial# TSN C MT MTV-9-B-C 180445 120 Prop Replaced Due to Original Delamination"
+          },
+          "Maintenance Condition": {
+            "items": [
+              "Show Room Condition"
+            ],
+            "text": "Show Room Condition"
+          },
+          "Avionics": {
+            "items": [
+              "2 COMs",
+              "Garmin Aera 660 GPS"
+            ],
+            "text": "2 COMs Garmin Aera 660 GPS"
+          },
+          "Contact Information": {
+            "items": [],
+            "text": "Please tell the seller that you saw this ad on ASO Tel: +(27) 46 624 4899 Tel: +(27) 82 565 8864 Fax: +(27) 46 624 5245 PO Box 2102 Port Alfred 6170, South Africa All Specifications Subject to Verification Upon Inspection Availability Subject to Prior Lease, Sale, or Withdrawal From Market Without Notice"
+          }
+        },
+        "gallery_count": 2,
+        "captured_at": "2026-03-14T07:44:19.017868+00:00"
+      }
+    }
+  }
+]

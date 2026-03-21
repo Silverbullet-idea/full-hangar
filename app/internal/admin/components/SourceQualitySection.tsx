@@ -99,7 +99,6 @@ function heatmapCellClass(value: number) {
 }
 
 function sourceLabel(source: string) {
-  if (source === "unknown") return "unknown";
   return source;
 }
 
@@ -230,7 +229,14 @@ export function SourceQualitySection() {
     };
   }, []);
 
-  const rows = useMemo(() => payload?.sources ?? [], [payload]);
+  const rows = useMemo(
+    () =>
+      (payload?.sources ?? []).filter((row) => {
+        const source = String(row.source ?? "").toLowerCase();
+        return source !== "unknown" && source !== "unkown";
+      }),
+    [payload]
+  );
   const fields = useMemo(() => payload?.completeness_fields ?? [], [payload]);
   const criticalFields = useMemo(() => payload?.critical_fields ?? [], [payload]);
   const rankedRows = useMemo(() => [...rows].sort((a, b) => b.source_health_score - a.source_health_score), [rows]);

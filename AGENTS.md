@@ -58,7 +58,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listings filter reliability pass shipped: make/model family filtering now uses wildcard matching (preventing zero-result false negatives), max-price filtering now enforces positive non-null prices (excluding call-for-price/$0 rows), top-category make dropdowns now include low-count makes, and helicopter detection/isolation was tightened so rotorcraft no longer leak into fixed-wing category lanes.
 - Listings sidebar filter expansion shipped: added deal-type selection, priced-only toggle, min/max price range (preset + manual), year range (preset + manual), total-time range (preset + manual), maintenance-burden bands, and true-cost exact range filters wired through URL params + API + DB query pipeline.
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
-- Listings filter-options fetch loop fixed: `/listings` now SSR-loads `getListingFilterOptions()` into `ListingsClient` (replacing always-empty `buildFilterOptions([])`), sync no longer clobbers client-hydrated options with empty props, and `/api/listings/options` fallback runs at most once.
+- Listings filter-options fetch loop fixed: `/listings` now SSR-loads `getListingFilterOptions()` into `ListingsClient` (replacing always-empty `buildFilterOptions([])`), sync no longer clobbers client-hydrated options with empty props, `/api/listings/options` fallback runs at most once, and `getListingFilterOptions()` no longer returns silent `[]` after transient retry exhaustion (throws so the route can 500 instead of misleading empty 200). Smoke: `npm run test:smoke:listings-options` (Playwright `webServer` + `tests/smoke/listings-options-no-loop.spec.js`).
 - Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Listing detail comps UX refresh shipped: removed inline asking-price text from the H1 title line, moved asking price into the `Comp & Cost` panel above estimated range, and restored expanded comparable-market outputs with a comps table plus an additional "other comps" list while keeping the Price-vs-Year/Time toggle and exact-submodel toggle behavior.
@@ -321,6 +321,12 @@ npm run pipeline:score-dist:full-v193-and-commit
 # Example: `npm run pipeline:backfill:all-chunked -- -ChunkSize 500 -FreshStart`
 npm run pipeline:backfill:all-chunked
 # Manual long runs: hide httpx line spam -> `$env:FULL_HANGAR_BACKFILL_QUIET_HTTP='1'` or `backfill_scores.py --quiet-http`
+
+# Playwright smoke (starts `npm run dev` on :3001 unless already running locally)
+npm run test:smoke:listings-options
+npm run test:smoke:listings-all
+# GitHub Actions: `.github/workflows/playwright-listings-options-smoke.yml` — set repo secrets
+# `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and one of `SUPABASE_SERVICE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `NEXT_SUPABASE_SERVICE_ROLE_KEY`.
 ```
 
 ---

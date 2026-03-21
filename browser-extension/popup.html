@@ -6,17 +6,172 @@
   <title>Full Hangar Harvester</title>
 </head>
 <body>
-  <div class="header">
-    <div class="title">FullHangar</div>
-    <div class="subtitle">Controller Harvester</div>
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="title">FullHangar</div>
+      <div class="subtitle">Unified Harvester</div>
+    </div>
+    <div class="bridge-block status"><span id="bridge-dot" class="dot"></span><span id="bridge-label">Checking bridge...</span></div>
+    <div class="mode-block field inline-field">
+      <label for="mode">Mode</label>
+      <select id="mode">
+        <option value="card_only">Card-only</option>
+        <option value="detailed">Detailed</option>
+      </select>
+    </div>
+    <div class="meta-block">
+      <span class="run-status" id="run-status">Status: idle</span>
+      <span class="profile">Risk: <strong>safe</strong></span>
+    </div>
+    <div class="stats">
+      <div><strong id="extracted">0</strong><span>Extracted</span></div>
+      <div><strong id="upserted">0</strong><span>Saved</span></div>
+      <div><strong id="failed">0</strong><span>Failed</span></div>
+    </div>
   </div>
-  <div class="status"><span id="bridge-dot" class="dot"></span><span id="bridge-label">Checking bridge...</span></div>
-  <div class="stats">
-    <div><strong id="extracted">0</strong><span>Extracted</span></div>
-    <div><strong id="upserted">0</strong><span>Saved</span></div>
-    <div><strong id="failed">0</strong><span>Failed</span></div>
+  <details class="compact-panel">
+    <summary>Diagnostics</summary>
+    <div class="diag">
+      <div><span>Challenge</span><strong id="diag-challenge">no</strong></div>
+      <div><span>Details</span><strong id="diag-details">0 / 0</strong></div>
+      <div><span>Last reason</span><strong id="diag-reason">none</strong></div>
+      <div><span>Activity</span><strong id="diag-activity">idle</strong></div>
+      <div><span>Page title</span><strong id="diag-title">n/a</strong></div>
+      <div><span>Selector</span><strong id="diag-selector">n/a</strong></div>
+      <div><span>Anchors/rows</span><strong id="diag-counts">0 / 0</strong></div>
+      <div><span>Range/total</span><strong id="diag-range">0 - 0 / 0</strong></div>
+      <div><span>Last URL</span><strong id="diag-url">n/a</strong></div>
+    </div>
+    <div class="diag sources-diag">
+      <div><span>Controller</span><strong id="srcdiag-controller">idle | 0/0 | none</strong></div>
+      <div><span>GlobalAir</span><strong id="srcdiag-globalair">idle | 0/0 | none</strong></div>
+      <div><span>TAP</span><strong id="srcdiag-tap">idle | 0/0 | none</strong></div>
+      <div><span>AeroTrader</span><strong id="srcdiag-aerotrader">idle | 0/0 | none</strong></div>
+    </div>
+  </details>
+  <div class="field">
+    <label>Category matrix</label>
+    <table class="category-matrix">
+      <thead>
+        <tr>
+          <th>TAP</th>
+          <th>GlobalAir</th>
+          <th>Controller</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="single-engine-piston" checked /> Single Piston</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="single-engine-piston" checked /> Single Piston</label></td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="piston-single-aircraft" checked /> Single Piston</label></td>
+        </tr>
+        <tr>
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="multi-engine-piston" /> Multi Piston</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="twin-engine-piston" /> Twin Piston</label></td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="piston-twin-aircraft" /> Twin Piston</label></td>
+        </tr>
+        <tr class="band-blue">
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="turboprop" /> Turboprop</label></td>
+          <td class="double-stack">
+            <label class="checkline"><input type="checkbox" class="globalair-category" value="single-engine-turbine" /> Single Turbine</label>
+            <label class="checkline"><input type="checkbox" class="globalair-category" value="twin-engine-turbine" /> Twin Turbine</label>
+          </td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="turboprop-aircraft" /> Turboprop</label></td>
+        </tr>
+        <tr class="band-green">
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="jets" /> Jets</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="private-jet" /> Private Jets</label></td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="jet-aircraft" /> Jets</label></td>
+        </tr>
+        <tr class="band-red">
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="helicopters" /> Helicopters</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="helicopters" /> Helicopters</label></td>
+          <td class="double-stack">
+            <label class="checkline"><input type="checkbox" class="controller-category" value="piston-helicopters" /> Piston Heli</label>
+            <label class="checkline"><input type="checkbox" class="controller-category" value="turbine-helicopters" /> Turbine Heli</label>
+          </td>
+        </tr>
+        <tr class="band-yellow">
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="light-sport" /> Light Sport</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="light-sport" /> Light Sport</label></td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="light-sport-aircraft" /> Light Sport</label></td>
+        </tr>
+        <tr class="band-purple">
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="amphibious-float" /> Amphibious / Float</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="amphibian" /> Amphibian</label></td>
+          <td class="double-stack">
+            <label class="checkline"><input type="checkbox" class="controller-category" value="piston-amphibious-floatplanes" /> Piston Amphib</label>
+            <label class="checkline"><input type="checkbox" class="controller-category" value="turbine-amphibious-floatplanes" /> Turbine Amphib</label>
+          </td>
+        </tr>
+        <tr>
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="experimental-homebuilt" /> Experimental</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="experimental-kit" /> Experimental / Kit</label></td>
+          <td><label class="checkline"><input type="checkbox" class="controller-category" value="experimental-homebuilt-aircraft" /> Experimental</label></td>
+        </tr>
+        <tr>
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="warbird" /> Warbird</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="warbird" /> Warbird</label></td>
+          <td class="double-stack">
+            <label class="checkline"><input type="checkbox" class="controller-category" value="piston-military-aircraft" /> Piston Mil</label>
+            <label class="checkline"><input type="checkbox" class="controller-category" value="turbine-military-aircraft" /> Turbine Mil</label>
+          </td>
+        </tr>
+        <tr>
+          <td><label class="checkline"><input type="checkbox" class="tap-category" value="gyroplane" /> Gyroplane</label></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="commercial" /> Commercial</label></td>
+          <td class="double-stack">
+            <label class="checkline"><input type="checkbox" class="controller-category" value="piston-agricultural-aircraft" /> Piston Ag</label>
+            <label class="checkline"><input type="checkbox" class="controller-category" value="turbine-agricultural-aircraft" /> Turbine Ag</label>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="empty-cell">-</span></td>
+          <td><label class="checkline"><input type="checkbox" class="globalair-category" value="vintage" /> Vintage</label></td>
+          <td><span class="empty-cell">-</span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <textarea id="makes" placeholder="One make per line (optional)"></textarea>
+  <details class="compact-panel">
+    <summary>Sources and make filters</summary>
+    <div class="field">
+      <label>Sources</label>
+      <div class="sources">
+        <label class="checkline"><input id="src-controller" type="checkbox" checked /> Controller</label>
+        <label class="checkline"><input id="src-globalair" type="checkbox" checked /> GlobalAir</label>
+        <label class="checkline"><input id="src-tap" type="checkbox" checked /> TAP</label>
+        <label class="checkline"><input id="src-aerotrader" type="checkbox" checked /> AeroTrader</label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="makes-controller">Controller makes</label>
+      <textarea id="makes-controller" class="makes-box" placeholder="One make per line (blank = auto-discover all makes)"></textarea>
+    </div>
+    <div class="field">
+      <label for="makes-globalair">GlobalAir makes</label>
+      <textarea id="makes-globalair" class="makes-box" placeholder="One make per line (blank = auto-discover all makes in selected category)"></textarea>
+    </div>
+    <div class="field">
+      <label for="makes-tap">TAP makes</label>
+      <textarea id="makes-tap" class="makes-box" placeholder="One make per line (blank = auto-discover all makes)"></textarea>
+    </div>
+    <div class="field">
+      <label for="makes-aerotrader">AeroTrader makes</label>
+      <textarea id="makes-aerotrader" class="makes-box" placeholder="One make per line (blank = auto-discover all makes)"></textarea>
+    </div>
+    <div class="field">
+      <label>AeroTrader search context</label>
+      <div class="aerotrader-search">
+        <label class="checkline">ZIP <input id="aerotrader-zip" type="text" maxlength="5" value="83854" /></label>
+        <label class="checkline">Radius <input id="aerotrader-radius" type="text" maxlength="6" value="10000" /></label>
+      </div>
+    </div>
+    <label class="checkline"><input id="aerotrader-use-current-tab" type="checkbox" /> AeroTrader: use currently open results page as seed</label>
+    <label class="checkline"><input id="detail-new-only" type="checkbox" /> New-only details (detail scrape only for listings not yet in DB)</label>
+    <label class="checkline"><input id="rotate-sources" type="checkbox" checked /> Rotate sources (Controller → GlobalAir → TAP → AeroTrader)</label>
+    <label class="checkline"><input id="start-fresh" type="checkbox" /> Start fresh (ignore checkpoint)</label>
+  </details>
   <div class="actions">
     <button id="start">Start</button>
     <button id="stop">Stop</button>

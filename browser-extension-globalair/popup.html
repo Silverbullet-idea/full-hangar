@@ -11,12 +11,33 @@
     <div class="subtitle">GlobalAir Harvester</div>
   </div>
   <div class="status"><span id="bridge-dot" class="dot"></span><span id="bridge-label">Checking bridge...</span></div>
+  <div class="profile">Risk profile: <strong>safe</strong></div>
+  <div class="run-status" id="run-status">Status: idle</div>
   <div class="stats">
     <div><strong id="extracted">0</strong><span>Extracted</span></div>
     <div><strong id="upserted">0</strong><span>Saved</span></div>
     <div><strong id="failed">0</strong><span>Failed</span></div>
   </div>
+  <div class="diag">
+    <div><span>Challenge</span><strong id="diag-challenge">no</strong></div>
+    <div><span>Details</span><strong id="diag-details">0 / 0</strong></div>
+    <div><span>Last reason</span><strong id="diag-reason">none</strong></div>
+    <div><span>Activity</span><strong id="diag-activity">idle</strong></div>
+    <div><span>Page title</span><strong id="diag-title">n/a</strong></div>
+    <div><span>Selector</span><strong id="diag-selector">n/a</strong></div>
+    <div><span>Anchors/rows</span><strong id="diag-counts">0 / 0</strong></div>
+    <div><span>Range/total</span><strong id="diag-range">0 - 0 / 0</strong></div>
+    <div><span>Last URL</span><strong id="diag-url">n/a</strong></div>
+  </div>
+  <div class="field">
+    <label for="mode">Mode</label>
+    <select id="mode">
+      <option value="card_only">Card-only</option>
+      <option value="detailed">Detailed</option>
+    </select>
+  </div>
   <textarea id="makes" placeholder="One model/make per line (optional)"></textarea>
+  <label class="checkline"><input id="start-fresh" type="checkbox" /> Start fresh (ignore checkpoint)</label>
   <div class="actions">
     <button id="start">Start</button>
     <button id="stop">Stop</button>

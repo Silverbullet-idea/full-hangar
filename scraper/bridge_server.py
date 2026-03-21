@@ -8,6 +8,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from datetime import date, datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -27,6 +28,18 @@ except Exception:  # pragma: no cover
     def parse_description(text: str, observed_price: int | float | None = None) -> dict[str, Any]:
         return {}
 
+try:
+    from registration_parser import apply_registration_fields
+except Exception:  # pragma: no cover
+    def apply_registration_fields(
+        target: dict[str, Any],
+        raw_value: str | None,
+        fallback_text: str | None = None,
+        *,
+        keep_existing_n_number: bool = True,
+    ) -> dict[str, Any]:
+        return target
+
 SOURCE_SITE = "controller"
 ROOT_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = ROOT_DIR / "scraper" / "logs"
@@ -34,6 +47,7 @@ STATE_DIR = ROOT_DIR / "scraper" / "state"
 LOG_FILE = LOG_DIR / "bridge_server.log"
 CHECKPOINT_FILE = STATE_DIR / "bridge_checkpoint.json"
 LOG = logging.getLogger("bridge_server")
+TABLE_COLUMNS_CACHE: dict[str, set[str]] = {}
 
 
 def normalize_manufacturer(value: Any) -> str:
@@ -57,19 +71,65 @@ def get_supabase() -> Any:
 def safe_upsert_with_fallback(*, supabase: Any, table: str, rows: list[dict[str, Any]], on_conflict: str, logger: logging.Logger) -> int:
     if not rows:
         return 0
+    working_rows = [dict(r) for r in rows]
+    removed_columns: set[str] = set()
+    missing_col_pattern = re.compile(r"Could not find the '([^']+)' column", re.IGNORECASE)
+
+    def _extract_missing_column(exc: Exception) -> str | None:
+        text = str(exc)
+        match = missing_col_pattern.search(text)
+        if match:
+            return match.group(1)
+        return None
+
     try:
-        supabase.table(table).upsert(rows, on_conflict=on_conflict).execute()
-        return len(rows)
+        while working_rows:
+            try:
+                supabase.table(table).upsert(working_rows, on_conflict=on_conflict).execute()
+                return len(working_rows)
+            except Exception as exc:
+                missing_col = _extract_missing_column(exc)
+                if missing_col and missing_col not in removed_columns:
+                    removed_columns.add(missing_col)
+                    logger.warning("Dropping unknown column '%s' and retrying bulk upsert.", missing_col)
+                    for row in working_rows:
+                        row.pop(missing_col, None)
+                    continue
+                raise
     except Exception as exc:
         logger.warning("Bulk upsert failed; falling back row-by-row: %s", exc)
         saved = 0
-        for row in rows:
+        for original_row in working_rows:
+            row = dict(original_row)
             try:
                 supabase.table(table).upsert(row, on_conflict=on_conflict).execute()
                 saved += 1
             except Exception as row_exc:
+                missing_col = _extract_missing_column(row_exc)
+                if missing_col:
+                    row.pop(missing_col, None)
+                    try:
+                        supabase.table(table).upsert(row, on_conflict=on_conflict).execute()
+                        saved += 1
+                        continue
+                    except Exception as retry_exc:
+                        logger.warning("Row upsert failed for %s after dropping '%s': %s", row.get("source_id"), missing_col, retry_exc)
+                        continue
                 logger.warning("Row upsert failed for %s: %s", row.get("source_id"), row_exc)
         return saved
+
+
+def fetch_table_columns_via_sample(supabase: Any, table: str) -> set[str]:
+    cached = TABLE_COLUMNS_CACHE.get(table)
+    if cached:
+        return cached
+    rows = supabase.table(table).select("*").limit(1).execute().data or []
+    if not rows:
+        TABLE_COLUMNS_CACHE[table] = set()
+        return set()
+    columns = {str(k).strip() for k in rows[0].keys()}
+    TABLE_COLUMNS_CACHE[table] = columns
+    return columns
 
 
 class BridgeState:
@@ -106,7 +166,7 @@ def write_checkpoint(state: BridgeState) -> None:
     CHECKPOINT_FILE.write_text(json.dumps(state.to_dict(), indent=2, ensure_ascii=True), encoding="utf-8")
 
 
-def normalize_row(raw: dict[str, Any], existing: set[str]) -> tuple[dict[str, Any] | None, str | None]:
+def normalize_row(raw: dict[str, Any], existing_ids: set[str], allowed_columns: set[str]) -> tuple[dict[str, Any] | None, str | None]:
     row = dict(raw or {})
     row["source_site"] = SOURCE_SITE
     row["listing_source"] = row.get("listing_source") or SOURCE_SITE
@@ -128,13 +188,47 @@ def normalize_row(raw: dict[str, Any], existing: set[str]) -> tuple[dict[str, An
     row["last_seen_date"] = today
     row["is_active"] = True
     row["inactive_date"] = None
-    if source_id not in existing:
+    if source_id not in existing_ids:
         row["first_seen_date"] = today
     if row.get("price_asking") is None and row.get("asking_price") is not None:
         row["price_asking"] = row.get("asking_price")
     if row.get("asking_price") is None and row.get("price_asking") is not None:
         row["asking_price"] = row.get("price_asking")
+
+    # Normalize registration data on ingest so extension runs can feed FAA-ready US tails
+    # while preserving non-US registrations in canonical registration_* fields.
+    reg_seed = str(row.get("registration_raw") or row.get("n_number") or "").strip()
+    fallback_parts = [
+        row.get("title"),
+        row.get("description"),
+        row.get("description_full"),
+        row.get("specs_text"),
+        row.get("location_raw"),
+    ]
+    fallback_text = " ".join(str(v or "") for v in fallback_parts).strip()
+    apply_registration_fields(
+        row,
+        raw_value=reg_seed,
+        fallback_text=fallback_text if fallback_text else None,
+        keep_existing_n_number=True,
+    )
+
     normalized = {k: v for k, v in row.items() if not str(k).startswith("_")}
+    if allowed_columns:
+        unknown_fields = {k: v for k, v in normalized.items() if k not in allowed_columns}
+        filtered = {k: v for k, v in normalized.items() if k in allowed_columns}
+        if unknown_fields and "raw_data" in allowed_columns:
+            prior_raw = filtered.get("raw_data")
+            if isinstance(prior_raw, dict):
+                raw_data = dict(prior_raw)
+            else:
+                raw_data = {}
+            raw_data["bridge_unmapped"] = unknown_fields
+            raw_data["bridge_unmapped_keys"] = sorted(unknown_fields.keys())
+            raw_data["bridge_source"] = SOURCE_SITE
+            raw_data["bridge_captured_at"] = datetime.now(timezone.utc).isoformat()
+            filtered["raw_data"] = raw_data
+        normalized = filtered
     return normalized, None
 
 
@@ -155,11 +249,12 @@ def fetch_existing_ids(supabase: Any, ids: list[str]) -> set[str]:
 
 def upsert_rows(supabase: Any, rows: list[dict[str, Any]], dry_run: bool) -> tuple[int, int]:
     ids = [str(r.get("source_id") or r.get("source_listing_id") or "").strip() for r in rows]
-    existing = fetch_existing_ids(supabase, [i for i in ids if i])
+    existing_ids = fetch_existing_ids(supabase, [i for i in ids if i])
+    allowed_columns = fetch_table_columns_via_sample(supabase, "aircraft_listings")
     prepared: list[dict[str, Any]] = []
     errors = 0
     for row in rows:
-        normalized, err = normalize_row(row, existing)
+        normalized, err = normalize_row(row, existing_ids, allowed_columns)
         if err:
             errors += 1
             continue

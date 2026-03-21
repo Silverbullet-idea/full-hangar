@@ -1,0 +1,16 @@
+{
+  "computed_at": "2026-03-14T06:00:48.040545+00:00",
+  "dry_run": false,
+  "promote_n_number": true,
+  "scanned": 8986,
+  "changed": 674,
+  "applied": 674,
+  "scheme_breakdown": {
+    "UNKNOWN": 642,
+    "US_N": 18,
+    "OTHER": 2,
+    "UK_G": 11,
+    "DE_D": 1
+  },
+  "source_breakdown": {}
+}
