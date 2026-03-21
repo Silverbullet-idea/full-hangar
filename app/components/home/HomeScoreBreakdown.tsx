@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { normalizeHomeCurrency } from "./normalizeHomeCurrency"
 
 const PILLARS = [
   {
@@ -71,8 +70,8 @@ export default function HomeScoreBreakdown() {
           <ul className="mt-6 space-y-2">
             <li className="text-xs text-[#4ade80]">↑ 12% below market comp range</li>
             <li className="text-xs text-[#4ade80]">↑ Engine at 78% remaining life</li>
-            <li className="text-xs text-[#4ade80]">{normalizeHomeCurrency("↑ GTN 750 confirmed (adds ~$14K)")}</li>
-            <li className="text-xs text-red-400">{normalizeHomeCurrency("↓ Annual due in 45 days ($1,200 est.)")}</li>
+            <li className="text-xs text-[#4ade80]">↑ GTN 750 confirmed (adds ~$14K)</li>
+            <li className="text-xs text-red-400">↓ Annual due in 45 days ($1,200 est.)</li>
           </ul>
         </div>
 
@@ -99,9 +98,9 @@ export default function HomeScoreBreakdown() {
             </div>
           ))}
 
-          <div className="rounded-xl border border-brand-dark bg-[#161f2d] p-4">
-            <h3 className="text-sm font-extrabold text-brand-white">Confidence Layering</h3>
-            <p className="mt-2 text-xs leading-relaxed text-brand-muted">
+          <div className="rounded-xl border border-[#2B3444] bg-[#161f2d] p-4">
+            <h3 className="text-sm font-extrabold text-[#ffffff]">Confidence Layering</h3>
+            <p className="mt-2 text-xs leading-relaxed text-[#9AA4B2]">
               Every score includes a Data Confidence and Pricing Confidence indicator — so you always know how much signal is behind the
               number, not just what the number is.
             </p>

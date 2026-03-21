@@ -38,31 +38,31 @@ export default function HomeStatsBar() {
   }, [])
 
   return (
-    <section ref={statsRef} className="border-y border-brand-dark bg-card-bg py-8">
+    <section ref={statsRef} className="border-y border-[#2B3444] bg-[#121923] py-8">
       <div className="mx-auto grid max-w-[1100px] grid-cols-2 gap-6 px-6 lg:grid-cols-4">
         <div>
-          <div id="s-listings" className="text-[2.2rem] font-extrabold leading-none text-brand-orange">
+          <div id="s-listings" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
             0
           </div>
-          <p className="mt-1 text-xs text-brand-muted">Live listings tracked</p>
+          <p className="mt-1 text-xs text-[#9AA4B2]">Live listings tracked</p>
         </div>
         <div>
-          <div id="s-faa" className="text-[2.2rem] font-extrabold leading-none text-brand-orange">
+          <div id="s-faa" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
             0
           </div>
-          <p className="mt-1 text-xs text-brand-muted">FAA registry records</p>
+          <p className="mt-1 text-xs text-[#9AA4B2]">FAA registry records</p>
         </div>
         <div>
-          <div id="s-tbo" className="text-[2.2rem] font-extrabold leading-none text-brand-orange">
+          <div id="s-tbo" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
             0
           </div>
-          <p className="mt-1 text-xs text-brand-muted">Engine TBO references</p>
+          <p className="mt-1 text-xs text-[#9AA4B2]">Engine TBO references</p>
         </div>
         <div>
-          <div id="s-sources" className="text-[2.2rem] font-extrabold leading-none text-brand-orange">
+          <div id="s-sources" className="text-[2.2rem] font-extrabold leading-none text-[#ffffff]">
             0
           </div>
-          <p className="mt-1 text-xs text-brand-muted">Data sources scraped daily</p>
+          <p className="mt-1 text-xs text-[#9AA4B2]">Data sources scraped daily</p>
         </div>
       </div>
     </section>

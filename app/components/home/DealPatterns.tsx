@@ -1,5 +1,3 @@
-import { normalizeHomeCurrency } from "./normalizeHomeCurrency"
-
 const DEALS = [
   {
     icon: "🔧",
@@ -35,16 +33,14 @@ export default function DealPatterns() {
         {DEALS.map((d) => (
           <article
             key={d.title}
-            className="rounded-2xl border border-brand-dark bg-[#161f2d] p-6 transition-all hover:-translate-y-0.5 hover:border-brand-orange"
+            className="rounded-2xl border border-[#2B3444] bg-[#161f2d] p-6 transition-all hover:-translate-y-0.5 hover:border-brand-orange"
           >
             <div className="mb-4 text-3xl" aria-hidden>
               {d.icon}
             </div>
-            <h3 className="mb-2 text-base font-extrabold text-brand-white">{d.title}</h3>
-            <p className="text-sm leading-relaxed text-brand-muted">{normalizeHomeCurrency(d.body)}</p>
-            <p className="mt-4 rounded-lg border border-[#FF9900]/15 bg-[#FF9900]/10 px-3 py-2.5 text-xs text-[#FF9900]">
-              {normalizeHomeCurrency(d.tag)}
-            </p>
+            <h3 className="mb-2 text-base font-extrabold text-[#ffffff]">{d.title}</h3>
+            <p className="text-sm leading-relaxed text-[#9AA4B2]">{d.body}</p>
+            <p className="mt-4 rounded-lg border border-[#FF9900]/15 bg-[#FF9900]/10 px-3 py-2.5 text-xs text-[#FF9900]">{d.tag}</p>
           </article>
         ))}
       </div>

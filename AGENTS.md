@@ -82,6 +82,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Homepage redesign shipped: ticker bar, updated hero copy + score card mockup, Carfax one-liner banner, animated stats counters, market infographic grid (6 cards), how-it-works 3-step, deal patterns 3-card, score breakdown with pillar bars, testimonial restyle, footer CTA update. No backend changes.
 - Homepage bug fixes: corrected double-$ price strings, ticker bar now full-bleed via `calc(-50vw + 50%)` margin breakout, score card pillar bar colors corrected (orange/green/amber).
 - Homepage pass 2 fixes: remaining double-dollar price strings cleared, footer CTA h2 `text-brand-white` → `text-[#ffffff]` + sub-copy `text-white/70` for light-mode readability on dark gradient (`text-white` is remapped in light theme in `globals.css`); `HomeStatsBar` / `HomeScoreBreakdown` client render verified.
+- Homepage pass 3: score card hardcoded dark in both themes (bg/ring/bars/text), deal pattern card headings use `text-[#ffffff]` on `#161f2d`, stats bar always `#121923` with white numerals and `#9AA4B2` labels, hero h1 `#ffffff`, proof pills polished above CTAs with `#9AA4B2`, price strings as clean literals (score card + infographics), confidence box text on dark surface fixed.
 
 ### Backend, Pipeline, and Data Sources
 
