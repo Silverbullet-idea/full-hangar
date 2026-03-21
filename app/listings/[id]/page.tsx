@@ -563,12 +563,18 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   }
 
   return (
-    <main className="container">
+    <main className="container max-w-full overflow-x-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(detailJsonLd) }}
       />
-      <p>
+      <Link
+        href={backToListingsHref}
+        className="mb-4 flex min-h-[44px] max-w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground md:hidden"
+      >
+        ← Back to listings
+      </Link>
+      <p className="mb-4 hidden md:block">
         <Link href={backToListingsHref}>← Back to listings</Link>
       </p>
 
@@ -584,6 +590,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
       {fractionalPricingNote ? <p className="fractional-pricing-note">{fractionalPricingNote}</p> : null}
 
       <div className="detail-grid">
+        <div className="detail-grid-left order-2 min-w-0 md:order-1">
         <LeftDetailColumn
           primaryImageUrl={primaryImageUrl}
           galleryUrls={galleryUrls}
@@ -609,6 +616,8 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             showCalendarWarning: showEngineCalendarWarning,
           }}
         />
+        </div>
+        <div className="detail-grid-right order-1 min-w-0 md:order-2">
         <RightDetailColumn
           listingId={id}
           askingPrice={resolvedAskingPrice}
@@ -654,6 +663,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           faaRows={faaRows}
           faaLookupUrl={faaLookupUrl}
         />
+        </div>
       </div>
       <div style={{ marginTop: "1rem" }}>
         <DealDeskCard

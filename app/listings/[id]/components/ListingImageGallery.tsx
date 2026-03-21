@@ -141,7 +141,7 @@ export default function ListingImageGallery({
         <button
           type="button"
           onClick={() => openModalAt(0)}
-          className={`relative block w-full text-left ${hasMultipleImages ? "cursor-zoom-in" : "cursor-default"}`}
+          className={`relative block min-h-[44px] w-full text-left ${hasMultipleImages ? "cursor-zoom-in" : "cursor-default"}`}
           title={hasMultipleImages ? "Open image carousel" : undefined}
           aria-label={hasMultipleImages ? "Open image carousel" : "Listing image"}
         >
@@ -170,13 +170,13 @@ export default function ListingImageGallery({
       </div>
 
       {effectiveImageUrls.length > 1 ? (
-        <div className="image-gallery-grid">
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch] snap-x snap-mandatory md:mt-[0.8rem] md:grid md:max-w-none md:grid-cols-3 md:gap-[0.6rem] md:overflow-visible md:pb-0">
           {effectiveImageUrls.slice(1).map((url, index) => (
             <button
               key={url}
               type="button"
               onClick={() => openModalAt(index + 1)}
-              className="relative block cursor-zoom-in"
+              className="relative block w-72 shrink-0 cursor-zoom-in snap-start md:w-auto md:shrink"
               title={`Open image ${index + 2}`}
               aria-label={`Open image ${index + 2}`}
             >

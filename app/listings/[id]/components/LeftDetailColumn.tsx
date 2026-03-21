@@ -273,45 +273,49 @@ export default function LeftDetailColumn({
   ]
 
   return (
-    <section className="panel">
-      <ListingImageGallery
-        title={title || "Aircraft listing"}
-        imageUrls={imageUrls}
-        dealTier={dealTier}
-        fallbackImageUrl={fallbackImageUrl}
-      />
-
-      <div style={{ marginTop: '0.9rem', display: 'grid', gap: '0.9rem' }}>
+    <section className="panel flex flex-col">
+      <div className="order-1 flex flex-col gap-[0.9rem] md:order-2">
         <DetailTableCard title="Aircraft Details" rows={aircraftRows} />
         <DetailTableCard title="Airframe & Engine" rows={engineRows} />
         {engineValuePanel ? <EngineValuePanel {...engineValuePanel} /> : null}
       </div>
 
-      <h3>Seller Description</h3>
-      <p>{descriptionText || 'No description available.'}</p>
+      <div className="order-2 space-y-2 md:order-3">
+        <h3>Seller Description</h3>
+        <p>{descriptionText || 'No description available.'}</p>
 
-      {sourceUrl ? (
-        <p>
-          <a className="button-link" href={sourceUrl} target="_blank" rel="noreferrer">
-            {sourceLinkLabel}
-          </a>
-        </p>
-      ) : null}
+        {sourceUrl ? (
+          <p>
+            <a className="button-link inline-flex min-h-[44px] min-w-[44px] items-center justify-center" href={sourceUrl} target="_blank" rel="noreferrer">
+              {sourceLinkLabel}
+            </a>
+          </p>
+        ) : null}
 
-      {logbookUrls.length > 0 ? (
-        <div style={{ marginTop: '1rem' }}>
-          <h3>Logbooks & Records</h3>
-          <ul>
-            {logbookUrls.map((url, index) => (
-              <li key={url}>
-                <a href={url} target="_blank" rel="noreferrer">
-                  {`Record ${index + 1}`}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+        {logbookUrls.length > 0 ? (
+          <div style={{ marginTop: '1rem' }}>
+            <h3>Logbooks & Records</h3>
+            <ul>
+              {logbookUrls.map((url, index) => (
+                <li key={url}>
+                  <a className="inline-flex min-h-[44px] items-center" href={url} target="_blank" rel="noreferrer">
+                    {`Record ${index + 1}`}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="order-3 w-full min-w-0 md:order-1">
+        <ListingImageGallery
+          title={title || "Aircraft listing"}
+          imageUrls={imageUrls}
+          dealTier={dealTier}
+          fallbackImageUrl={fallbackImageUrl}
+        />
+      </div>
     </section>
   )
 }

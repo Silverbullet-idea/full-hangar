@@ -68,23 +68,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           suppressHydrationWarning
         />
       </head>
-      <body className="min-h-screen bg-brand-black text-white" suppressHydrationWarning>
+      <body className="min-h-screen overflow-x-hidden bg-brand-black text-white" suppressHydrationWarning>
         <ThemeProvider>
           <Suspense fallback={null}>
             <NavigationLoadingProvider>
-              <header className="border-b border-brand-dark bg-brand-black px-6 py-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-                  <a href="/" className="flex items-center" aria-label="Full Hangar home">
+              <header className="border-b border-brand-dark bg-brand-black px-4 py-3 sm:px-6 sm:py-4">
+                <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+                  <a href="/" className="flex shrink-0 items-center" aria-label="Full Hangar home">
                     <HeaderBrand />
                   </a>
-                  <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
-                    <HeaderSearchBar />
-                    <nav>
-                      <div className="flex items-center gap-3">
-                        <a href="/internal/login" className="text-sm text-brand-muted hover:text-brand-orange">
+                  <div className="flex min-w-0 w-full flex-1 basis-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:basis-auto sm:gap-3 md:flex-nowrap">
+                    <div className="min-w-0 flex-1 basis-[min(100%,280px)] sm:max-w-[560px]">
+                      <HeaderSearchBar />
+                    </div>
+                    <nav className="shrink-0">
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm">
+                        <a href="/internal/login" className="whitespace-nowrap text-brand-muted hover:text-brand-orange">
                           Admin Login
                         </a>
-                        <a href="/beta/join" className="text-sm text-brand-muted hover:text-brand-orange">
+                        <a href="/beta/join" className="whitespace-nowrap text-brand-muted hover:text-brand-orange">
                           Beta Login
                         </a>
                       </div>
@@ -93,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </div>
               </header>
-              <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
+              <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">{children}</main>
             </NavigationLoadingProvider>
           </Suspense>
         </ThemeProvider>

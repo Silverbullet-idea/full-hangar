@@ -66,8 +66,8 @@ type RightDetailColumnProps = {
 
 export default function RightDetailColumn(props: RightDetailColumnProps) {
   return (
-    <div className="panel-stack">
-      <section className="table-card">
+    <div className="panel-stack flex flex-col">
+      <section className="table-card order-2 md:order-1">
         <h3 className="section-title">Comp & Cost</h3>
         {typeof props.askingPrice === 'number' && props.askingPrice > 0 ? (
           <div style={{ marginBottom: '0.75rem' }}>
@@ -101,10 +101,12 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
         <div style={{ marginBottom: '0.55rem', fontSize: '0.9rem', fontWeight: 700, color: '#FF9900' }}>
           Comparable Market Intelligence
         </div>
-        <CompsChartPanel listingId={props.listingId} hideChrome />
+        <div className="w-full max-w-full overflow-x-hidden">
+          <CompsChartPanel listingId={props.listingId} hideChrome />
+        </div>
       </section>
 
-      <section className="panel">
+      <section className="panel order-1 md:order-2">
         <h3>Score Summary</h3>
         <div className="score-badge" style={{ borderColor: props.scoreColor, boxShadow: `0 0 0 6px ${props.scoreColor}20 inset` }}>
           <div className="score-readout">
@@ -148,7 +150,10 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </ul>
           )}
         </div>
-        <div style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}>
+        <div
+          className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
+          style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}
+        >
           <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
             {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
           </div>
@@ -206,7 +211,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
       </section>
 
       {props.showAvionicsPanel ? (
-        <section className="table-card">
+        <section className="table-card order-4 md:order-3">
           <h3 className="section-title">Avionics & Modifications</h3>
           <div className="price-history-metrics">
             <div><strong>{props.safeDisplay(props.formatMoney(props.installedAvionicsValue))}</strong><div className="metric-label">Installed avionics value</div></div>
@@ -247,7 +252,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
       ) : null}
 
       {props.priceHistory.length > 0 ? (
-        <section className="table-card">
+        <section className="table-card order-5 md:order-4">
           <h3 className="section-title">Price History</h3>
           <div className="price-history-metrics">
             <div><strong>{props.safeDisplay(props.formatMoney(props.priceHistoryStats.latestPrice))}</strong><div className="metric-label">Latest ask</div></div>
@@ -300,7 +305,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
       ) : null}
 
       {props.showFaaSnapshot ? (
-        <section className="table-card">
+        <section className="table-card order-3 md:order-5">
           <h3 className="section-title">FAA Snapshot & Verification</h3>
           {props.verificationFlags.length > 0 ? (
             <div style={{ display: 'grid', gap: '0.45rem', marginBottom: '0.8rem' }}>

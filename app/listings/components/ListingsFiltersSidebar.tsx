@@ -17,6 +17,8 @@ type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
 type ListingsFiltersSidebarProps = {
+  className?: string
+  embedded?: boolean
   makeFilter: string
   setMakeFilter: (value: string) => void
   modelFilter: string
@@ -60,6 +62,8 @@ type ListingsFiltersSidebarProps = {
 }
 
 export default function ListingsFiltersSidebar({
+  className = '',
+  embedded = false,
   makeFilter,
   setMakeFilter,
   modelFilter,
@@ -112,8 +116,10 @@ export default function ListingsFiltersSidebar({
   }
 
   return (
-    <aside className="h-fit rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-4">
-      <div className="mb-3 text-sm font-semibold text-white">Filters</div>
+    <aside
+      className={`h-fit rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-4 ${embedded ? 'border-0 bg-transparent p-0' : ''} ${className}`.trim()}
+    >
+      {!embedded ? <div className="mb-3 text-sm font-semibold text-white">Filters</div> : null}
       <div className="flex flex-col gap-3">
         <label className="text-xs text-brand-muted">
           Make
@@ -491,20 +497,24 @@ export default function ListingsFiltersSidebar({
             <option value="critical">Critical</option>
           </select>
         </label>
-        <button
-          type="button"
-          onClick={onResetFilters}
-          className="rounded border border-[#3A4454] bg-transparent px-3 py-2 text-sm text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]"
-        >
-          Reset Filters
-        </button>
-        <button
-          type="button"
-          onClick={onApplyFilters}
-          className="rounded border border-[#FF9900] bg-[#FF9900] px-3 py-2 text-sm font-bold text-black hover:bg-[#AF4D27] hover:text-white"
-        >
-          Search
-        </button>
+        {embedded ? null : (
+          <>
+            <button
+              type="button"
+              onClick={onResetFilters}
+              className="rounded border border-[#3A4454] bg-transparent px-3 py-2 text-sm text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]"
+            >
+              Reset Filters
+            </button>
+            <button
+              type="button"
+              onClick={onApplyFilters}
+              className="rounded border border-[#FF9900] bg-[#FF9900] px-3 py-2 text-sm font-bold text-black hover:bg-[#AF4D27] hover:text-white"
+            >
+              Search
+            </button>
+          </>
+        )}
       </div>
     </aside>
   )

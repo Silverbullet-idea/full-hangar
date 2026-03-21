@@ -77,6 +77,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - `/beta/join` now supports Google Sign-In for authorized users listed in `admin_users`.
 - `/internal/admin` now includes source-level inventory detail view (table, completeness tiers, unknown-domain disambiguation, and 15-field coverage heatmap).
 - Geographic Intelligence section (market-intel Section 5) upgraded from plain table to interactive SVG choropleth map with state-level color encoding, listing count circles, hover tooltips, non-US footnote table, and full dark/light theme parity. New component: `app/components/GeoIntelMap.tsx`. State path data at `lib/geo/us-states-albers.ts`.
+- Mobile responsiveness pass shipped: listings page now has a bottom-sheet filter drawer on mobile (< 768px) with active-filter badge count, replacing the sidebar; listing detail page comps chart fixed for narrow viewport overflow, comps table columns hide on mobile, gallery images use CSS snap horizontal scroll, touch targets audited to 44px minimum; Deal Desk sensitivity grid is desktop-only with mobile fallback message, all 9 sections are single-column on mobile, number inputs have `inputMode="numeric"`, sticky P&L summary bar added for mobile; global header overflow verified; back-nav link added to listing detail on mobile. Full dark/light theme parity maintained throughout.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -224,7 +225,7 @@ Each item should stay one-line actionable with clear completion criteria.
 ### Low Priority / Future
 
 - **DS-9 YouTube Prototype:** transcript-mining proof of concept and confidence-labeled report.
-- **User-facing roadmap:** auth/saved searches, marketing home page, pre-buy export, mobile polish.
+- **User-facing roadmap:** auth/saved searches, marketing home page, pre-buy export. Mobile polish: ✅ core pass complete — next: performance (ISR + image optimization).
 
 ---
 

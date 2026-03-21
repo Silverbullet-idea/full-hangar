@@ -2,11 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
-  LabelList,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -121,7 +117,7 @@ function getRiskColor(risk: string | null): string {
   return "#9ca3af";
 }
 
-function useIsMobile(breakpointPx = 640): boolean {
+function useIsMobile(breakpointPx = 767): boolean {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const media = window.matchMedia(`(max-width: ${breakpointPx}px)`);
@@ -268,18 +264,6 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       .filter((row) => hasValidPrice(row.price) && !hasValidY(row[yMetric]))
       .slice(0, 10);
   }, [payload, viewMode, yMetric]);
-
-  const mobileBars = useMemo(() => {
-    if (!payload) return [];
-    return payload.comps
-      .map((row) => ({
-        id: String(row.id ?? `${row.make}-${row.model}-${row.year}`),
-        name: `${row.year ?? "?"} ${row.make ?? ""} ${row.model ?? ""}`.trim(),
-        valueScore: row.value_score ?? 0,
-      }))
-      .sort((a, b) => b.valueScore - a.valueScore)
-      .slice(0, 10);
-  }, [payload]);
 
   const plottingStats = useMemo(() => {
     if (!payload) return null;
@@ -451,21 +435,19 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
 
   const body = (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: "0.55rem" }}>
+      <div className="flex flex-wrap items-center justify-between gap-2" style={{ marginBottom: "0.55rem" }}>
         {!hideChrome ? <h3 className="comps-title">Comparable Market Intelligence</h3> : <div style={{ fontSize: "0.82rem", color: "var(--brand-muted)" }}>Comparable Market Intelligence</div>}
-        <div style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <div style={{ display: "inline-flex", border: "1px solid var(--brand-dark)", borderRadius: 8, overflow: "hidden" }}>
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+          <div className="inline-flex min-h-[44px] rounded-lg border border-[var(--brand-dark)] md:min-h-0" style={{ overflow: "hidden" }}>
             <button
               type="button"
               onClick={() => setViewMode("time")}
+              className="min-h-[44px] min-w-[44px] px-2 py-2 text-[0.73rem] font-bold md:min-h-0 md:min-w-0 md:px-[0.45rem] md:py-[0.28rem]"
               style={{
                 border: "none",
                 borderRight: "1px solid var(--brand-dark)",
-                padding: "0.28rem 0.45rem",
                 background: viewMode === "time" ? "#FF9900" : "var(--card-bg)",
                 color: viewMode === "time" ? "#000000" : "var(--brand-muted)",
-                fontSize: "0.73rem",
-                fontWeight: 700,
                 cursor: "pointer",
               }}
             >
@@ -474,13 +456,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
             <button
               type="button"
               onClick={() => setViewMode("year")}
+              className="min-h-[44px] min-w-[44px] px-2 py-2 text-[0.73rem] font-bold md:min-h-0 md:min-w-0 md:px-[0.45rem] md:py-[0.28rem]"
               style={{
                 border: "none",
-                padding: "0.28rem 0.45rem",
                 background: viewMode === "year" ? "#FF9900" : "var(--card-bg)",
                 color: viewMode === "year" ? "#000000" : "var(--brand-muted)",
-                fontSize: "0.73rem",
-                fontWeight: 700,
                 cursor: "pointer",
               }}
             >
@@ -491,19 +471,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
             type="button"
             onClick={() => setSubmodelOnly((prev) => !prev)}
             title={submodelOnly ? "Currently exact sub-model only. Click to compare all related models." : "Currently showing broader related models. Click for exact sub-model only."}
+            className="inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-lg border border-[var(--brand-dark)] px-2 py-2 text-left text-[0.7rem] font-bold md:max-w-none md:min-h-0 md:gap-1.5 md:px-[0.45rem] md:py-[0.28rem] md:text-[0.73rem]"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              border: "1px solid var(--brand-dark)",
-              borderRadius: 8,
-              padding: "0.28rem 0.45rem",
               background: submodelOnly ? "#FF9900" : "var(--card-bg)",
               color: submodelOnly ? "#000000" : "var(--brand-muted)",
-              fontSize: "0.73rem",
-              fontWeight: 700,
               cursor: "pointer",
-              whiteSpace: "nowrap",
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -516,22 +488,22 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
         </div>
       </div>
 
-      {!isMobile ? (
-        <div
-          ref={chartContainerRef}
-          style={{ position: "relative", width: "100%", height: 300 }}
-          onMouseEnter={() => setIsHoveringChart(true)}
-          onMouseLeave={() => {
-            setIsHoveringChart(false);
-            if (!isHoveringCard) {
-              setActivePoint(null);
-              setActivePointPosition(null);
-            }
-          }}
-        >
-          <ResponsiveContainer>
+      <div
+        ref={chartContainerRef}
+        className="w-full max-w-full overflow-x-hidden"
+        style={{ position: "relative", width: "100%", height: isMobile ? 260 : 300 }}
+        onMouseEnter={() => setIsHoveringChart(true)}
+        onMouseLeave={() => {
+          setIsHoveringChart(false);
+          if (!isHoveringCard) {
+            setActivePoint(null);
+            setActivePointPosition(null);
+          }
+        }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
             <ScatterChart
-              margin={{ top: 20, right: 20, bottom: 15, left: 10 }}
+              margin={{ top: 20, right: isMobile ? 8 : 20, bottom: 15, left: isMobile ? 0 : 10 }}
               onMouseMove={(state: any) => {
                 const point = state?.activePayload?.[0]?.payload as ScatterPoint | undefined;
                 if (point) {
@@ -702,24 +674,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               </div>
             )
           ) : null}
-        </div>
-      ) : (
-        <div style={{ width: "100%", height: 300 }}>
-          <ResponsiveContainer>
-            <BarChart data={mobileBars} layout="vertical" margin={{ top: 8, right: 20, bottom: 8, left: 20 }}>
-              <CartesianGrid stroke={gridColor} strokeOpacity={0.38} horizontal={false} />
-              <XAxis type="number" stroke={axisTextColor} tick={{ fill: axisTextColor, fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" width={130} stroke={axisTextColor} tick={{ fill: axisTextColor, fontSize: 11 }} />
-              <Bar dataKey="valueScore" radius={[0, 6, 6, 0]}>
-                {mobileBars.map((entry) => (
-                  <Cell key={entry.id} fill={entry.valueScore >= 80 ? "#16a34a" : entry.valueScore >= 60 ? "#84cc16" : entry.valueScore >= 40 ? "#d97706" : "#dc2626"} />
-                ))}
-                <LabelList dataKey="valueScore" position="right" fill={readableBodyTextColor} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      </div>
 
       <div className="comps-metric-label" style={{ marginTop: "0.7rem" }}>
         {`Comparing against ${payload.metadata.comp_count} similar aircraft · Price range ${formatMoney(priceRange.min)}-${formatMoney(priceRange.max)} · Median ${formatMoney(priceRange.median)}`}
@@ -732,11 +687,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
           <div style={{ fontSize: "0.82rem", color: "#FF9900", fontWeight: 800, padding: "0.5rem 0.6rem", borderBottom: "1px solid var(--brand-dark)", background: "var(--surface-muted)" }}>
             Market Comps Table
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.76rem" }}>
+          <div className="w-full max-w-full overflow-x-hidden md:overflow-x-auto">
+            <table className="w-full table-fixed border-collapse text-[0.76rem] md:table-auto" style={{ fontSize: "0.76rem" }}>
               <thead>
                 <tr style={{ background: "var(--surface-muted)" }}>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Aircraft</th>
+                  <th className="min-w-0" style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>Aircraft</th>
                   <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
                     <button
                       type="button"
@@ -748,7 +703,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                         setMarketCompsSortKey("price");
                         setMarketCompsSortDirection("asc");
                       }}
-                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center bg-transparent md:min-h-0 md:min-w-0"
+                      style={{ border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
                       title="Sort by price (low/high)"
                     >
                       {`Price ${marketCompsSortKey === "price" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
@@ -765,13 +721,14 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                         setMarketCompsSortKey("year");
                         setMarketCompsSortDirection("asc");
                       }}
-                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center bg-transparent md:min-h-0 md:min-w-0"
+                      style={{ border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
                       title="Sort by year (old/new)"
                     >
                       {`Year ${marketCompsSortKey === "year" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
                     </button>
                   </th>
-                  <th style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
+                  <th className="hidden md:table-cell" style={{ textAlign: "left", padding: "0.4rem 0.55rem", color: "var(--brand-muted)" }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -782,7 +739,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                         setMarketCompsSortKey("totalTimeHours");
                         setMarketCompsSortDirection("asc");
                       }}
-                      style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center bg-transparent md:min-h-0 md:min-w-0"
+                      style={{ border: "none", color: "inherit", cursor: "pointer", fontWeight: 700, padding: 0 }}
                       title="Sort by total time (low/high)"
                     >
                       {`TT ${marketCompsSortKey === "totalTimeHours" ? (marketCompsSortDirection === "asc" ? "▲" : "▼") : ""}`}
@@ -793,7 +751,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
               <tbody>
                 {marketCompsTableRows.map((row, index) => (
                   <tr key={`${row.id ?? row.label}-${index}`} style={{ borderTop: "1px solid var(--brand-dark)" }}>
-                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>
+                    <td className="min-w-0 break-words" style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>
                       {row.id ? (
                         <a href={`/listings/${encodeURIComponent(row.id)}`} style={{ color: readableBodyTextColor, textDecorationColor: "var(--brand-muted)" }}>
                           {row.label}
@@ -805,7 +763,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     </td>
                     <td style={{ padding: "0.45rem 0.55rem", color: "#86efac", fontWeight: 700 }}>{formatMoney(row.price)}</td>
                     <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{typeof row.year === "number" ? row.year : "N/A"}</td>
-                    <td style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{formatHours(row.totalTimeHours)}</td>
+                    <td className="hidden md:table-cell" style={{ padding: "0.45rem 0.55rem", color: readableBodyTextColor }}>{formatHours(row.totalTimeHours)}</td>
                   </tr>
                 ))}
               </tbody>

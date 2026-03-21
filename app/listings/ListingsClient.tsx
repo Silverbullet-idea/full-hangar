@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import FilterDrawer from '../components/FilterDrawer'
 import ListingCard from './components/ListingCard'
 import ListingsFiltersSidebar from './components/ListingsFiltersSidebar'
 import ListingsGridAndPagination from './components/ListingsGridAndPagination'
@@ -181,7 +182,52 @@ export default function ListingsClient({
   const [categoryFilter, setCategoryFilter] = useState<CategoryValue>(initialCategoryFilter)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('tiles')
   const [sortBy, setSortBy] = useState<SortOption>(initialSortBy)
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
   const hasSkippedInitialFetch = useRef(false)
+
+  const mobileActiveFilterCount = useMemo(() => {
+    let count = 0
+    if (categoryFilter) count += 1
+    if (appliedMakeFilter !== 'all') count += 1
+    if (appliedModelFilter.trim()) count += 1
+    if (appliedSubModelFilter.trim()) count += 1
+    if (appliedSourceFilter !== 'all') count += 1
+    if (appliedRiskFilter !== 'all') count += 1
+    if (dealFilter !== 'all') count += 1
+    if (minimumScore > 0) count += 1
+    if (appliedMinPrice > 0) count += 1
+    if (appliedMaxPrice > 0) count += 1
+    if (appliedPriceStatus !== 'all') count += 1
+    if (appliedYearMin > 0) count += 1
+    if (appliedYearMax > 0) count += 1
+    if (appliedTotalTimeMin > 0) count += 1
+    if (appliedTotalTimeMax > 0) count += 1
+    if (appliedMaintenanceBand !== 'any') count += 1
+    if (appliedEngineTime !== 'any') count += 1
+    if (appliedTrueCostMin > 0) count += 1
+    if (appliedTrueCostMax > 0) count += 1
+    return count
+  }, [
+    categoryFilter,
+    appliedMakeFilter,
+    appliedModelFilter,
+    appliedSubModelFilter,
+    appliedSourceFilter,
+    appliedRiskFilter,
+    dealFilter,
+    minimumScore,
+    appliedMinPrice,
+    appliedMaxPrice,
+    appliedPriceStatus,
+    appliedYearMin,
+    appliedYearMax,
+    appliedTotalTimeMin,
+    appliedTotalTimeMax,
+    appliedMaintenanceBand,
+    appliedEngineTime,
+    appliedTrueCostMin,
+    appliedTrueCostMax,
+  ])
 
   useEffect(() => {
     // Keep UI state in sync when URL/search params change within /listings.
@@ -827,65 +873,96 @@ export default function ListingsClient({
           setCurrentPage(1)
         }}
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <ListingsFiltersSidebar
-          makeFilter={makeFilter}
-          setMakeFilter={setMakeFilter}
-          modelFilter={modelFilter}
-          setModelFilter={setModelFilter}
-          subModelFilter={subModelFilter}
-          setSubModelFilter={setSubModelFilter}
-          sourceFilter={sourceFilter}
-          setSourceFilter={setSourceFilter}
-          dealFilter={dealFilter}
-          setDealFilter={setDealFilter}
-          priceStatus={priceStatus}
-          setPriceStatus={setPriceStatus}
-          minPrice={minPrice}
-          setMinPrice={setMinPrice}
-          maxPrice={maxPrice}
-          setMaxPrice={setMaxPrice}
-          yearMin={yearMin}
-          setYearMin={setYearMin}
-          yearMax={yearMax}
-          setYearMax={setYearMax}
-          totalTimeMin={totalTimeMin}
-          setTotalTimeMin={setTotalTimeMin}
-          totalTimeMax={totalTimeMax}
-          setTotalTimeMax={setTotalTimeMax}
-          maintenanceBand={maintenanceBand}
-          setMaintenanceBand={setMaintenanceBand}
-          engineTime={engineTime}
-          setEngineTime={setEngineTime}
-          trueCostMin={trueCostMin}
-          setTrueCostMin={setTrueCostMin}
-          trueCostMax={trueCostMax}
-          setTrueCostMax={setTrueCostMax}
-          riskFilter={riskFilter}
-          setRiskFilter={setRiskFilter}
-          makeOptions={makeOptions}
-          modelOptions={modelOptions}
-          subModelOptions={subModelOptions}
-          onResetFilters={() => {
-            setMakeFilter('all')
-            setModelFilter('')
-            setSubModelFilter('')
-            setSourceFilter('all')
-            setDealFilter('all')
-            setPriceStatus('all')
-            setMinPrice(0)
-            setMaxPrice(0)
-            setYearMin(0)
-            setYearMax(0)
-            setTotalTimeMin(0)
-            setTotalTimeMax(0)
-            setMaintenanceBand('any')
-            setEngineTime('any')
-            setTrueCostMin(0)
-            setTrueCostMax(0)
-            setRiskFilter('all')
-          }}
-          onApplyFilters={() => {
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="hidden md:block">
+          <ListingsFiltersSidebar
+            makeFilter={makeFilter}
+            setMakeFilter={setMakeFilter}
+            modelFilter={modelFilter}
+            setModelFilter={setModelFilter}
+            subModelFilter={subModelFilter}
+            setSubModelFilter={setSubModelFilter}
+            sourceFilter={sourceFilter}
+            setSourceFilter={setSourceFilter}
+            dealFilter={dealFilter}
+            setDealFilter={setDealFilter}
+            priceStatus={priceStatus}
+            setPriceStatus={setPriceStatus}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            yearMin={yearMin}
+            setYearMin={setYearMin}
+            yearMax={yearMax}
+            setYearMax={setYearMax}
+            totalTimeMin={totalTimeMin}
+            setTotalTimeMin={setTotalTimeMin}
+            totalTimeMax={totalTimeMax}
+            setTotalTimeMax={setTotalTimeMax}
+            maintenanceBand={maintenanceBand}
+            setMaintenanceBand={setMaintenanceBand}
+            engineTime={engineTime}
+            setEngineTime={setEngineTime}
+            trueCostMin={trueCostMin}
+            setTrueCostMin={setTrueCostMin}
+            trueCostMax={trueCostMax}
+            setTrueCostMax={setTrueCostMax}
+            riskFilter={riskFilter}
+            setRiskFilter={setRiskFilter}
+            makeOptions={makeOptions}
+            modelOptions={modelOptions}
+            subModelOptions={subModelOptions}
+            onResetFilters={() => {
+              setMakeFilter('all')
+              setModelFilter('')
+              setSubModelFilter('')
+              setSourceFilter('all')
+              setDealFilter('all')
+              setPriceStatus('all')
+              setMinPrice(0)
+              setMaxPrice(0)
+              setYearMin(0)
+              setYearMax(0)
+              setTotalTimeMin(0)
+              setTotalTimeMax(0)
+              setMaintenanceBand('any')
+              setEngineTime('any')
+              setTrueCostMin(0)
+              setTrueCostMax(0)
+              setRiskFilter('all')
+            }}
+            onApplyFilters={() => {
+              setAppliedMakeFilter(makeFilter)
+              setAppliedModelFilter(modelFilter)
+              setAppliedSubModelFilter(subModelFilter)
+              setAppliedSourceFilter(sourceFilter)
+              setAppliedRiskFilter(riskFilter)
+              setAppliedMinPrice(minPrice)
+              setAppliedMaxPrice(maxPrice)
+              setAppliedPriceStatus(priceStatus)
+              setAppliedYearMin(yearMin)
+              setAppliedYearMax(yearMax)
+              setAppliedTotalTimeMin(totalTimeMin)
+              setAppliedTotalTimeMax(totalTimeMax)
+              setAppliedMaintenanceBand(maintenanceBand)
+              setAppliedEngineTime(engineTime)
+              setAppliedTrueCostMin(trueCostMin)
+              setAppliedTrueCostMax(trueCostMax)
+              setCurrentPage(1)
+            }}
+            riskTooltip={(
+              <InfoTooltip
+                title="Risk Level"
+                body="Overall downside-risk flag (LOW/MODERATE/HIGH/CRITICAL) driven by maintenance burden, registration/safety alerts, and condition signals. Critical issues cap upside and push listings down the queue."
+              />
+            )}
+          />
+        </div>
+        <FilterDrawer
+          open={filterDrawerOpen}
+          onClose={() => setFilterDrawerOpen(false)}
+          onApply={() => {
             setAppliedMakeFilter(makeFilter)
             setAppliedModelFilter(modelFilter)
             setAppliedSubModelFilter(subModelFilter)
@@ -904,14 +981,131 @@ export default function ListingsClient({
             setAppliedTrueCostMax(trueCostMax)
             setCurrentPage(1)
           }}
-          riskTooltip={(
-            <InfoTooltip
-              title="Risk Level"
-              body="Overall downside-risk flag (LOW/MODERATE/HIGH/CRITICAL) driven by maintenance burden, registration/safety alerts, and condition signals. Critical issues cap upside and push listings down the queue."
-            />
-          )}
-        />
-        <section>
+          onClearAll={() => {
+            setCategoryFilter(null)
+            setMakeFilter('all')
+            setModelFilter('')
+            setSubModelFilter('')
+            setSourceFilter('all')
+            setDealFilter('all')
+            setPriceStatus('all')
+            setMinPrice(0)
+            setMaxPrice(0)
+            setYearMin(0)
+            setYearMax(0)
+            setTotalTimeMin(0)
+            setTotalTimeMax(0)
+            setMaintenanceBand('any')
+            setEngineTime('any')
+            setTrueCostMin(0)
+            setTrueCostMax(0)
+            setRiskFilter('all')
+            setMinimumScore(0)
+            setAppliedMakeFilter('all')
+            setAppliedModelFilter('')
+            setAppliedSubModelFilter('')
+            setAppliedSourceFilter('all')
+            setAppliedRiskFilter('all')
+            setAppliedMinPrice(0)
+            setAppliedMaxPrice(0)
+            setAppliedPriceStatus('all')
+            setAppliedYearMin(0)
+            setAppliedYearMax(0)
+            setAppliedTotalTimeMin(0)
+            setAppliedTotalTimeMax(0)
+            setAppliedMaintenanceBand('any')
+            setAppliedEngineTime('any')
+            setAppliedTrueCostMin(0)
+            setAppliedTrueCostMax(0)
+            setCurrentPage(1)
+          }}
+        >
+          <ListingsFiltersSidebar
+            embedded
+            makeFilter={makeFilter}
+            setMakeFilter={setMakeFilter}
+            modelFilter={modelFilter}
+            setModelFilter={setModelFilter}
+            subModelFilter={subModelFilter}
+            setSubModelFilter={setSubModelFilter}
+            sourceFilter={sourceFilter}
+            setSourceFilter={setSourceFilter}
+            dealFilter={dealFilter}
+            setDealFilter={setDealFilter}
+            priceStatus={priceStatus}
+            setPriceStatus={setPriceStatus}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            yearMin={yearMin}
+            setYearMin={setYearMin}
+            yearMax={yearMax}
+            setYearMax={setYearMax}
+            totalTimeMin={totalTimeMin}
+            setTotalTimeMin={setTotalTimeMin}
+            totalTimeMax={totalTimeMax}
+            setTotalTimeMax={setTotalTimeMax}
+            maintenanceBand={maintenanceBand}
+            setMaintenanceBand={setMaintenanceBand}
+            engineTime={engineTime}
+            setEngineTime={setEngineTime}
+            trueCostMin={trueCostMin}
+            setTrueCostMin={setTrueCostMin}
+            trueCostMax={trueCostMax}
+            setTrueCostMax={setTrueCostMax}
+            riskFilter={riskFilter}
+            setRiskFilter={setRiskFilter}
+            makeOptions={makeOptions}
+            modelOptions={modelOptions}
+            subModelOptions={subModelOptions}
+            onResetFilters={() => {
+              setMakeFilter('all')
+              setModelFilter('')
+              setSubModelFilter('')
+              setSourceFilter('all')
+              setDealFilter('all')
+              setPriceStatus('all')
+              setMinPrice(0)
+              setMaxPrice(0)
+              setYearMin(0)
+              setYearMax(0)
+              setTotalTimeMin(0)
+              setTotalTimeMax(0)
+              setMaintenanceBand('any')
+              setEngineTime('any')
+              setTrueCostMin(0)
+              setTrueCostMax(0)
+              setRiskFilter('all')
+            }}
+            onApplyFilters={() => {
+              setAppliedMakeFilter(makeFilter)
+              setAppliedModelFilter(modelFilter)
+              setAppliedSubModelFilter(subModelFilter)
+              setAppliedSourceFilter(sourceFilter)
+              setAppliedRiskFilter(riskFilter)
+              setAppliedMinPrice(minPrice)
+              setAppliedMaxPrice(maxPrice)
+              setAppliedPriceStatus(priceStatus)
+              setAppliedYearMin(yearMin)
+              setAppliedYearMax(yearMax)
+              setAppliedTotalTimeMin(totalTimeMin)
+              setAppliedTotalTimeMax(totalTimeMax)
+              setAppliedMaintenanceBand(maintenanceBand)
+              setAppliedEngineTime(engineTime)
+              setAppliedTrueCostMin(trueCostMin)
+              setAppliedTrueCostMax(trueCostMax)
+              setCurrentPage(1)
+            }}
+            riskTooltip={(
+              <InfoTooltip
+                title="Risk Level"
+                body="Overall downside-risk flag (LOW/MODERATE/HIGH/CRITICAL) driven by maintenance burden, registration/safety alerts, and condition signals. Critical issues cap upside and push listings down the queue."
+              />
+            )}
+          />
+        </FilterDrawer>
+        <section className="min-w-0">
           <ListingsResultsToolbar
             safePage={safePage}
             totalPages={totalPages}
@@ -924,6 +1118,8 @@ export default function ListingsClient({
             layoutMode={layoutMode}
             setLayoutMode={setLayoutMode}
             fetchError={fetchError}
+            mobileFilterCount={mobileActiveFilterCount}
+            onOpenMobileFilters={() => setFilterDrawerOpen(true)}
           />
           <ListingsGridAndPagination
             layoutMode={layoutMode}

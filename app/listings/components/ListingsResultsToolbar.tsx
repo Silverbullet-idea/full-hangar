@@ -27,6 +27,8 @@ type ListingsResultsToolbarProps = {
   layoutMode: LayoutMode
   setLayoutMode: (value: LayoutMode) => void
   fetchError: string | null
+  mobileFilterCount?: number
+  onOpenMobileFilters?: () => void
 }
 
 export default function ListingsResultsToolbar({
@@ -41,6 +43,8 @@ export default function ListingsResultsToolbar({
   layoutMode,
   setLayoutMode,
   fetchError,
+  mobileFilterCount = 0,
+  onOpenMobileFilters,
 }: ListingsResultsToolbarProps) {
   const showingStart = totalFiltered > 0 && visibleCount > 0
     ? (safePage - 1) * pageSize + 1
@@ -51,7 +55,17 @@ export default function ListingsResultsToolbar({
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-2.5">
+      <div className="sticky top-0 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[#3A4454] bg-[#1A1A1A]/95 p-2.5 backdrop-blur-sm md:static md:z-auto md:bg-[#1A1A1A] md:backdrop-blur-none">
+        {onOpenMobileFilters ? (
+          <button
+            type="button"
+            onClick={onOpenMobileFilters}
+            className="order-first flex min-h-[44px] items-center rounded border border-[#FF9900] bg-[#141922] px-3 text-sm font-bold text-[#FF9900] hover:bg-[#FF9900] hover:text-black md:hidden"
+            aria-label="Open filters"
+          >
+            Filters{mobileFilterCount > 0 ? ` (${mobileFilterCount})` : ''}
+          </button>
+        ) : null}
         <div className="min-w-[82px] rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-center text-xs font-semibold text-[#B2B2B2]" title="Current page / total pages">
           Page {safePage} of {totalPages}
         </div>

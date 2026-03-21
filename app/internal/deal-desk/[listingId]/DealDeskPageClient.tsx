@@ -368,9 +368,15 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
   const acquisitionSubtotal = (category: AcquisitionCategory) =>
     acquisitionByCategory(category).reduce((total, item) => total + item.amount, 0);
   const selectedSensitivity = outputs.sensitivity_grid.filter((cell) => cell.days_to_sell === selectedSensitivityDays);
+  const dealGrade =
+    outputs.base.net_profit >= form.target_profit_dollars
+      ? { label: "Strong", className: "text-emerald-400" as const }
+      : outputs.base.net_profit >= 0
+        ? { label: "Marginal", className: "text-amber-300" as const }
+        : { label: "Weak", className: "text-red-400" as const };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 pb-24 md:pb-0">
       {researchHref ? (
         <div className="flex justify-end">
           <Link
@@ -382,7 +388,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         </div>
       ) : null}
       <div className="sticky top-2 z-20 rounded border border-brand-dark bg-card-bg/95 p-3 backdrop-blur">
-        <div className="grid gap-2 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
           <SummaryStat label="All-in Basis" value={formatCurrency(outputs.section_totals.all_in_basis)} />
           <SummaryStat label="Net Profit (base)" value={formatCurrency(outputs.base.net_profit)} className={profitColor(outputs.base.net_profit)} />
           <SummaryStat label="ROI %" value={formatPercent(outputs.base.roi_pct)} className={profitColor(outputs.base.net_profit)} />
@@ -397,7 +403,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             key={tabOption.id}
             type="button"
             onClick={() => setTab(tabOption.id)}
-            className={`rounded border px-3 py-1 text-sm ${
+            className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${
               tab === tabOption.id
                 ? "border-brand-orange bg-brand-orange/20 text-brand-orange"
                 : "border-brand-dark bg-card-bg text-brand-muted hover:border-brand-orange"
@@ -410,13 +416,13 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
       </div>
 
       {tab === "overview" ? (
-        <div className="grid gap-3 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
             <TextInput label="Scenario Label" value={scenarioLabel} onChange={setScenarioLabel} />
             <CurrencyInput label="Purchase Price" value={form.purchase_price} onChange={(value) => setForm((previous) => ({ ...previous, purchase_price: value }))} />
             <div>
               <p className="mb-1 text-sm text-brand-muted">Resale Price</p>
-              <div className="grid gap-2 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                 <CurrencyInput label="Low" value={form.resale_low} onChange={(value) => setForm((p) => ({ ...p, resale_low: value }))} />
                 <CurrencyInput label="Base" value={form.resale_base} onChange={(value) => setForm((p) => ({ ...p, resale_base: value }))} />
                 <CurrencyInput label="Stretch" value={form.resale_stretch} onChange={(value) => setForm((p) => ({ ...p, resale_stretch: value }))} />
@@ -439,7 +445,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
                 { label: "Contingency", amount: (outputs.section_totals.must_do_upgrades + outputs.section_totals.value_add_upgrades) * (form.maintenance_contingency_pct / 100), color: "#a78bfa" },
               ]}
             />
-            <div className="grid gap-2 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
               <MetricCard label="Low" value={formatCurrency(outputs.low.net_profit)} className={profitColor(outputs.low.net_profit)} />
               <MetricCard label="Base" value={formatCurrency(outputs.base.net_profit)} className={profitColor(outputs.base.net_profit)} />
               <MetricCard label="Stretch" value={formatCurrency(outputs.stretch.net_profit)} className={profitColor(outputs.stretch.net_profit)} />
@@ -487,7 +493,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
                   ))}
                 </tbody>
               </table>
-              <div className="mt-2 grid gap-2 md:grid-cols-[1fr,180px,100px]">
+              <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-[1fr,180px,100px]">
                 <input value={newAcquisitionDraft[category].label} onChange={(event) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], label: event.target.value } }))} placeholder="Add item label" className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white outline-none focus:border-brand-orange" />
                 <CurrencyInputInline value={newAcquisitionDraft[category].amount} onChange={(value) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], amount: value } }))} />
                 <button type="button" onClick={() => { if (!newAcquisitionDraft[category].label.trim()) return; setForm((previous) => ({ ...previous, acquisition_items: [...previous.acquisition_items, { id: crypto.randomUUID(), label: newAcquisitionDraft[category].label.trim(), amount: newAcquisitionDraft[category].amount, category }] })); setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { label: "", amount: 0 } })); }} className="rounded bg-brand-orange px-2 py-1 text-sm font-semibold !text-black hover:bg-brand-burn">Add item</button>
@@ -502,7 +508,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
           <div className="rounded border border-brand-dark p-3">
             <p className="mb-2 font-semibold">Add upgrade line item</p>
-            <div className="grid gap-2 md:grid-cols-5">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
               <input value={newUpgradeDraft.label} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, label: event.target.value }))} placeholder="Upgrade label" className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white outline-none focus:border-brand-orange md:col-span-2" />
               <CurrencyInputInline value={newUpgradeDraft.amount} onChange={(value) => setNewUpgradeDraft((previous) => ({ ...previous, amount: value }))} />
               <select value={newUpgradeDraft.type} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, type: event.target.value as UpgradeItem["type"] }))} className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white"><option value="must_do">Must Do</option><option value="value_add">Value Add</option></select>
@@ -526,7 +532,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
               </tbody>
             </table>
           </div>
-          <div className="grid gap-2 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
             <SummaryStat label="Must-Do total" value={formatCurrency(outputs.section_totals.must_do_upgrades)} />
             <SummaryStat label="Value-Add total" value={formatCurrency(outputs.section_totals.value_add_upgrades)} />
             <div className="rounded border border-brand-dark p-2"><RangeInput label={`Contingency ${form.maintenance_contingency_pct}%`} min={5} max={25} step={5} value={form.maintenance_contingency_pct} onChange={(value) => setForm((previous) => ({ ...previous, maintenance_contingency_pct: value }))} /></div>
@@ -540,7 +546,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
       ) : null}
 
       {tab === "carrying" ? (
-        <section className="grid gap-3 xl:grid-cols-2">
+        <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <div className="rounded border border-brand-dark bg-card-bg p-4 space-y-2">
             <p className="font-semibold">Fixed (per month)</p>
             <CurrencyInput label="Hangar / Tie-down" value={form.hangar_monthly} onChange={(value) => setForm((p) => ({ ...p, hangar_monthly: value }))} />
@@ -560,7 +566,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             <StaticRow label="Deductible amount" value={formatCurrency(deductibleAmount)} />
             <p className="text-xs text-brand-muted">Lender typically requires hull coverage at or above loan amount.</p>
             <p className="mt-2 font-semibold">Variable (if flying)</p>
-            <div className="grid gap-2 md:grid-cols-2"><NumberInput label="Fuel GPH" value={form.fuel_gph} onChange={(value) => setForm((p) => ({ ...p, fuel_gph: value }))} /><CurrencyInput label="Fuel price per gallon" value={form.fuel_price_per_gallon} onChange={(value) => setForm((p) => ({ ...p, fuel_price_per_gallon: value }))} /></div>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2"><NumberInput label="Fuel GPH" value={form.fuel_gph} onChange={(value) => setForm((p) => ({ ...p, fuel_gph: value }))} /><CurrencyInput label="Fuel price per gallon" value={form.fuel_price_per_gallon} onChange={(value) => setForm((p) => ({ ...p, fuel_price_per_gallon: value }))} /></div>
             <CurrencyInput label="Oil per hour" value={form.oil_cost_per_hour} onChange={(value) => setForm((p) => ({ ...p, oil_cost_per_hour: value }))} />
             <CurrencyInput label="Engine reserve per hour" value={form.engine_reserve_per_hour} onChange={(value) => setForm((p) => ({ ...p, engine_reserve_per_hour: value }))} />
             {suggestedEngineReserve !== null ? (
@@ -598,9 +604,9 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
 
       {tab === "financing" ? (
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: false }))} className={`rounded border px-3 py-1 text-sm ${!form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Cash Deal</button>
-            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: true }))} className={`rounded border px-3 py-1 text-sm ${form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Financed</button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: false }))} className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${!form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Cash Deal</button>
+            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: true }))} className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Financed</button>
           </div>
           {!form.financing_enabled ? (
             <div className="space-y-2"><NumberInput label="Opportunity cost rate %" value={form.opportunity_cost_rate_pct} onChange={(value) => setForm((previous) => ({ ...previous, opportunity_cost_rate_pct: value }))} /><p className="text-sm text-brand-muted">Opportunity cost over hold: {formatCurrency(opportunityCost)} (not included in profit calculation).</p></div>
@@ -637,26 +643,32 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
           <RangeInput label={`Days-to-sell: ${selectedSensitivityDays}`} min={90} max={270} step={90} value={selectedSensitivityDays} onChange={(value) => { setSelectedSensitivityDays(value); setForm((previous) => ({ ...previous, days_to_sell_slow: value })); }} />
           <RangeInput label={`Contingency: ${form.maintenance_contingency_pct}%`} min={5} max={25} step={5} value={form.maintenance_contingency_pct} onChange={(value) => setForm((previous) => ({ ...previous, maintenance_contingency_pct: value }))} />
-          <div className="overflow-x-auto">
-            <table className="min-w-[760px] w-full text-xs">
-              <thead className="bg-[#151515] text-brand-muted"><tr><th className="px-2 py-2 text-left">Days</th><th className="px-2 py-2 text-left">Low -10%</th><th className="px-2 py-2 text-left">Base</th><th className="px-2 py-2 text-left">Stretch +10%</th></tr></thead>
-              <tbody>
-                {[90, 180, 270].map((days) => (
-                  <tr key={days} className="border-t border-brand-dark">
-                    <td className="px-2 py-2 font-semibold">{days}</td>
-                    {[-10, 0, 10].map((salePct) => {
-                      const cell = outputs.sensitivity_grid.find((entry) => entry.days_to_sell === days && entry.sale_price_pct === salePct);
-                      const profit = cell?.net_profit ?? 0;
-                      const color = profit < 0 ? "bg-red-500/20" : profit < form.target_profit_dollars ? "bg-amber-500/20" : "bg-emerald-500/20";
-                      const activeBorder = days === selectedSensitivityDays && salePct === 0 ? "ring-1 ring-brand-orange" : "";
-                      return <td key={`${days}-${salePct}`} className={`px-2 py-2 ${color} ${activeBorder}`}><p className={profitColor(profit)}>{formatCurrency(profit)}</p><p className="text-brand-muted">{formatPercent(cell?.roi_pct ?? 0)}</p></td>;
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="min-w-[760px] w-full text-xs">
+                <thead className="bg-[#151515] text-brand-muted"><tr><th className="px-2 py-2 text-left">Days</th><th className="px-2 py-2 text-left">Low -10%</th><th className="px-2 py-2 text-left">Base</th><th className="px-2 py-2 text-left">Stretch +10%</th></tr></thead>
+                <tbody>
+                  {[90, 180, 270].map((days) => (
+                    <tr key={days} className="border-t border-brand-dark">
+                      <td className="px-2 py-2 font-semibold">{days}</td>
+                      {[-10, 0, 10].map((salePct) => {
+                        const cell = outputs.sensitivity_grid.find((entry) => entry.days_to_sell === days && entry.sale_price_pct === salePct);
+                        const profit = cell?.net_profit ?? 0;
+                        const color = profit < 0 ? "bg-red-500/20" : profit < form.target_profit_dollars ? "bg-amber-500/20" : "bg-emerald-500/20";
+                        const activeBorder = days === selectedSensitivityDays && salePct === 0 ? "ring-1 ring-brand-orange" : "";
+                        return <td key={`${days}-${salePct}`} className={`px-2 py-2 ${color} ${activeBorder}`}><p className={profitColor(profit)}>{formatCurrency(profit)}</p><p className="text-brand-muted">{formatPercent(cell?.roi_pct ?? 0)}</p></td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="block md:hidden rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
+            <p className="mb-1 font-medium text-foreground">Sensitivity Analysis</p>
+            <p>Open on desktop to view the full price × cost sensitivity grid.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <SummaryStat label="Break-even sale price" value={formatCurrency(outputs.breakeven_sale_price)} />
             <SummaryStat label={`Max purchase for ${formatCurrency(form.target_profit_dollars)} target`} value={formatCurrency(outputs.max_purchase_price_for_target)} />
             <SummaryStat label="At current purchase, break-even" value={formatCurrency(outputs.breakeven_sale_price)} />
@@ -669,6 +681,23 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
           {selectedSensitivity.length > 0 ? <p className="text-xs text-brand-muted">Selected days scenario: {selectedSensitivity.map((cell) => `${cell.sale_price_pct}%: ${formatCurrency(cell.net_profit)}`).join(" · ")}</p> : null}
         </section>
       ) : null}
+
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-2 border-t border-border bg-background px-4 py-3 shadow-lg md:hidden"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="min-w-0 text-sm">
+          <span className="text-muted-foreground">Est. Profit</span>
+          <span className={`ml-1 font-semibold ${profitColor(outputs.base.net_profit)}`}>{formatCurrency(outputs.base.net_profit)}</span>
+        </div>
+        <div className="min-w-0 text-sm">
+          <span className="text-muted-foreground">ROI</span>
+          <span className={`ml-1 font-semibold ${profitColor(outputs.base.net_profit)}`}>{formatPercent(outputs.base.roi_pct)}</span>
+        </div>
+        <div className="shrink-0 text-sm">
+          <span className={`font-bold ${dealGrade.className}`}>{dealGrade.label}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -725,7 +754,13 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
   return (
     <label className="block">
       <p className="mb-1 text-sm text-brand-muted">{label}</p>
-      <input type="number" value={Number.isFinite(value) ? value : 0} onChange={(event) => onChange(Number(event.target.value || "0"))} className="w-full rounded border border-brand-dark bg-[#121212] px-2 py-2 text-sm text-white outline-none focus:border-brand-orange" />
+      <input
+        type="number"
+        inputMode="decimal"
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(event) => onChange(Number(event.target.value || "0"))}
+        className="w-full rounded border border-brand-dark bg-[#121212] px-2 py-2 text-sm text-white outline-none focus:border-brand-orange"
+      />
     </label>
   );
 }
