@@ -43,6 +43,16 @@ export type DealListing = {
   component_gap_value?: number | null
   flip_candidate_triggered?: boolean | null
   flip_candidate_threshold?: number | null
+  deferred_total?: number | null
+  engine_hours_smoh?: number | null
+  engine_tbo_hours?: number | null
+  ev_hours_smoh?: number | null
+  ev_tbo_hours?: number | null
+  ev_hours_remaining?: number | null
+  ev_pct_life_remaining?: number | null
+  ev_engine_overrun_liability?: number | null
+  ev_engine_reserve_per_hour?: number | null
+  ev_data_quality?: string | null
 }
 
 export type WatchlistEntry = {
@@ -77,6 +87,8 @@ export type SortKey =
   | 'days_on_market'
   | 'price_reduction_amount'
   | 'component_gap_value'
+  | 'engine_life_desc'
+  | 'engine_life_asc'
 
 export type PresetKey = 'none' | 'flip_fast' | 'motivated_sellers' | 'price_call_followup'
 
@@ -85,6 +97,7 @@ export type DealExplanation = {
   engine: string
   avionics: string
   component: string
+  deferred: string
   risk: string
   recommendation: string
 }

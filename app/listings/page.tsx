@@ -26,8 +26,10 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
+  | 'engine_life'
 type PriceStatus = 'all' | 'priced'
 type MaintenanceBand = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
+type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
 function parseParam(searchParams: SearchParams | undefined, key: string): string {
   const raw = searchParams?.[key]
@@ -95,7 +97,7 @@ function parseSortBy(searchParams?: SearchParams): SortOption {
   const validSorts: SortOption[] = [
     'price_low', 'price_high', 'deal_desc',
     'market_best', 'market_worst', 'risk_low', 'risk_high',
-    'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest',
+    'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life',
   ]
   if (value && validSorts.includes(value as SortOption)) return value as SortOption
   return 'deal_desc'
@@ -116,6 +118,13 @@ function parsePriceStatus(searchParams?: SearchParams): PriceStatus {
 function parseMaintenanceBand(searchParams?: SearchParams): MaintenanceBand {
   const value = parseParam(searchParams, 'maintenanceBand').toLowerCase()
   if (value === 'light' || value === 'moderate' || value === 'heavy' || value === 'severe') return value
+  return 'any'
+}
+
+function parseEngineTime(searchParams?: SearchParams): EngineTimeFilter {
+  const value = parseParam(searchParams, 'engineTime').toLowerCase()
+  if (value === 'fresh' || value === 'mid' || value === 'approaching') return value
+  if (value === 'hashours') return 'hasHours'
   return 'any'
 }
 
@@ -219,6 +228,7 @@ export default async function ListingsPage({
   const initialTotalTimeMin = parsePositiveInt(resolvedSearchParams, 'totalTimeMin', 0)
   const initialTotalTimeMax = parsePositiveInt(resolvedSearchParams, 'totalTimeMax', 0)
   const initialMaintenanceBand = parseMaintenanceBand(resolvedSearchParams)
+  const initialEngineTime = parseEngineTime(resolvedSearchParams)
   const initialTrueCostMin = parsePositiveInt(resolvedSearchParams, 'trueCostMin', 0)
   const initialTrueCostMax = parsePositiveInt(resolvedSearchParams, 'trueCostMax', 0)
   const initialPage = parsePositiveInt(resolvedSearchParams, 'page', 1)
@@ -249,6 +259,7 @@ export default async function ListingsPage({
       totalTimeMin: initialTotalTimeMin,
       totalTimeMax: initialTotalTimeMax,
       maintenanceBand: initialMaintenanceBand,
+      engineTime: initialEngineTime,
       trueCostMin: initialTrueCostMin,
       trueCostMax: initialTrueCostMax,
       category: initialCategoryFilter ?? '',
@@ -324,6 +335,7 @@ export default async function ListingsPage({
         initialTotalTimeMin={initialTotalTimeMin}
         initialTotalTimeMax={initialTotalTimeMax}
         initialMaintenanceBand={initialMaintenanceBand}
+        initialEngineTime={initialEngineTime}
         initialTrueCostMin={initialTrueCostMin}
         initialTrueCostMax={initialTrueCostMax}
         initialPage={initialPage}

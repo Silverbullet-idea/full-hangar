@@ -28,6 +28,7 @@ export type ListingsPageQuery = {
   totalTimeMin?: number;
   totalTimeMax?: number;
   maintenanceBand?: "any" | "light" | "moderate" | "heavy" | "severe";
+  engineTime?: "any" | "fresh" | "mid" | "approaching" | "hasHours";
   trueCostMin?: number;
   trueCostMax?: number;
   sortBy?: string;
@@ -163,7 +164,7 @@ export async function getListings(filters: ListingFilters = {}) {
 }
 
 const LISTINGS_PAGE_COLUMNS_PUBLIC =
-  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
+  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_exchange_price,ev_engine_remaining_value,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_score_contribution,ev_data_quality,ev_explanation";
 const LISTINGS_PAGE_COLUMNS_AIRCRAFT =
   "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active";
 
@@ -242,6 +243,74 @@ function toNumericOrNull(value: unknown): number | null {
     if (Number.isFinite(parsed)) return parsed;
   }
   return null;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function deriveEngineValueFallback(row: Record<string, unknown>): Record<string, unknown> {
+  const evHoursSmoh =
+    toNumericOrNull(row.ev_hours_smoh) ??
+    toNumericOrNull(row.engine_hours_smoh) ??
+    toNumericOrNull(row.engine_time_since_overhaul) ??
+    toNumericOrNull(row.time_since_overhaul);
+  const evTboHours =
+    toNumericOrNull(row.ev_tbo_hours) ??
+    toNumericOrNull(row.engine_tbo_hours);
+  const evHoursRemaining =
+    toNumericOrNull(row.ev_hours_remaining) ??
+    (typeof evHoursSmoh === "number" && typeof evTboHours === "number"
+      ? Math.round(evTboHours - evHoursSmoh)
+      : null);
+  const evPctLifeRemaining =
+    toNumericOrNull(row.ev_pct_life_remaining) ??
+    (typeof evHoursSmoh === "number" && typeof evTboHours === "number" && evTboHours > 0
+      ? clampNumber((evTboHours - evHoursSmoh) / evTboHours, -1, 1)
+      : null);
+  const evEngineRemainingValue =
+    toNumericOrNull(row.ev_engine_remaining_value) ??
+    toNumericOrNull(row.engine_remaining_value);
+  const evEngineOverrunLiability =
+    toNumericOrNull(row.ev_engine_overrun_liability) ??
+    toNumericOrNull(row.engine_overrun_liability);
+  const evEngineReservePerHour =
+    toNumericOrNull(row.ev_engine_reserve_per_hour) ??
+    toNumericOrNull(row.engine_reserve_per_hour);
+  const evExchangePrice = toNumericOrNull(row.ev_exchange_price);
+  const evScoreContribution = toNumericOrNull(row.ev_score_contribution);
+
+  const existingQuality = String(row.ev_data_quality ?? "").trim();
+  let derivedQuality: string | null = null;
+  if (!existingQuality) {
+    const hasTbo = typeof evTboHours === "number" && Number.isFinite(evTboHours);
+    const hasSmoh = typeof evHoursSmoh === "number" && Number.isFinite(evHoursSmoh);
+    const hasValuation =
+      typeof evEngineRemainingValue === "number" ||
+      typeof evEngineOverrunLiability === "number" ||
+      typeof evEngineReservePerHour === "number";
+    if (hasTbo && hasSmoh && hasValuation) derivedQuality = "full";
+    else if (hasTbo) derivedQuality = "tbo_only";
+    else if (hasSmoh) derivedQuality = "hours_only";
+  }
+
+  return {
+    ...row,
+    ev_hours_smoh: evHoursSmoh,
+    ev_tbo_hours: evTboHours,
+    ev_hours_remaining: evHoursRemaining,
+    ev_pct_life_remaining: evPctLifeRemaining,
+    ev_engine_remaining_value: evEngineRemainingValue,
+    ev_engine_overrun_liability: evEngineOverrunLiability,
+    ev_engine_reserve_per_hour: evEngineReservePerHour,
+    ev_exchange_price: evExchangePrice,
+    ev_score_contribution: evScoreContribution,
+    ev_data_quality: existingQuality || derivedQuality,
+  };
+}
+
+function normalizeEngineValueRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  return rows.map((row) => deriveEngineValueFallback(row));
 }
 
 function toRecordRows(data: unknown): Record<string, unknown>[] {
@@ -363,8 +432,10 @@ function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
   const isDefaultOwnership = !ownershipType || ownershipType === "all";
   const priceStatus = String(query.priceStatus ?? "").trim().toLowerCase();
   const maintenanceBand = String(query.maintenanceBand ?? "").trim().toLowerCase();
+  const engineTime = String(query.engineTime ?? "").trim().toLowerCase();
   const isDefaultPriceStatus = !priceStatus || priceStatus === "all";
   const isDefaultMaintenanceBand = !maintenanceBand || maintenanceBand === "any";
+  const isDefaultEngineTime = !engineTime || engineTime === "any";
   return (
     !hasText(query.q) &&
     !hasText(query.make) &&
@@ -385,6 +456,7 @@ function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
     Number(query.totalTimeMin ?? 0) <= 0 &&
     Number(query.totalTimeMax ?? 0) <= 0 &&
     isDefaultMaintenanceBand &&
+    isDefaultEngineTime &&
     Number(query.trueCostMin ?? 0) <= 0 &&
     Number(query.trueCostMax ?? 0) <= 0 &&
     Number(query.maxPrice ?? 0) <= 0
@@ -472,8 +544,10 @@ function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
   if (!q) return false;
   const priceStatus = String(query.priceStatus ?? "").trim().toLowerCase();
   const maintenanceBand = String(query.maintenanceBand ?? "").trim().toLowerCase();
+  const engineTime = String(query.engineTime ?? "").trim().toLowerCase();
   const isDefaultPriceStatus = !priceStatus || priceStatus === "all";
   const isDefaultMaintenanceBand = !maintenanceBand || maintenanceBand === "any";
+  const isDefaultEngineTime = !engineTime || engineTime === "any";
   return (
     !String(query.make ?? "").trim() &&
     !String(query.model ?? "").trim() &&
@@ -493,6 +567,7 @@ function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
     Number(query.totalTimeMin ?? 0) <= 0 &&
     Number(query.totalTimeMax ?? 0) <= 0 &&
     isDefaultMaintenanceBand &&
+    isDefaultEngineTime &&
     Number(query.trueCostMin ?? 0) <= 0 &&
     Number(query.trueCostMax ?? 0) <= 0 &&
     Number(query.maxPrice ?? 0) <= 0
@@ -624,6 +699,23 @@ function applyMaintenanceBandFilter(query: any, band: string) {
   return query;
 }
 
+function applyEngineTimeFilter(query: any, value: string, table: string) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized || normalized === "any") return query;
+  const isPublic = table === "public_listings";
+  if (!isPublic) {
+    if (normalized === "hashours") {
+      return query.not("time_since_overhaul", "is", null);
+    }
+    return query;
+  }
+  if (normalized === "fresh") return query.gte("ev_pct_life_remaining", 0.75);
+  if (normalized === "mid") return query.gte("ev_pct_life_remaining", 0.5).lt("ev_pct_life_remaining", 0.75);
+  if (normalized === "approaching") return query.lt("ev_pct_life_remaining", 0.5);
+  if (normalized === "hashours") return query.not("ev_hours_smoh", "is", null);
+  return query;
+}
+
 function applyHelicopterExclusion(query: any) {
   let nextQuery = query;
   for (const pattern of HELICOPTER_MAKE_PATTERNS) {
@@ -687,7 +779,7 @@ async function runSimpleSearchListingsPage(
   if (result.error) throw new Error(result.error.message);
   const enrichedRows = await attachFractionalFields(
     supabase,
-    toRecordRows(result.data)
+    normalizeEngineValueRows(toRecordRows(result.data))
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
@@ -729,7 +821,7 @@ async function runDefaultCuratedListingsPage(
 
   const enrichedRows = await attachFractionalFields(
     supabase,
-    toRecordRows(result.data)
+    normalizeEngineValueRows(toRecordRows(result.data))
   );
   const ownershipFilteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const curatedRows = ownershipFilteredRows.filter(shouldIncludeInDefaultListings);
@@ -770,6 +862,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const totalTimeMin = Number(query.totalTimeMin ?? 0);
   const totalTimeMax = Number(query.totalTimeMax ?? 0);
   const maintenanceBand = String(query.maintenanceBand ?? "any").trim().toLowerCase();
+  const engineTime = String(query.engineTime ?? "any").trim().toLowerCase();
   const trueCostMin = Number(query.trueCostMin ?? 0);
   const trueCostMax = Number(query.trueCostMax ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
@@ -843,6 +936,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   dbQuery = applyPositiveNumericRange(dbQuery, "year", yearMin, yearMax);
   dbQuery = applyPositiveNumericRange(dbQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
   dbQuery = applyMaintenanceBandFilter(dbQuery, maintenanceBand);
+  dbQuery = applyEngineTimeFilter(dbQuery, engineTime, listBaseTable);
   dbQuery = applyPositiveNumericRange(dbQuery, "true_cost", trueCostMin, trueCostMax);
   dbQuery = applyCategoryFilter(dbQuery, category);
 
@@ -861,6 +955,9 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   else if (sortBy === "tt_high") dbQuery = dbQuery.order("total_time_airframe", { ascending: false, nullsFirst: false });
   else if (sortBy === "year_newest") dbQuery = dbQuery.order("year", { ascending: false, nullsFirst: false });
   else if (sortBy === "year_oldest") dbQuery = dbQuery.order("year", { ascending: true, nullsFirst: false });
+  else if (sortBy === "engine_life" && listBaseTable === "public_listings") {
+    dbQuery = dbQuery.order("ev_pct_life_remaining", { ascending: false, nullsFirst: false });
+  }
   else if (sortBy === "deal_desc") dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
   else dbQuery = dbQuery.order("value_score", { ascending: false, nullsFirst: false });
 
@@ -889,6 +986,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "year", yearMin, yearMax);
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
     fallbackQuery = applyMaintenanceBandFilter(fallbackQuery, maintenanceBand);
+    fallbackQuery = applyEngineTimeFilter(fallbackQuery, engineTime, listBaseTable);
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "true_cost", trueCostMin, trueCostMax);
     fallbackQuery = applyCategoryFilter(fallbackQuery, category);
     fallbackQuery = fallbackQuery
@@ -939,7 +1037,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
         if (!tableResult.error) {
           const enrichedTableRows = await attachFractionalFields(
             supabase,
-            toRecordRows(tableResult.data)
+            normalizeEngineValueRows(toRecordRows(tableResult.data))
           );
           const filteredTableRows = applyOwnershipFilterToRows(enrichedTableRows, ownershipType);
           const orderedTableRows = applyDealTierPreference(filteredTableRows, preferDealTier);
@@ -983,6 +1081,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     countQuery = applyPositiveNumericRange(countQuery, "year", yearMin, yearMax);
     countQuery = applyPositiveNumericRange(countQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
     countQuery = applyMaintenanceBandFilter(countQuery, maintenanceBand);
+    countQuery = applyEngineTimeFilter(countQuery, engineTime, listBaseTable);
     countQuery = applyPositiveNumericRange(countQuery, "true_cost", trueCostMin, trueCostMax);
     countQuery = applyCategoryFilter(countQuery, category);
     const countResult = await countQuery;
@@ -995,7 +1094,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
 
   const enrichedRows = await attachFractionalFields(
     supabase,
-    toRecordRows(result.data)
+    normalizeEngineValueRows(toRecordRows(result.data))
   );
   const filteredRows = applyOwnershipFilterToRows(enrichedRows, ownershipType);
   const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);

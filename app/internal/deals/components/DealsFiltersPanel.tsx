@@ -18,6 +18,16 @@ type DealsFiltersPanelProps = {
   setFaaAlertsOnly: (value: boolean) => void
   highPriorityOnly: boolean
   setHighPriorityOnly: (value: boolean) => void
+  engineFreshOnly: boolean
+  setEngineFreshOnly: (value: boolean) => void
+  engineMidOnly: boolean
+  setEngineMidOnly: (value: boolean) => void
+  engineApproachingOnly: boolean
+  setEngineApproachingOnly: (value: boolean) => void
+  engineOverrunOnly: boolean
+  setEngineOverrunOnly: (value: boolean) => void
+  hasEngineDataOnly: boolean
+  setHasEngineDataOnly: (value: boolean) => void
   toTierBadgeText: (tier: string) => string
 }
 
@@ -39,6 +49,16 @@ export default function DealsFiltersPanel({
   setFaaAlertsOnly,
   highPriorityOnly,
   setHighPriorityOnly,
+  engineFreshOnly,
+  setEngineFreshOnly,
+  engineMidOnly,
+  setEngineMidOnly,
+  engineApproachingOnly,
+  setEngineApproachingOnly,
+  engineOverrunOnly,
+  setEngineOverrunOnly,
+  hasEngineDataOnly,
+  setHasEngineDataOnly,
   toTierBadgeText,
 }: DealsFiltersPanelProps) {
   return (
@@ -48,8 +68,8 @@ export default function DealsFiltersPanel({
         <input
           type="range"
           min={0}
-          max={60000}
-          step={500}
+          max={2000000}
+          step={5000}
           value={maxPrice}
           onChange={(event) => setMaxPrice(Number(event.target.value))}
           className="mt-1 w-full"
@@ -118,6 +138,32 @@ export default function DealsFiltersPanel({
         <input type="checkbox" checked={highPriorityOnly} onChange={(event) => setHighPriorityOnly(event.target.checked)} />
         High-priority only (reduced or 90+ days listed)
       </label>
+
+      <fieldset className="rounded border border-brand-dark bg-[#171717] p-2 md:col-span-2 lg:col-span-3">
+        <legend className="px-1 text-xs text-brand-muted">Engine Health</legend>
+        <div className="mt-1 flex flex-wrap gap-3">
+          <label className="inline-flex items-center gap-1">
+            <input type="checkbox" checked={engineFreshOnly} onChange={(event) => setEngineFreshOnly(event.target.checked)} />
+            Fresh engine (75%+ life)
+          </label>
+          <label className="inline-flex items-center gap-1">
+            <input type="checkbox" checked={engineMidOnly} onChange={(event) => setEngineMidOnly(event.target.checked)} />
+            Mid-life engine (50-75%)
+          </label>
+          <label className="inline-flex items-center gap-1">
+            <input type="checkbox" checked={engineApproachingOnly} onChange={(event) => setEngineApproachingOnly(event.target.checked)} />
+            Engine approaching TBO (&lt;50%)
+          </label>
+          <label className="inline-flex items-center gap-1">
+            <input type="checkbox" checked={engineOverrunOnly} onChange={(event) => setEngineOverrunOnly(event.target.checked)} />
+            Engine past TBO (overrun)
+          </label>
+          <label className="inline-flex items-center gap-1">
+            <input type="checkbox" checked={hasEngineDataOnly} onChange={(event) => setHasEngineDataOnly(event.target.checked)} />
+            Has engine data
+          </label>
+        </div>
+      </fieldset>
     </div>
   )
 }

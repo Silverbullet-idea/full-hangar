@@ -20,6 +20,10 @@ type LeftDetailColumnProps = {
     hoursSmoh: number | null
     tboHours: number | null
     replacementCost: number | null
+    dataQuality?: string | null
+    explanation?: string | null
+    tboReferenceLine?: string | null
+    showCalendarWarning?: boolean
   } | null
 }
 
@@ -40,6 +44,10 @@ function EngineValuePanel({
   hoursSmoh,
   tboHours,
   replacementCost,
+  dataQuality,
+  explanation,
+  tboReferenceLine,
+  showCalendarWarning,
 }: {
   remainingValue: number | null
   overrunLiability: number | null
@@ -47,10 +55,23 @@ function EngineValuePanel({
   hoursSmoh: number | null
   tboHours: number | null
   replacementCost: number | null
+  dataQuality?: string | null
+  explanation?: string | null
+  tboReferenceLine?: string | null
+  showCalendarWarning?: boolean
 }) {
+  const quality = String(dataQuality ?? "").trim().toLowerCase()
+  if (quality === "none") return null
+  const isTboOnly = quality === "tbo_only"
   const hasRemainingValue = typeof remainingValue === "number" && remainingValue > 0
   const hasOverrunLiability = typeof overrunLiability === "number" && overrunLiability > 0
-  if (!hasRemainingValue && !hasOverrunLiability) return null
+  const hasLifeData =
+    typeof hoursSmoh === "number" &&
+    typeof tboHours === "number" &&
+    Number.isFinite(hoursSmoh) &&
+    Number.isFinite(tboHours) &&
+    tboHours > 0
+  if (!hasLifeData && !hasRemainingValue && !hasOverrunLiability && !isTboOnly) return null
 
   const lifeUsedPercentRaw =
     typeof hoursSmoh === "number" &&
@@ -123,23 +144,33 @@ function EngineValuePanel({
         </p>
       ) : null}
 
-      {hasRemainingValue ? (
+      {hasRemainingValue && !isTboOnly ? (
         <div className="mb-2 flex items-start justify-between gap-3 text-sm">
           <span className="text-brand-muted">Remaining Value</span>
           <div className="text-right">
             <div className={`font-semibold ${remainingValueClass}`}>{formatCurrency(remainingValue)}</div>
             {typeof replacementCost === "number" && replacementCost > 0 ? (
-              <div className="text-xs text-brand-muted">{`(based on ${formatCurrency(replacementCost)} new)`}</div>
+              <div className="text-xs text-brand-muted">{`(based on ${formatCurrency(replacementCost)} AirPower exchange price)`}</div>
             ) : null}
           </div>
         </div>
       ) : null}
 
-      {typeof reservePerHour === "number" && reservePerHour > 0 ? (
+      {typeof reservePerHour === "number" && reservePerHour > 0 && !isTboOnly ? (
         <div className="mb-2 flex items-start justify-between gap-3 text-sm">
           <span className="text-brand-muted">Reserve Per Hour</span>
           <span className="font-semibold text-brand-white">{`${formatCurrency(reservePerHour)}/h`}</span>
         </div>
+      ) : null}
+
+      {tboReferenceLine ? (
+        <p className="mb-2 text-xs text-brand-muted">
+          <span className="font-semibold text-brand-white">TBO Reference:</span> {tboReferenceLine}
+        </p>
+      ) : explanation ? (
+        <p className="mb-2 text-xs text-brand-muted">
+          <span className="font-semibold text-brand-white">TBO Reference:</span> {explanation}
+        </p>
       ) : null}
 
       {hasOverrunLiability ? (
@@ -153,6 +184,11 @@ function EngineValuePanel({
               ) : null}
             </div>
           </div>
+        </div>
+      ) : null}
+      {showCalendarWarning ? (
+        <div className="mt-2 rounded border border-amber-500/45 bg-amber-500/10 p-2 text-xs text-amber-200">
+          ⚠ Calendar Note: Both Lycoming and Continental recommend overhaul within 12 years of last overhaul regardless of hours. Verify last overhaul date with seller.
         </div>
       ) : null}
       <style>{`

@@ -11,6 +11,9 @@ type ListingCardProps = {
   titleText: string
   locationText: string
   ownershipBadgeText?: string
+  engineBadgeText?: string
+  engineBadgeTitle?: string
+  engineBadgeClass?: string
   dealTier?: string | null
   specRows: Array<[string, string]>
   onImageError: () => void
@@ -110,6 +113,9 @@ export default function ListingCard({
   titleText,
   locationText,
   ownershipBadgeText,
+  engineBadgeText,
+  engineBadgeTitle,
+  engineBadgeClass,
   dealTier,
   specRows,
   onImageError,
@@ -147,6 +153,14 @@ export default function ListingCard({
                   {dealTierMeta.label}
                 </span>
               ) : null}
+              {engineBadgeText ? (
+                <span
+                  className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold ${engineBadgeClass ?? 'border-[#3A4454] bg-[#141922] text-[#B2B2B2]'}`}
+                  title={engineBadgeTitle}
+                >
+                  {engineBadgeText}
+                </span>
+              ) : null}
             </div>
             <div className="mt-1 text-sm text-brand-muted" suppressHydrationWarning>{locationText}</div>
             {renderSpecTable(listingKey, specRows)}
@@ -178,6 +192,14 @@ export default function ListingCard({
                     {dealTierMeta.label}
                   </span>
                 ) : null}
+                {engineBadgeText ? (
+                  <span
+                    className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold ${engineBadgeClass ?? 'border-[#3A4454] bg-[#141922] text-[#B2B2B2]'}`}
+                    title={engineBadgeTitle}
+                  >
+                    {engineBadgeText}
+                  </span>
+                ) : null}
               </div>
               <div className="truncate text-[11px] text-brand-muted" suppressHydrationWarning>{locationText}</div>
             </div>
@@ -206,6 +228,14 @@ export default function ListingCard({
         {dealTierMeta ? (
           <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
             {dealTierMeta.label}
+          </span>
+        ) : null}
+        {engineBadgeText ? (
+          <span
+            className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold ${engineBadgeClass ?? 'border-[#3A4454] bg-[#141922] text-[#B2B2B2]'}`}
+            title={engineBadgeTitle}
+          >
+            {engineBadgeText}
           </span>
         ) : null}
       </div>

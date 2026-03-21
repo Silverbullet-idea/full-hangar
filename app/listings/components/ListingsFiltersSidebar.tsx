@@ -14,6 +14,7 @@ type ListingSourceKey =
 type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
 type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
+type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
 type ListingsFiltersSidebarProps = {
   makeFilter: string
@@ -42,6 +43,8 @@ type ListingsFiltersSidebarProps = {
   setTotalTimeMax: (value: number) => void
   maintenanceBand: MaintenanceBandFilter
   setMaintenanceBand: (value: MaintenanceBandFilter) => void
+  engineTime: EngineTimeFilter
+  setEngineTime: (value: EngineTimeFilter) => void
   trueCostMin: number
   setTrueCostMin: (value: number) => void
   trueCostMax: number
@@ -83,6 +86,8 @@ export default function ListingsFiltersSidebar({
   setTotalTimeMax,
   maintenanceBand,
   setMaintenanceBand,
+  engineTime,
+  setEngineTime,
   trueCostMin,
   setTrueCostMin,
   trueCostMax,
@@ -394,6 +399,56 @@ export default function ListingsFiltersSidebar({
             <option value="severe">Severe (&gt; $250k)</option>
           </select>
         </label>
+        <fieldset className="rounded border border-[#2b3342] bg-[#121822] p-3">
+          <legend className="px-1 text-xs font-semibold text-[#d1d5db]">Engine Time</legend>
+          <div className="mt-2 space-y-1.5 text-[11px] text-brand-muted">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="engine-time-filter"
+                checked={engineTime === 'any'}
+                onChange={() => setEngineTime('any')}
+              />
+              Any engine time
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="engine-time-filter"
+                checked={engineTime === 'fresh'}
+                onChange={() => setEngineTime('fresh')}
+              />
+              Fresh (75%+ life remaining)
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="engine-time-filter"
+                checked={engineTime === 'mid'}
+                onChange={() => setEngineTime('mid')}
+              />
+              Mid-life (50-75%)
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="engine-time-filter"
+                checked={engineTime === 'approaching'}
+                onChange={() => setEngineTime('approaching')}
+              />
+              Approaching TBO (under 50%)
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="engine-time-filter"
+                checked={engineTime === 'hasHours'}
+                onChange={() => setEngineTime('hasHours')}
+              />
+              Has engine hours listed
+            </label>
+          </div>
+        </fieldset>
         <div className="rounded border border-[#2b3342] bg-[#121822] p-3">
           <div className="mb-2 text-xs font-semibold text-[#d1d5db]">True Cost Range (Exact)</div>
           <div className="grid grid-cols-2 gap-2">

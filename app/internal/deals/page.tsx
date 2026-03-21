@@ -15,10 +15,26 @@ const DEALS_SORT_KEY = 'internal_deals_sort'
 const DEALS_PRESET_KEY = 'internal_deals_preset'
 const NAV_LOADING_START_EVENT = 'fullhangar:navigation-loading-start'
 const NAV_LOADING_END_EVENT = 'fullhangar:navigation-loading-end'
-const DEFAULT_TIERS = new Set(['EXCEPTIONAL_DEAL', 'GOOD_DEAL'])
 const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKET', 'OVERPRICED'] as const
+const DEFAULT_TIERS = new Set(DEAL_TIERS)
+const DEFAULT_MAX_PRICE = 2000000
+const DEALS_PRICE_FILTER = `asking_price.lte.${DEFAULT_MAX_PRICE},asking_price.is.null`
+const DEALS_FALLBACK_COLUMNS_WITH_ENGINE =
+  'id,source_id,year,make,model,asking_price,deal_rating,deal_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at,engine_hours_smoh,engine_tbo_hours,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_data_quality'
+const DEALS_FALLBACK_COLUMNS_BASE =
+  'id,source_id,year,make,model,asking_price,deal_rating,deal_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+function buildDealsListingQuery(selectColumns: string | null) {
+  const query = supabase
+    .from('public_listings')
+    .select(selectColumns ?? '*')
+    .or(DEALS_PRICE_FILTER)
+    .order('deal_rating', { ascending: false, nullsFirst: false })
+    .limit(2500)
+  return query
+}
 
 function preferText(primary: string | null | undefined, fallback: string | null | undefined): string | null | undefined {
   const normalizedPrimary = (primary ?? '').trim()
@@ -59,10 +75,10 @@ const endNavigationLoading = () => {
 export default function InternalDealsPage() {
   const [rows, setRows] = useState<DealListing[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'all' | 'priority' | 'watchlist'>('priority')
+  const [activeTab, setActiveTab] = useState<'all' | 'priority' | 'watchlist'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const [maxPrice, setMaxPrice] = useState(50000)
+  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX_PRICE)
   const [selectedTiers, setSelectedTiers] = useState<Set<string>>(new Set(DEFAULT_TIERS))
   const [selectedMakes, setSelectedMakes] = useState<string[]>([])
   const [minAvionicsScore, setMinAvionicsScore] = useState(0)
@@ -70,11 +86,17 @@ export default function InternalDealsPage() {
   const [hasNNumberOnly, setHasNNumberOnly] = useState(false)
   const [faaAlertsOnly, setFaaAlertsOnly] = useState(false)
   const [highPriorityOnly, setHighPriorityOnly] = useState(false)
+  const [engineFreshOnly, setEngineFreshOnly] = useState(false)
+  const [engineMidOnly, setEngineMidOnly] = useState(false)
+  const [engineApproachingOnly, setEngineApproachingOnly] = useState(false)
+  const [engineOverrunOnly, setEngineOverrunOnly] = useState(false)
+  const [hasEngineDataOnly, setHasEngineDataOnly] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('deal_rating')
   const [activePreset, setActivePreset] = useState<PresetKey>('none')
   const [watchlist, setWatchlist] = useState<Record<string, WatchlistEntry>>({})
   const [recentSales, setRecentSales] = useState<RecentSoldRecord[]>([])
   const [recentSalesLoading, setRecentSalesLoading] = useState(true)
+  const [didAutoRelaxFilters, setDidAutoRelaxFilters] = useState(false)
 
   useEffect(() => {
     const raw = localStorage.getItem(WATCHLIST_KEY)
@@ -107,7 +129,7 @@ export default function InternalDealsPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem(DEALS_SORT_KEY)
-    if (raw === 'deal_rating' || raw === 'vs_median_price' || raw === 'days_on_market' || raw === 'price_reduction_amount' || raw === 'component_gap_value') {
+    if (raw === 'deal_rating' || raw === 'vs_median_price' || raw === 'days_on_market' || raw === 'price_reduction_amount' || raw === 'component_gap_value' || raw === 'engine_life_desc' || raw === 'engine_life_asc') {
       setSortKey(raw)
     }
     const presetRaw = localStorage.getItem(DEALS_PRESET_KEY)
@@ -128,26 +150,54 @@ export default function InternalDealsPage() {
     ;(async () => {
       try {
         startNavigationLoading()
-        const listingQuery = supabase
-          .from('public_listings')
-          .select('*')
-          .or('asking_price.lte.60000,asking_price.is.null')
-          .order('deal_rating', { ascending: false, nullsFirst: false })
-          .limit(2500)
-        const listingResult = await withTimeout(
-          listingQuery as unknown as Promise<{ data: DealListing[] | null; error: unknown }>,
-          12000,
-          'internal deals listing query'
-        )
-        const data = listingResult.data
-        const error = listingResult.error
-
-        if (error) {
-          console.error('Failed to load internal deals:', error)
-          return
+        let baseRows: DealListing[] = []
+        try {
+          const apiResponse = await withTimeout(
+            fetch('/api/listings?page=1&pageSize=2500&sortBy=deal_desc'),
+            12000,
+            'internal deals api listings fallback fetch'
+          )
+          if (apiResponse.ok) {
+            const payload = await apiResponse.json()
+            const rows = Array.isArray(payload?.data) ? (payload.data as DealListing[]) : []
+            if (rows.length > 0) {
+              baseRows = rows
+            }
+          }
+        } catch (apiFallbackError) {
+          console.warn('Internal deals API fallback fetch failed; continuing with direct public_listings query', apiFallbackError)
         }
 
-        const baseRows = (data ?? []) as DealListing[]
+        const runDealsQuery = async (selectColumns: string | null, label: string) =>
+          withTimeout(
+            buildDealsListingQuery(selectColumns) as unknown as Promise<{ data: DealListing[] | null; error: unknown }>,
+            12000,
+            label
+          )
+
+        if (baseRows.length === 0) {
+          let listingResult = await runDealsQuery(null, 'internal deals listing query')
+          if (listingResult.error) {
+            console.warn('Primary internal deals query failed; retrying with explicit columns + engine fields', listingResult.error)
+            listingResult = await runDealsQuery(
+              DEALS_FALLBACK_COLUMNS_WITH_ENGINE,
+              'internal deals fallback query with engine fields'
+            )
+          }
+          if (listingResult.error) {
+            console.warn('Engine-field fallback failed; retrying with conservative columns', listingResult.error)
+            listingResult = await runDealsQuery(
+              DEALS_FALLBACK_COLUMNS_BASE,
+              'internal deals conservative fallback query'
+            )
+          }
+          if (listingResult.error) {
+            console.error('Failed to load internal deals:', listingResult.error)
+            return
+          }
+          baseRows = (listingResult.data ?? []) as DealListing[]
+        }
+
         if (baseRows.length === 0) {
           setRows(baseRows)
           return
@@ -238,11 +288,20 @@ export default function InternalDealsPage() {
         if (hasNNumberOnly && !normalizeText(row.n_number)) return false
         if (faaAlertsOnly && !normalizeText(row.faa_registration_alert)) return false
         if (highPriorityOnly && !isHighPriorityDeal(row)) return false
+        const lifePct = getEngineLifePct(row)
+        const overrun = getEngineOverrunLiability(row)
+        const engineConditions: boolean[] = []
+        if (engineFreshOnly) engineConditions.push(typeof lifePct === 'number' && lifePct >= 0.75)
+        if (engineMidOnly) engineConditions.push(typeof lifePct === 'number' && lifePct >= 0.5 && lifePct < 0.75)
+        if (engineApproachingOnly) engineConditions.push(typeof lifePct === 'number' && lifePct < 0.5)
+        if (engineOverrunOnly) engineConditions.push(overrun > 0)
+        if (hasEngineDataOnly) engineConditions.push(hasEngineData(row))
+        if (engineConditions.length > 0 && !engineConditions.some(Boolean)) return false
 
         return true
       })
       .sort((a, b) => compareDeals(a, b, sortKey))
-  }, [rows, excludeNoPrice, faaAlertsOnly, hasNNumberOnly, highPriorityOnly, maxPrice, minAvionicsScore, selectedMakes, selectedTiers, sortKey])
+  }, [rows, excludeNoPrice, faaAlertsOnly, hasNNumberOnly, highPriorityOnly, maxPrice, minAvionicsScore, selectedMakes, selectedTiers, sortKey, engineFreshOnly, engineMidOnly, engineApproachingOnly, engineOverrunOnly, hasEngineDataOnly])
 
   const watchlistRows = useMemo(() => {
     return rows.filter((row) => Boolean(watchlist[row.id])).sort((a, b) => compareDeals(a, b, sortKey))
@@ -253,6 +312,30 @@ export default function InternalDealsPage() {
   }, [filteredRows])
 
   const displayedRows = activeTab === 'watchlist' ? watchlistRows : activeTab === 'priority' ? priorityRows : filteredRows
+
+  useEffect(() => {
+    // QA-safety: if data exists but current filters produce zero rows, auto-relax once.
+    if (didAutoRelaxFilters) return
+    if (rows.length === 0 || filteredRows.length > 0) return
+    if (activeTab === 'watchlist') return
+    setMaxPrice(DEFAULT_MAX_PRICE)
+    setSelectedTiers(new Set(DEFAULT_TIERS))
+    setSelectedMakes([])
+    setMinAvionicsScore(0)
+    setExcludeNoPrice(false)
+    setHasNNumberOnly(false)
+    setFaaAlertsOnly(false)
+    setHighPriorityOnly(false)
+    setEngineFreshOnly(false)
+    setEngineMidOnly(false)
+    setEngineApproachingOnly(false)
+    setEngineOverrunOnly(false)
+    setHasEngineDataOnly(false)
+    setSortKey('deal_rating')
+    setActiveTab('all')
+    setActivePreset('none')
+    setDidAutoRelaxFilters(true)
+  }, [activeTab, didAutoRelaxFilters, filteredRows.length, rows.length])
 
   const topStats = useMemo(() => {
     const exceptionalCount = baseUnder50k.filter((row) => normalizeTier(row.deal_tier) === 'EXCEPTIONAL_DEAL').length
@@ -318,6 +401,11 @@ export default function InternalDealsPage() {
       setHasNNumberOnly(true)
       setFaaAlertsOnly(false)
       setHighPriorityOnly(false)
+      setEngineFreshOnly(false)
+      setEngineMidOnly(false)
+      setEngineApproachingOnly(false)
+      setEngineOverrunOnly(false)
+      setHasEngineDataOnly(false)
       setSortKey('deal_rating')
       return
     }
@@ -330,6 +418,11 @@ export default function InternalDealsPage() {
       setHasNNumberOnly(false)
       setFaaAlertsOnly(false)
       setHighPriorityOnly(true)
+      setEngineFreshOnly(false)
+      setEngineMidOnly(false)
+      setEngineApproachingOnly(false)
+      setEngineOverrunOnly(false)
+      setHasEngineDataOnly(false)
       setSortKey('days_on_market')
       return
     }
@@ -342,11 +435,16 @@ export default function InternalDealsPage() {
       setHasNNumberOnly(false)
       setFaaAlertsOnly(false)
       setHighPriorityOnly(false)
+      setEngineFreshOnly(false)
+      setEngineMidOnly(false)
+      setEngineApproachingOnly(false)
+      setEngineOverrunOnly(false)
+      setHasEngineDataOnly(false)
       setSortKey('price_reduction_amount')
       return
     }
 
-    setMaxPrice(50000)
+    setMaxPrice(DEFAULT_MAX_PRICE)
     setSelectedTiers(new Set(DEFAULT_TIERS))
     setSelectedMakes([])
     setMinAvionicsScore(0)
@@ -354,6 +452,11 @@ export default function InternalDealsPage() {
     setHasNNumberOnly(false)
     setFaaAlertsOnly(false)
     setHighPriorityOnly(false)
+    setEngineFreshOnly(false)
+    setEngineMidOnly(false)
+    setEngineApproachingOnly(false)
+    setEngineOverrunOnly(false)
+    setHasEngineDataOnly(false)
     setSortKey('deal_rating')
   }
 
@@ -400,6 +503,16 @@ export default function InternalDealsPage() {
           setFaaAlertsOnly={setFaaAlertsOnly}
           highPriorityOnly={highPriorityOnly}
           setHighPriorityOnly={setHighPriorityOnly}
+          engineFreshOnly={engineFreshOnly}
+          setEngineFreshOnly={setEngineFreshOnly}
+          engineMidOnly={engineMidOnly}
+          setEngineMidOnly={setEngineMidOnly}
+          engineApproachingOnly={engineApproachingOnly}
+          setEngineApproachingOnly={setEngineApproachingOnly}
+          engineOverrunOnly={engineOverrunOnly}
+          setEngineOverrunOnly={setEngineOverrunOnly}
+          hasEngineDataOnly={hasEngineDataOnly}
+          setHasEngineDataOnly={setHasEngineDataOnly}
           toTierBadgeText={toTierBadgeText}
         />
       </div>
@@ -425,6 +538,8 @@ export default function InternalDealsPage() {
         daysListedClass={daysListedClass}
         formatDaysListed={formatDaysListed}
         isHighPriorityDeal={isHighPriorityDeal}
+        sortKey={sortKey}
+        setSortKey={setSortKey}
       />
 
       {displayedRows.length === 0 ? (
@@ -472,6 +587,41 @@ function tierBadgeClass(tier: string): string {
 function getAskingPrice(row: DealListing): number | null {
   const price = row.asking_price ?? row.price_asking
   return typeof price === 'number' ? price : null
+}
+
+function getEngineLifePct(row: DealListing): number | null {
+  const pct = row.ev_pct_life_remaining
+  if (typeof pct === 'number' && Number.isFinite(pct)) {
+    return Math.max(0, Math.min(1, pct))
+  }
+  const smohCandidate = row.ev_hours_smoh ?? row.engine_hours_smoh ?? row.time_since_overhaul
+  const tboCandidate = row.ev_tbo_hours ?? row.engine_tbo_hours
+  if (
+    typeof smohCandidate === 'number' &&
+    Number.isFinite(smohCandidate) &&
+    typeof tboCandidate === 'number' &&
+    Number.isFinite(tboCandidate) &&
+    tboCandidate > 0
+  ) {
+    return Math.max(0, Math.min(1, (tboCandidate - smohCandidate) / tboCandidate))
+  }
+  return null
+}
+
+function getEngineOverrunLiability(row: DealListing): number {
+  const overrun = row.ev_engine_overrun_liability
+  return typeof overrun === 'number' && overrun > 0 ? overrun : 0
+}
+
+function hasEngineData(row: DealListing): boolean {
+  return typeof row.ev_hours_smoh === 'number' || typeof row.time_since_overhaul === 'number'
+}
+
+function getDeferredTotal(row: DealListing): number | null {
+  const base = typeof row.deferred_total === 'number' ? row.deferred_total : null
+  const overrun = getEngineOverrunLiability(row)
+  if (base === null && overrun <= 0) return null
+  return (base ?? 0) + overrun
 }
 
 function formatScore(value: number | null): string {
@@ -575,6 +725,13 @@ function compareDeals(a: DealListing, b: DealListing, sortKey: SortKey): number 
     const bGap = b.component_gap_value ?? Number.NEGATIVE_INFINITY
     if (aGap !== bGap) return bGap - aGap
   }
+  if (sortKey === 'engine_life_desc' || sortKey === 'engine_life_asc') {
+    const aLife = getEngineLifePct(a)
+    const bLife = getEngineLifePct(b)
+    const aRank = aLife === null ? Number.NEGATIVE_INFINITY : aLife
+    const bRank = bLife === null ? Number.NEGATIVE_INFINITY : bLife
+    if (aRank !== bRank) return sortKey === 'engine_life_desc' ? bRank - aRank : aRank - bRank
+  }
 
   const priorityDelta = priorityRank(b) - priorityRank(a)
   if (priorityDelta !== 0) return priorityDelta
@@ -602,6 +759,8 @@ function buildDealExplanation(row: DealListing) {
   const descriptionText = `${row.description ?? ''} ${row.description_full ?? ''}`.toLowerCase()
   const annualCurrent = descriptionText.includes('annual') && (descriptionText.includes('current') || descriptionText.includes('fresh'))
   const componentGap = typeof row.component_gap_value === 'number' ? row.component_gap_value : null
+  const engineOverrun = getEngineOverrunLiability(row)
+  const deferredTotal = getDeferredTotal(row)
 
   let priceLine = 'Price: CALL — insufficient pricing data'
   if (price != null && typeof vsMedian === 'number') {
@@ -636,6 +795,12 @@ function buildDealExplanation(row: DealListing) {
       : componentGap >= 0
       ? `Component gap: +$${Math.round(componentGap).toLocaleString()} (estimated component value above ask)`
       : `Component gap: -$${Math.abs(Math.round(componentGap)).toLocaleString()}`
+  const deferredLine =
+    deferredTotal == null
+      ? 'Deferred: unavailable'
+      : engineOverrun > 0
+        ? `Deferred: $${Math.round(deferredTotal).toLocaleString()} total (includes $${Math.round(engineOverrun).toLocaleString()} engine overrun)`
+        : `Deferred: $${Math.round(deferredTotal).toLocaleString()}`
 
   const riskLine =
     alert.length > 0
@@ -661,6 +826,7 @@ function buildDealExplanation(row: DealListing) {
     engine: engineLine,
     avionics: avionicsLine,
     component: componentLine,
+    deferred: deferredLine,
     risk: riskLine,
     recommendation,
   }

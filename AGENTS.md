@@ -245,7 +245,8 @@ Recommended verification flow:
 
 1. Compare local `supabase/migrations/` files against applied remote migration history.
 2. Apply only missing migrations in chronological order.
-3. Run:
+3. **Engine value / `public_listings` `ev_*`:** apply order and verification notes are in `docs/ENGINE_VALUE_MIGRATIONS.md` (migrations `20260321000062`, `20260321000061`, `20260322000065` — skip any already on the remote).
+4. Run:
 
 ```bash
 .venv312\Scripts\python.exe scraper\backfill_scores.py

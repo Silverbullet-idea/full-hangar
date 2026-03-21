@@ -34,9 +34,11 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
+  | 'engine_life'
 type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
 type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
+type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
 type FilterOptions = {
   makes: string[]
@@ -74,6 +76,7 @@ type ListingsClientProps = {
   initialTotalTimeMin?: number
   initialTotalTimeMax?: number
   initialMaintenanceBand?: MaintenanceBandFilter
+  initialEngineTime?: EngineTimeFilter
   initialTrueCostMin?: number
   initialTrueCostMax?: number
   initialPage?: number
@@ -122,6 +125,7 @@ export default function ListingsClient({
   initialTotalTimeMin = 0,
   initialTotalTimeMax = 0,
   initialMaintenanceBand = 'any',
+  initialEngineTime = 'any',
   initialTrueCostMin = 0,
   initialTrueCostMax = 0,
   initialPage = 1,
@@ -160,6 +164,7 @@ export default function ListingsClient({
   const [totalTimeMin, setTotalTimeMin] = useState(Math.max(0, initialTotalTimeMin))
   const [totalTimeMax, setTotalTimeMax] = useState(Math.max(0, initialTotalTimeMax))
   const [maintenanceBand, setMaintenanceBand] = useState<MaintenanceBandFilter>(initialMaintenanceBand)
+  const [engineTime, setEngineTime] = useState<EngineTimeFilter>(initialEngineTime)
   const [trueCostMin, setTrueCostMin] = useState(Math.max(0, initialTrueCostMin))
   const [trueCostMax, setTrueCostMax] = useState(Math.max(0, initialTrueCostMax))
   const [appliedMinPrice, setAppliedMinPrice] = useState(Math.max(0, initialMinPrice))
@@ -170,6 +175,7 @@ export default function ListingsClient({
   const [appliedTotalTimeMin, setAppliedTotalTimeMin] = useState(Math.max(0, initialTotalTimeMin))
   const [appliedTotalTimeMax, setAppliedTotalTimeMax] = useState(Math.max(0, initialTotalTimeMax))
   const [appliedMaintenanceBand, setAppliedMaintenanceBand] = useState<MaintenanceBandFilter>(initialMaintenanceBand)
+  const [appliedEngineTime, setAppliedEngineTime] = useState<EngineTimeFilter>(initialEngineTime)
   const [appliedTrueCostMin, setAppliedTrueCostMin] = useState(Math.max(0, initialTrueCostMin))
   const [appliedTrueCostMax, setAppliedTrueCostMax] = useState(Math.max(0, initialTrueCostMax))
   const [categoryFilter, setCategoryFilter] = useState<CategoryValue>(initialCategoryFilter)
@@ -206,6 +212,7 @@ export default function ListingsClient({
     setTotalTimeMin(Math.max(0, initialTotalTimeMin))
     setTotalTimeMax(Math.max(0, initialTotalTimeMax))
     setMaintenanceBand(initialMaintenanceBand)
+    setEngineTime(initialEngineTime)
     setTrueCostMin(Math.max(0, initialTrueCostMin))
     setTrueCostMax(Math.max(0, initialTrueCostMax))
     setAppliedMinPrice(Math.max(0, initialMinPrice))
@@ -216,6 +223,7 @@ export default function ListingsClient({
     setAppliedTotalTimeMin(Math.max(0, initialTotalTimeMin))
     setAppliedTotalTimeMax(Math.max(0, initialTotalTimeMax))
     setAppliedMaintenanceBand(initialMaintenanceBand)
+    setAppliedEngineTime(initialEngineTime)
     setAppliedTrueCostMin(Math.max(0, initialTrueCostMin))
     setAppliedTrueCostMax(Math.max(0, initialTrueCostMax))
     setCategoryFilter(initialCategoryFilter)
@@ -246,6 +254,7 @@ export default function ListingsClient({
     initialTotalTimeMin,
     initialTotalTimeMax,
     initialMaintenanceBand,
+    initialEngineTime,
     initialTrueCostMin,
     initialTrueCostMax,
     initialCategoryFilter,
@@ -302,7 +311,7 @@ export default function ListingsClient({
     const validSorts: SortOption[] = [
       'price_low', 'price_high', 'deal_desc',
       'market_best', 'market_worst', 'risk_low', 'risk_high',
-      'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest'
+      'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life'
     ]
     if (canApplySavedSort && savedSort && validSorts.includes(savedSort as SortOption)) {
       setSortBy(savedSort as SortOption)
@@ -429,7 +438,7 @@ export default function ListingsClient({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMinPrice, appliedMaxPrice, appliedPriceStatus, appliedYearMin, appliedYearMax, appliedTotalTimeMin, appliedTotalTimeMax, appliedMaintenanceBand, appliedTrueCostMin, appliedTrueCostMax, categoryFilter, appliedRiskFilter, dealFilter, pageSize])
+  }, [appliedSearchTerm, appliedMakeFilter, appliedModelFilter, appliedSubModelFilter, appliedSourceFilter, minimumScore, appliedMinPrice, appliedMaxPrice, appliedPriceStatus, appliedYearMin, appliedYearMax, appliedTotalTimeMin, appliedTotalTimeMax, appliedMaintenanceBand, appliedEngineTime, appliedTrueCostMin, appliedTrueCostMax, categoryFilter, appliedRiskFilter, dealFilter, pageSize])
 
   useEffect(() => {
     if (!hasSkippedInitialFetch.current) {
@@ -465,6 +474,7 @@ export default function ListingsClient({
         if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
         if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
         if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+        if (appliedEngineTime !== 'any') params.set('engineTime', appliedEngineTime)
         if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
         if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
         if (categoryFilter) params.set('category', categoryFilter)
@@ -513,6 +523,7 @@ export default function ListingsClient({
     appliedTotalTimeMin,
     appliedTotalTimeMax,
     appliedMaintenanceBand,
+    appliedEngineTime,
     appliedTrueCostMin,
     appliedTrueCostMax,
     categoryFilter,
@@ -541,6 +552,7 @@ export default function ListingsClient({
     if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
     if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
     if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+    if (appliedEngineTime !== 'any') params.set('engineTime', appliedEngineTime)
     if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
     if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (safePage > 1) params.set('page', String(safePage))
@@ -565,6 +577,7 @@ export default function ListingsClient({
     appliedTotalTimeMin,
     appliedTotalTimeMax,
     appliedMaintenanceBand,
+    appliedEngineTime,
     appliedTrueCostMin,
     appliedTrueCostMax,
     safePage,
@@ -590,6 +603,7 @@ export default function ListingsClient({
     if (appliedTotalTimeMin > 0) params.set('totalTimeMin', String(appliedTotalTimeMin))
     if (appliedTotalTimeMax > 0) params.set('totalTimeMax', String(appliedTotalTimeMax))
     if (appliedMaintenanceBand !== 'any') params.set('maintenanceBand', appliedMaintenanceBand)
+    if (appliedEngineTime !== 'any') params.set('engineTime', appliedEngineTime)
     if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
     if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (page > 1) params.set('page', String(page))
@@ -699,6 +713,63 @@ export default function ListingsClient({
     const ownershipBadgeText = isFractional ? 'Fractional' : undefined
     const locationText = l.location_label ?? 'Location unavailable'
     const dealRatingText = formatScore(typeof l.deal_rating === 'number' ? l.deal_rating : null)
+    const evPctLifeRemainingRaw = typeof l.ev_pct_life_remaining === 'number' ? l.ev_pct_life_remaining : null
+    const evHoursRemainingRaw = typeof l.ev_hours_remaining === 'number' ? l.ev_hours_remaining : null
+    const evHoursSmohRaw =
+      typeof l.ev_hours_smoh === 'number'
+        ? l.ev_hours_smoh
+        : typeof l.engine_hours_smoh === 'number'
+          ? l.engine_hours_smoh
+          : typeof l.time_since_overhaul === 'number'
+            ? l.time_since_overhaul
+            : null
+    const evDataQuality = String(l.ev_data_quality ?? '').trim().toLowerCase()
+    const evPctLifeRemaining =
+      typeof evPctLifeRemainingRaw === 'number' && Number.isFinite(evPctLifeRemainingRaw)
+        ? evPctLifeRemainingRaw
+        : 0
+    const hasEngineBadgeData =
+      evDataQuality !== 'none' &&
+      typeof evHoursSmohRaw === 'number' &&
+      Number.isFinite(evHoursSmohRaw) &&
+      evHoursSmohRaw >= 0 &&
+      typeof evPctLifeRemainingRaw === 'number' &&
+      Number.isFinite(evPctLifeRemainingRaw)
+    const isPastTbo = typeof evHoursRemainingRaw === 'number' && evHoursRemainingRaw < 0
+    const isOverdue = hasEngineBadgeData && (isPastTbo || evPctLifeRemaining < 0.05)
+    const badgeBaseClass = isOverdue
+      ? 'border-red-500 bg-red-500/15 text-red-300'
+      : evPctLifeRemaining >= 0.75
+        ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+        : evPctLifeRemaining >= 0.5
+          ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200'
+          : evPctLifeRemaining >= 0.25
+            ? 'border-amber-500 bg-amber-500/15 text-amber-300'
+            : 'border-orange-500 bg-orange-500/15 text-orange-300'
+    const hoursRemainingRounded =
+      typeof evHoursRemainingRaw === 'number' && Number.isFinite(evHoursRemainingRaw)
+        ? Math.max(0, Math.round(evHoursRemainingRaw))
+        : null
+    const fullEngineBadgeText = !hasEngineBadgeData
+      ? undefined
+      : isOverdue
+        ? 'Engine: Overdue'
+        : evPctLifeRemaining >= 0.75
+          ? 'Engine: Fresh'
+          : evPctLifeRemaining >= 0.5
+            ? 'Engine: Mid-life'
+            : evPctLifeRemaining >= 0.25
+              ? `Engine: ${hoursRemainingRounded?.toLocaleString('en-US') ?? '0'}hrs left`
+              : 'Engine: Low'
+    const compactEngineBadgeText = !hasEngineBadgeData
+      ? undefined
+      : isOverdue
+        ? '⚠ Overdue'
+        : evPctLifeRemaining >= 0.75
+          ? '●'
+          : evPctLifeRemaining >= 0.25
+            ? `~${hoursRemainingRounded?.toLocaleString('en-US') ?? '0'}hrs`
+            : 'Low'
 
     const specRows: Array<[string, string]> = [
       ['N-Number', tailText],
@@ -717,6 +788,9 @@ export default function ListingsClient({
         titleText={titleText}
         locationText={locationText}
         ownershipBadgeText={ownershipBadgeText}
+        engineBadgeText={mode === 'compact' ? compactEngineBadgeText : fullEngineBadgeText}
+        engineBadgeTitle={fullEngineBadgeText}
+        engineBadgeClass={hasEngineBadgeData ? badgeBaseClass : undefined}
         dealTier={typeof l.deal_tier === 'string' ? l.deal_tier : null}
         specRows={specRows}
         onImageError={() => {
@@ -781,6 +855,8 @@ export default function ListingsClient({
           setTotalTimeMax={setTotalTimeMax}
           maintenanceBand={maintenanceBand}
           setMaintenanceBand={setMaintenanceBand}
+          engineTime={engineTime}
+          setEngineTime={setEngineTime}
           trueCostMin={trueCostMin}
           setTrueCostMin={setTrueCostMin}
           trueCostMax={trueCostMax}
@@ -804,6 +880,7 @@ export default function ListingsClient({
             setTotalTimeMin(0)
             setTotalTimeMax(0)
             setMaintenanceBand('any')
+            setEngineTime('any')
             setTrueCostMin(0)
             setTrueCostMax(0)
             setRiskFilter('all')
@@ -822,6 +899,7 @@ export default function ListingsClient({
             setAppliedTotalTimeMin(totalTimeMin)
             setAppliedTotalTimeMax(totalTimeMax)
             setAppliedMaintenanceBand(maintenanceBand)
+            setAppliedEngineTime(engineTime)
             setAppliedTrueCostMin(trueCostMin)
             setAppliedTrueCostMax(trueCostMax)
             setCurrentPage(1)

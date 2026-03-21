@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       totalTimeMin: Number(search.get("totalTimeMin") ?? 0),
       totalTimeMax: Number(search.get("totalTimeMax") ?? 0),
       maintenanceBand: (search.get("maintenanceBand") ?? "any") as "any" | "light" | "moderate" | "heavy" | "severe",
+      engineTime: (search.get("engineTime") ?? "any") as "any" | "fresh" | "mid" | "approaching" | "hasHours",
       trueCostMin: Number(search.get("trueCostMin") ?? 0),
       trueCostMax: Number(search.get("trueCostMax") ?? 0),
       sortBy: search.get("sortBy") ?? "value_desc",

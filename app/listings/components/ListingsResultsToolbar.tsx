@@ -13,6 +13,7 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
+  | 'engine_life'
 
 type ListingsResultsToolbarProps = {
   safePage: number
@@ -74,6 +75,7 @@ export default function ListingsResultsToolbar({
             <option value="tt_high">Total Time (high to low)</option>
             <option value="year_newest">Year (newest first)</option>
             <option value="year_oldest">Year (oldest first)</option>
+            <option value="engine_life">Engine Life (most remaining first)</option>
             <option value="market_worst">Worst Market Delta (most above)</option>
           </select>
         </div>

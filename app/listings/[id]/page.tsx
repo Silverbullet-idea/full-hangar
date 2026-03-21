@@ -190,21 +190,43 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     ? listingRow.engine_time_since_overhaul
     : parsedEngineSmoh ?? parsedDescription.engineSmoh
   const engineTboHours =
+    pickNumber(raw, ["ev_tbo_hours"]) ??
     listingRow.engine_tbo_hours ??
     pickNumber(raw, ["engine_tbo_hours", "engine_tbo"]) ??
     parsedEngineTbo ??
     parsedDescription.engineTbo
+  const scoreData = parseUnknownRecord(raw, ["score_data"]) ?? parseUnknownRecord(listingRow as UnknownRow, ["score_data"])
+  const engineValueData = scoreData && typeof scoreData.engine_value === "object" ? (scoreData.engine_value as Record<string, unknown>) : null
   const engineRemainingValue =
+    pickNumber(engineValueData, ["engine_remaining_value"]) ??
+    pickNumber(raw, ["ev_engine_remaining_value"]) ??
     pickNumber(raw, ["engine_remaining_value", "engine_value_remaining"]) ?? null
   const engineOverrunLiability =
+    pickNumber(engineValueData, ["engine_overrun_liability"]) ??
+    pickNumber(raw, ["ev_engine_overrun_liability"]) ??
     pickNumber(raw, ["engine_overrun_liability", "engine_tbo_overrun_liability"]) ?? null
   const engineReservePerHour =
+    pickNumber(engineValueData, ["engine_reserve_per_hour"]) ??
+    pickNumber(raw, ["ev_engine_reserve_per_hour"]) ??
     pickNumber(raw, ["engine_reserve_per_hour", "engine_hourly_reserve"]) ?? null
   const engineHoursSmoh =
+    pickNumber(engineValueData, ["engine_hours_smoh"]) ??
+    pickNumber(raw, ["ev_hours_smoh"]) ??
     pickNumber(raw, ["engine_hours_smoh", "engine_time_since_overhaul", "time_since_overhaul"]) ??
     engineSmohHours ??
     null
+  const engineDataQuality =
+    pickText(engineValueData, ["data_quality"]) ??
+    pickText(raw, ["ev_data_quality"]) ??
+    null
+  const engineValueExplanation =
+    pickText(engineValueData, ["explanation"]) ??
+    pickText(raw, ["ev_explanation"]) ??
+    null
+  const engineTboReferenceLine = normalizeTboReferenceLine(engineValueExplanation)
   const listedEngineReplacementCost =
+    pickNumber(engineValueData, ["exchange_price"]) ??
+    pickNumber(raw, ["ev_exchange_price"]) ??
     pickNumber(raw, ["engine_replacement_cost", "engine_overhaul_cost", "engine_exchange_price", "engine_new_cost"]) ?? null
   const derivedEngineReplacementCost =
     typeof engineRemainingValue === "number" &&
@@ -215,6 +237,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
       ? (engineRemainingValue * engineTboHours) / (engineTboHours - engineHoursSmoh)
       : null
   const engineReplacementCost = listedEngineReplacementCost ?? derivedEngineReplacementCost
+  const possibleEngineOverhaulDate =
+    pickText(raw, ["engine_overhaul_date", "last_engine_overhaul_date", "last_overhaul_date"]) ??
+    pickText(engineValueData, ["last_overhaul_date"])
+  const currentYear = new Date().getFullYear()
+  const showEngineCalendarWarning =
+    typeof listingRow.year === "number" &&
+    Number.isFinite(listingRow.year) &&
+    currentYear - listingRow.year >= 10 &&
+    !possibleEngineOverhaulDate
   const engineModelText =
     cleanEngineModelText(
       pickText(raw, ["engine_model", "faa_engine_model_detail"]) ||
@@ -572,6 +603,10 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             hoursSmoh: engineHoursSmoh,
             tboHours: typeof engineTboHours === "number" ? engineTboHours : null,
             replacementCost: engineReplacementCost,
+            dataQuality: engineDataQuality,
+            explanation: engineValueExplanation,
+            tboReferenceLine: engineTboReferenceLine,
+            showCalendarWarning: showEngineCalendarWarning,
           }}
         />
         <RightDetailColumn
@@ -963,6 +998,33 @@ function formatAirworthy(raw: UnknownRow, parsedDescription?: ParsedSellerDescri
   const text = pickText(raw, ["airworthy"])
   if (!text && parsedDescription?.airworthy) return parsedDescription.airworthy
   return text || "Unknown"
+}
+
+function parseUnknownRecord(row: UnknownRow, keys: string[]): Record<string, unknown> | null {
+  for (const key of keys) {
+    const value = row && typeof row === "object" ? (row as Record<string, unknown>)[key] : null
+    if (!value) continue
+    if (typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value) as unknown
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>
+        }
+      } catch {
+        // Ignore invalid JSON values from heterogeneous payloads.
+      }
+    }
+  }
+  return null
+}
+
+function normalizeTboReferenceLine(value: string | null): string | null {
+  if (!value) return null
+  const compact = value.replace(/\s+/g, " ").trim()
+  if (!compact) return null
+  const firstSentence = compact.split(".")[0]?.trim() ?? compact
+  return firstSentence.length > 160 ? `${firstSentence.slice(0, 157)}...` : firstSentence
 }
 
 function normalizeEngineTypeLabel(

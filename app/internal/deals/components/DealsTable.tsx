@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { DealExplanation, DealListing, WatchlistEntry } from '../types'
+import type { DealExplanation, DealListing, SortKey, WatchlistEntry } from '../types'
 
 type DealsTableProps = {
   displayedRows: DealListing[]
@@ -23,6 +23,8 @@ type DealsTableProps = {
   daysListedClass: (value: number | null) => string
   formatDaysListed: (value: number | null) => string
   isHighPriorityDeal: (row: DealListing) => boolean
+  sortKey: SortKey
+  setSortKey: (value: SortKey) => void
 }
 
 function FragmentRow({ children }: { children: ReactNode }) {
@@ -66,6 +68,49 @@ function parseMakeModelFromTitle(title: string | null | undefined): { make: stri
   return { make, model }
 }
 
+function engineLifePct(row: DealListing): number | null {
+  const pct = row.ev_pct_life_remaining
+  if (typeof pct === 'number' && Number.isFinite(pct)) {
+    return Math.max(0, Math.min(1, pct))
+  }
+  return null
+}
+
+function engineOverrun(row: DealListing): number {
+  const overrun = row.ev_engine_overrun_liability
+  return typeof overrun === 'number' && overrun > 0 ? overrun : 0
+}
+
+function deferredTotal(row: DealListing): number | null {
+  const base = typeof row.deferred_total === 'number' ? row.deferred_total : null
+  const overrun = engineOverrun(row)
+  if (base === null && overrun <= 0) return null
+  return (base ?? 0) + overrun
+}
+
+function formatCurrency(value: number | null): string {
+  if (value === null) return '—'
+  return `$${Math.round(value).toLocaleString('en-US')}`
+}
+
+function renderEngineLife(row: DealListing): ReactNode {
+  const pct = engineLifePct(row)
+  const overrun = engineOverrun(row)
+  if (overrun > 0) {
+    return <span className="font-semibold text-red-300">⚠ Over</span>
+  }
+  if (pct === null || typeof row.ev_hours_smoh !== 'number') {
+    return <span className="text-[#777]">--</span>
+  }
+  const filled = Math.max(0, Math.min(5, Math.round(pct * 5)))
+  const dots = '●'.repeat(filled).padEnd(5, '○')
+  return (
+    <span className="font-semibold text-brand-muted">
+      {dots} <span className="text-white">{`${Math.round(pct * 100)}%`}</span>
+    </span>
+  )
+}
+
 function marketIntelHref(row: DealListing): string {
   const make = (row.make ?? '').trim()
   const model = (row.model ?? '').trim()
@@ -101,6 +146,8 @@ export default function DealsTable({
   daysListedClass,
   formatDaysListed,
   isHighPriorityDeal,
+  sortKey,
+  setSortKey,
 }: DealsTableProps) {
   return (
     <div className="overflow-x-auto rounded border border-brand-dark bg-[#111]">
@@ -114,6 +161,18 @@ export default function DealsTable({
             <th className="px-2 py-2 text-left">Price</th>
             <th className="px-2 py-2 text-left">vs Market</th>
             <th className="px-2 py-2 text-left">Component Gap</th>
+            <th className="px-2 py-2 text-left">Deferred</th>
+            <th className="px-2 py-2 text-left">
+              <button
+                type="button"
+                onClick={() => setSortKey(sortKey === 'engine_life_desc' ? 'engine_life_asc' : 'engine_life_desc')}
+                className="inline-flex items-center gap-1 text-left font-semibold hover:text-brand-orange"
+                title="Sort by engine life"
+              >
+                Engine
+                <span>{sortKey === 'engine_life_desc' ? '↓' : sortKey === 'engine_life_asc' ? '↑' : ''}</span>
+              </button>
+            </th>
             <th className="px-2 py-2 text-left">TT / SMOH</th>
             <th className="px-2 py-2 text-left">Avionics</th>
             <th className="px-2 py-2 text-left">Location</th>
@@ -158,6 +217,8 @@ export default function DealsTable({
                   <td className="px-2 py-2 align-top font-bold text-brand-orange">{formatPrice(row)}</td>
                   <td className="px-2 py-2 align-top">{formatVsMarket(row.vs_median_price)}</td>
                   <td className="px-2 py-2 align-top">{formatComponentGap(row.component_gap_value)}</td>
+                  <td className="px-2 py-2 align-top font-semibold">{formatCurrency(deferredTotal(row))}</td>
+                  <td className="px-2 py-2 align-top">{renderEngineLife(row)}</td>
                   <td className="px-2 py-2 align-top">
                     {formatInteger(row.total_time_airframe)} TT / {formatInteger(row.time_since_overhaul)} SMOH
                   </td>
@@ -242,7 +303,7 @@ export default function DealsTable({
                 </tr>
                 {isExpanded ? (
                   <tr className="border-t border-brand-dark bg-[#0f0f0f]">
-                    <td colSpan={13} className="p-3">
+                    <td colSpan={15} className="p-3">
                       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                         <div className="rounded border border-brand-dark bg-[#161616] p-3 text-xs">
                           <div className="mb-2 text-sm font-bold text-brand-orange">Deal Explanation</div>
@@ -250,6 +311,7 @@ export default function DealsTable({
                           <p className="mb-1">{summary.engine}</p>
                           <p className="mb-1">{summary.avionics}</p>
                           <p className="mb-1">{summary.component}</p>
+                          <p className="mb-1">{summary.deferred}</p>
                           <p className="mb-1">{summary.risk}</p>
                           <p className="mt-2 font-semibold text-white">{summary.recommendation}</p>
                         </div>

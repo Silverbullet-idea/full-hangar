@@ -56,6 +56,8 @@ export default function DealsControlsBar({
         <option value="days_on_market">Sort: Days listed</option>
         <option value="price_reduction_amount">Sort: Price reduction</option>
         <option value="component_gap_value">Sort: Component gap</option>
+        <option value="engine_life_desc">Sort: Engine life (high to low)</option>
+        <option value="engine_life_asc">Sort: Engine life (low to high)</option>
       </select>
       <button
         type="button"

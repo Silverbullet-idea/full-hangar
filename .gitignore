@@ -25,3 +25,9 @@ scraper/state/media_refresh/
 # Playwright local outputs
 test-results/
 playwright-report/
+
+# TypeScript incremental build info
+tsconfig.tsbuildinfo
+
+# Supabase CLI local cache
+supabase/.temp/
