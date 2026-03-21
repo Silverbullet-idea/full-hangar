@@ -1,7 +1,7 @@
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 20, 2026
+> Last updated: March 21, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -79,6 +79,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Geographic Intelligence section (market-intel Section 5) upgraded from plain table to interactive SVG choropleth map with state-level color encoding, listing count circles, hover tooltips, non-US footnote table, and full dark/light theme parity. New component: `app/components/GeoIntelMap.tsx`. State path data at `lib/geo/us-states-albers.ts`.
 - Mobile responsiveness pass shipped: listings page now has a bottom-sheet filter drawer on mobile (< 768px) with active-filter badge count, replacing the sidebar; listing detail page comps chart fixed for narrow viewport overflow, comps table columns hide on mobile, gallery images use CSS snap horizontal scroll, touch targets audited to 44px minimum; Deal Desk sensitivity grid is desktop-only with mobile fallback message, all 9 sections are single-column on mobile, number inputs have `inputMode="numeric"`, sticky P&L summary bar added for mobile; global header overflow verified; back-nav link added to listing detail on mobile. Full dark/light theme parity maintained throughout.
 - Mobile safe-area follow-up: root `viewportFit: "cover"` plus `env(safe-area-inset-*)` on Deal Desk sticky bar, filter drawer footer, and scroll padding; drawer max height uses `85dvh`; site header top padding respects notch.
+- Homepage redesign shipped: ticker bar, updated hero copy + score card mockup, Carfax one-liner banner, animated stats counters, market infographic grid (6 cards), how-it-works 3-step, deal patterns 3-card, score breakdown with pillar bars, testimonial restyle, footer CTA update. No backend changes.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -214,7 +215,7 @@ Each item should stay one-line actionable with clear completion criteria.
 - **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
 - **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.
 - **Pending migration decision:** add `stoh`, `sfoh`, and `no_damage_history` columns to `aircraft_listings` and wire into `backfill_scores.py` write path (currently stored in `description_intelligence` JSONB only).
-- **Score distribution deployment (ready):** run `validate_score_distribution_fix.py` then trigger new backfill per `SCORE_DISTRIBUTION_FIX_RUNBOOK.md` once current backfill completes.
+- **Score distribution deployment (ready):** after `backfill_scores.py --all --compute-comps` exits cleanly, run `npm run pipeline:score-dist:post-backfill` (or follow `SCORE_DISTRIBUTION_FIX_RUNBOOK.md` manually).
 
 ### Medium Priority
 
@@ -302,6 +303,16 @@ npm run pipeline:avionics:price-ingest
 npm run pipeline:media:coverage:active
 npm run pipeline:media:integrity
 .venv312\Scripts\python.exe scraper\validate_scores.py
+
+# After full `backfill_scores.py --all --compute-comps` completes (see SCORE_DISTRIBUTION_FIX_RUNBOOK.md)
+npm run pipeline:score-dist:post-backfill
+
+# One-shot: full `--all --compute-comps`, then post-backfill, then git commit audit + related docs/scripts
+npm run pipeline:score-dist:full-v193-and-commit
+
+# Chunked full re-score (`--all` in `--limit` batches + one `compute-comps-only` at end); resume-safe via checkpoint
+# Example: `npm run pipeline:backfill:all-chunked -- -ChunkSize 500 -FreshStart`
+npm run pipeline:backfill:all-chunked
 ```
 
 ---

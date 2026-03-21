@@ -1,0 +1,87 @@
+export default function HeroScoreCard() {
+  return (
+    <div className="home-hero-score-card relative overflow-hidden rounded-2xl border border-brand-dark bg-card-bg p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_both_0.2s_forwards]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted">Full Hangar Score Report</p>
+      <h3 className="mt-3 text-lg font-extrabold text-brand-white">1979 Cessna 172N Skyhawk</h3>
+      <p className="mt-1 text-xs text-brand-muted">N12345 · 4,210 TTAF · IO-360 · Van Nuys, CA</p>
+
+      <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-start">
+        <div className="flex shrink-0 justify-center sm:justify-start">
+          <div
+            className="relative grid h-[104px] w-[104px] place-items-center rounded-full p-[5px]"
+            style={{
+              background: "conic-gradient(#FF9900 0% 78%, var(--border) 78% 100%)",
+            }}
+          >
+            <div className="grid h-full w-full place-items-center rounded-full bg-card-bg">
+              <div className="text-center leading-none">
+                <span className="text-3xl font-extrabold text-brand-orange">78</span>
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-muted">Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-3">
+          <PillarRow label="Market Opportunity" value={81} pct={81} />
+          <PillarRow label="Condition" value={74} pct={74} />
+          <PillarRow label="Execution" value={68} pct={68} />
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <span className="rounded-md border border-[#4ade80]/25 bg-[#4ade80]/12 px-2.5 py-1 text-[11px] font-semibold text-[#4ade80]">
+          12% Below Market
+        </span>
+        <span className="rounded-md border border-[#4ade80]/25 bg-[#4ade80]/12 px-2.5 py-1 text-[11px] font-semibold text-[#4ade80]">
+          Engine 78% Life
+        </span>
+        <span className="rounded-md border border-[#FF9900]/25 bg-[#FF9900]/12 px-2.5 py-1 text-[11px] font-semibold text-[#FF9900]">
+          GTN 750 Detected
+        </span>
+        <span className="rounded-md border border-red-500/25 bg-red-500/12 px-2.5 py-1 text-[11px] font-semibold text-red-400">
+          Annual Due 45 Days
+        </span>
+      </div>
+
+      <div className="mt-5 border-t border-brand-dark pt-4 text-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <span className="text-brand-muted">
+            Asking: <span className="font-bold text-brand-white">$38,500</span>
+          </span>
+          <span className="text-brand-muted">
+            Market: <span className="font-bold text-brand-white">$42K – $48K</span>
+          </span>
+        </div>
+        <p className="mt-1 text-xs font-semibold text-[#4ade80]">↓ $3,500 discount signal</p>
+      </div>
+
+      <style>{`
+        @keyframes homeScoreCardFade {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .home-hero-score-card {
+            animation: none;
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function PillarRow({ label, value, pct }: { label: string; value: number; pct: number }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-bold text-brand-white">{label}</span>
+        <span className="font-extrabold text-brand-orange">{value}</span>
+      </div>
+      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-brand-dark">
+        <div className="h-full rounded-full bg-brand-orange" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
