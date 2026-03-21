@@ -1,7 +1,7 @@
 export default function HeroScoreCard() {
   return (
     <div
-      className="home-hero-score-card relative overflow-hidden rounded-2xl border border-[#2B3444] p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_both_0.2s_forwards]"
+      className="home-hero-score-card relative overflow-hidden rounded-2xl border border-[#2B3444] p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_0.2s_forwards]"
       style={{ backgroundColor: "#1a2538" }}
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#9AA4B2" }}>
