@@ -1,6 +1,4 @@
-# Guard against /listings hammering /api/listings/options (empty 200 + client refetch loop).
-# Requires repository secrets so `npm run dev` can reach Supabase (same vars as local .env.local + service role).
-name: Playwright listings options smoke
+name: Listings Options Smoke
 
 on:
   workflow_dispatch:
@@ -11,21 +9,12 @@ on:
       - "app/api/listings/**"
       - "lib/db/listingsRepository.ts"
       - "tests/smoke/**"
-      - "playwright.config.js"
-      - "package.json"
-      - "package-lock.json"
-  pull_request:
-    paths:
-      - "app/listings/**"
-      - "app/api/listings/**"
-      - "lib/db/listingsRepository.ts"
-      - "tests/smoke/**"
-      - "playwright.config.js"
+      - "playwright.config.*"
       - "package.json"
       - "package-lock.json"
 
 jobs:
-  listings-options-smoke:
+  smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -33,22 +22,17 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY }}
-
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "npm"
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Install Playwright Chromium
-        run: npx playwright install chromium --with-deps
-
-      - name: Run listings options no-loop smoke
-        run: npm run test:smoke:listings-options
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run listings smoke tests
+        run: npm run test:smoke:listings-all
