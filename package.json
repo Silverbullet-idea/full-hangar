@@ -46,6 +46,7 @@
     "pipeline:avbuyer": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-avbuyer-pipeline.ps1",
     "pipeline:avbuyer:dry": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-avbuyer-pipeline.ps1 -DryRun",
     "pipeline:avbuyer:preview": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-avbuyer-pipeline.ps1 -Preview",
+    "pipeline:airpower": "powershell -File scripts/run-airpower-pipeline.ps1",
     "pipeline:faa-monitor": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-faa-monitor.ps1",
     "pipeline:audit:non-aircraft": ".venv312\\Scripts\\python.exe scraper\\audit_non_aircraft_listings.py --strict-output scraper\\non_aircraft_strict_candidates_latest.json --borderline-output scraper\\non_aircraft_borderline_review_latest.json --combined-output scraper\\non_aircraft_review_latest.json",
     "pipeline:audit:non-aircraft:hybrid": ".venv312\\Scripts\\python.exe scraper\\audit_non_aircraft_listings.py --strict-output scraper\\non_aircraft_strict_candidates_latest.json --borderline-output scraper\\non_aircraft_borderline_review_latest.json --combined-output scraper\\non_aircraft_review_latest.json",
@@ -75,7 +76,12 @@
     "test:smoke:listings": "playwright test tests/smoke/listings-smoke.spec.js --reporter=line",
     "admin:seed-user": "node ./seed-admin-user.mjs",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "pipeline:score-dist:validate-dry": ".venv312\\Scripts\\python.exe scraper\\validate_score_distribution_fix.py",
+    "pipeline:score-dist:audit": ".venv312\\Scripts\\python.exe scraper\\audit_score_distribution.py",
+    "pipeline:score-dist:post-backfill": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-post-full-backfill-verification.ps1",
+    "pipeline:score-dist:full-v193-and-commit": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-v193-full-backfill-then-audit-commit.ps1",
+    "pipeline:backfill:all-chunked": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-backfill-all-chunked.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",

@@ -26,6 +26,14 @@ Intelligence v1.9.3 fixes score clustering (31.9% of listings at identical score
 .venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
 
 ## Post-deployment verification
+One-shot (runs dry validator, writes audit file, then `validate_scores.py`):
+
+```bash
+npm run pipeline:score-dist:post-backfill
+```
+
+Or manually:
+
 .venv312\Scripts\python.exe scraper\audit_score_distribution.py
 -> Save output to: scraper/score_distribution_audit_post_fix.txt
 -> Confirm: most common score < 5% of population (was 31.9%)
