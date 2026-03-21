@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { createServerClient } from "../../lib/supabase/server"
+import { createServerClient, isPublicSupabaseConfigured } from "../../lib/supabase/server"
 import { toAbsoluteUrl } from "../../lib/seo/site"
 
 type ListingSitemapRow = {
@@ -20,6 +20,12 @@ function normalizeLastModified(rawValue: string | null | undefined): Date {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rows: ListingSitemapRow[] = []
+
+  // Build-time (e.g. Vercel) may run static generation before env is available to this route.
+  // Return no listing URLs instead of throwing; set NEXT_PUBLIC_SUPABASE_* on the project for full sitemaps.
+  if (!isPublicSupabaseConfigured()) {
+    return []
+  }
 
   try {
     const supabase = createServerClient()
