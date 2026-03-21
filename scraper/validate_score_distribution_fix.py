@@ -1,4 +1,15 @@
 """
+Dry-run validator for score distribution fix.
+
+Loads 50 active listings from DB, scores them with the NEW logic, prints a distribution
+report. Does NOT write any changes to the database.
+
+Run:
+  .venv312\\Scripts\\python.exe scraper\\validate_score_distribution_fix.py
+
+Then if distribution looks good, run:
+  .venv312\\Scripts\\python.exe scraper\\backfill_scores.py --all --compute-comps
+
 Baseline output captured before this fix (from scraper/audit_score_distribution.py):
 
 === Score Distribution Audit ===
@@ -37,22 +48,17 @@ Risk level distribution:
   CRITICAL: 236
 """
 
-"""
-Dry-run validator for score distribution fix.
-Loads 50 active listings from DB, scores them with the NEW logic, prints a distribution
-report. Does NOT write any changes to the database.
-
-Run after the current backfill completes (Ryan will do this manually):
-  .venv312\\Scripts\\python.exe scraper\\validate_score_distribution_fix.py
-
-Then if distribution looks good, run:
-  .venv312\\Scripts\\python.exe scraper\\backfill_scores.py --all --compute-comps
-"""
-
 from __future__ import annotations
 
 import os
+import sys
 from collections import Counter
+from pathlib import Path
+
+# Allow importing `core` when run as `python scraper/validate_score_distribution_fix.py`
+_ROOT = Path(__file__).resolve().parent
+if _ROOT.name == "scraper":
+    sys.path.insert(0, str(_ROOT.parent))
 
 from dotenv import load_dotenv
 from supabase import create_client
@@ -60,7 +66,7 @@ from supabase import create_client
 from core.intelligence.aircraft_intelligence import aircraft_intelligence_score
 from backfill_scores import listing_for_intelligence
 
-load_dotenv(dotenv_path="scraper/.env")
+load_dotenv(dotenv_path=_ROOT / ".env")
 
 
 def _get_supabase():
@@ -101,8 +107,6 @@ def _fetch_sample_rows(limit: int = 50) -> list[dict]:
             "most_severe_damage",
             "has_accident_history",
             "faa_registration_alert",
-            "last_annual_date",
-            "elt_expiry_date",
             "value_score",
             "risk_level",
         ]

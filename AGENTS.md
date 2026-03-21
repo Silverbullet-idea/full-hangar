@@ -1,7 +1,7 @@
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 15, 2026
+> Last updated: March 20, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -123,6 +123,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing media resilience hardened (URL validation, gallery failover, proxy-safe placeholders, integrity audit tooling).
 - AirPower engine-overhaul pricing backend scaffold shipped: added table migration `20260321000060_add_engine_overhaul_pricing.sql`, new scraper `scraper/airpower_engine_scraper.py` (Playwright category discovery + requests detail parsing with Chrome view-source reconstruction support), and pipeline wrapper `scripts/run-airpower-pipeline.ps1` (`npm run pipeline:airpower`).
 - public_listings view gap closure migration applied (`20260320000066_add_missing_fields_to_public_listings_view.sql`): added accident/NTSB fields, FAA panel fields (`faa_owner`/`faa_status`/`faa_cert_date`/`faa_type_aircraft`), new scoring fields (`investment_score`, `market_opportunity_score`, `execution_score`, `pricing_confidence`, comp band fields), `deal_comparison_source`, and `manufacturer_tier`. `PUBLIC_LISTINGS_VIEW.md` updated to reflect new canonical view SQL.
+- v1.9.3 score-distribution deploy ops: `scraper/validate_score_distribution_fix.py` hardened (module import order, `sys.path` for `core`, `scraper/.env`, column list matches live `aircraft_listings`). Save `scraper/score_distribution_audit_post_fix.txt` only **after** `backfill_scores.py --all --compute-comps` completes — mid-backfill audits skew the `intelligence_version` mix. `SCORE_DISTRIBUTION_FIX_RUNBOOK.md` checklist updated for vintage-heavy dry-run sample.
 
 ### Intelligence and Scoring
 

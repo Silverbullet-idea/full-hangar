@@ -1,6 +1,10 @@
 # Score Distribution Fix - Deployment Runbook
 
-## Status: READY TO DEPLOY (pending current backfill completion)
+## Status: DEPLOY IN PROGRESS — full backfill running; re-run audit after it finishes
+
+> **Authoritative post-fix audit:** run `audit_score_distribution.py` only after
+> `backfill_scores.py --all --compute-comps` completes. A snapshot taken mid-backfill
+> will still show mostly the prior `intelligence_version` (e.g. 1.9.2) on most rows.
 
 ## Background
 Intelligence v1.9.3 fixes score clustering (31.9% of listings at identical score
@@ -14,8 +18,9 @@ Intelligence v1.9.3 fixes score clustering (31.9% of listings at identical score
 [ ] Current backfill (`scraper/backfill_scores.py --all --compute-comps`) has completed
 [ ] Run dry-run validator and confirm distribution is spread:
     .venv312\Scripts\python.exe scraper\validate_score_distribution_fix.py
-[ ] Confirm unique score count in 50-listing sample is >= 40 (not clustered)
-[ ] Confirm at least 1 listing scores >= 78 (LOW tier reachable)
+[ ] Confirm unique score count in 50-listing sample is healthy (not a single mass point).
+    Note: the sample is **year-ascending (vintage-heavy)** — use the full-fleet audit for LOW-tier and tie-rate gates.
+[ ] Optional: confirm at least one listing in the sample reaches LOW tier (>= 78); vintage samples may show none.
 
 ## Deployment
 .venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
