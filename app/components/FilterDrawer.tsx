@@ -33,9 +33,13 @@ export default function FilterDrawer({ open, onClose, onApply, onClearAll, child
         aria-label="Close filters"
       />
       <div
-        className={`absolute bottom-0 left-0 right-0 flex max-h-[85vh] flex-col rounded-t-2xl border border-border bg-background text-foreground shadow-lg transition-transform duration-300 ease-out ${
+        className={`absolute bottom-0 left-0 right-0 flex max-h-[85dvh] flex-col rounded-t-2xl border border-border bg-background text-foreground shadow-lg transition-transform duration-300 ease-out ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
+        style={{
+          paddingLeft: "max(0px, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(0px, env(safe-area-inset-right, 0px))",
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="filter-drawer-title"
@@ -57,7 +61,10 @@ export default function FilterDrawer({ open, onClose, onApply, onClearAll, child
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">{children}</div>
-        <div className="shrink-0 border-t border-border bg-background px-4 py-3">
+        <div
+          className="shrink-0 border-t border-border bg-background px-4 pt-3"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
+        >
           <div className="flex flex-col gap-2">
             <button
               type="button"

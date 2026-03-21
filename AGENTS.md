@@ -78,6 +78,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - `/internal/admin` now includes source-level inventory detail view (table, completeness tiers, unknown-domain disambiguation, and 15-field coverage heatmap).
 - Geographic Intelligence section (market-intel Section 5) upgraded from plain table to interactive SVG choropleth map with state-level color encoding, listing count circles, hover tooltips, non-US footnote table, and full dark/light theme parity. New component: `app/components/GeoIntelMap.tsx`. State path data at `lib/geo/us-states-albers.ts`.
 - Mobile responsiveness pass shipped: listings page now has a bottom-sheet filter drawer on mobile (< 768px) with active-filter badge count, replacing the sidebar; listing detail page comps chart fixed for narrow viewport overflow, comps table columns hide on mobile, gallery images use CSS snap horizontal scroll, touch targets audited to 44px minimum; Deal Desk sensitivity grid is desktop-only with mobile fallback message, all 9 sections are single-column on mobile, number inputs have `inputMode="numeric"`, sticky P&L summary bar added for mobile; global header overflow verified; back-nav link added to listing detail on mobile. Full dark/light theme parity maintained throughout.
+- Mobile safe-area follow-up: root `viewportFit: "cover"` plus `env(safe-area-inset-*)` on Deal Desk sticky bar, filter drawer footer, and scroll padding; drawer max height uses `85dvh`; site header top padding respects notch.
 
 ### Backend, Pipeline, and Data Sources
 

@@ -376,7 +376,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         : { label: "Weak", className: "text-red-400" as const };
 
   return (
-    <div className="space-y-3 pb-24 md:pb-0">
+    <div className="space-y-3 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-0">
       {researchHref ? (
         <div className="flex justify-end">
           <Link
@@ -683,8 +683,12 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
       ) : null}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-2 border-t border-border bg-background px-4 py-3 shadow-lg md:hidden"
-        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-2 border-t border-border bg-background py-3 shadow-lg md:hidden"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
+          paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+        }}
       >
         <div className="min-w-0 text-sm">
           <span className="text-muted-foreground">Est. Profit</span>

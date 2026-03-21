@@ -1,6 +1,6 @@
 import './globals.css'
 import { Suspense } from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import HeaderBrand from "./components/HeaderBrand"
 import HeaderSearchBar from "./components/HeaderSearchBar"
 import { NavigationLoadingProvider } from "./components/NavigationLoadingProvider"
@@ -17,6 +17,10 @@ import {
 
 const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
 const bingVerification = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION?.trim()
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -72,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Suspense fallback={null}>
             <NavigationLoadingProvider>
-              <header className="border-b border-brand-dark bg-brand-black px-4 py-3 sm:px-6 sm:py-4">
+              <header className="border-b border-brand-dark bg-brand-black px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-6 sm:pb-4 sm:pt-[max(1rem,env(safe-area-inset-top,0px))]">
                 <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
                   <a href="/" className="flex shrink-0 items-center" aria-label="Full Hangar home">
                     <HeaderBrand />
