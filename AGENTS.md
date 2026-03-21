@@ -83,7 +83,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Homepage bug fixes: corrected double-$ price strings, ticker bar now full-bleed via `calc(-50vw + 50%)` margin breakout, score card pillar bar colors corrected (orange/green/amber).
 - Homepage pass 2 fixes: remaining double-dollar price strings cleared, footer CTA h2 `text-brand-white` → `text-[#ffffff]` + sub-copy `text-white/70` for light-mode readability on dark gradient (`text-white` is remapped in light theme in `globals.css`); `HomeStatsBar` / `HomeScoreBreakdown` client render verified.
 - Homepage pass 3: score card hardcoded dark in both themes (bg/ring/bars/text), deal pattern card headings use `text-[#ffffff]` on `#161f2d`, stats bar always `#121923` with white numerals and `#9AA4B2` labels, hero h1 `#ffffff`, proof pills polished above CTAs with `#9AA4B2`, price strings as clean literals (score card + infographics), confidence box text on dark surface fixed.
-- Homepage pass 4 (final): hero bg/h1/subcopy/pills use inline styles to resist light-theme CSS override; score card outer + ring inner use inline `backgroundColor`; stats bar inline bg + immediate formatted counts (no observer); footer Internal Deal Dashboard link uses inline bg/color; hero “See How It Works” anchor same; infographic value/trend helpers for single-`$` literals; deal-pattern emoji wrapper `filter: none`.
+- Homepage pass 4 (final): hero bg/h1 use inline styles to resist light-theme CSS override, score card now visible in light mode, stats bar shows values immediately on render, price strings use explicit JSX string literals / infographic helpers, footer CTA Internal Deal Dashboard button readable in light mode (inline bg/color).
 
 ### Backend, Pipeline, and Data Sources
 
