@@ -15,8 +15,6 @@ SELECT
   END AS year,
   NULLIF(j ->> 'make', '') AS make,
   NULLIF(j ->> 'model', '') AS model,
-  NULLIF(j ->> 'aircraft_type', '') AS aircraft_type,
-  COALESCE(NULLIF(j ->> 'aircraft_category', ''), NULLIF(j ->> 'aircraft_type', '')) AS aircraft_category,
   COALESCE(NULLIF(j ->> 'source', ''), NULLIF(j ->> 'source_site', '')) AS source,
   NULLIF(j ->> 'source_id', '') AS source_id,
   COALESCE(NULLIF(j ->> 'source_url', ''), NULLIF(j ->> 'url', '')) AS url,
@@ -246,7 +244,9 @@ SELECT
     ELSE NULL
   END AS ev_score_contribution,
   NULLIF(j #>> '{score_data,engine_value,data_quality}', '') AS ev_data_quality,
-  NULLIF(j #>> '{score_data,engine_value,explanation}', '') AS ev_explanation
+  NULLIF(j #>> '{score_data,engine_value,explanation}', '') AS ev_explanation,
+  NULLIF(j ->> 'aircraft_type', '') AS aircraft_type,
+  COALESCE(NULLIF(j ->> 'aircraft_category', ''), NULLIF(j ->> 'aircraft_type', '')) AS aircraft_category
 FROM base
 WHERE
   NULLIF(j ->> 'value_score', '') ~ '^-?\d+(\.\d+)?$';
