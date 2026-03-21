@@ -2,6 +2,14 @@ import fs from "node:fs"
 import path from "node:path"
 import { createClient } from "@supabase/supabase-js"
 
+/** True when anon client env is present (required for `createServerClient` / browser-aligned reads). */
+export function isPublicSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+  )
+}
+
 function getSupabaseUrl(): string {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!supabaseUrl) {
