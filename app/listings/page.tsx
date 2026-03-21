@@ -1,6 +1,12 @@
 import type { Metadata } from "next"
 import ListingsClient from './ListingsClient'
-import { getListingFilterOptions, getListingsPage } from '../../lib/db/listingsRepository'
+import { aggregateListingFilterOptionsFromRows } from '../../lib/listings/filterOptionsAggregate'
+import type { ListingsPageQuery } from '../../lib/db/listingsRepository'
+import {
+  getListingFilterOptionsClientPayload,
+  getListingsPage,
+  loadCachedDefaultListingsHomeIfEligible,
+} from '../../lib/db/listingsRepository'
 import {
   buildListingsCanonicalPath,
   buildListingsPageDescription,
@@ -50,20 +56,6 @@ function toFlatSearchParams(searchParams?: SearchParams): Record<string, string>
 
 function parseSearchTerm(searchParams?: SearchParams): string {
   return parseParam(searchParams, 'q')
-}
-
-function normalizeSourceKey(sourceRaw: string): string {
-  const value = sourceRaw.trim().toLowerCase()
-  if (!value) return 'unknown'
-  if (value === 'tap' || value === 'trade-a-plane' || value === 'tradaplane') return 'trade-a-plane'
-  if (value === 'controller_cdp') return 'controller_cdp'
-  if (value === 'controller' || value === 'ctrl' || value.startsWith('controller_')) return 'controller'
-  if (value === 'aerotrader' || value === 'aero_trader') return 'aerotrader'
-  if (value === 'aircraftforsale' || value === 'aircraft_for_sale' || value === 'afs') return 'aircraftforsale'
-  if (value === 'aso') return 'aso'
-  if (value === 'globalair' || value === 'global_air') return 'globalair'
-  if (value === 'barnstormers') return 'barnstormers'
-  return value
 }
 
 function parseCategory(searchParams?: SearchParams): CategoryValue {
@@ -131,81 +123,6 @@ function parseEngineTime(searchParams?: SearchParams): EngineTimeFilter {
   return 'any'
 }
 
-function buildFilterOptions(rows: Array<{ make: string | null; model: string | null; state: string | null; source: string | null; dealTier: string | null; valueScore: number | null }>) {
-  const makes = new Set<string>()
-  const models = new Set<string>()
-  const states = new Set<string>()
-  const modelPairs = new Set<string>()
-  const makeCounts = new Map<string, number>()
-  const modelCounts = new Map<string, number>()
-  const modelPairCounts = new Map<string, number>()
-  const sourceCounts = new Map<string, number>()
-  const dealTierCounts = new Map<string, number>()
-  let score60Count = 0
-  let score80Count = 0
-
-  for (const row of rows) {
-    const make = String(row.make ?? '').trim()
-    const model = String(row.model ?? '').trim()
-    const state = String(row.state ?? '').trim().toUpperCase()
-    const source = normalizeSourceKey(String(row.source ?? ''))
-    const dealTier = String(row.dealTier ?? '').trim().toUpperCase()
-    const valueScore = typeof row.valueScore === 'number' ? row.valueScore : null
-    const normalizedMake = make.toUpperCase()
-    const isValidMake = make.length > 0 && normalizedMake !== '-' && normalizedMake !== 'N/A' && normalizedMake !== 'UNKNOWN'
-    if (isValidMake) makes.add(make)
-    if (model) models.add(model)
-    if (state) states.add(state)
-    if (isValidMake && model) modelPairs.add(`${make}|||${model}`)
-    if (isValidMake) makeCounts.set(make, (makeCounts.get(make) ?? 0) + 1)
-    if (model) modelCounts.set(model, (modelCounts.get(model) ?? 0) + 1)
-    if (isValidMake && model) {
-      const pairKey = `${make}|||${model}`
-      modelPairCounts.set(pairKey, (modelPairCounts.get(pairKey) ?? 0) + 1)
-    }
-    sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1)
-    if (dealTier) dealTierCounts.set(dealTier, (dealTierCounts.get(dealTier) ?? 0) + 1)
-    if (typeof valueScore === 'number') {
-      if (valueScore >= 60) score60Count += 1
-      if (valueScore >= 80) score80Count += 1
-    }
-  }
-
-  const exceptionalDeals = dealTierCounts.get('EXCEPTIONAL_DEAL') ?? 0
-  const goodDeals = dealTierCounts.get('GOOD_DEAL') ?? 0
-  const allCount = rows.length
-
-  return {
-    makes: Array.from(makes).sort((a, b) => a.localeCompare(b)),
-    models: Array.from(models).sort((a, b) => a.localeCompare(b)),
-    states: Array.from(states).sort((a, b) => a.localeCompare(b)),
-    modelPairs: Array.from(modelPairs)
-      .map((entry) => {
-        const [make, model] = entry.split('|||')
-        return { make, model }
-      })
-      .sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model)),
-    makeCounts: Object.fromEntries(makeCounts),
-    modelCounts: Object.fromEntries(modelCounts),
-    modelPairCounts: Object.fromEntries(modelPairCounts),
-    sourceCounts: Object.fromEntries(sourceCounts),
-    dealTierCounts: {
-      all: allCount,
-      TOP_DEALS: exceptionalDeals + goodDeals,
-      EXCEPTIONAL_DEAL: exceptionalDeals,
-      GOOD_DEAL: goodDeals,
-      FAIR_MARKET: dealTierCounts.get('FAIR_MARKET') ?? 0,
-      ABOVE_MARKET: dealTierCounts.get('ABOVE_MARKET') ?? 0,
-      OVERPRICED: dealTierCounts.get('OVERPRICED') ?? 0,
-    },
-    minimumValueScoreCounts: {
-      any: allCount,
-      '60': score60Count,
-      '80': score80Count,
-    },
-  }
-}
-
 export default async function ListingsPage({
   searchParams,
 }: {
@@ -240,43 +157,58 @@ export default async function ListingsPage({
   const initialSortBy: SortOption =
     initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
 
-  let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
-  try {
-    initialPageData = await getListingsPage({
-      page: initialPage,
-      pageSize: initialPageSize,
-      sortBy: initialSortBy,
-      q: initialSearchTerm,
-      make: initialMakeFilter,
-      modelFamily: initialModelFamilyFilter,
-      subModel: initialSubModelFilter,
-      source: initialSourceFilter,
-      state: initialStateFilter,
-      risk: initialRiskFilter,
-      minValueScore: initialMinimumScore,
-      minPrice: initialMinPrice,
-      maxPrice: initialMaxPrice,
-      priceStatus: initialPriceStatus,
-      yearMin: initialYearMin,
-      yearMax: initialYearMax,
-      totalTimeMin: initialTotalTimeMin,
-      totalTimeMax: initialTotalTimeMax,
-      maintenanceBand: initialMaintenanceBand,
-      engineTime: initialEngineTime,
-      trueCostMin: initialTrueCostMin,
-      trueCostMax: initialTrueCostMax,
-      category: initialCategoryFilter ?? '',
-      dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-    })
-  } catch (error) {
-    console.error("[listings/page] failed to load initial listings", error)
+  const listingsQuery: ListingsPageQuery = {
+    page: initialPage,
+    pageSize: initialPageSize,
+    sortBy: initialSortBy,
+    q: initialSearchTerm,
+    make: initialMakeFilter,
+    model: '',
+    modelFamily: initialModelFamilyFilter,
+    subModel: initialSubModelFilter,
+    source: initialSourceFilter,
+    state: initialStateFilter,
+    risk: initialRiskFilter,
+    dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
+    minValueScore: initialMinimumScore,
+    minPrice: initialMinPrice,
+    maxPrice: initialMaxPrice,
+    priceStatus: initialPriceStatus,
+    yearMin: initialYearMin,
+    yearMax: initialYearMax,
+    totalTimeMin: initialTotalTimeMin,
+    totalTimeMax: initialTotalTimeMax,
+    maintenanceBand: initialMaintenanceBand,
+    engineTime: initialEngineTime,
+    trueCostMin: initialTrueCostMin,
+    trueCostMax: initialTrueCostMax,
+    category: initialCategoryFilter ?? '',
   }
 
-  let initialFilterOptionRows: Awaited<ReturnType<typeof getListingFilterOptions>> = []
-  try {
-    initialFilterOptionRows = await getListingFilterOptions()
-  } catch (error) {
-    console.error("[listings/page] failed to load filter options", error)
+  let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
+  let initialFilterOptions = aggregateListingFilterOptionsFromRows([])
+
+  const cachedHome = await loadCachedDefaultListingsHomeIfEligible(listingsQuery, {
+    page: initialPage,
+    pageSize: initialPageSize,
+    sortBy: initialSortBy,
+  })
+
+  if (cachedHome) {
+    initialPageData = { rows: cachedHome.rows as any[], total: cachedHome.total }
+    initialFilterOptions = cachedHome.filterOptions
+  } else {
+    const listingsPagePromise = getListingsPage(listingsQuery).catch((error) => {
+      console.error("[listings/page] failed to load initial listings", error)
+      return { rows: [] as any[], total: 0 }
+    })
+    const filterOptionsPromise = getListingFilterOptionsClientPayload().catch((error) => {
+      console.error("[listings/page] failed to load filter options", error)
+      return aggregateListingFilterOptionsFromRows([])
+    })
+    const [pageResult, filterPayload] = await Promise.all([listingsPagePromise, filterOptionsPromise])
+    initialPageData = pageResult
+    initialFilterOptions = filterPayload
   }
 
   const itemListJsonLd = {
@@ -325,7 +257,7 @@ export default async function ListingsPage({
       <ListingsClient
         initialListings={initialPageData.rows}
         initialTotalFiltered={initialPageData.total}
-        initialFilterOptions={buildFilterOptions(initialFilterOptionRows)}
+        initialFilterOptions={initialFilterOptions}
         initialSearchTerm={initialSearchTerm}
         initialCategoryFilter={initialCategoryFilter}
         initialDealFilter={initialDealFilter}

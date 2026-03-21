@@ -52,6 +52,7 @@ export default function ListingsGridAndPagination({
               <span className="rounded border border-[#3A4454] px-3 py-1.5 text-xs opacity-40">Previous</span>
             ) : (
               <Link
+                prefetch={false}
                 href={buildPageHref(Math.max(1, safePage - 1))}
                 className="rounded border border-[#3A4454] px-3 py-1.5 text-xs hover:border-[#FF9900] hover:text-[#FF9900]"
               >
@@ -62,6 +63,7 @@ export default function ListingsGridAndPagination({
               <span className="rounded border border-[#3A4454] px-3 py-1.5 text-xs opacity-40">Next</span>
             ) : (
               <Link
+                prefetch={false}
                 href={buildPageHref(Math.min(totalPages, safePage + 1))}
                 className="rounded border border-[#3A4454] px-3 py-1.5 text-xs hover:border-[#FF9900] hover:text-[#FF9900]"
               >

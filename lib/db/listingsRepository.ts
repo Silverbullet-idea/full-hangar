@@ -1,3 +1,9 @@
+import { unstable_cache } from "next/cache";
+import {
+  aggregateListingFilterOptionsFromRows,
+  parseListingFilterOptionsRpcPayload,
+  type ListingsFilterOptionsClientShape,
+} from "../listings/filterOptionsAggregate";
 import { createPrivilegedServerClient, createServerClient } from "../supabase/server";
 
 export type ListingFilters = {
@@ -426,7 +432,7 @@ type ParsedListingsSearch = {
   orClause?: string;
 };
 
-function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
+export function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean {
   const hasText = (value: unknown) => String(value ?? "").trim().length > 0;
   const ownershipType = String(query.ownershipType ?? "").trim().toLowerCase();
   const isDefaultOwnership = !ownershipType || ownershipType === "all";
@@ -1109,7 +1115,36 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   };
 }
 
+/**
+ * Full filter-options payload for UI + /api/listings/options.
+ * Prefers DB RPC `get_listing_filter_options_payload` (set-based); falls back to chunked reads if RPC is missing or fails.
+ */
+export async function getListingFilterOptionsClientPayload(): Promise<ListingsFilterOptionsClientShape> {
+  const supabase = createReadServerClient();
+  const { data, error } = await supabase.rpc("get_listing_filter_options_payload");
+  if (!error && data != null) {
+    const parsed = parseListingFilterOptionsRpcPayload(data);
+    if (parsed) return parsed;
+  }
+  const rows = await fetchListingFilterOptionsRowsChunked();
+  return aggregateListingFilterOptionsFromRows(
+    rows.map((row) => ({
+      make: row.make,
+      model: row.model,
+      state: row.state,
+      source: row.source,
+      dealTier: row.dealTier,
+      valueScore: row.valueScore,
+    }))
+  );
+}
+
+/** @deprecated Prefer getListingFilterOptionsClientPayload — avoids shipping raw rows. */
 export async function getListingFilterOptions(): Promise<ListingFilterOption[]> {
+  return fetchListingFilterOptionsRowsChunked();
+}
+
+async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOption[]> {
   const supabase = createReadServerClient();
   const chunkSizes = [2000, 1000, 500];
   const maxRows = 50000;
@@ -1163,6 +1198,63 @@ export async function getListingFilterOptions(): Promise<ListingFilterOption[]> 
     throw lastError;
   }
   throw new Error("getListingFilterOptions: exhausted retries without a successful read");
+}
+
+async function fetchDefaultListingsHomeUncached(): Promise<{
+  rows: Record<string, unknown>[];
+  total: number;
+  filterOptions: ListingsFilterOptionsClientShape;
+}> {
+  const query: ListingsPageQuery = {
+    page: 1,
+    pageSize: 24,
+    sortBy: "deal_desc",
+    q: "",
+    make: "",
+    model: "",
+    modelFamily: "",
+    subModel: "",
+    source: "",
+    state: "",
+    risk: "",
+    dealTier: "",
+    minValueScore: 0,
+    minPrice: 0,
+    maxPrice: 0,
+    priceStatus: "all",
+    yearMin: 0,
+    yearMax: 0,
+    totalTimeMin: 0,
+    totalTimeMax: 0,
+    maintenanceBand: "any",
+    engineTime: "any",
+    trueCostMin: 0,
+    trueCostMax: 0,
+    category: "",
+  };
+  const [pageResult, filterOptions] = await Promise.all([
+    getListingsPage(query),
+    getListingFilterOptionsClientPayload(),
+  ]);
+  return { rows: pageResult.rows, total: pageResult.total, filterOptions };
+}
+
+const getCachedDefaultListingsHome = unstable_cache(fetchDefaultListingsHomeUncached, ["listings-default-home-v1"], {
+  revalidate: 90,
+  tags: ["listings-default"],
+});
+
+/**
+ * Cached first paint for the common case: /listings page 1, 24 rows, deal_desc, no filters.
+ * Call only when URL-derived query matches `isDefaultListingsLandingQuery` and sort/page/size match.
+ */
+export async function loadCachedDefaultListingsHomeIfEligible(
+  query: ListingsPageQuery,
+  resolved: { page: number; pageSize: number; sortBy: string }
+): Promise<{ rows: Record<string, unknown>[]; total: number; filterOptions: ListingsFilterOptionsClientShape } | null> {
+  if (!isDefaultListingsLandingQuery(query)) return null;
+  if (resolved.page !== 1 || resolved.pageSize !== 24 || resolved.sortBy !== "deal_desc") return null;
+  return getCachedDefaultListingsHome();
 }
 
 export async function getListingById(id: string) {

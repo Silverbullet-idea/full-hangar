@@ -55,6 +55,7 @@ export default function ListingsTopBanner({
             return (
               <div key={category.label} className="group relative -mb-2 pb-2">
                 <Link
+                  prefetch={false}
                   href={buildCategoryHref(category.value)}
                   onClick={() => onSelectCategory(category.value)}
                   className={`block w-full rounded-md px-2 py-2 text-center text-sm transition-colors ${
@@ -70,6 +71,7 @@ export default function ListingsTopBanner({
                     <div className="max-h-72 overflow-y-auto pr-1">
                     {dropdownMakes.map((entry) => (
                       <Link
+                        prefetch={false}
                         key={`${category.label}-${entry.make}`}
                         href={buildCategoryMakeHref(category.value, entry.make)}
                         className="flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left text-xs text-[#B2B2B2] hover:bg-[#1d2636] hover:text-[#FF9900]"
@@ -113,6 +115,7 @@ export default function ListingsTopBanner({
               return (
                 <>
                   <Link
+                    prefetch={false}
                     href={buildDealHref('TOP_DEALS')}
                     onClick={() => onSelectDealPreset('top')}
                     className={`flex h-8 w-full items-center justify-center rounded-md border px-2 text-center text-xs font-bold ${isDealsActive ? 'border-[#FF9900] bg-[#FF9900] text-black' : 'border-[#166534] bg-[#166534] text-white hover:bg-[#15803d]'}`}
@@ -122,6 +125,7 @@ export default function ListingsTopBanner({
                   <div className="pointer-events-none invisible absolute right-0 top-full z-30 mt-0 min-w-[220px] rounded-md border border-[#3A4454] bg-[#141922] p-2 opacity-0 shadow-xl transition-all duration-150 delay-75 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-hover:delay-0 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100 group-focus-within:delay-0">
                     {visibleDealItems.map((item) => (
                       <Link
+                        prefetch={false}
                         key={item.key}
                         href={buildDealHref(item.key)}
                         onClick={() => onSelectDealPreset(item.preset)}
