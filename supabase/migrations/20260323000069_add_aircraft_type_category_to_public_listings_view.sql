@@ -1,4 +1,6 @@
 -- Expose aircraft_type + aircraft_category on public_listings for browse category filters and comps fallbacks.
+-- Must include all columns from 20260320000066 (accident/FAA/comp/attribution) so CREATE OR REPLACE VIEW does not
+-- drop columns relative to databases that already applied that migration (PostgreSQL 42P16).
 CREATE OR REPLACE VIEW public.public_listings AS
 WITH base AS (
   SELECT
@@ -245,8 +247,86 @@ SELECT
   END AS ev_score_contribution,
   NULLIF(j #>> '{score_data,engine_value,data_quality}', '') AS ev_data_quality,
   NULLIF(j #>> '{score_data,engine_value,explanation}', '') AS ev_explanation,
+  CASE
+    WHEN NULLIF(j ->> 'accident_count', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'accident_count')::integer
+    ELSE NULL
+  END AS accident_count,
+  CASE
+    WHEN NULLIF(j ->> 'most_recent_accident_date', '') ~ '^\d{4}-\d{2}-\d{2}$' THEN (j ->> 'most_recent_accident_date')::date
+    ELSE NULL
+  END AS most_recent_accident_date,
+  NULLIF(j ->> 'most_severe_damage', '') AS most_severe_damage,
+  CASE
+    WHEN LOWER(NULLIF(j ->> 'has_accident_history', '')) IN ('true', 'false') THEN (j ->> 'has_accident_history')::boolean
+    ELSE NULL
+  END AS has_accident_history,
+  CASE
+    WHEN LOWER(NULLIF(j ->> 'faa_matched', '')) IN ('true', 'false') THEN (j ->> 'faa_matched')::boolean
+    ELSE NULL
+  END AS faa_matched,
+  NULLIF(j ->> 'faa_owner', '') AS faa_owner,
+  NULLIF(j ->> 'faa_status', '') AS faa_status,
+  CASE
+    WHEN NULLIF(j ->> 'faa_cert_date', '') ~ '^\d{4}-\d{2}-\d{2}$' THEN (j ->> 'faa_cert_date')::date
+    ELSE NULL
+  END AS faa_cert_date,
+  NULLIF(j ->> 'faa_type_aircraft', '') AS faa_type_aircraft,
+  CASE
+    WHEN NULLIF(j ->> 'investment_score', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'investment_score')::numeric
+    ELSE NULL
+  END AS investment_score,
+  CASE
+    WHEN NULLIF(j ->> 'market_opportunity_score', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'market_opportunity_score')::numeric
+    ELSE NULL
+  END AS market_opportunity_score,
+  CASE
+    WHEN NULLIF(j ->> 'execution_score', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'execution_score')::numeric
+    ELSE NULL
+  END AS execution_score,
+  CASE
+    WHEN NULLIF(j ->> 'condition_score', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'condition_score')::numeric
+    ELSE NULL
+  END AS condition_score,
+  NULLIF(j ->> 'pricing_confidence', '') AS pricing_confidence,
+  NULLIF(j ->> 'comp_selection_tier', '') AS comp_selection_tier,
+  CASE
+    WHEN NULLIF(j ->> 'comp_universe_size', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_universe_size')::integer
+    ELSE NULL
+  END AS comp_universe_size,
+  CASE
+    WHEN NULLIF(j ->> 'comp_exact_count', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_exact_count')::integer
+    ELSE NULL
+  END AS comp_exact_count,
+  CASE
+    WHEN NULLIF(j ->> 'comp_family_count', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_family_count')::integer
+    ELSE NULL
+  END AS comp_family_count,
+  CASE
+    WHEN NULLIF(j ->> 'comp_make_count', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_make_count')::integer
+    ELSE NULL
+  END AS comp_make_count,
+  CASE
+    WHEN NULLIF(j ->> 'comp_median_price', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_median_price')::numeric
+    ELSE NULL
+  END AS comp_median_price,
+  CASE
+    WHEN NULLIF(j ->> 'comp_p25_price', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_p25_price')::numeric
+    ELSE NULL
+  END AS comp_p25_price,
+  CASE
+    WHEN NULLIF(j ->> 'comp_p75_price', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'comp_p75_price')::numeric
+    ELSE NULL
+  END AS comp_p75_price,
+  CASE
+    WHEN NULLIF(j ->> 'mispricing_zscore', '') ~ '^-?\d+(\.\d+)?$' THEN (j ->> 'mispricing_zscore')::numeric
+    ELSE NULL
+  END AS mispricing_zscore,
+  NULLIF(j ->> 'deal_comparison_source', '') AS deal_comparison_source,
+  NULLIF(j ->> 'manufacturer_tier', '') AS manufacturer_tier,
   NULLIF(j ->> 'aircraft_type', '') AS aircraft_type,
   COALESCE(NULLIF(j ->> 'aircraft_category', ''), NULLIF(j ->> 'aircraft_type', '')) AS aircraft_category
 FROM base
 WHERE
   NULLIF(j ->> 'value_score', '') ~ '^-?\d+(\.\d+)?$';
+
+GRANT SELECT ON public.public_listings TO anon, authenticated;
