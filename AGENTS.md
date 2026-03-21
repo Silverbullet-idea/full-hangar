@@ -43,6 +43,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Beta invite/session schema added via migration `20260307000050_add_beta_invites.sql`.
 - Admin user management and password hashing utilities shipped (`/internal/admin/users`, `lib/admin/users.ts`).
 - Manual production redeploy trigger commit was pushed on `main` after stale admin HTML/caching behavior.
+- Post-deploy verification doc shipped (`docs/PRODUCTION_VERIFY.md`); Playwright listings smoke workflow tightened (secret callouts, path triggers, CI webServer timeout); `/listings` + `/listings/[id]` use `revalidate` ISR hints; Controller scraper gains broader prop SMOH/SPOH labels + twin `prop_2` fallback into `time_since_prop_overhaul`.
 
 ### Frontend Product and UX
 
@@ -325,8 +326,9 @@ npm run pipeline:backfill:all-chunked
 # Playwright smoke (starts `npm run dev` on :3001 unless already running locally)
 npm run test:smoke:listings-options
 npm run test:smoke:listings-all
+# Post-deploy checklist: `docs/PRODUCTION_VERIFY.md`
 # GitHub Actions: `.github/workflows/playwright-listings-options-smoke.yml` — set repo secrets
-# `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and one of `SUPABASE_SERVICE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `NEXT_SUPABASE_SERVICE_ROLE_KEY`.
+# `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_KEY` (workflow maps it to service-role aliases).
 ```
 
 ---

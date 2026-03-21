@@ -9,6 +9,9 @@ import {
   toAbsoluteUrl,
 } from "../../lib/seo/site"
 
+/** ISR: revalidate listing index + filter SSR payload every 2 minutes per URL. */
+export const revalidate = 120
+
 type SearchParams = Record<string, string | string[] | undefined>
 type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
 type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'

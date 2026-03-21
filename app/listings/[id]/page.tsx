@@ -47,6 +47,9 @@ import { getListingById, getListingPriceHistory, getListingRawById, getSimilarMa
 import type { AircraftListing } from "../../../lib/types"
 import { DEFAULT_OG_IMAGE_PATH, toAbsoluteUrl, titleFromParts } from "../../../lib/seo/site"
 
+/** ISR: listing detail can be cached briefly to reduce repeat Supabase reads on popular slugs. */
+export const revalidate = 300
+
 type ListingPageProps = {
   params: Promise<{ id: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>

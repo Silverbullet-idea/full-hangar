@@ -575,6 +575,9 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
         if engine_2_notes:
             extra["engine_2_notes"] = engine_2_notes
 
+        prop_1_time = None
+        prop_2_time = None
+
         prop_1_mfr = _spec_text("prop 1 manufacturer", "prop manufacturer")
         if prop_1_mfr:
             extra["prop_1_manufacturer"] = prop_1_mfr
@@ -582,10 +585,26 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
         if prop_1_model:
             extra["prop_1_model"] = prop_1_model
             extra["prop_model"] = prop_1_model
-        prop_1_time_text = _spec_text("prop 1 time", "prop time")
+        prop_1_time_text = _spec_text(
+            "prop 1 time",
+            "prop time",
+            "prop 1 smoh",
+            "prop smoh",
+            "prop 1 spoh",
+            "spoh",
+            "time since prop overhaul",
+        )
         if prop_1_time_text:
             extra["prop_1_time_text"] = prop_1_time_text
-            prop_1_time = _spec_int("prop 1 time", "prop time")
+            prop_1_time = _spec_int(
+                "prop 1 time",
+                "prop time",
+                "prop 1 smoh",
+                "prop smoh",
+                "prop 1 spoh",
+                "spoh",
+                "time since prop overhaul",
+            )
             if prop_1_time is not None:
                 extra["prop_1_time_hours"] = prop_1_time
                 extra["time_since_prop_overhaul"] = prop_1_time
@@ -595,12 +614,14 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
         prop_2_model = _spec_text("prop 2 model")
         if prop_2_model:
             extra["prop_2_model"] = prop_2_model
-        prop_2_time_text = _spec_text("prop 2 time")
+        prop_2_time_text = _spec_text("prop 2 time", "prop 2 smoh", "prop 2 spoh")
         if prop_2_time_text:
             extra["prop_2_time_text"] = prop_2_time_text
-            prop_2_time = _spec_int("prop 2 time")
+            prop_2_time = _spec_int("prop 2 time", "prop 2 smoh", "prop 2 spoh")
             if prop_2_time is not None:
                 extra["prop_2_time_hours"] = prop_2_time
+        if extra.get("time_since_prop_overhaul") is None and prop_2_time is not None:
+            extra["time_since_prop_overhaul"] = prop_2_time
         prop_blades = _spec_int("number of blades")
         if prop_blades is not None:
             extra["prop_blade_count"] = prop_blades
