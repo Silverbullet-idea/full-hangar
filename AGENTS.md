@@ -80,6 +80,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Mobile responsiveness pass shipped: listings page now has a bottom-sheet filter drawer on mobile (< 768px) with active-filter badge count, replacing the sidebar; listing detail page comps chart fixed for narrow viewport overflow, comps table columns hide on mobile, gallery images use CSS snap horizontal scroll, touch targets audited to 44px minimum; Deal Desk sensitivity grid is desktop-only with mobile fallback message, all 9 sections are single-column on mobile, number inputs have `inputMode="numeric"`, sticky P&L summary bar added for mobile; global header overflow verified; back-nav link added to listing detail on mobile. Full dark/light theme parity maintained throughout.
 - Mobile safe-area follow-up: root `viewportFit: "cover"` plus `env(safe-area-inset-*)` on Deal Desk sticky bar, filter drawer footer, and scroll padding; drawer max height uses `85dvh`; site header top padding respects notch.
 - Homepage redesign shipped: ticker bar, updated hero copy + score card mockup, Carfax one-liner banner, animated stats counters, market infographic grid (6 cards), how-it-works 3-step, deal patterns 3-card, score breakdown with pillar bars, testimonial restyle, footer CTA update. No backend changes.
+- Homepage bug fixes: corrected double-$ price strings, ticker bar now full-bleed via `calc(-50vw + 50%)` margin breakout, score card pillar bar colors corrected (orange/green/amber).
 
 ### Backend, Pipeline, and Data Sources
 

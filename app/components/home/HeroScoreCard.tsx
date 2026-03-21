@@ -23,9 +23,9 @@ export default function HeroScoreCard() {
         </div>
 
         <div className="min-w-0 flex-1 space-y-3">
-          <PillarRow label="Market Opportunity" value={81} pct={81} />
-          <PillarRow label="Condition" value={74} pct={74} />
-          <PillarRow label="Execution" value={68} pct={68} />
+          <PillarRow label="Market Opportunity" value={81} pct={81} barClass="bg-brand-orange" />
+          <PillarRow label="Condition" value={74} pct={74} barClass="bg-[#4ade80]" />
+          <PillarRow label="Execution" value={68} pct={68} barClass="bg-[#f59e0b]" />
         </div>
       </div>
 
@@ -72,7 +72,17 @@ export default function HeroScoreCard() {
   )
 }
 
-function PillarRow({ label, value, pct }: { label: string; value: number; pct: number }) {
+function PillarRow({
+  label,
+  value,
+  pct,
+  barClass,
+}: {
+  label: string
+  value: number
+  pct: number
+  barClass: string
+}) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 text-xs">
@@ -80,7 +90,7 @@ function PillarRow({ label, value, pct }: { label: string; value: number; pct: n
         <span className="font-extrabold text-brand-orange">{value}</span>
       </div>
       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-brand-dark">
-        <div className="h-full rounded-full bg-brand-orange" style={{ width: `${pct}%` }} />
+        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   )

@@ -1,3 +1,5 @@
+import { normalizeHomeCurrency } from "./normalizeHomeCurrency"
+
 const TESTIMONIALS = [
   {
     quote:
@@ -43,7 +45,7 @@ export default function HomeSocialProofFaq() {
         <div className="mt-5 space-y-3">
           {TESTIMONIALS.map((item) => (
             <blockquote key={item.author} className="rounded-2xl border border-brand-dark bg-card-bg p-6">
-              <p className="text-base leading-relaxed text-brand-muted">&ldquo;{item.quote}&rdquo;</p>
+              <p className="text-base leading-relaxed text-brand-muted">&ldquo;{normalizeHomeCurrency(item.quote)}&rdquo;</p>
               <footer className="mt-3 text-xs font-semibold text-brand-muted">— {item.author}</footer>
             </blockquote>
           ))}

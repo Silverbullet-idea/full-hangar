@@ -1,3 +1,5 @@
+import { normalizeHomeCurrency } from "./normalizeHomeCurrency"
+
 const TICKER_PARTS = [
   "LIVE DATA",
   "10,574 Active Listings",
@@ -14,7 +16,7 @@ const TICKER_PARTS = [
 ]
 
 function TickerStrip() {
-  const text = TICKER_PARTS.join("  ·  ")
+  const text = normalizeHomeCurrency(TICKER_PARTS.join("  ·  "))
   return (
     <>
       <span className="home-ticker-segment inline-flex shrink-0 items-center gap-3 whitespace-nowrap px-6">
@@ -36,9 +38,12 @@ function TickerStrip() {
 export default function TickerBar() {
   return (
     <div
-      className="home-ticker-outer w-full overflow-hidden py-2.5"
+      className="home-ticker-outer relative w-screen max-w-none overflow-hidden py-2.5"
       style={{
         background: "linear-gradient(90deg, #AF4D27 0%, #c55e30 50%, #AF4D27 100%)",
+        marginLeft: "calc(-50vw + 50%)",
+        marginRight: "calc(-50vw + 50%)",
+        width: "100vw",
       }}
     >
       <div className="home-ticker-track flex w-max text-[12px] font-bold uppercase tracking-[0.06em] text-white">

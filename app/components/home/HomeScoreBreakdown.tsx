@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { normalizeHomeCurrency } from "./normalizeHomeCurrency"
 
 const PILLARS = [
   {
@@ -70,8 +71,8 @@ export default function HomeScoreBreakdown() {
           <ul className="mt-6 space-y-2">
             <li className="text-xs text-[#4ade80]">↑ 12% below market comp range</li>
             <li className="text-xs text-[#4ade80]">↑ Engine at 78% remaining life</li>
-            <li className="text-xs text-[#4ade80]">↑ GTN 750 confirmed (adds ~$14K)</li>
-            <li className="text-xs text-red-400">↓ Annual due in 45 days ($1,200 est.)</li>
+            <li className="text-xs text-[#4ade80]">{normalizeHomeCurrency("↑ GTN 750 confirmed (adds ~$14K)")}</li>
+            <li className="text-xs text-red-400">{normalizeHomeCurrency("↓ Annual due in 45 days ($1,200 est.)")}</li>
           </ul>
         </div>
 
