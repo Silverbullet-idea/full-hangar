@@ -40,6 +40,8 @@ def _listing_for_engine(input_listing: dict) -> dict:
         description_tokens.append(str(listing["engine_model"]))
     if listing.get("prop_model"):
         description_tokens.append(str(listing["prop_model"]))
+    if listing.get("description"):
+        description_tokens.append(str(listing["description"]))
 
     # Drive LLP annual status from date field.
     try:
@@ -144,8 +146,8 @@ def test_calendar_exceeded() -> dict:
     return _assert_case(
         case_name="test_calendar_exceeded",
         listing=listing,
-        min_score=40,
-        max_score=85,
+        min_score=20,
+        max_score=60,
         expected_risk_levels=("HIGH", "CRITICAL"),
         expected_present_keys=("annual_due",),
     )
@@ -207,8 +209,8 @@ def test_elt_expired() -> dict:
     return _assert_case(
         case_name="test_elt_expired",
         listing=listing,
-        min_score=35,
-        max_score=90,
+        min_score=20,
+        max_score=60,
         expected_risk_levels=("HIGH", "CRITICAL"),
         expected_present_keys=("elt_due",),
     )
@@ -238,9 +240,9 @@ def test_all_green() -> dict:
     return _assert_case(
         case_name="test_all_green",
         listing=listing,
-        min_score=75,
+        min_score=60,
         max_score=100,
-        expected_risk_levels=("LOW",),
+        expected_risk_levels=("LOW", "MODERATE"),
         expected_absent_keys=("engine_overhaul", "prop_overhaul", "annual_due", "elt_due", "caps_due", "robinson_12yr"),
     )
 
@@ -273,6 +275,100 @@ def test_deregistered_aircraft() -> dict:
     )
 
 
+def test_sparse_listing_old_year_not_clustered() -> dict:
+    listing = base_listing_fixture()
+    listing["year"] = 1968
+    listing["engine_smoh"] = None
+    listing["prop_smoh"] = None
+    scored = _assert_case(
+        case_name="test_sparse_listing_old_year_not_clustered",
+        listing=listing,
+        min_score=20,
+        max_score=75,
+        expected_risk_levels=("MODERATE", "HIGH"),
+    )
+    value_score = float(scored["value_score"])
+    details = pformat(scored, sort_dicts=True)
+    assert not (50.0 <= value_score <= 53.0), (
+        "test_sparse_listing_old_year_not_clustered: sparse listing clustered around "
+        f"midpoint score {value_score}\nScored output:\n{details}"
+    )
+    return scored
+
+
+def test_sparse_listing_newer_year_spreads_above_old() -> dict:
+    old_listing = base_listing_fixture()
+    old_listing["year"] = 1968
+    old_listing["engine_smoh"] = None
+    old_listing["prop_smoh"] = None
+    old_scored = aircraft_intelligence_score(_listing_for_engine(old_listing))
+
+    newer_listing = base_listing_fixture()
+    newer_listing["year"] = 2005
+    newer_listing["engine_smoh"] = None
+    newer_listing["prop_smoh"] = None
+    newer_scored = _assert_case(
+        case_name="test_sparse_listing_newer_year_spreads_above_old",
+        listing=newer_listing,
+        min_score=20,
+        max_score=85,
+        expected_risk_levels=("MODERATE", "HIGH"),
+    )
+    old_score = float(old_scored["value_score"])
+    new_score = float(newer_scored["value_score"])
+    details = pformat({"old": old_scored, "new": newer_scored}, sort_dicts=True)
+    assert new_score > old_score, (
+        "test_sparse_listing_newer_year_spreads_above_old: expected newer sparse listing "
+        f"to score above older sparse listing ({new_score} <= {old_score})\n{details}"
+    )
+    assert new_score != old_score, (
+        "test_sparse_listing_newer_year_spreads_above_old: expected different sparse scores "
+        f"for different years ({new_score} == {old_score})\n{details}"
+    )
+    return newer_scored
+
+
+def test_high_data_listing_scores_high() -> dict:
+    listing = base_listing_fixture()
+    listing["year"] = 2012
+    listing["engine_smoh"] = 200
+    listing["prop_smoh"] = 180
+    listing["asking_price"] = 165000
+    listing["description"] = (
+        "Garmin G500 TXi GTN750Xi GTX345R GFC500 WAAS ADS-B complete logbooks"
+    )
+    scored = aircraft_intelligence_score(_listing_for_engine(listing))
+    details = pformat(scored, sort_dicts=True)
+    assert float(scored["value_score"]) >= 70.0, (
+        "test_high_data_listing_scores_high: expected high-data listing >= 70 "
+        f"got {scored['value_score']}\nScored output:\n{details}"
+    )
+    assert scored.get("risk_level") in {"LOW", "MODERATE"}, (
+        "test_high_data_listing_scores_high: expected LOW/MODERATE risk got "
+        f"{scored.get('risk_level')}\nScored output:\n{details}"
+    )
+    return scored
+
+
+def test_hard_safety_override_forces_critical() -> dict:
+    listing = base_listing_fixture()
+    listing["engine_smoh"] = 150
+    listing["prop_smoh"] = 120
+    listing["faa_registration_alert"] = "DEREGISTERED - DO NOT OPERATE"
+    listing["description"] = "annual expired elt expired llp expired"
+    scored = aircraft_intelligence_score(_listing_for_engine(listing))
+    details = pformat(scored, sort_dicts=True)
+    assert scored.get("risk_level") == "CRITICAL", (
+        "test_hard_safety_override_forces_critical: expected CRITICAL risk\n"
+        f"Scored output:\n{details}"
+    )
+    assert float(scored["value_score"]) <= 25.0, (
+        "test_hard_safety_override_forces_critical: expected value_score <= 25 "
+        f"got {scored['value_score']}\nScored output:\n{details}"
+    )
+    return scored
+
+
 def _run_all_tests() -> int:
     tests = [
         test_engine_over_tbo,
@@ -286,6 +382,10 @@ def _run_all_tests() -> int:
         test_all_green,
         test_all_critical,
         test_deregistered_aircraft,
+        test_sparse_listing_old_year_not_clustered,
+        test_sparse_listing_newer_year_spreads_above_old,
+        test_high_data_listing_scores_high,
+        test_hard_safety_override_forces_critical,
     ]
 
     failures = 0

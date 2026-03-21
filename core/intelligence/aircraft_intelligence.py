@@ -11,12 +11,16 @@ from __future__ import annotations
 from datetime import date, datetime
 import os
 import re
+import statistics
 
 from .avionics_intelligence import avionics_score
 from .model_normalizer import extract_engine_canonical_from_listing, extract_prop_canonical_from_listing
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
 
-INTELLIGENCE_VERSION = "1.8.0"
+# v1.9.3 - Score distribution fix: age-differentiated imputed defaults,
+# widened risk tier bands (LOW threshold 78, HIGH band 25-44),
+# days_on_market tiebreaker nudge, _components_measured tracking.
+INTELLIGENCE_VERSION = "1.9.3"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -332,19 +336,26 @@ def calculate_deferred_cost(listing: dict) -> dict:
 
 
 # ─── Risk Level ──────────────────────────────────────────────────────────────
-def risk_level_from_score(value_score: float, llp_any_unairworthy: bool, faa_alert: str | None = None) -> str:
+def risk_level_from_score(
+    value_score: float,
+    llp_any_unairworthy: bool,
+    faa_alert: str | None = None,
+    severe_ntsb: bool = False,
+) -> str:
     faa_alert_text = str(faa_alert).upper() if faa_alert else ""
+    if severe_ntsb:
+        return "CRITICAL"
     if "DEREGISTERED" in faa_alert_text:
         return "CRITICAL"
     if "REVOKED" in faa_alert_text:
         return "CRITICAL"
     if "EXPIRED" in faa_alert_text:
-        return "HIGH"
+        return "CRITICAL"
     if llp_any_unairworthy:
-        return "CRITICAL" if value_score < 40 else "HIGH"
-    if value_score >= 75:
+        return "CRITICAL"
+    if value_score >= 78:
         return "LOW"
-    if value_score >= 50:
+    if value_score >= 45:
         return "MODERATE"
     if value_score >= 25:
         return "HIGH"
@@ -424,19 +435,23 @@ def _get_market_comps_client():
         return None
     try:
         from supabase import create_client
-        from supabase.lib.client_options import ClientOptions
+        try:
+            from supabase.lib.client_options import ClientOptions
 
-        timeout_seconds = int(
-            os.environ.get(
-                "MARKET_COMPS_TIMEOUT_SECONDS",
-                os.environ.get("SUPABASE_POSTGREST_TIMEOUT_SECONDS", "60"),
+            timeout_seconds = int(
+                os.environ.get(
+                    "MARKET_COMPS_TIMEOUT_SECONDS",
+                    os.environ.get("SUPABASE_POSTGREST_TIMEOUT_SECONDS", "60"),
+                )
             )
-        )
-        options = ClientOptions(
-            postgrest_client_timeout=timeout_seconds,
-            storage_client_timeout=timeout_seconds,
-        )
-        _market_comps_client = create_client(url, service_key, options=options)
+            options = ClientOptions(
+                postgrest_client_timeout=timeout_seconds,
+                storage_client_timeout=timeout_seconds,
+            )
+            _market_comps_client = create_client(url, service_key, options=options)
+        except Exception:
+            # Compatibility fallback for client variants without ClientOptions support.
+            _market_comps_client = create_client(url, service_key)
     except Exception:
         _market_comps_client = None
     return _market_comps_client
@@ -450,6 +465,350 @@ def _safe_float(value):
     if number != number:  # NaN check
         return None
     return number
+
+
+def _safe_int(value):
+    number = _safe_float(value)
+    if number is None:
+        return None
+    try:
+        return int(round(number))
+    except (TypeError, ValueError):
+        return None
+
+
+_ENGINE_LOOKUP_NOISE_WORDS = {
+    "HOURS",
+    "HOUR",
+    "SNEW",
+    "SMOH",
+    "SPOH",
+    "PROP",
+    "PROPELLER",
+    "INTERIOR",
+    "EXTERIOR",
+    "PROGRAM",
+    "ADVANTAGE",
+    "COLLINS",
+    "PROLINE",
+    "AVIONICS",
+}
+
+_ENGINE_MODEL_PATTERNS = [
+    re.compile(r"\b(?:AE|GO|GIO|HIO|IO|IVO|LIO|LO|LTIO|LTSIO|O|TIO|TO|TSIO|VO)-?\d{3,4}[A-Z0-9-]*\b"),
+    re.compile(r"\bR-?\d{3,4}[A-Z0-9-]*\b"),
+    re.compile(r"\b(?:PT6A|PT6T|JT15D|PW\d{3,4}[A-Z]?|TPE331|M601|RR300|CF34|FJ44|TFE731)[A-Z0-9-]*\b"),
+]
+
+
+def _canonicalize_engine_token(value: str | None) -> str | None:
+    token = re.sub(r"\s+", " ", str(value or "").upper()).strip(" -/")
+    if not token:
+        return None
+
+    # Strip trailing narrative qualifiers that are not part of a model.
+    token = re.sub(r"\b(?:SERIES|SER)\b", "", token).strip(" -/")
+    # Remove leading manufacturer words that leak into model fields.
+    token = re.sub(
+        r"^(?:CONTINENTAL|LYCOMING|PRATT\s*(?:&|AND)?\s*WHITNEY|WILLIAMS)\s+",
+        "",
+        token,
+    ).strip(" -/")
+    if not token:
+        return None
+
+    token = token.replace("/", "-")
+
+    # Common OCR/typing errors where letter O is captured as zero.
+    token = re.sub(r"\bTI0-", "TIO-", token)
+    token = re.sub(r"\bTSI0-", "TSIO-", token)
+    token = re.sub(r"\bI0-", "IO-", token)
+    token = re.sub(r"\b0-(\d{3,4})", r"O-\1", token)
+
+    match = re.match(r"^([A-Z0-9]+)-?(\d{3,4})([A-Z0-9-]*)$", token)
+    if not match:
+        return token
+
+    prefix = match.group(1)
+    digits = match.group(2)
+    suffix = (match.group(3) or "").strip("-")
+    canonical = f"{prefix}-{digits}"
+    if suffix:
+        canonical = f"{canonical}-{suffix}"
+    return canonical
+
+
+def _clean_engine_model_text(value: str | None) -> str:
+    text = re.sub(r"[^A-Z0-9/\- ]+", " ", str(value or "").upper())
+    text = re.sub(r"\s+", " ", text).strip()
+    # Canonicalize malformed short forms where possible.
+    canonical = _canonicalize_engine_token(text)
+    if canonical:
+        return canonical
+    return text
+
+
+def _extract_engine_model_token(value: str | None) -> str | None:
+    text = _clean_engine_model_text(value)
+    if not text:
+        return None
+    for pattern in _ENGINE_MODEL_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            token = _canonicalize_engine_token(match.group(0).replace("/", "-"))
+            if token:
+                return token
+    return None
+
+
+def _is_plausible_engine_lookup_value(value: str | None) -> bool:
+    token = _clean_engine_model_text(value)
+    if not token:
+        return False
+    if len(token) > 48:
+        return False
+    if token.count(" ") > 2:
+        return False
+    if not re.search(r"[A-Z]", token):
+        return False
+    if not re.search(r"\d", token):
+        return False
+    if any(word in token.split() for word in _ENGINE_LOOKUP_NOISE_WORDS):
+        return False
+    return True
+
+
+def _build_engine_lookup_candidates(engine_model: str | None) -> list[str]:
+    raw = _clean_engine_model_text(engine_model)
+    extracted = _extract_engine_model_token(raw)
+    candidates: list[str] = []
+    for candidate in (raw, extracted):
+        if candidate and _is_plausible_engine_lookup_value(candidate):
+            if candidate not in candidates:
+                candidates.append(candidate)
+    return candidates
+
+
+def _normalize_engine_model_for_pricing(engine_model: str | None) -> str | None:
+    model = _clean_engine_model_text(engine_model)
+    if not model:
+        return None
+    match = re.match(r"^([A-Z]+-\d+)(?:-([A-Z])\w*)?", model)
+    if not match:
+        return model
+    base = match.group(1)
+    variant_letter = match.group(2)
+    return f"{base}-{variant_letter}" if variant_letter else base
+
+
+def _extract_engine_family_for_pricing(engine_model: str | None) -> str | None:
+    model = _clean_engine_model_text(engine_model)
+    if not model:
+        return None
+    match = re.match(r"^([A-Z]+-\d+)", model)
+    return match.group(1) if match else model
+
+
+def _first_plausible_engine_lookup_candidate(engine_model: str | None) -> str | None:
+    candidates = _build_engine_lookup_candidates(engine_model)
+    return candidates[0] if candidates else None
+
+
+def lookup_engine_overhaul_pricing(engine_model: str, supabase_client=None) -> dict | None:
+    """
+    Look up engine overhaul pricing for a given engine model.
+    """
+    models = _build_engine_lookup_candidates(engine_model)
+    if not models:
+        return None
+
+    client = supabase_client or _get_market_comps_client()
+    if client is None:
+        return None
+
+    select_cols = "exchange_price,core_charge,retail_price,manufacturer,engine_model,engine_model_normalized,engine_family,updated_at"
+    for model in models:
+        normalized_model = _normalize_engine_model_for_pricing(model)
+        family_model = _extract_engine_family_for_pricing(model)
+        lookups = [
+            ("exact", "engine_model", model),
+            ("normalized", "engine_model_normalized", normalized_model),
+            ("family", "engine_family", family_model),
+        ]
+        for match_type, column, value in lookups:
+            if not value:
+                continue
+            try:
+                response = (
+                    client.table("engine_overhaul_pricing")
+                    .select(select_cols)
+                    .eq(column, value)
+                    .order("updated_at", desc=True)
+                    .limit(1)
+                    .execute()
+                )
+                row = (response.data or [None])[0]
+            except Exception:
+                row = None
+            if not row:
+                continue
+            return {
+                "exchange_price": _safe_float(row.get("exchange_price")),
+                "core_charge": _safe_float(row.get("core_charge")),
+                "retail_price": _safe_float(row.get("retail_price")),
+                "manufacturer": row.get("manufacturer"),
+                "engine_model_matched": row.get("engine_model"),
+                "match_type": match_type,
+            }
+    return None
+
+
+def _estimate_engine_overhaul_pricing_from_family(engine_model: str, supabase_client=None) -> dict | None:
+    """
+    Estimate overhaul pricing from family-level records when exact model pricing is unavailable.
+    """
+    models = _build_engine_lookup_candidates(engine_model)
+    if not models:
+        return None
+
+    client = supabase_client or _get_market_comps_client()
+    if client is None:
+        return None
+
+    select_cols = "exchange_price,core_charge,retail_price,manufacturer,engine_family,updated_at"
+    for model in models:
+        family = _extract_engine_family_for_pricing(model)
+        if not family:
+            continue
+        try:
+            response = (
+                client.table("engine_overhaul_pricing")
+                .select(select_cols)
+                .ilike("engine_family", f"{family}%")
+                .order("updated_at", desc=True)
+                .limit(40)
+                .execute()
+            )
+            rows = response.data or []
+        except Exception:
+            rows = []
+        if not rows:
+            continue
+
+        exchange_values = [_safe_float(row.get("exchange_price")) for row in rows]
+        exchange_values = [value for value in exchange_values if value is not None and value > 0]
+        core_values = [_safe_float(row.get("core_charge")) for row in rows]
+        core_values = [value for value in core_values if value is not None and value >= 0]
+        retail_values = [_safe_float(row.get("retail_price")) for row in rows]
+        retail_values = [value for value in retail_values if value is not None and value > 0]
+
+        if not exchange_values:
+            continue
+
+        manufacturer_counts: dict[str, int] = {}
+        for row in rows:
+            manufacturer = str(row.get("manufacturer") or "").strip()
+            if manufacturer:
+                manufacturer_counts[manufacturer] = manufacturer_counts.get(manufacturer, 0) + 1
+        dominant_mfr = max(manufacturer_counts.items(), key=lambda item: item[1])[0] if manufacturer_counts else None
+
+        return {
+            "exchange_price": round(float(statistics.median(exchange_values)), 2),
+            "core_charge": round(float(statistics.median(core_values)), 2) if core_values else None,
+            "retail_price": round(float(statistics.median(retail_values)), 2) if retail_values else None,
+            "manufacturer": dominant_mfr,
+            "engine_model_matched": family,
+            "match_type": "family_estimated",
+        }
+    return None
+
+
+def score_engine_value(listing: dict, tbo_data: dict | None, pricing: dict | None) -> dict:
+    """
+    Calculate engine remaining value and overrun liability.
+    """
+    smoh_value = listing.get("engine_time_since_overhaul")
+    if smoh_value is None:
+        smoh_value = listing.get("engine_hours_smoh")
+    if smoh_value is None:
+        smoh_value = listing.get("time_since_overhaul")
+    engine_hours_smoh = _safe_int(smoh_value)
+    tbo_hours = _safe_int((tbo_data or {}).get("tbo_hours"))
+    exchange_price = _safe_float((pricing or {}).get("exchange_price"))
+    core_charge = _safe_float((pricing or {}).get("core_charge"))
+
+    hours_remaining = None
+    hours_past_tbo = None
+    pct_life_remaining = None
+    engine_remaining_value = None
+    engine_overrun_liability = None
+    engine_reserve_per_hour = None
+    score_contribution = 0.0
+
+    if tbo_hours and engine_hours_smoh is not None:
+        hours_remaining = tbo_hours - engine_hours_smoh
+        hours_past_tbo = max(0, engine_hours_smoh - tbo_hours)
+        pct_life_remaining = max(0.0, min(1.0, hours_remaining / max(tbo_hours, 1)))
+        used_pct = engine_hours_smoh / max(tbo_hours, 1)
+        if used_pct < 0.25:
+            score_contribution = 25.0
+        elif used_pct < 0.50:
+            score_contribution = 20.0
+        elif used_pct < 0.75:
+            score_contribution = 15.0
+        elif used_pct <= 1.0:
+            score_contribution = 8.0
+        else:
+            overrun_pct = (engine_hours_smoh - tbo_hours) / max(tbo_hours, 1)
+            score_contribution = -5.0 if overrun_pct > 0.10 else 0.0
+
+    if exchange_price is not None and tbo_hours:
+        engine_reserve_per_hour = exchange_price / max(tbo_hours, 1)
+    if exchange_price is not None and pct_life_remaining is not None:
+        engine_remaining_value = exchange_price * pct_life_remaining
+    if exchange_price is not None and hours_past_tbo is not None:
+        overrun_pct = min(hours_past_tbo / max(tbo_hours or 1, 1), 1.0)
+        engine_overrun_liability = 0.0 if hours_past_tbo <= 0 else exchange_price * overrun_pct
+
+    if tbo_hours and exchange_price is not None:
+        data_quality = "full"
+    elif tbo_hours:
+        data_quality = "tbo_only"
+    elif exchange_price is not None:
+        data_quality = "pricing_only"
+    else:
+        data_quality = "none"
+
+    explanation = "Insufficient engine lifecycle and pricing data."
+    if data_quality == "full":
+        match_type = (pricing or {}).get("match_type")
+        if match_type == "family_estimated":
+            data_quality = "estimated_pricing"
+        explanation = (
+            f"Engine SMOH {engine_hours_smoh}h vs TBO {tbo_hours}h; "
+            f"exchange reference ${exchange_price:,.0f} ({match_type or 'unknown'} match)."
+        )
+    elif data_quality == "tbo_only":
+        explanation = f"Engine SMOH {engine_hours_smoh}h vs TBO {tbo_hours}h; overhaul pricing unavailable."
+    elif data_quality == "pricing_only":
+        explanation = f"Pricing reference found (${exchange_price:,.0f}), but TBO/SMOH pairing unavailable."
+
+    return {
+        "engine_hours_smoh": engine_hours_smoh,
+        "tbo_hours": tbo_hours,
+        "hours_remaining": hours_remaining,
+        "hours_past_tbo": hours_past_tbo,
+        "pct_life_remaining": round(float(pct_life_remaining), 4) if pct_life_remaining is not None else None,
+        "exchange_price": round(float(exchange_price), 2) if exchange_price is not None else None,
+        "core_charge": round(float(core_charge), 2) if core_charge is not None else None,
+        "engine_remaining_value": round(float(engine_remaining_value), 2) if engine_remaining_value is not None else None,
+        "engine_overrun_liability": round(float(engine_overrun_liability), 2) if engine_overrun_liability is not None else None,
+        "engine_reserve_per_hour": round(float(engine_reserve_per_hour), 2) if engine_reserve_per_hour is not None else None,
+        "score_contribution": round(float(score_contribution), 1),
+        "explanation": explanation,
+        "match_type": (pricing or {}).get("match_type"),
+        "data_quality": data_quality,
+    }
 
 
 def _deal_price(listing: dict):
@@ -793,11 +1152,25 @@ def _normalize_component_model(value: str | None) -> str | None:
     return normalized or None
 
 
-def _get_component_sales_median(component_type: str, model: str | None) -> dict | None:
+def _build_component_sales_model_candidates(component_type: str, model: str | None) -> list[str]:
+    component = (component_type or "").strip().lower()
     normalized_model = _normalize_component_model(model)
-    if not normalized_model:
+    if component == "engine":
+        candidates = _build_engine_lookup_candidates(model)
+        normalized_candidates = [_normalize_component_model(candidate) for candidate in candidates]
+        deduped: list[str] = []
+        for candidate in normalized_candidates:
+            if candidate and candidate not in deduped:
+                deduped.append(candidate)
+        return deduped
+    return [normalized_model] if normalized_model else []
+
+
+def _get_component_sales_median(component_type: str, model: str | None) -> dict | None:
+    model_candidates = _build_component_sales_model_candidates(component_type, model)
+    if not model_candidates:
         return None
-    key = (component_type.strip().lower(), normalized_model)
+    key = (component_type.strip().lower(), "|".join(model_candidates))
     if key in _component_sales_cache:
         return _component_sales_cache[key]
 
@@ -806,35 +1179,41 @@ def _get_component_sales_median(component_type: str, model: str | None) -> dict 
         _component_sales_cache[key] = None
         return None
 
-    try:
-        response = (
-            client.table("aircraft_component_sales")
-            .select("model,price_sold,sold_date,confidence")
-            .eq("component_type", component_type)
-            .not_.is_("price_sold", "null")
-            .ilike("model", f"%{normalized_model}%")
-            .order("sold_date", desc=True)
-            .limit(12)
-            .execute()
-        )
-        rows = response.data or []
-    except Exception:
-        rows = []
+    best_prices: list[float] = []
+    for model_candidate in model_candidates:
+        try:
+            response = (
+                client.table("aircraft_component_sales")
+                .select("model,price_sold,sold_date,confidence")
+                .eq("component_type", component_type)
+                .not_.is_("price_sold", "null")
+                .ilike("model", f"%{model_candidate}%")
+                .order("sold_date", desc=True)
+                .limit(12)
+                .execute()
+            )
+            rows = response.data or []
+        except Exception:
+            rows = []
 
-    prices: list[float] = []
-    for row in rows:
-        price = _safe_float(row.get("price_sold"))
-        if price is not None and price > 0:
-            prices.append(price)
+        prices: list[float] = []
+        for row in rows:
+            price = _safe_float(row.get("price_sold"))
+            if price is not None and price > 0:
+                prices.append(price)
+        if len(prices) > len(best_prices):
+            best_prices = prices
+        if len(prices) >= 3:
+            break
 
-    if not prices:
+    if not best_prices:
         _component_sales_cache[key] = None
         return None
 
-    ordered = sorted(prices)
+    ordered = sorted(best_prices)
     median_price = ordered[len(ordered) // 2] if len(ordered) % 2 == 1 else (ordered[len(ordered) // 2 - 1] + ordered[len(ordered) // 2]) / 2
     result = {
-        "sample_size": len(prices),
+        "sample_size": len(best_prices),
         "median_price": round(float(median_price), 2),
     }
     _component_sales_cache[key] = result
@@ -1286,6 +1665,92 @@ def _build_execution_score(
     return round(max(0.0, min(100.0, score)), 1)
 
 
+def _coerce_listing_year(listing: dict) -> int | None:
+    year_value = listing.get("year")
+    try:
+        if year_value is None:
+            return None
+        parsed_year = int(float(year_value))
+    except (TypeError, ValueError):
+        return None
+    current_year = datetime.now().year + 1
+    if parsed_year < 1940 or parsed_year > current_year:
+        return None
+    return parsed_year
+
+
+def _age_adjusted_imputed_default(component: str, listing: dict) -> float:
+    """
+    Neutral default that varies by aircraft age/type to avoid sparse-data clusters.
+    """
+    base_defaults = {
+        "engine": 50.0,
+        "prop": 52.0,
+        "llp": 55.0,
+        "quality": 53.0,
+        "avionics": 50.0,
+    }
+    age_weight = {
+        "engine": 1.00,
+        "prop": 0.80,
+        "llp": 0.70,
+        "quality": 0.90,
+        "avionics": 1.15,
+    }
+    year = _coerce_listing_year(listing)
+    if year is None:
+        age_adjustment = -1.0
+    else:
+        age_ratio = max(0.0, min(1.0, (year - 1960) / 70.0))
+        age_adjustment = (age_ratio - 0.5) * 12.0  # roughly -6 to +6
+    aircraft_type = str(listing.get("aircraft_type") or "").upper()
+    type_adjustment = 0.0
+    if "JET" in aircraft_type:
+        type_adjustment = 1.0
+    elif "HELI" in aircraft_type or "ROTOR" in aircraft_type:
+        type_adjustment = -1.0
+    score = (
+        base_defaults.get(component, 50.0)
+        + age_adjustment * age_weight.get(component, 1.0)
+        + type_adjustment
+    )
+    return max(28.0, min(72.0, round(score, 1)))
+
+
+def _apply_percentile_normalization(
+    raw_score: float,
+    data_confidence: str,
+    *,
+    components_measured: int = 0,
+    days_on_market: int | None = None,
+    listing_year: int | None = None,
+) -> float:
+    """
+    Population-shape normalization without DB reads.
+    Uses confidence + measured-component depth + age/market tie-breakers.
+    """
+    score = max(0.0, min(100.0, float(raw_score)))
+    confidence = str(data_confidence or "LOW").upper()
+    measured_bonus = (max(0, min(5, components_measured)) - 2.5) * 1.4
+    year_nudge = 0.0
+    if listing_year is not None:
+        year_nudge = max(-2.0, min(2.0, (listing_year - 1990) / 20.0))
+    market_nudge = 0.0
+    if days_on_market is not None:
+        market_nudge = -2.0 if days_on_market > 180 else (-1.0 if days_on_market > 90 else 0.6)
+
+    if confidence == "HIGH":
+        normalized = 50.0 + (score - 50.0) * 1.22 + measured_bonus + year_nudge + market_nudge
+        return max(0.0, min(100.0, normalized))
+    if confidence == "MEDIUM":
+        normalized = 50.0 + (score - 50.0) * 1.05 + measured_bonus * 0.8 + year_nudge * 0.7 + market_nudge
+        return max(12.0, min(95.0, normalized))
+
+    # Low-confidence scores remain bounded but spread; avoid narrow midpoint pile-up.
+    normalized = 47.0 + (score - 50.0) * 0.48 + measured_bonus * 0.65 + year_nudge + market_nudge
+    return max(30.0, min(65.0, normalized))
+
+
 def _comp_sample_adjustment(sample_size: int) -> float:
     for threshold, bonus in HYBRID_SCORING_PROFILE["comp_sample_bonus"]:
         if sample_size >= threshold:
@@ -1511,7 +1976,7 @@ def _accident_history_adjustment(listing: dict) -> dict:
             "penalty": 15.0,
             "explanation": "Prior substantial damage",
             "score_cap": None,
-            "risk_override": "HIGH",
+            "risk_override": "CRITICAL",
             "no_history_note": False,
         }
 
@@ -1553,6 +2018,33 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     llp = llp_status(listing)
     deferred = calculate_deferred_cost(listing)
     avionics = avionics_score(listing)
+    pricing_enabled = str(os.environ.get("FULL_HANGAR_ENABLE_ENGINE_VALUE_SCORING", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    engine_pricing = None
+    if pricing_enabled:
+        pricing_client = _get_market_comps_client()
+        primary_model = _first_plausible_engine_lookup_candidate(listing.get("engine_model"))
+        faa_model = _first_plausible_engine_lookup_candidate(listing.get("faa_engine_model"))
+        pricing_candidates = []
+        for candidate in (primary_model, faa_model):
+            if candidate and candidate not in pricing_candidates:
+                pricing_candidates.append(candidate)
+
+        for candidate in pricing_candidates:
+            engine_pricing = lookup_engine_overhaul_pricing(candidate, pricing_client)
+            if engine_pricing:
+                break
+
+        if not engine_pricing:
+            for candidate in pricing_candidates:
+                engine_pricing = _estimate_engine_overhaul_pricing_from_family(candidate, pricing_client)
+                if engine_pricing:
+                    break
+    engine_value_result = score_engine_value(listing, engine, engine_pricing)
 
     total_deferred = deferred["total"]
     if total_deferred == 0:
@@ -1560,12 +2052,32 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     else:
         deferred_impact_score = max(0, 100 - (total_deferred / 500))
 
+    engine_measured = bool(engine.get("engine_time_known")) and bool(engine.get("tbo_known"))
+    prop_measured = listing.get("time_since_prop_overhaul") is not None or prop.get("hours_remaining") is not None
+    llp_measured = bool(llp.get("items")) or bool(listing.get("last_annual_date")) or bool(listing.get("elt_expiry_date"))
+    avionics_measured = bool(avionics.get("matched_items")) or _safe_float(avionics.get("installed_value")) is not None
+    quality_measured = bool(llp.get("items")) or deferred.get("total", 0) > 0
+
+    engine_component_score = float(engine.get("score") if engine_measured else _age_adjusted_imputed_default("engine", listing))
+    prop_component_score = float(prop.get("score") if prop_measured else _age_adjusted_imputed_default("prop", listing))
+    llp_component_score = float(llp.get("score") if llp_measured else _age_adjusted_imputed_default("llp", listing))
+    quality_component_score = float(
+        min(100, deferred_impact_score) if quality_measured else _age_adjusted_imputed_default("quality", listing)
+    )
+    avionics_component_score = float(
+        avionics.get("score") if avionics_measured else _age_adjusted_imputed_default("avionics", listing)
+    )
+
+    components_measured = sum(
+        1 for measured in (engine_measured, prop_measured, llp_measured, quality_measured, avionics_measured) if measured
+    )
+
     condition_score = (
-        INTELLIGENCE_WEIGHTS["engine"] * engine["score"]
-        + INTELLIGENCE_WEIGHTS["prop"] * prop["score"]
-        + INTELLIGENCE_WEIGHTS["llp"] * llp["score"]
-        + INTELLIGENCE_WEIGHTS["quality"] * min(100, deferred_impact_score)
-        + INTELLIGENCE_WEIGHTS["avionics"] * avionics["score"]
+        INTELLIGENCE_WEIGHTS["engine"] * engine_component_score
+        + INTELLIGENCE_WEIGHTS["prop"] * prop_component_score
+        + INTELLIGENCE_WEIGHTS["llp"] * llp_component_score
+        + INTELLIGENCE_WEIGHTS["quality"] * quality_component_score
+        + INTELLIGENCE_WEIGHTS["avionics"] * avionics_component_score
     )
     condition_score = max(0, min(100, condition_score))
 
@@ -1617,24 +2129,42 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         ),
         1,
     )
-    value_score = _hybrid_value_score(
+    raw_value_score = _hybrid_value_score(
         condition_score=float(condition_score),
         market_opportunity_score=float(market_opportunity_score),
         execution_score=float(execution_score),
-        engine_score=float(engine.get("score") or 50.0),
-        prop_score=float(prop.get("score") or 50.0),
-        llp_score=float(llp.get("score") or 50.0),
-        avionics_score_value=float(avionics.get("score") or 50.0),
+        engine_score=engine_component_score,
+        prop_score=prop_component_score,
+        llp_score=llp_component_score,
+        avionics_score_value=avionics_component_score,
         deal=deal,
         avionics=avionics,
         component_gap_value=component_gap_value,
         signals=signals,
         data_confidence=data_confidence,
     )
+    days_on_market = _days_on_market(listing)
+    value_score = _apply_percentile_normalization(
+        raw_value_score,
+        data_confidence,
+        components_measured=components_measured,
+        days_on_market=days_on_market,
+        listing_year=_coerce_listing_year(listing),
+    )
     if accident_penalty:
         value_score = max(0.0, value_score - accident_penalty)
     if isinstance(accident_score_cap, (int, float)):
         value_score = min(value_score, float(accident_score_cap))
+    faa_registration_alert = listing.get("faa_registration_alert")
+    faa_alert_text = str(faa_registration_alert or "").upper()
+    severe_ntsb = str(listing.get("most_severe_damage") or "").strip().upper() in {"SUBSTANTIAL", "DESTROYED"}
+    hard_safety_override = (
+        llp.get("any_unairworthy", False)
+        or severe_ntsb
+        or any(token in faa_alert_text for token in ("DEREGISTERED", "REVOKED", "EXPIRED"))
+    )
+    if hard_safety_override:
+        value_score = min(value_score, 25.0)
     data_gaps = len(signals["missing_fields"]) > 0
     score_band_low, score_band_high = _score_band(value_score, data_confidence, len(signals["missing_fields"]))
     rank_score = max(0.0, min(100.0, condition_score * (0.7 + 0.3 * (confidence_score / 100))))
@@ -1656,27 +2186,19 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     risk_reasons = _build_risk_reasons(engine, prop, llp, deferred, data_confidence)
     improvement_actions = _build_improvement_actions(signals)
 
-    faa_registration_alert = listing.get("faa_registration_alert")
     risk = risk_level_from_score(
         value_score,
         llp.get("any_unairworthy", False),
         faa_alert=faa_registration_alert,
+        severe_ntsb=severe_ntsb,
     )
     if isinstance(accident_risk_override, str) and accident_risk_override:
         risk = accident_risk_override
-    days_on_market = _days_on_market(listing)
-
     if days_on_market is not None:
         if days_on_market > 180:
-            if isinstance(deal_rating, (int, float)):
-                deal_rating = round(min(100.0, float(deal_rating) + 15.0), 1)
-                deal_tier = _deal_tier_from_rating(deal_rating)
-            score_explanation.append("Listed 90+ days — motivated seller likely")
+            score_explanation.append("Listed 180+ days — stale listing tie-breaker applied (-2)")
         elif days_on_market > 90:
-            if isinstance(deal_rating, (int, float)):
-                deal_rating = round(min(100.0, float(deal_rating) + 8.0), 1)
-                deal_tier = _deal_tier_from_rating(deal_rating)
-            score_explanation.append("Listed 90+ days — motivated seller likely")
+            score_explanation.append("Listed 90+ days — stale listing tie-breaker applied (-1)")
         elif days_on_market < 7:
             score_explanation.append("New listing")
 
@@ -1724,6 +2246,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "execution_score": execution_score,
         "investment_score": investment_score,
         "pricing_confidence": pricing_confidence,
+        "_components_measured": components_measured,
         "deal_rating": deal_rating,
         "deal_tier": deal_tier,
         "comps_sample_size": deal["comps_sample_size"],
@@ -1754,4 +2277,9 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "component_gap_value": component_gap_value,
         "flip_candidate_triggered": flip_signal.get("flip_candidate_triggered"),
         "flip_candidate_threshold": flip_signal.get("flip_candidate_threshold"),
+        "engine_value": engine_value_result,
+        "engine_hours_smoh": engine_value_result.get("engine_hours_smoh"),
+        "engine_remaining_value": engine_value_result.get("engine_remaining_value"),
+        "engine_overrun_liability": engine_value_result.get("engine_overrun_liability"),
+        "engine_reserve_per_hour": engine_value_result.get("engine_reserve_per_hour"),
     }
