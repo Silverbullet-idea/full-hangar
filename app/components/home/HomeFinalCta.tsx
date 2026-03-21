@@ -5,8 +5,10 @@ export default function HomeFinalCta() {
     <section className="mt-14 rounded-2xl border border-brand-dark bg-[linear-gradient(165deg,#121923_0%,#101722_100%)] p-6 md:p-9">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">Find your next aircraft deal.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-brand-muted">
+          <h2 className="text-3xl font-extrabold leading-tight text-[#ffffff] md:text-4xl">
+            Find your next aircraft deal.
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/70">
             Start with live listings scored and ranked by deal quality. Every factor is transparent. Every signal is explained. No guessing.
           </p>
         </div>

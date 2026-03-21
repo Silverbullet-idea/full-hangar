@@ -47,13 +47,27 @@ export default function HeroScoreCard() {
       <div className="mt-5 border-t border-brand-dark pt-4 text-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-brand-muted">
-            Asking: <span className="font-bold text-brand-white">$38,500</span>
+            Asking:{" "}
+            <span className="font-bold text-brand-white">
+              {"$"}
+              {"38,500"}
+            </span>
           </span>
           <span className="text-brand-muted">
-            Market: <span className="font-bold text-brand-white">$42K – $48K</span>
+            Market:{" "}
+            <span className="font-bold text-brand-white">
+              {"$"}
+              {"42K – "}
+              {"$"}
+              {"48K"}
+            </span>
           </span>
         </div>
-        <p className="mt-1 text-xs font-semibold text-[#4ade80]">↓ $3,500 discount signal</p>
+        <p className="mt-1 text-xs font-semibold text-[#4ade80]">
+          {"↓ "}
+          {"$"}
+          {"3,500 discount signal"}
+        </p>
       </div>
 
       <style>{`

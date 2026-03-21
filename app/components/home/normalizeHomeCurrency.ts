@@ -1,4 +1,10 @@
-/** Collapse accidental double dollar signs in marketing copy (e.g. `$` + `$42,500`). */
+/** Collapse accidental doubled currency symbols in marketing copy (e.g. two `$` before an amount). */
 export function normalizeHomeCurrency(text: string): string {
-  return text.replace(/\$\$+/g, "$")
+  const one = "$"
+  const two = one + one
+  let result = text
+  while (result.includes(two)) {
+    result = result.split(two).join(one)
+  }
+  return result
 }

@@ -81,6 +81,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Mobile safe-area follow-up: root `viewportFit: "cover"` plus `env(safe-area-inset-*)` on Deal Desk sticky bar, filter drawer footer, and scroll padding; drawer max height uses `85dvh`; site header top padding respects notch.
 - Homepage redesign shipped: ticker bar, updated hero copy + score card mockup, Carfax one-liner banner, animated stats counters, market infographic grid (6 cards), how-it-works 3-step, deal patterns 3-card, score breakdown with pillar bars, testimonial restyle, footer CTA update. No backend changes.
 - Homepage bug fixes: corrected double-$ price strings, ticker bar now full-bleed via `calc(-50vw + 50%)` margin breakout, score card pillar bar colors corrected (orange/green/amber).
+- Homepage pass 2 fixes: remaining double-dollar price strings cleared, footer CTA h2 `text-brand-white` → `text-[#ffffff]` + sub-copy `text-white/70` for light-mode readability on dark gradient (`text-white` is remapped in light theme in `globals.css`); `HomeStatsBar` / `HomeScoreBreakdown` client render verified.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -314,6 +315,7 @@ npm run pipeline:score-dist:full-v193-and-commit
 # Chunked full re-score (`--all` in `--limit` batches + one `compute-comps-only` at end); resume-safe via checkpoint
 # Example: `npm run pipeline:backfill:all-chunked -- -ChunkSize 500 -FreshStart`
 npm run pipeline:backfill:all-chunked
+# Manual long runs: hide httpx line spam -> `$env:FULL_HANGAR_BACKFILL_QUIET_HTTP='1'` or `backfill_scores.py --quiet-http`
 ```
 
 ---

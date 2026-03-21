@@ -84,7 +84,7 @@ export default function MarketInfographics() {
             className="home-reveal-infographic rounded-2xl border border-brand-dark bg-card-bg p-5 transition-all hover:-translate-y-0.5 hover:border-brand-orange"
             style={{ animationDelay: `${80 + i * 50}ms` }}
           >
-            <p className="mb-1.5 text-xs text-brand-muted">{normalizeHomeCurrency(card.label)}</p>
+            <p className="mb-1.5 text-xs text-brand-muted">{card.label}</p>
             <p className="text-3xl font-extrabold leading-tight text-brand-white">{normalizeHomeCurrency(card.value)}</p>
             <p className={`mt-2 text-xs ${TREND_COLOR[card.barColor]}`}>{normalizeHomeCurrency(card.trend)}</p>
             <div className="mt-3 h-1 overflow-hidden rounded-full bg-brand-dark">
