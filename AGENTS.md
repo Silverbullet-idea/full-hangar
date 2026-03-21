@@ -1,7 +1,7 @@
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 21, 2026
+> Last updated: March 22, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -61,6 +61,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
 - Listings filter-options fetch loop fixed: `/listings` now SSR-loads `getListingFilterOptions()` into `ListingsClient` (replacing always-empty `buildFilterOptions([])`), sync no longer clobbers client-hydrated options with empty props, `/api/listings/options` fallback runs at most once, and `getListingFilterOptions()` no longer returns silent `[]` after transient retry exhaustion (throws so the route can 500 instead of misleading empty 200). Smoke: `npm run test:smoke:listings-options` (Playwright `webServer` + `tests/smoke/listings-options-no-loop.spec.js`).
 - Listings performance pass: migration `20260322000067_listing_filter_options_aggregate_rpc.sql` adds `get_listing_filter_options_payload()` (set-based JSON); app uses RPC + chunked fallback via `getListingFilterOptionsClientPayload()`; default `/listings` (page 1, 24 rows, `deal_desc`, no filters) uses `unstable_cache` 90s; `export const revalidate = 120` on listings page; category/deal/pagination links use `prefetch={false}`; `app/listings/loading.tsx` skeleton. Rollout order: `docs/PRODUCTION_VERIFY.md` §0.
+- Category button bar filtering fixed on `/listings`: `?category=<value>` now filters using `aircraft_type` (plus legacy make/model fallbacks for null/unknown rows); added `lib/listings/categoryMap.ts` mapping URL params to stored type tokens (`piston_single`, `single_engine_piston`, etc.); migration `20260323000069_add_aircraft_type_category_to_public_listings_view.sql` exposes `aircraft_type` / `aircraft_category` on `public_listings`. Button-bar dropdown make counts remain inventory-wide (intentional until options API accepts `category`).
 - Listing detail SSR reliability hardening shipped for `/listings/[id]`: metadata/detail/market-history fetches now fail soft instead of crashing, and server-side detail queries prefer service-role Supabase auth (with anon fallback) to avoid `aircraft_listings` permission regressions.
 - Listing detail page upgraded with richer FAA snapshot, comps/cost visualization, score summary clarity, and avionics rendering quality.
 - Listing detail comps UX refresh shipped: removed inline asking-price text from the H1 title line, moved asking price into the `Comp & Cost` panel above estimated range, and restored expanded comparable-market outputs with a comps table plus an additional "other comps" list while keeping the Price-vs-Year/Time toggle and exact-submodel toggle behavior.

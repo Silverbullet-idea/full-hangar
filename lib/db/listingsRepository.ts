@@ -4,6 +4,7 @@ import {
   parseListingFilterOptionsRpcPayload,
   type ListingsFilterOptionsClientShape,
 } from "../listings/filterOptionsAggregate";
+import { CATEGORY_PARAM_TO_DB } from "../listings/categoryMap";
 import { createPrivilegedServerClient, createServerClient } from "../supabase/server";
 
 export type ListingFilters = {
@@ -229,8 +230,9 @@ const HELICOPTER_OR =
   ].join(",");
 const LSP_OR =
   "model.ilike.%LSA%,model.ilike.%Light Sport%,make.ilike.%Flight Design%,make.ilike.%Tecnam%,make.ilike.%Jabiru%,make.ilike.%Pipistrel%";
+/** Fallback when `aircraft_type` is null/unknown — keep broad enough to cover common piston singles. */
 const SINGLE_OR =
-  "make.ilike.%Cessna%,make.ilike.%Piper%,make.ilike.%Beechcraft%,make.ilike.%Cirrus%,make.ilike.%Mooney%,make.ilike.%Diamond%,make.ilike.%Grumman%";
+  "make.ilike.%Cessna%,make.ilike.%Piper%,make.ilike.%Beechcraft%,make.ilike.%Cirrus%,make.ilike.%Mooney%,make.ilike.%Diamond%,make.ilike.%Grumman%,make.ilike.%Vans%,make.ilike.%Zenith%,make.ilike.%American Champion%,make.ilike.%CubCrafters%,make.ilike.%Maule%,make.ilike.%Aviat%,make.ilike.%Sonex%,make.ilike.%Flight Design%,make.ilike.%Pitts%";
 
 type FractionalFields = {
   is_fractional_ownership: boolean | null;
@@ -736,15 +738,51 @@ function applyHelicopterExclusion(query: any) {
 function applyCategoryFilter(query: any, categoryInput: string) {
   const category = String(categoryInput ?? "").trim().toLowerCase();
   if (!category) return applyHelicopterExclusion(query);
-  if (category === "single") return applyHelicopterExclusion(query.or(SINGLE_OR));
-  if (category === "multi") return applyHelicopterExclusion(query.or(MULTI_OR));
-  if (category === "helicopter") return query.or(HELICOPTER_OR);
-  if (category === "lsp") return applyHelicopterExclusion(query.or(LSP_OR));
-  if (category === "se_turboprop") return applyHelicopterExclusion(query.or(SE_TURBOPROP_OR));
-  if (category === "me_turboprop") return applyHelicopterExclusion(query.or(ME_TURBOPROP_OR));
-  if (category === "jet") return applyHelicopterExclusion(query.or(JET_OR));
-  if (category === "sea") return applyHelicopterExclusion(query.or(SEA_OR));
-  return applyHelicopterExclusion(query);
+
+  if (category === "helicopter") {
+    return query.or(HELICOPTER_OR);
+  }
+
+  if (category === "se_turboprop") {
+    return applyHelicopterExclusion(
+      query
+        .or("aircraft_type.eq.turboprop,aircraft_type.is.null,aircraft_type.eq.unknown")
+        .or(SE_TURBOPROP_OR)
+    );
+  }
+  if (category === "me_turboprop") {
+    return applyHelicopterExclusion(
+      query
+        .or("aircraft_type.eq.turboprop,aircraft_type.is.null,aircraft_type.eq.unknown")
+        .or(ME_TURBOPROP_OR)
+    );
+  }
+
+  const typeList = CATEGORY_PARAM_TO_DB[category as keyof typeof CATEGORY_PARAM_TO_DB];
+  if (!typeList?.length) return applyHelicopterExclusion(query);
+
+  const legacyOr =
+    category === "single"
+      ? SINGLE_OR
+      : category === "multi"
+        ? MULTI_OR
+        : category === "jet"
+          ? JET_OR
+          : category === "lsp"
+            ? LSP_OR
+            : category === "sea"
+              ? SEA_OR
+              : null;
+
+  const inList = typeList.join(",");
+  if (!legacyOr) {
+    return applyHelicopterExclusion(query);
+  }
+  return applyHelicopterExclusion(
+    query.or(
+      `aircraft_type.in.(${inList}),and(aircraft_type.is.null,or(${legacyOr})),and(aircraft_type.eq.unknown,or(${legacyOr}))`
+    )
+  );
 }
 
 async function runSimpleSearchListingsPage(
