@@ -5,7 +5,7 @@ import {
   type ListingsFilterOptionsClientShape,
 } from "../listings/filterOptionsAggregate";
 import { CATEGORY_PARAM_TO_DB } from "../listings/categoryMap";
-import { createPrivilegedServerClient, createServerClient } from "../supabase/server";
+import { createPrivilegedServerClient, createReadServerClient, createServerClient } from "../supabase/server";
 
 export type ListingFilters = {
   minDealRating?: number;
@@ -42,14 +42,6 @@ export type ListingsPageQuery = {
   category?: string;
   ownershipType?: "all" | "full" | "fractional";
 };
-
-function createReadServerClient() {
-  try {
-    return createPrivilegedServerClient();
-  } catch {
-    return createServerClient();
-  }
-}
 
 function isTransientSupabaseUpstreamFailure(rawMessage: unknown): boolean {
   const message = String(rawMessage ?? "").toLowerCase();

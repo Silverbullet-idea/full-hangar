@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next"
-import { createServerClient, isPublicSupabaseConfigured } from "../../lib/supabase/server"
+import { createReadServerClient, isPublicSupabaseConfigured } from "../../lib/supabase/server"
 import { toAbsoluteUrl } from "../../lib/seo/site"
+
+/** Avoid baking an empty sitemap at build when env/DB is unavailable; regenerate per request. */
+export const dynamic = "force-dynamic"
 
 type ListingSitemapRow = {
   id: string | null
@@ -21,14 +24,16 @@ function normalizeLastModified(rawValue: string | null | undefined): Date {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rows: ListingSitemapRow[] = []
 
-  // Build-time (e.g. Vercel) may run static generation before env is available to this route.
-  // Return no listing URLs instead of throwing; set NEXT_PUBLIC_SUPABASE_* on the project for full sitemaps.
+  // Without anon URL+key we cannot call Supabase from this route; service-role alone is not enough for createServerClient().
   if (!isPublicSupabaseConfigured()) {
+    console.warn(
+      "[sitemap:listings] Skipping entries: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY for listing URLs.",
+    )
     return []
   }
 
   try {
-    const supabase = createServerClient()
+    const supabase = createReadServerClient()
     for (let offset = 0; offset < MAX_ROWS; offset += BATCH_SIZE) {
       const { data, error } = await supabase
         .from("public_listings")
@@ -37,7 +42,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .order("last_seen_date", { ascending: false, nullsFirst: false })
         .range(offset, offset + BATCH_SIZE - 1)
 
-      if (error) break
+      if (error) {
+        console.error("[sitemap:listings] public_listings batch failed", { offset, message: error.message, code: error.code })
+        break
+      }
       const batch = (data ?? []) as ListingSitemapRow[]
       if (!batch.length) break
       rows.push(...batch)

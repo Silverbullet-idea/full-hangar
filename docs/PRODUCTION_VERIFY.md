@@ -20,11 +20,11 @@ In **Project → Settings → Environment Variables**, for **Production** (and *
 |----------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Client + server Supabase (required for `/listings/sitemap.xml` listing URLs) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same |
-| `SUPABASE_SERVICE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`) | Server-only: privileged reads + RPC `get_listing_filter_options_payload` |
+| `SUPABASE_SERVICE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`) | Server-only: privileged reads + RPC `get_listing_filter_options_payload`; sitemap prefers this when set |
 | `INTERNAL_PASSWORD` | Internal routes if used |
 | Any beta/Google keys | Per `.env.local` parity |
 
-Without the two `NEXT_PUBLIC_SUPABASE_*` values at **build** time, `/listings/sitemap.xml` is intentionally empty (no build failure).
+Without the two `NEXT_PUBLIC_SUPABASE_*` values at **runtime** (Vercel Production), `/listings/sitemap.xml` returns an empty urlset (by design).
 
 Without a **service role** key at runtime, filter-options RPC may fail; the app falls back to chunked `public_listings` reads (slower).
 
@@ -59,4 +59,9 @@ Requires `.env.local` with Supabase keys for `npm run dev` (Playwright starts th
 ## 5. Optional SEO
 
 - **`/sitemap.xml`**: static + curated listing landings.
-- **`/listings/sitemap.xml`**: per-listing URLs when Supabase env is present at build.
+- **`/listings/sitemap.xml`**: generated **dynamically on each request** (`app/listings/sitemap.ts` uses `force-dynamic`). It stays empty only when:
+  - **`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`** are missing at **runtime** (Vercel Production), or
+  - **`public_listings` queries fail** (check Vercel function logs for `[sitemap:listings]`).
+  - Previously, a **statically prerendered** empty sitemap could be cached from builds where env was absent or the first query errored silently; the dynamic route avoids locking in that empty output.
+
+Expect a large XML (up to ~20k URLs); `curl -sI` still returns **200** with a modest body length if the urlset is empty.

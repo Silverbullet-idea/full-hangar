@@ -71,6 +71,15 @@ export function createPrivilegedServerClient() {
   return createClient(getSupabaseUrl(), getServiceRoleKey(), clientOptions)
 }
 
+/** Prefer service-role reads when configured (Vercel production); fall back to anon. */
+export function createReadServerClient() {
+  try {
+    return createPrivilegedServerClient()
+  } catch {
+    return createServerClient()
+  }
+}
+
 // Backward compatibility for older imports.
 export function getSupabaseServerClient() {
   return createServerClient()
