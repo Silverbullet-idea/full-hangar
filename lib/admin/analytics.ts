@@ -203,7 +203,8 @@ function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number, label: string):
   });
 }
 
-const getActiveListings = cache(async (): Promise<ListingRow[]> => {
+/** Cached full active listing rows for admin analytics (platform, data quality, buyer intel). */
+export const getActiveListings = cache(async (): Promise<ListingRow[]> => {
   const supabase = createPrivilegedServerClient();
   const pageSize = 1000;
   const rows: ListingRow[] = [];

@@ -4,6 +4,7 @@ import {
   computeBuyerIntelligence,
   computeDataQuality,
   computePlatformStats,
+  getActiveListings,
   listInvitesWithSessions,
 } from "@/lib/admin/analytics";
 import { SourceQualitySection } from "./components/SourceQualitySection";
@@ -115,12 +116,17 @@ const EMPTY_AVIONICS = {
 };
 
 export default async function InternalAdminPage() {
+  // `computePlatformStats`, `computeDataQuality`, and `computeBuyerIntelligence` all share
+  // `getActiveListings()` via React `cache()`. Per-panel 9s timeouts started in parallel all
+  // counted from t=0, so one slow multi-page `select("*")` caused every panel to fail together.
+  await withTimeout(getActiveListings(), 180_000, "admin listing snapshot");
+
   const [platformResult, qualityResult, buyerResult, invitesResult, avionicsResult] = await Promise.allSettled([
-    withTimeout(computePlatformStats(), 9000, "platform stats"),
-    withTimeout(computeDataQuality(), 9000, "data quality"),
-    withTimeout(computeBuyerIntelligence(), 9000, "buyer intelligence"),
-    withTimeout(listInvitesWithSessions(), 9000, "invites"),
-    withTimeout(computeAvionicsIntelligence({ days: 90, top: 30 }), 9000, "avionics intelligence"),
+    withTimeout(computePlatformStats(), 90_000, "platform stats"),
+    withTimeout(computeDataQuality(), 90_000, "data quality"),
+    withTimeout(computeBuyerIntelligence(), 90_000, "buyer intelligence"),
+    withTimeout(listInvitesWithSessions(), 30_000, "invites"),
+    withTimeout(computeAvionicsIntelligence({ days: 90, top: 30 }), 180_000, "avionics intelligence"),
   ]);
 
   if (platformResult.status === "rejected") {
