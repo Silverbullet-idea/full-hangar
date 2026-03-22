@@ -1,24 +1,46 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import type { ReadonlyURLSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import FilterDrawer from '../components/FilterDrawer'
+import CategoryBar from './components/CategoryBar'
+import DealTierBar from './components/DealTierBar'
 import ListingCard from './components/ListingCard'
 import ListingsFiltersSidebar from './components/ListingsFiltersSidebar'
 import ListingsGridAndPagination from './components/ListingsGridAndPagination'
+import ListingsMetaBar from './components/ListingsMetaBar'
 import ListingsResultsToolbar from './components/ListingsResultsToolbar'
-import ListingsTopBanner from './components/ListingsTopBanner'
+import PillarLegendBar from './components/PillarLegendBar'
 import { formatPriceOrCall, formatScore } from '../../lib/listings/format'
 import {
-  CATEGORIES,
   collectImageCandidates,
   deriveModelFamily,
   inferCategoriesForMakeModel,
-  isLikelyHelicopterMake,
   normalizeTopMenuMakeLabel,
   normalizeSourceKey,
   type CategoryValue,
   type ListingSourceKey,
 } from './components/listingsClientUtils'
+
+function mergeListingsUrlSnapshot(params: URLSearchParams, searchParams: ReadonlyURLSearchParams) {
+  const keys = [
+    'dealScore',
+    'priceDropOnly',
+    'addedToday',
+    'hidePriceUndisclosed',
+    'location',
+    'minEngine',
+    'minAvionics',
+    'minQuality',
+    'minValue',
+    'maxValueScore',
+  ] as const
+  for (const k of keys) {
+    const v = searchParams.get(k)
+    if (v) params.set(k, v)
+  }
+}
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 type SortOption =
@@ -36,6 +58,8 @@ type SortOption =
   | 'year_newest'
   | 'year_oldest'
   | 'engine_life'
+  | 'dom_asc'
+  | 'recent_add'
 type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
 type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
@@ -69,6 +93,15 @@ type ListingsClientProps = {
   initialStateFilter?: string
   initialRiskFilter?: string
   initialMinimumScore?: number
+  initialMaxValueScore?: number
+  initialDealScore?: string
+  initialLocation?: string
+  initialMinEngine?: number
+  initialMinAvionics?: number
+  initialMinQuality?: number
+  initialMinMktValue?: number
+  initialPriceReducedOnly?: boolean
+  initialAddedToday?: boolean
   initialMinPrice?: number
   initialMaxPrice?: number
   initialPriceStatus?: PriceStatusFilter
@@ -118,6 +151,15 @@ export default function ListingsClient({
   initialStateFilter = '',
   initialRiskFilter = 'all',
   initialMinimumScore = 0,
+  initialMaxValueScore = 0,
+  initialDealScore = '',
+  initialLocation = '',
+  initialMinEngine = 0,
+  initialMinAvionics = 0,
+  initialMinQuality = 0,
+  initialMinMktValue = 0,
+  initialPriceReducedOnly = false,
+  initialAddedToday = false,
   initialMinPrice = 0,
   initialMaxPrice = 0,
   initialPriceStatus = 'all',
@@ -132,6 +174,8 @@ export default function ListingsClient({
   initialPage = 1,
   initialPageSize = 24,
 }: ListingsClientProps) {
+  const searchParams = useSearchParams()
+  const searchParamsKey = searchParams.toString()
   const canApplySavedSort = initialSortBy === 'deal_desc' && initialDealFilter === 'all'
   const [listings, setListings] = useState<any[]>(Array.isArray(initialListings) ? initialListings : [])
   const [totalFiltered, setTotalFiltered] = useState(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
@@ -377,7 +421,8 @@ export default function ListingsClient({
     const validSorts: SortOption[] = [
       'price_low', 'price_high', 'deal_desc',
       'market_best', 'market_worst', 'risk_low', 'risk_high',
-      'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life'
+      'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life',
+      'dom_asc', 'recent_add',
     ]
     if (canApplySavedSort && savedSort && validSorts.includes(savedSort as SortOption)) {
       setSortBy(savedSort as SortOption)
@@ -395,10 +440,7 @@ export default function ListingsClient({
   }, [sortBy])
 
   const makeOptions = useMemo(() => filterOptions.makes, [filterOptions.makes])
-  const makeCountMap = useMemo(() => filterOptions.makeCounts ?? {}, [filterOptions.makeCounts])
   const modelPairCountMap = useMemo(() => filterOptions.modelPairCounts ?? {}, [filterOptions.modelPairCounts])
-  const dealTierCountMap = useMemo(() => filterOptions.dealTierCounts ?? {}, [filterOptions.dealTierCounts])
-  const minScoreCountMap = useMemo(() => filterOptions.minimumValueScoreCounts ?? {}, [filterOptions.minimumValueScoreCounts])
 
   const modelOptions = useMemo(() => {
     const pairs = makeFilter === 'all'
@@ -499,8 +541,41 @@ export default function ListingsClient({
     return { makesByCategory, categoryCounts }
   }, [filterOptions.modelPairs, modelPairCountMap])
 
-  const visibleCategories = useMemo(() => CATEGORIES, [])
-  const topMenuButtonCount = visibleCategories.length + 1
+  const categoryBarCounts = useMemo(() => {
+    const c = categoryMenuData.categoryCounts
+    return {
+      all: totalFiltered,
+      single: c.single,
+      multi: c.multi,
+      turboprop: (c.se_turboprop ?? 0) + (c.me_turboprop ?? 0),
+      jet: c.jet,
+      helicopter: c.helicopter,
+    }
+  }, [categoryMenuData.categoryCounts, totalFiltered])
+
+  useEffect(() => {
+    const s = searchParams.get('sortBy')
+    if (!s) return
+    const valid: SortOption[] = [
+      'price_low',
+      'price_high',
+      'deal_desc',
+      'market_best',
+      'market_worst',
+      'risk_low',
+      'risk_high',
+      'deferred_low',
+      'deferred_high',
+      'tt_low',
+      'tt_high',
+      'year_newest',
+      'year_oldest',
+      'engine_life',
+      'dom_asc',
+      'recent_add',
+    ]
+    if (valid.includes(s as SortOption)) setSortBy(s as SortOption)
+  }, [searchParamsKey, searchParams])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -530,7 +605,13 @@ export default function ListingsClient({
         if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
         if (appliedSourceFilter !== 'all') params.set('source', appliedSourceFilter)
         if (appliedRiskFilter !== 'all') params.set('risk', appliedRiskFilter)
-        if (dealFilter !== 'all') params.set('dealTier', dealFilter)
+        const urlParams =
+          typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
+        if (urlParams.get('dealScore')) {
+          params.set('dealScore', urlParams.get('dealScore')!)
+        } else if (dealFilter !== 'all') {
+          params.set('dealTier', dealFilter)
+        }
         if (minimumScore > 0) params.set('minValueScore', String(minimumScore))
         if (appliedMinPrice > 0) params.set('minPrice', String(appliedMinPrice))
         if (appliedMaxPrice > 0) params.set('maxPrice', String(appliedMaxPrice))
@@ -543,7 +624,18 @@ export default function ListingsClient({
         if (appliedEngineTime !== 'any') params.set('engineTime', appliedEngineTime)
         if (appliedTrueCostMin > 0) params.set('trueCostMin', String(appliedTrueCostMin))
         if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
-        if (categoryFilter) params.set('category', categoryFilter)
+        const categoryParam = categoryFilter || urlParams.get('category')
+        if (categoryParam) params.set('category', categoryParam)
+        for (const key of ['priceDropOnly', 'addedToday', 'hidePriceUndisclosed'] as const) {
+          const v = urlParams.get(key)
+          if (v) params.set(key, v)
+        }
+        const urlMax = urlParams.get('maxPrice')
+        if (urlMax && !params.has('maxPrice')) params.set('maxPrice', urlMax)
+        for (const key of ['location', 'minEngine', 'minAvionics', 'minQuality', 'minValue', 'maxValueScore'] as const) {
+          const v = urlParams.get(key)
+          if (v) params.set(key, v)
+        }
 
         const response = await fetch(`/api/listings?${params.toString()}`, {
           signal: controller.signal,
@@ -594,6 +686,7 @@ export default function ListingsClient({
     appliedTrueCostMax,
     categoryFilter,
     sortBy,
+    searchParamsKey,
   ])
 
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize))
@@ -623,6 +716,7 @@ export default function ListingsClient({
     if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (safePage > 1) params.set('page', String(safePage))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
+    mergeListingsUrlSnapshot(params, searchParams)
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
   }, [
     appliedSearchTerm,
@@ -648,6 +742,8 @@ export default function ListingsClient({
     appliedTrueCostMax,
     safePage,
     pageSize,
+    searchParamsKey,
+    searchParams,
   ])
   const buildPageHref = (page: number) => {
     const params = new URLSearchParams()
@@ -674,6 +770,7 @@ export default function ListingsClient({
     if (appliedTrueCostMax > 0) params.set('trueCostMax', String(appliedTrueCostMax))
     if (page > 1) params.set('page', String(page))
     if (pageSize !== 24) params.set('pageSize', String(pageSize))
+    mergeListingsUrlSnapshot(params, searchParams)
     return `/listings${params.toString() ? `?${params.toString()}` : ''}`
   }
   const paginatedListings = listings
@@ -700,60 +797,21 @@ export default function ListingsClient({
     return [...rebuiltFirst, ...rebuiltRemaining]
   }, [paginatedListings, layoutMode])
 
-  const applyDealPreset = (preset: 'all' | 'top' | 'exceptional' | 'good' | 'fair' | 'above' | 'overpriced') => {
-    setCurrentPage(1)
-    if (preset === 'all') {
-      setDealFilter('all')
-      return
-    }
-    if (preset === 'top') {
-      setDealFilter('TOP_DEALS')
-      setSortBy('deal_desc')
-      return
-    }
-    if (preset === 'exceptional') {
-      setDealFilter('EXCEPTIONAL_DEAL')
-      return
-    }
-    if (preset === 'good') {
-      setDealFilter('GOOD_DEAL')
-      return
-    }
-    if (preset === 'fair') {
-      setDealFilter('FAIR_MARKET')
-      return
-    }
-    if (preset === 'above') {
-      setDealFilter('ABOVE_MARKET')
-      return
-    }
-    setDealFilter('OVERPRICED')
-  }
+  const noPriceDividerIndex = useMemo(() => {
+    return prioritizedListings.findIndex((l) => {
+      const p = l?.asking_price
+      return p == null || (typeof p === 'number' && p <= 0)
+    })
+  }, [prioritizedListings])
 
-  const buildCategoryHref = (category: CategoryValue) => {
-    const params = new URLSearchParams()
-    if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
-    if (category) params.set('category', category)
-    return `/listings${params.toString() ? `?${params.toString()}` : ''}`
-  }
+  const noPriceCountOnPage = useMemo(() => {
+    return prioritizedListings.filter((l) => {
+      const p = l?.asking_price
+      return p == null || (typeof p === 'number' && p <= 0)
+    }).length
+  }, [prioritizedListings])
 
-  const buildCategoryMakeHref = (category: CategoryValue, make: string) => {
-    const params = new URLSearchParams()
-    if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
-    if (category) params.set('category', category)
-    params.set('make', make)
-    return `/listings${params.toString() ? `?${params.toString()}` : ''}`
-  }
-
-  const buildDealHref = (dealTier: DealTierFilter) => {
-    const params = new URLSearchParams()
-    if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
-    if (dealTier !== 'all') params.set('dealTier', dealTier)
-    if (dealTier === 'TOP_DEALS') params.set('sortBy', 'deal_desc')
-    return `/listings${params.toString() ? `?${params.toString()}` : ''}`
-  }
-
-  const renderListingCard = (l: any, mode: LayoutMode) => {
+  const renderListingCard = (l: any, mode: LayoutMode, listingIndex = 0) => {
     const listingKey = String(l.source_id ?? l.id)
     const detailHref = `/listings/${l.source_id ?? l.id}?returnTo=${encodeURIComponent(listingsReturnTo)}`
     const imageCandidates = collectImageCandidates(l)
@@ -844,6 +902,32 @@ export default function ListingsClient({
       ['Deal Rating', dealRatingText],
     ]
 
+    const askingNum = typeof l.asking_price === 'number' ? l.asking_price : null
+    const hasDisclosedPrice = askingNum != null && askingNum > 0
+    const tileMeta = {
+      hasDisclosedPrice,
+      daysOnMarket: typeof l.days_on_market === 'number' ? l.days_on_market : null,
+      priceReduced: l.price_reduced === true,
+      priceReductionAmount: typeof l.price_reduction_amount === 'number' ? l.price_reduction_amount : null,
+      trueCost: typeof l.true_cost === 'number' ? l.true_cost : null,
+      askingPrice: hasDisclosedPrice ? askingNum : null,
+      valueScore: typeof l.value_score === 'number' ? l.value_score : null,
+      engineScore: typeof l.engine_score === 'number' ? l.engine_score : null,
+      avionicsScore: typeof l.avionics_score === 'number' ? l.avionics_score : null,
+      qualityScore: typeof l.condition_score === 'number' ? l.condition_score : null,
+      marketValueScore: typeof l.market_opportunity_score === 'number' ? l.market_opportunity_score : null,
+      executionScore: typeof l.execution_score === 'number' ? l.execution_score : null,
+      totalTimeAirframe: typeof l.total_time_airframe === 'number' ? l.total_time_airframe : null,
+      engineSmoh: typeof evHoursSmohRaw === 'number' ? evHoursSmohRaw : null,
+      engineLifePct:
+        typeof evPctLifeRemainingRaw === 'number' && Number.isFinite(evPctLifeRemainingRaw)
+          ? evPctLifeRemainingRaw
+          : null,
+      engineModelLabel: null,
+      sourceKey: String(l.source ?? 'unknown'),
+      faaMatched: l.faa_matched === true,
+    }
+
     return (
       <ListingCard
         key={listingKey}
@@ -859,6 +943,8 @@ export default function ListingsClient({
         engineBadgeClass={hasEngineBadgeData ? badgeBaseClass : undefined}
         dealTier={typeof l.deal_tier === 'string' ? l.deal_tier : null}
         specRows={specRows}
+        tileStaggerIndex={listingIndex}
+        tileMeta={tileMeta}
         onImageError={() => {
           setImageCursor((prev) => ({ ...prev, [listingKey]: currentImageIndex + 1 }))
         }}
@@ -870,31 +956,15 @@ export default function ListingsClient({
 
   return (
     <div>
-      <ListingsTopBanner
-        topMenuButtonCount={topMenuButtonCount}
-        visibleCategories={visibleCategories}
-        categoryFilter={categoryFilter}
-        makeOptions={makeOptions.filter((make) => !isLikelyHelicopterMake(make))}
-        makeCountMap={makeCountMap}
-        categoryMenuData={categoryMenuData}
-        dealFilter={dealFilter}
-        dealTierCountMap={dealTierCountMap}
-        buildCategoryHref={buildCategoryHref}
-        buildCategoryMakeHref={buildCategoryMakeHref}
-        buildDealHref={buildDealHref}
-        onSelectCategory={(category) => {
-          setCategoryFilter(category)
-          setDealFilter('all')
-          setCurrentPage(1)
-        }}
-        onSelectDealPreset={(preset) => {
-          setCategoryFilter(null)
-          applyDealPreset(preset)
-          setCurrentPage(1)
-        }}
-      />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="hidden md:block">
+      <Suspense
+        fallback={<div className="min-h-[120px] border-b border-[var(--fh-border)] bg-[var(--fh-bg)]" aria-hidden />}
+      >
+        <CategoryBar counts={categoryBarCounts} />
+        <DealTierBar layoutMode={layoutMode} setLayoutMode={setLayoutMode} sortBy={sortBy} />
+        <PillarLegendBar />
+      </Suspense>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="hidden md:block md:sticky md:top-[120px] md:h-[calc(100vh-120px)] md:max-h-[calc(100vh-120px)] md:overflow-y-auto md:border-r md:border-[var(--fh-border)] md:bg-[var(--fh-bg2)] md:py-2.5 md:pr-2">
           <ListingsFiltersSidebar
             makeFilter={makeFilter}
             setMakeFilter={setMakeFilter}
@@ -1126,6 +1196,9 @@ export default function ListingsClient({
           />
         </FilterDrawer>
         <section className="min-w-0">
+          <Suspense fallback={null}>
+            <ListingsMetaBar totalFiltered={totalFiltered} />
+          </Suspense>
           <ListingsResultsToolbar
             safePage={safePage}
             totalPages={totalPages}
@@ -1140,6 +1213,7 @@ export default function ListingsClient({
             fetchError={fetchError}
             mobileFilterCount={mobileActiveFilterCount}
             onOpenMobileFilters={() => setFilterDrawerOpen(true)}
+            hideSortAndLayout
           />
           <ListingsGridAndPagination
             layoutMode={layoutMode}
@@ -1150,6 +1224,8 @@ export default function ListingsClient({
             totalPages={totalPages}
             renderListingCard={renderListingCard}
             buildPageHref={buildPageHref}
+            noPriceDividerIndex={noPriceDividerIndex}
+            noPriceCountOnPage={noPriceCountOnPage}
           />
         </section>
       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getListingsPage } from "../../../lib/db/listingsRepository";
+import { buildListingsPageQueryFromFlatParams } from "../../../lib/listings/listingsQueryFromSearchParams";
 
 function sanitizeListingsApiError(rawMessage: unknown): string {
   const message = String(rawMessage ?? "");
@@ -20,41 +21,10 @@ function sanitizeListingsApiError(rawMessage: unknown): string {
 export async function GET(request: NextRequest) {
   const startedAt = Date.now();
   const search = request.nextUrl.searchParams;
-  const ownershipTypeRaw = (search.get("ownershipType") ?? "all").toLowerCase();
-  const ownershipType =
-    ownershipTypeRaw === "fractional" || ownershipTypeRaw === "full" || ownershipTypeRaw === "all"
-      ? ownershipTypeRaw
-      : "all";
+  const flat = Object.fromEntries(search.entries());
 
   try {
-    const result = await getListingsPage({
-      page: Number(search.get("page") ?? 1),
-      pageSize: Number(search.get("pageSize") ?? 24),
-      q: search.get("q") ?? "",
-      make: search.get("make") ?? "",
-      model: search.get("model") ?? "",
-      modelFamily: search.get("modelFamily") ?? "",
-      subModel: search.get("subModel") ?? "",
-      source: search.get("source") ?? "",
-      state: search.get("state") ?? "",
-      risk: search.get("risk") ?? "",
-      dealTier: search.get("dealTier") ?? "",
-      minValueScore: Number(search.get("minValueScore") ?? 0),
-      minPrice: Number(search.get("minPrice") ?? 0),
-      maxPrice: Number(search.get("maxPrice") ?? 0),
-      priceStatus: (search.get("priceStatus") ?? "all") as "all" | "priced",
-      yearMin: Number(search.get("yearMin") ?? 0),
-      yearMax: Number(search.get("yearMax") ?? 0),
-      totalTimeMin: Number(search.get("totalTimeMin") ?? 0),
-      totalTimeMax: Number(search.get("totalTimeMax") ?? 0),
-      maintenanceBand: (search.get("maintenanceBand") ?? "any") as "any" | "light" | "moderate" | "heavy" | "severe",
-      engineTime: (search.get("engineTime") ?? "any") as "any" | "fresh" | "mid" | "approaching" | "hasHours",
-      trueCostMin: Number(search.get("trueCostMin") ?? 0),
-      trueCostMax: Number(search.get("trueCostMax") ?? 0),
-      sortBy: search.get("sortBy") ?? "value_desc",
-      category: search.get("category") ?? "",
-      ownershipType,
-    });
+    const result = await getListingsPage(buildListingsPageQueryFromFlatParams(flat));
 
     const elapsedMs = Date.now() - startedAt;
     return NextResponse.json(

@@ -349,6 +349,56 @@ a.fh-header-search-filter:hover {
   color: var(--fh-orange);
 }
 
+.fh-category-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fh-category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.fh-checkbox-orange {
+  accent-color: var(--fh-orange);
+}
+
+.fh-no-price-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-family: var(--font-barlow-condensed), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--fh-text-muted);
+}
+
+.fh-no-price-divider::before,
+.fh-no-price-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--fh-border);
+}
+
+@keyframes fh-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fh-listing-card-enter {
+  animation: fh-fade-up 0.3s ease forwards;
+}
+
 a {
   color: var(--brand-orange);
 }

@@ -12,7 +12,7 @@ export const CATEGORIES = [
 
 export const TOP_MENU_MIN_COUNT = 10
 
-export type CategoryValue = (typeof CATEGORIES)[number]['value']
+export type CategoryValue = (typeof CATEGORIES)[number]['value'] | 'turboprop'
 
 export type ListingSourceKey =
   | 'trade-a-plane'

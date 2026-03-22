@@ -3,6 +3,10 @@ import ListingsClient from './ListingsClient'
 import { aggregateListingFilterOptionsFromRows } from '../../lib/listings/filterOptionsAggregate'
 import type { ListingsPageQuery } from '../../lib/db/listingsRepository'
 import {
+  buildListingsPageQueryFromFlatParams,
+  dealScoreToBounds,
+} from '../../lib/listings/listingsQueryFromSearchParams'
+import {
   getListingFilterOptionsClientPayload,
   getListingsPage,
   loadCachedDefaultListingsHomeIfEligible,
@@ -19,7 +23,17 @@ import {
 export const revalidate = 120
 
 type SearchParams = Record<string, string | string[] | undefined>
-type CategoryValue = 'single' | 'multi' | 'se_turboprop' | 'me_turboprop' | 'jet' | 'helicopter' | 'lsp' | 'sea' | null
+type CategoryValue =
+  | 'single'
+  | 'multi'
+  | 'turboprop'
+  | 'se_turboprop'
+  | 'me_turboprop'
+  | 'jet'
+  | 'helicopter'
+  | 'lsp'
+  | 'sea'
+  | null
 type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
 type SortOption =
   | 'price_low'
@@ -36,6 +50,8 @@ type SortOption =
   | 'year_newest'
   | 'year_oldest'
   | 'engine_life'
+  | 'dom_asc'
+  | 'recent_add'
 type PriceStatus = 'all' | 'priced'
 type MaintenanceBand = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
@@ -65,6 +81,7 @@ function parseCategory(searchParams?: SearchParams): CategoryValue {
   if (
     value === 'single' ||
     value === 'multi' ||
+    value === 'turboprop' ||
     value === 'se_turboprop' ||
     value === 'me_turboprop' ||
     value === 'jet' ||
@@ -93,6 +110,7 @@ function parseSortBy(searchParams?: SearchParams): SortOption {
     'price_low', 'price_high', 'deal_desc',
     'market_best', 'market_worst', 'risk_low', 'risk_high',
     'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life',
+    'dom_asc', 'recent_add',
   ]
   if (value && validSorts.includes(value as SortOption)) return value as SortOption
   return 'deal_desc'
@@ -129,61 +147,49 @@ export default async function ListingsPage({
   searchParams?: Promise<SearchParams>
 }) {
   const resolvedSearchParams = await searchParams
-  const initialSearchTerm = parseSearchTerm(resolvedSearchParams)
-  const initialCategoryFilter = parseCategory(resolvedSearchParams)
-  const initialDealFilter = parseDealTier(resolvedSearchParams)
+  const flat = toFlatSearchParams(resolvedSearchParams)
+  const initialDealFilter: DealTierValue =
+    dealScoreToBounds(flat.dealScore ?? "").min > 0 ? "all" : parseDealTier(resolvedSearchParams)
   const requestedSortBy = parseSortBy(resolvedSearchParams)
-  const initialMakeFilter = parseParam(resolvedSearchParams, 'make')
-  const initialModelFamilyFilter = parseParam(resolvedSearchParams, 'modelFamily')
-  const initialSubModelFilter = parseParam(resolvedSearchParams, 'subModel')
-  const initialSourceFilter = parseParam(resolvedSearchParams, 'source')
-  const initialStateFilter = parseParam(resolvedSearchParams, 'state')
-  const initialRiskFilter = parseParam(resolvedSearchParams, 'risk')
-  const initialMinimumScore = parsePositiveInt(resolvedSearchParams, 'minValueScore', 0)
-  const initialMinPrice = parsePositiveInt(resolvedSearchParams, 'minPrice', 0)
-  const initialMaxPrice = parsePositiveInt(resolvedSearchParams, 'maxPrice', 0)
-  const initialPriceStatus = parsePriceStatus(resolvedSearchParams)
-  const initialYearMin = parsePositiveInt(resolvedSearchParams, 'yearMin', 0)
-  const initialYearMax = parsePositiveInt(resolvedSearchParams, 'yearMax', 0)
-  const initialTotalTimeMin = parsePositiveInt(resolvedSearchParams, 'totalTimeMin', 0)
-  const initialTotalTimeMax = parsePositiveInt(resolvedSearchParams, 'totalTimeMax', 0)
-  const initialMaintenanceBand = parseMaintenanceBand(resolvedSearchParams)
-  const initialEngineTime = parseEngineTime(resolvedSearchParams)
-  const initialTrueCostMin = parsePositiveInt(resolvedSearchParams, 'trueCostMin', 0)
-  const initialTrueCostMax = parsePositiveInt(resolvedSearchParams, 'trueCostMax', 0)
-  const initialPage = parsePositiveInt(resolvedSearchParams, 'page', 1)
-  const requestedPageSize = parsePositiveInt(resolvedSearchParams, 'pageSize', 24)
-  const initialPageSize = Math.min(48, Math.max(12, requestedPageSize))
   const initialSortBy: SortOption =
     initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
 
   const listingsQuery: ListingsPageQuery = {
-    page: initialPage,
-    pageSize: initialPageSize,
+    ...buildListingsPageQueryFromFlatParams(flat),
     sortBy: initialSortBy,
-    q: initialSearchTerm,
-    make: initialMakeFilter,
-    model: '',
-    modelFamily: initialModelFamilyFilter,
-    subModel: initialSubModelFilter,
-    source: initialSourceFilter,
-    state: initialStateFilter,
-    risk: initialRiskFilter,
-    dealTier: initialDealFilter === 'all' ? '' : initialDealFilter,
-    minValueScore: initialMinimumScore,
-    minPrice: initialMinPrice,
-    maxPrice: initialMaxPrice,
-    priceStatus: initialPriceStatus,
-    yearMin: initialYearMin,
-    yearMax: initialYearMax,
-    totalTimeMin: initialTotalTimeMin,
-    totalTimeMax: initialTotalTimeMax,
-    maintenanceBand: initialMaintenanceBand,
-    engineTime: initialEngineTime,
-    trueCostMin: initialTrueCostMin,
-    trueCostMax: initialTrueCostMax,
-    category: initialCategoryFilter ?? '',
   }
+
+  const initialSearchTerm = listingsQuery.q ?? ''
+  const initialCategoryFilter = parseCategory(resolvedSearchParams)
+  const initialMakeFilter = listingsQuery.make ?? ''
+  const initialModelFamilyFilter = listingsQuery.modelFamily ?? ''
+  const initialSubModelFilter = listingsQuery.subModel ?? ''
+  const initialSourceFilter = listingsQuery.source ?? ''
+  const initialStateFilter = listingsQuery.state ?? ''
+  const initialRiskFilter = listingsQuery.risk ?? ''
+  const initialMinimumScore = Math.max(0, listingsQuery.minValueScore ?? 0)
+  const initialMaxValueScore = Math.max(0, listingsQuery.maxValueScore ?? 0)
+  const initialMinPrice = listingsQuery.minPrice ?? 0
+  const initialMaxPrice = listingsQuery.maxPrice ?? 0
+  const initialPriceStatus = listingsQuery.priceStatus ?? 'all'
+  const initialYearMin = listingsQuery.yearMin ?? 0
+  const initialYearMax = listingsQuery.yearMax ?? 0
+  const initialTotalTimeMin = listingsQuery.totalTimeMin ?? 0
+  const initialTotalTimeMax = listingsQuery.totalTimeMax ?? 0
+  const initialMaintenanceBand = listingsQuery.maintenanceBand ?? 'any'
+  const initialEngineTime = listingsQuery.engineTime ?? 'any'
+  const initialTrueCostMin = listingsQuery.trueCostMin ?? 0
+  const initialTrueCostMax = listingsQuery.trueCostMax ?? 0
+  const initialPage = listingsQuery.page ?? 1
+  const initialPageSize = listingsQuery.pageSize ?? 24
+  const initialDealScore = parseParam(resolvedSearchParams, 'dealScore').toLowerCase()
+  const initialLocation = listingsQuery.location ?? ''
+  const initialMinEngine = listingsQuery.minEngineScore ?? 0
+  const initialMinAvionics = listingsQuery.minAvionicsScore ?? 0
+  const initialMinQuality = listingsQuery.minQualityScore ?? 0
+  const initialMinMktValue = listingsQuery.minMarketValueScore ?? 0
+  const initialPriceReducedOnly = listingsQuery.priceReducedOnly === true
+  const initialAddedToday = listingsQuery.addedToday === true
 
   let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
   let initialFilterOptions = aggregateListingFilterOptionsFromRows([])
@@ -269,6 +275,15 @@ export default async function ListingsPage({
         initialStateFilter={initialStateFilter}
         initialRiskFilter={initialRiskFilter}
         initialMinimumScore={initialMinimumScore}
+        initialMaxValueScore={initialMaxValueScore}
+        initialDealScore={initialDealScore}
+        initialLocation={initialLocation}
+        initialMinEngine={initialMinEngine}
+        initialMinAvionics={initialMinAvionics}
+        initialMinQuality={initialMinQuality}
+        initialMinMktValue={initialMinMktValue}
+        initialPriceReducedOnly={initialPriceReducedOnly}
+        initialAddedToday={initialAddedToday}
         initialMinPrice={initialMinPrice}
         initialMaxPrice={initialMaxPrice}
         initialPriceStatus={initialPriceStatus}

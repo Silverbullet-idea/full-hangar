@@ -10,8 +10,10 @@ type ListingsGridAndPaginationProps = {
   totalFiltered: number
   safePage: number
   totalPages: number
-  renderListingCard: (listing: any, mode: LayoutMode) => ReactNode
+  renderListingCard: (listing: any, mode: LayoutMode, listingIndex: number) => ReactNode
   buildPageHref: (page: number) => string
+  noPriceDividerIndex?: number
+  noPriceCountOnPage?: number
 }
 
 export default function ListingsGridAndPagination({
@@ -23,6 +25,8 @@ export default function ListingsGridAndPagination({
   totalPages,
   renderListingCard,
   buildPageHref,
+  noPriceDividerIndex = -1,
+  noPriceCountOnPage = 0,
 }: ListingsGridAndPaginationProps) {
   return (
     <>
@@ -35,7 +39,24 @@ export default function ListingsGridAndPagination({
               : "flex flex-col gap-2"
         }
       >
-        {prioritizedListings.map((l) => renderListingCard(l, layoutMode))}
+        {prioritizedListings.flatMap((l, i) => {
+          const nodes: ReactNode[] = []
+          if (
+            noPriceDividerIndex >= 0 &&
+            i === noPriceDividerIndex &&
+            noPriceCountOnPage > 0
+          ) {
+            nodes.push(
+              <div key={`no-price-divider-${i}`} className="fh-no-price-divider">
+                <span className="shrink-0 text-center">
+                  ↓ {noPriceCountOnPage} listings with undisclosed price — not scored, sorted last
+                </span>
+              </div>
+            )
+          }
+          nodes.push(renderListingCard(l, layoutMode, i))
+          return nodes
+        })}
       </div>
       {!paginatedListings.length && (
         <div className="mt-8 rounded-lg border border-brand-dark bg-[#1a1a1a] p-6 text-center text-brand-muted">

@@ -1,5 +1,7 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { getDealTierMeta } from '../../../lib/listings/dealTier'
+import { formatMoney } from '../../../lib/listings/format'
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 
@@ -17,6 +19,101 @@ type ListingCardProps = {
   dealTier?: string | null
   specRows: Array<[string, string]>
   onImageError: () => void
+  /** Staggered entrance (tiles grid); capped in CSS. */
+  tileStaggerIndex?: number
+  /** Extended fields for Phase 2 tiles layout */
+  tileMeta?: {
+    hasDisclosedPrice: boolean
+    daysOnMarket: number | null
+    priceReduced: boolean
+    priceReductionAmount: number | null
+    trueCost: number | null
+    askingPrice: number | null
+    valueScore: number | null
+    engineScore: number | null
+    avionicsScore: number | null
+    qualityScore: number | null
+    marketValueScore: number | null
+    executionScore: number | null
+    totalTimeAirframe: number | null
+    engineSmoh: number | null
+    engineLifePct: number | null
+    engineModelLabel: string | null
+    sourceKey: string
+    faaMatched: boolean
+  }
+}
+
+function formatSourceLabel(raw: string): string {
+  const k = raw.trim().toLowerCase().replace(/_/g, '-')
+  const m: Record<string, string> = {
+    'trade-a-plane': 'Trade-A-Plane',
+    controller: 'Controller',
+    aerotrader: 'AeroTrader',
+    aircraftforsale: 'Aircraft For Sale',
+    aso: 'ASO',
+    globalair: 'GlobalAir',
+    barnstormers: 'Barnstormers',
+    avbuyer: 'AvBuyer',
+    'controller_cdp': 'Controller',
+    unknown: 'Listing',
+  }
+  return m[k] ?? raw
+}
+
+function pillarBarHeight(score: number | null | undefined): number | null {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return null
+  return Math.max(2, Math.min(100, score))
+}
+
+function PillarColumn({
+  short,
+  label,
+  score,
+  gradient,
+}: {
+  short: string
+  label: string
+  score: number | null
+  gradient: string
+}) {
+  const h = pillarBarHeight(score)
+  return (
+    <div className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1">
+      <span
+        className="text-[11px] font-bold text-[var(--fh-text-dim)]"
+        style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+      >
+        {score != null ? Math.round(score) : '—'}
+      </span>
+      <div className="flex h-8 w-full items-end overflow-hidden rounded-sm bg-[var(--fh-bg3)] px-px">
+        {h != null ? (
+          <div
+            className="w-full min-h-[2px] rounded-sm transition-[height] duration-500"
+            style={{
+              height: `${h}%`,
+              background: gradient,
+            }}
+          />
+        ) : (
+          <div className="h-0.5 w-full rounded-sm bg-[var(--fh-border)] opacity-50" />
+        )}
+      </div>
+      <span
+        className="text-center text-[8px] text-[var(--fh-text-muted)]"
+        style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+      >
+        {short}
+      </span>
+      <div
+        className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded border border-[var(--fh-border)] bg-[var(--fh-bg2)] px-2 py-1 text-[10px] text-[var(--fh-text-dim)] opacity-0 shadow-lg transition-opacity group-hover/pillar:opacity-100"
+        style={{ fontFamily: 'var(--font-dm-sans)' }}
+      >
+        <span className="font-semibold text-[var(--fh-text)]">{label}</span>
+        {score != null ? ` · ${Math.round(score)}` : ''}
+      </div>
+    </div>
+  )
 }
 
 function renderSpecTable(listingKey: string, rows: Array<[string, string]>, compact = false) {
@@ -39,9 +136,26 @@ function renderImageNode(props: {
   imageUrl: string
   titleText: string
   onImageError: () => void
+  tileCover?: boolean
 }) {
-  const { mode, imageUrl, titleText, onImageError } = props
+  const { mode, imageUrl, titleText, onImageError, tileCover } = props
   const shouldShowImage = Boolean(imageUrl)
+
+  if (tileCover && shouldShowImage) {
+    return (
+      <Image
+        src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+        alt={`${titleText} listing photo`.trim()}
+        width={640}
+        height={360}
+        sizes="(max-width: 768px) 100vw, 400px"
+        unoptimized
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+        loading="lazy"
+        onError={onImageError}
+      />
+    )
+  }
 
   if (mode === 'compact') {
     return shouldShowImage ? (
@@ -119,8 +233,9 @@ export default function ListingCard({
   dealTier,
   specRows,
   onImageError,
+  tileStaggerIndex = 0,
+  tileMeta,
 }: ListingCardProps) {
-  const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError })
   const dealTierMeta = getDealTierMeta(dealTier)
   const dealTierBadgeClass = dealTierMeta
     ? dealTierMeta.tone === 'green'
@@ -131,6 +246,294 @@ export default function ListingCard({
           ? 'border-[#d97706] bg-[#d977061f] text-[#d97706]'
           : 'border-[#dc2626] bg-[#dc26261f] text-[#dc2626]'
     : ''
+
+  if (mode === 'tiles' && tileMeta) {
+    const m = tileMeta
+    const dom =
+      typeof m.daysOnMarket === 'number' && Number.isFinite(m.daysOnMarket) && m.daysOnMarket >= 0
+        ? m.daysOnMarket
+        : null
+    const dropAmt =
+      m.priceReduced && typeof m.priceReductionAmount === 'number' && m.priceReductionAmount > 0
+        ? m.priceReductionAmount
+        : null
+    const exceptional =
+      m.hasDisclosedPrice && dealTierMeta?.key === 'EXCEPTIONAL_DEAL'
+    const ribbonUndisclosed = !m.hasDisclosedPrice
+    const ribbonGreen =
+      m.hasDisclosedPrice && dealTierMeta && (dealTierMeta.key === 'EXCEPTIONAL_DEAL' || dealTierMeta.key === 'GOOD_DEAL')
+    const ribbonOrange =
+      m.hasDisclosedPrice && dealTierMeta?.key === 'ABOVE_MARKET'
+    const ribbonBlue = m.hasDisclosedPrice && dealTierMeta?.key === 'FAIR_MARKET'
+    const ribbonRed = m.hasDisclosedPrice && dealTierMeta?.key === 'OVERPRICED'
+
+    const ribbonClass = ribbonUndisclosed
+      ? 'border border-[rgba(122,138,158,0.4)] text-[var(--fh-text-dim)]'
+      : ribbonGreen
+        ? 'border border-[rgba(34,197,94,0.5)] text-[#22c55e]'
+        : ribbonOrange
+          ? 'border border-[rgba(255,153,0,0.5)] text-[var(--fh-orange)]'
+          : ribbonBlue
+            ? 'border border-[rgba(59,130,246,0.5)] text-[#3b82f6]'
+            : ribbonRed
+              ? 'border border-[rgba(239,68,68,0.5)] text-[#ef4444]'
+              : 'border border-[rgba(122,138,158,0.35)] text-[var(--fh-text-dim)]'
+
+    const ribbonText = ribbonUndisclosed
+      ? 'PRICE UNDISCLOSED'
+      : dealTierMeta
+        ? dealTierMeta.label.toUpperCase()
+        : 'DEAL'
+
+    const scoreBadgeColor = ribbonUndisclosed
+      ? 'var(--fh-text-muted)'
+      : ribbonGreen
+        ? '#22c55e'
+        : ribbonOrange
+          ? 'var(--fh-orange)'
+          : ribbonBlue
+            ? '#3b82f6'
+            : ribbonRed
+              ? '#ef4444'
+              : 'var(--fh-text-muted)'
+
+    const locLine = `${locationText} — ${formatSourceLabel(m.sourceKey)}`
+    const delayMs = Math.min(tileStaggerIndex, 6) * 50
+
+    return (
+      <article
+        className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(34,197,94,0.25)] hover:border-[rgba(34,197,94,0.5)]' : 'border-[var(--fh-border)]'}`}
+        style={{ animationDelay: `${delayMs}ms` }}
+      >
+        <Link href={detailHref} className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]">
+          <div className="relative h-[180px] overflow-hidden bg-[var(--fh-bg3)]">
+            {imageUrl ? (
+              renderImageNode({ mode, imageUrl, titleText, onImageError, tileCover: true })
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--fh-bg4)] to-[var(--fh-bg)] text-4xl text-[var(--fh-text-muted)]">
+                ✈
+              </div>
+            )}
+            <div
+              className={`absolute left-2.5 top-2.5 z-[2] flex max-w-[calc(100%-56px)] items-center gap-1.5 rounded-full px-2.5 py-1 backdrop-blur-md ${ribbonClass}`}
+              style={{
+                fontFamily: 'var(--font-dm-sans), system-ui',
+                fontSize: '10px',
+                fontWeight: 700,
+                letterSpacing: '0.5px',
+                background: 'rgba(0,0,0,0.7)',
+              }}
+            >
+              <span className="inline-block h-[5px] w-[5px] shrink-0 rounded-full bg-current" />
+              <span className="truncate">{ribbonText}</span>
+            </div>
+            <div
+              className="absolute right-2.5 top-2.5 z-[2] flex h-10 w-10 items-center justify-center rounded-full border-2 border-current backdrop-blur-md"
+              style={{
+                color: scoreBadgeColor,
+                background: 'rgba(0,0,0,0.7)',
+                fontFamily: 'var(--font-barlow-condensed), system-ui',
+                fontSize: ribbonUndisclosed ? 10 : 16,
+                fontWeight: 800,
+              }}
+            >
+              {m.hasDisclosedPrice && typeof m.valueScore === 'number'
+                ? Math.round(m.valueScore)
+                : 'N/A'}
+            </div>
+            <span
+              className="absolute right-2.5 top-[54px] z-[2] text-[8px] text-[var(--fh-text-muted)]"
+              style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+            >
+              OVERALL
+            </span>
+            {dom != null ? (
+              <div
+                className="absolute bottom-2.5 left-2.5 z-[2] rounded-md px-2 py-0.5 backdrop-blur-md"
+                style={{
+                  background: 'rgba(0,0,0,0.75)',
+                  fontFamily: 'var(--font-dm-sans), system-ui',
+                  fontSize: '10px',
+                  color: 'var(--fh-text-dim)',
+                }}
+              >
+                📅 {dom} days listed
+              </div>
+            ) : null}
+            {dropAmt != null ? (
+              <div
+                className="absolute bottom-2.5 right-2.5 z-[2] rounded-md px-2 py-0.5 text-[9px] font-bold text-white"
+                style={{ background: 'rgba(239,68,68,0.85)' }}
+              >
+                ↓ {formatMoney(dropAmt)} drop
+              </div>
+            ) : null}
+          </div>
+
+          <div className="px-3.5 pb-0 pt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2
+                className="min-w-0 flex-1 pr-1 text-[19px] font-bold leading-tight text-[var(--fh-text)]"
+                style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+                suppressHydrationWarning
+              >
+                {titleText}
+              </h2>
+              {ownershipBadgeText ? (
+                <span className="shrink-0 rounded border border-[var(--fh-orange)] bg-[var(--fh-bg)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--fh-orange)]">
+                  {ownershipBadgeText}
+                </span>
+              ) : null}
+            </div>
+            <p
+              className="mt-1 text-[11px] text-[var(--fh-text-muted)]"
+              style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+              suppressHydrationWarning
+            >
+              📍 {locLine}
+            </p>
+            {m.hasDisclosedPrice && typeof m.askingPrice === 'number' ? (
+              <>
+                <p
+                  className="mt-2 text-[26px] font-extrabold text-[var(--fh-orange)]"
+                  style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+                >
+                  {formatMoney(m.askingPrice)}
+                </p>
+                {typeof m.trueCost === 'number' && m.trueCost > 0 ? (
+                  <p className="mt-0.5 text-[10px] text-[var(--fh-text-muted)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    True cost est. ~{formatMoney(m.trueCost)}…
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <div className="mt-2 space-y-2">
+                <span className="inline-block rounded-full border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3 py-1 text-xs text-[var(--fh-text-dim)]">
+                  Call for Price
+                </span>
+                <div
+                  className="border-l-2 border-[rgba(122,138,158,0.3)] bg-[rgba(122,138,158,0.08)] px-2 py-1.5 text-[10px] italic text-[var(--fh-text-muted)]"
+                  style={{ fontFamily: 'var(--font-dm-sans)' }}
+                >
+                  ⚠ Deal scoring requires a disclosed price. Aircraft intelligence is still available on the report.
+                </div>
+              </div>
+            )}
+
+            <div
+              className="mt-2.5 grid grid-cols-2 gap-x-2.5 gap-y-1.5"
+              style={{ columnGap: '10px', rowGap: '6px' }}
+            >
+              {(
+                [
+                  ['TOTAL TIME', typeof m.totalTimeAirframe === 'number' ? `${Math.round(m.totalTimeAirframe).toLocaleString('en-US')} hrs` : '—', 'normal'],
+                  ['ENGINE SMOH', typeof m.engineSmoh === 'number' ? `${Math.round(m.engineSmoh).toLocaleString('en-US')} hrs` : '—', 'normal'],
+                  ['ENGINE MDL', m.engineModelLabel?.trim() || '—', 'normal'],
+                  [
+                    'ENG LIFE',
+                    typeof m.engineLifePct === 'number' && Number.isFinite(m.engineLifePct)
+                      ? `${Math.round(m.engineLifePct * 100)}% left`
+                      : '—',
+                    m.engineLifePct != null && m.engineLifePct < 0.25 ? 'bad' : m.engineLifePct != null && m.engineLifePct >= 0.5 ? 'good' : 'normal',
+                  ],
+                ] as const
+              ).map(([lab, val, tone]) => (
+                <div key={lab}>
+                  <div
+                    className="text-[9px] font-bold uppercase tracking-wide text-[var(--fh-text-muted)]"
+                    style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+                  >
+                    {lab}
+                  </div>
+                  <div
+                    className={`text-xs font-medium ${tone === 'good' ? 'text-[var(--fh-green)]' : tone === 'bad' ? 'text-[var(--fh-red)]' : 'text-[var(--fh-text)]'}`}
+                    style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+                  >
+                    {val}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--fh-border)] px-3.5 py-2.5">
+            {m.hasDisclosedPrice ? (
+              <div className="flex items-end gap-1">
+                <PillarColumn
+                  short="ENG"
+                  label="Engine Health"
+                  score={m.engineScore}
+                  gradient="linear-gradient(180deg, #22c55e, #059669)"
+                />
+                <PillarColumn
+                  short="AVI"
+                  label="Avionics"
+                  score={m.avionicsScore}
+                  gradient="linear-gradient(180deg, #3b82f6, #7c3aed)"
+                />
+                <PillarColumn
+                  short="QUAL"
+                  label="Listing Quality"
+                  score={m.qualityScore}
+                  gradient="linear-gradient(180deg, #FF9900, #AF4D27)"
+                />
+                <PillarColumn
+                  short="MKT"
+                  label="Market Value"
+                  score={m.marketValueScore}
+                  gradient="linear-gradient(180deg, #f59e0b, #d97706)"
+                />
+                <PillarColumn
+                  short="STC"
+                  label="STC / Mods"
+                  score={m.executionScore}
+                  gradient="linear-gradient(180deg, #ec4899, #be185d)"
+                />
+              </div>
+            ) : (
+              <p className="text-center text-[11px] text-[var(--fh-text-muted)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                📊 Aircraft intelligence available — deal score unlocks when price is disclosed.
+              </p>
+            )}
+          </div>
+        </Link>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3.5 py-2">
+          <span
+            className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg)] px-2 py-0.5 text-[10px] text-[var(--fh-text-dim)]"
+            style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+          >
+            {formatSourceLabel(m.sourceKey)}
+          </span>
+          {m.faaMatched ? (
+            <span
+              className="rounded border border-[rgba(34,197,94,0.35)] bg-[var(--fh-green-dim)] px-2 py-0.5 text-[10px] text-[var(--fh-green)]"
+              style={{ fontFamily: 'var(--font-dm-sans)' }}
+            >
+              N# matched
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="ml-auto rounded border border-[var(--fh-border)] px-2 py-1 text-[10px] font-semibold text-[var(--fh-text-dim)] transition-colors hover:border-[var(--fh-orange)] hover:bg-[var(--fh-orange-dim)] hover:text-[var(--fh-orange)]"
+            style={{ fontFamily: 'var(--font-dm-sans)' }}
+            onClick={(e) => e.preventDefault()}
+          >
+            + Watch
+          </button>
+          <Link
+            href={detailHref}
+            className="rounded border border-[var(--fh-border-orange)] bg-[var(--fh-orange-dim)] px-2.5 py-1 text-[10px] font-semibold text-[var(--fh-orange)] transition-colors hover:brightness-110"
+            style={{ fontFamily: 'var(--font-dm-sans)' }}
+          >
+            View Report →
+          </Link>
+        </div>
+      </article>
+    )
+  }
+
+  const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError })
 
   if (mode === 'rows') {
     return (
