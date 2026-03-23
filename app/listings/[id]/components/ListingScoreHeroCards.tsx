@@ -2,18 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { getDealTierMeta } from "../../../../lib/listings/dealTier"
+import { formatMoney, formatScore } from "../../../../lib/listings/format"
+import { safeDisplay } from "./detailUtils"
 
 type ListingScoreHeroCardsProps = {
   dealTier: string | null
   primaryScore: number | null
   primaryLabel: string
   scoreColor: string
-  formatScore: (value: number | null | undefined) => string
-  safeDisplay: (value: string | number | null | undefined) => string
   intelligenceVersion: string | null
   percentileLabel?: string | null
   askingPrice: number | null
-  formatMoney: (value: number | null | undefined) => string
   priceReduced: boolean
   priceReductionAmount: number | null
   daysOnMarket: number | null
@@ -42,8 +41,6 @@ function PillarRow({
   label,
   score,
   note,
-  formatScore,
-  safeDisplay,
   animate,
 }: {
   dotClass: string
@@ -51,8 +48,6 @@ function PillarRow({
   label: string
   score: number | null
   note: string | null
-  formatScore: (v: number | null | undefined) => string
-  safeDisplay: (v: string | number | null | undefined) => string
   animate: boolean
 }) {
   const pct = typeof score === "number" && Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0
@@ -135,7 +130,7 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
           <span
             className={`text-[clamp(3rem,10vw,4.25rem)] font-extrabold leading-none ${priceDisclosed ? tierScore.scoreClass : "text-[var(--fh-text-muted)]"}`}
           >
-            {priceDisclosed ? props.safeDisplay(props.formatScore(effectivePrimaryScore)) : "N/A"}
+            {priceDisclosed ? safeDisplay(formatScore(effectivePrimaryScore)) : "N/A"}
           </span>
           <span className="text-lg font-semibold text-[var(--fh-text-muted)]">/100</span>
         </div>
@@ -154,7 +149,7 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
         </div>
         {typeof props.askingPrice === "number" && props.askingPrice > 0 ? (
           <div className="mt-1 text-[clamp(1.75rem,6vw,2.75rem)] font-extrabold text-[var(--fh-orange,#f97316)]" style={barlow}>
-            {props.formatMoney(props.askingPrice)}
+            {formatMoney(props.askingPrice)}
           </div>
         ) : (
           <div className="mt-1 text-base font-semibold text-[var(--fh-text-muted)]">Call for price</div>
@@ -164,7 +159,7 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
             <div className="font-semibold text-[#22c55e]">
               Price reduced
               {typeof props.priceReductionAmount === "number" && props.priceReductionAmount > 0
-                ? ` (−${props.formatMoney(props.priceReductionAmount)})`
+                ? ` (−${formatMoney(props.priceReductionAmount)})`
                 : ""}
             </div>
           ) : null}
@@ -185,7 +180,7 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
               <div className="text-[11px] text-[var(--fh-text-muted)]">Includes deferred maintenance</div>
             </div>
             <div className="text-xl font-bold text-amber-500" style={barlow}>
-              {props.formatMoney(props.trueCostEstimate)}
+              {formatMoney(props.trueCostEstimate)}
             </div>
           </div>
         ) : null}
@@ -203,8 +198,6 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
             label="Market"
             score={props.marketScore}
             note={props.pillarNotes.market}
-            formatScore={props.formatScore}
-            safeDisplay={props.safeDisplay}
             animate={animateBars}
           />
           <PillarRow
@@ -213,8 +206,6 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
             label="Condition"
             score={props.conditionScore}
             note={props.pillarNotes.condition}
-            formatScore={props.formatScore}
-            safeDisplay={props.safeDisplay}
             animate={animateBars}
           />
           <PillarRow
@@ -223,8 +214,6 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
             label="Execution"
             score={props.executionScore}
             note={props.pillarNotes.execution}
-            formatScore={props.formatScore}
-            safeDisplay={props.safeDisplay}
             animate={animateBars}
           />
         </div>

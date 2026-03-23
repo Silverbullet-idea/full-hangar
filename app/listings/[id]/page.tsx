@@ -759,12 +759,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             primaryScore={hasDisclosedListPrice ? scoreBreakdown.primaryScore : null}
             primaryLabel={scoreBreakdown.primaryLabel}
             scoreColor={scoreColor}
-            formatScore={formatScore}
-            safeDisplay={safeDisplay}
             intelligenceVersion={intelligenceVersion}
             percentileLabel={percentileLabel}
             askingPrice={resolvedAskingPrice}
-            formatMoney={formatMoney}
             priceReduced={listingRow.price_reduced === true}
             priceReductionAmount={listingRow.price_reduction_amount ?? null}
             daysOnMarket={listingRow.days_on_market ?? null}
