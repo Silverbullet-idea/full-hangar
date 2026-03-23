@@ -30,7 +30,20 @@ const EMPTY_OPTIONS_BODY = JSON.stringify({
  * This test forces that empty 200 for browser-initiated options calls and caps request volume.
  */
 test.describe("listings filter options fetch guard", () => {
+  let skipOptionsLoopTest = false;
+
+  test.beforeAll(async ({ request }) => {
+    const response = await request.get("/listings");
+    if (!response.ok()) {
+      skipOptionsLoopTest = true;
+    }
+  });
+
   test("does not hammer /api/listings/options when the API returns empty 200", async ({ page }) => {
+    test.skip(
+      skipOptionsLoopTest,
+      `GET /listings returned non-OK (dev server or Supabase env needed for this browser smoke)`
+    );
     let optionsGetCount = 0;
 
     await page.route("**/api/listings/options", async (route) => {

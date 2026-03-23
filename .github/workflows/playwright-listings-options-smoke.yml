@@ -12,6 +12,7 @@ on:
     paths:
       - "app/listings/**"
       - "app/api/listings/**"
+      - "lib/listings/**"
       - "lib/db/listingsRepository.ts"
       - "tests/smoke/**"
       - "playwright.config.*"

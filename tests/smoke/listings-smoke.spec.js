@@ -92,3 +92,14 @@ test.describe("listings category + search smoke", () => {
     }
   });
 });
+
+/** Guards listing detail RSC + client islands: bad id must not throw (regression vs function props / dynamic). */
+test.describe("listing detail shell", () => {
+  test("missing slug returns not-found HTML with 200", async ({ request }) => {
+    const response = await request.get("/listings/__smoke_nonexistent_id__");
+    expect(response.status()).toBe(200);
+    const body = await response.text();
+    expect(body).toMatch(/listing not found/i);
+    expect(body).toMatch(/back to listings/i);
+  });
+});

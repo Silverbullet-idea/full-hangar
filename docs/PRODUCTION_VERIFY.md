@@ -54,7 +54,7 @@ Expect **200** (or **307/308** only if you intentionally redirect to `www`—fol
 npm run test:smoke:listings-all
 ```
 
-Requires `.env.local` with Supabase keys for `npm run dev` (Playwright starts the dev server). GitHub Actions needs repository **Secrets** (see `AGENTS.md` → Listings Options workflow).
+Requires `.env.local` with Supabase keys for `npm run dev` (Playwright starts the dev server). GitHub Actions needs repository **Secrets** (see `AGENTS.md` → Listings Options workflow). If `GET /api/listings?page=1&pageSize=1` is not a healthy JSON payload, the **API parameter matrix** inside `listings-smoke.spec.js` is skipped (HTML `/listings` checks and listing-detail shell test still run).
 
 ## 5. Optional SEO
 
