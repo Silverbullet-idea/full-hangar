@@ -22,6 +22,8 @@ type ListingCardProps = {
   dealTier?: string | null
   specRows: Array<[string, string]>
   onImageError: () => void
+  /** Next/Image LCP hint for first screen of results (parent sets by index + layout). */
+  imagePriority?: boolean
   /** Staggered entrance (tiles grid); capped in CSS. */
   tileStaggerIndex?: number
   /** Extended fields for Phase 2 tiles layout */
@@ -160,9 +162,11 @@ function renderImageNode(props: {
   titleText: string
   onImageError: () => void
   tileCover?: boolean
+  priority?: boolean
 }) {
-  const { mode, imageUrl, titleText, onImageError, tileCover } = props
+  const { mode, imageUrl, titleText, onImageError, tileCover, priority = false } = props
   const shouldShowImage = Boolean(imageUrl)
+  const lazyOrPriority = priority ? { priority: true as const } : { loading: 'lazy' as const }
 
   if (tileCover && shouldShowImage) {
     return (
@@ -174,7 +178,7 @@ function renderImageNode(props: {
         sizes="(max-width: 768px) 100vw, 400px"
         unoptimized
         className="h-full w-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.04]"
-        loading="lazy"
+        {...lazyOrPriority}
         onError={onImageError}
       />
     )
@@ -190,7 +194,7 @@ function renderImageNode(props: {
         sizes="112px"
         unoptimized
         className="h-[84px] w-28 shrink-0 rounded bg-[#0f141d] object-contain"
-        loading="lazy"
+        {...lazyOrPriority}
         onError={onImageError}
       />
     ) : (
@@ -211,7 +215,7 @@ function renderImageNode(props: {
           sizes="(max-width: 1024px) 100vw, 288px"
           unoptimized
           className="h-[216px] w-full rounded bg-[#0f141d] object-contain lg:w-72"
-          loading="lazy"
+          {...lazyOrPriority}
           onError={onImageError}
         />
       )
@@ -226,7 +230,7 @@ function renderImageNode(props: {
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
           unoptimized
           className="object-contain"
-          loading="lazy"
+          {...lazyOrPriority}
           onError={onImageError}
         />
       </div>
@@ -256,6 +260,7 @@ export default function ListingCard({
   dealTier,
   specRows,
   onImageError,
+  imagePriority = false,
   tileStaggerIndex = 0,
   tileMeta,
 }: ListingCardProps) {
@@ -332,7 +337,14 @@ export default function ListingCard({
         <Link href={detailHref} className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]">
           <div className="relative h-[180px] overflow-hidden bg-[var(--fh-bg3)]">
             {imageUrl ? (
-              renderImageNode({ mode, imageUrl, titleText, onImageError, tileCover: true })
+              renderImageNode({
+                mode,
+                imageUrl,
+                titleText,
+                onImageError,
+                tileCover: true,
+                priority: imagePriority,
+              })
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--fh-bg4)] to-[var(--fh-bg)] text-4xl text-[var(--fh-text-muted)]">
                 ✈
@@ -593,7 +605,7 @@ export default function ListingCard({
     )
   }
 
-  const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError })
+  const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError, priority: imagePriority })
 
   if (mode === 'rows') {
     return (

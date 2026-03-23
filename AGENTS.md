@@ -95,6 +95,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Homepage light mode theming: deal pattern cards, hero score card, FAQ items, Carfax banner, score-breakdown panel, pillar tracks, and confidence box now adapt in light theme via `[data-theme="light"]` rules in `app/page.tsx` (slate-100/200/300 palette). Hero section and stats bar stay hardcoded dark. Dark mode matches prior styling.
 - UI overhaul Phase 7 (7C/7D): `app/listings/[id]/CompsChartPanelLazy.tsx` defers comps client bundle on listing detail; `/internal/market-intel` loads `GeoIntelMap` with `dynamic(..., { ssr: false })` + loading shell; `globals.css` adds low-specificity `:focus-visible` outline using `var(--fh-orange)`; `RightDetailColumn` score badge + `ListingCard` (tiles overall ring, rows/compact tier chips) gain screen-reader labels.
 - Listing tile pillar row: each `PillarColumn` exposes `role="tooltip"` copy in `.sr-only` with `aria-describedby` on `role="group"`; hover popover marked `aria-hidden` to avoid duplicate announcements.
+- Listings LCP: `ListingCard` accepts `imagePriority`; `ListingsClient` sets it for the first 12 tile cards, first 4 row cards, and first 10 compact cards (`next/image` `priority` replaces `loading="lazy"` for those slots only).
 
 ### Backend, Pipeline, and Data Sources
 

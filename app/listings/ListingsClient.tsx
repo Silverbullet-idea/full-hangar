@@ -1334,6 +1334,11 @@ export default function ListingsClient({
 
     const askingNum = typeof l.asking_price === 'number' ? l.asking_price : null
     const hasDisclosedPrice = askingNum != null && askingNum > 0
+    const imagePriority =
+      (mode === 'tiles' && listingIndex < 12) ||
+      (mode === 'rows' && listingIndex < 4) ||
+      (mode === 'compact' && listingIndex < 10)
+
     const tileMeta = {
       hasDisclosedPrice,
       daysOnMarket: typeof l.days_on_market === 'number' ? l.days_on_market : null,
@@ -1375,6 +1380,7 @@ export default function ListingsClient({
         specRows={specRows}
         tileStaggerIndex={listingIndex}
         tileMeta={tileMeta}
+        imagePriority={imagePriority}
         onImageError={() => {
           setImageCursor((prev) => ({ ...prev, [listingKey]: currentImageIndex + 1 }))
         }}
