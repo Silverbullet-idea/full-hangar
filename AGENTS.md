@@ -344,6 +344,7 @@ npm run pipeline:backfill:all-chunked
 # Playwright smoke (starts `npm run dev` on :3001 unless already running locally)
 npm run test:smoke:listings-options
 npm run test:smoke:listings-all
+# `listings-smoke.spec.js` probes `GET /api/listings?page=1&pageSize=1` once; if it is not 200 or returns `error`, the API matrix is **skipped** (page HTML checks still run) so local runs without Supabase stay green.
 # Post-deploy checklist: `docs/PRODUCTION_VERIFY.md`
 # GitHub Actions: `.github/workflows/playwright-listings-options-smoke.yml` — set repo secrets
 # `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_KEY` (workflow maps it to service-role aliases).
