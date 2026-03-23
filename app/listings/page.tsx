@@ -297,6 +297,9 @@ export default async function ListingsPage({
         initialTrueCostMax={initialTrueCostMax}
         initialPage={initialPage}
         initialPageSize={initialPageSize}
+        initialEngineLife={listingsQuery.engineLife ?? ""}
+        initialAvionics={listingsQuery.avionics ?? ""}
+        initialDealPattern={listingsQuery.dealPattern ?? ""}
       />
     </>
   )

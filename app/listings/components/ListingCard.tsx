@@ -1,5 +1,8 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { getDealTierMeta } from '../../../lib/listings/dealTier'
 import { formatMoney } from '../../../lib/listings/format'
 
@@ -67,32 +70,39 @@ function pillarBarHeight(score: number | null | undefined): number | null {
 }
 
 function PillarColumn({
-  short,
+  letter,
   label,
   score,
   gradient,
+  tooltipHint,
+  barsRevealed,
 }: {
-  short: string
+  letter: string
   label: string
   score: number | null
   gradient: string
+  tooltipHint: string
+  barsRevealed: boolean
 }) {
   const h = pillarBarHeight(score)
+  const targetPct = h != null ? h : 0
+  const showFill = h != null
   return (
     <div className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1">
       <span
         className="text-[11px] font-bold text-[var(--fh-text-dim)]"
         style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
       >
-        {score != null ? Math.round(score) : '—'}
+        {letter}:{score != null ? Math.round(score) : '—'}
       </span>
-      <div className="flex h-8 w-full items-end overflow-hidden rounded-sm bg-[var(--fh-bg3)] px-px">
-        {h != null ? (
+      <div className="flex h-8 w-full items-end overflow-hidden rounded-[3px] bg-[var(--fh-bg3)] px-px">
+        {showFill ? (
           <div
-            className="w-full min-h-[2px] rounded-sm transition-[height] duration-500"
+            className="w-full min-h-[2px] rounded-sm"
             style={{
-              height: `${h}%`,
+              height: `${barsRevealed ? targetPct : 0}%`,
               background: gradient,
+              transition: 'height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
           />
         ) : (
@@ -103,14 +113,15 @@ function PillarColumn({
         className="text-center text-[8px] text-[var(--fh-text-muted)]"
         style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
       >
-        {short}
+        {label}
       </span>
       <div
-        className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded border border-[var(--fh-border)] bg-[var(--fh-bg2)] px-2 py-1 text-[10px] text-[var(--fh-text-dim)] opacity-0 shadow-lg transition-opacity group-hover/pillar:opacity-100"
+        className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-10 max-w-[200px] -translate-x-1/2 whitespace-normal rounded border border-[var(--fh-border)] bg-[var(--fh-bg2)] px-2 py-1 text-[10px] leading-snug text-[var(--fh-text-dim)] opacity-0 shadow-lg transition-opacity group-hover/pillar:opacity-100"
         style={{ fontFamily: 'var(--font-dm-sans)' }}
       >
         <span className="font-semibold text-[var(--fh-text)]">{label}</span>
         {score != null ? ` · ${Math.round(score)}` : ''}
+        <span className="mt-0.5 block text-[9px] text-[var(--fh-text-muted)]">{tooltipHint}</span>
       </div>
     </div>
   )
@@ -150,7 +161,7 @@ function renderImageNode(props: {
         height={360}
         sizes="(max-width: 768px) 100vw, 400px"
         unoptimized
-        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+        className="h-full w-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.04]"
         loading="lazy"
         onError={onImageError}
       />
@@ -236,7 +247,8 @@ export default function ListingCard({
   tileStaggerIndex = 0,
   tileMeta,
 }: ListingCardProps) {
-  const dealTierMeta = getDealTierMeta(dealTier)
+  const suppressTierForNoPrice = tileMeta != null && !tileMeta.hasDisclosedPrice
+  const dealTierMeta = suppressTierForNoPrice ? null : getDealTierMeta(dealTier)
   const dealTierBadgeClass = dealTierMeta
     ? dealTierMeta.tone === 'green'
       ? 'border-[#16a34a] bg-[#16a34a1f] text-[#16a34a]'
@@ -246,6 +258,12 @@ export default function ListingCard({
           ? 'border-[#d97706] bg-[#d977061f] text-[#d97706]'
           : 'border-[#dc2626] bg-[#dc26261f] text-[#dc2626]'
     : ''
+
+  const [pillarBarsRevealed, setPillarBarsRevealed] = useState(false)
+  useEffect(() => {
+    const id = window.setTimeout(() => setPillarBarsRevealed(true), 300)
+    return () => window.clearTimeout(id)
+  }, [])
 
   if (mode === 'tiles' && tileMeta) {
     const m = tileMeta
@@ -260,24 +278,29 @@ export default function ListingCard({
     const exceptional =
       m.hasDisclosedPrice && dealTierMeta?.key === 'EXCEPTIONAL_DEAL'
     const ribbonUndisclosed = !m.hasDisclosedPrice
-    const ribbonGreen =
-      m.hasDisclosedPrice && dealTierMeta && (dealTierMeta.key === 'EXCEPTIONAL_DEAL' || dealTierMeta.key === 'GOOD_DEAL')
-    const ribbonOrange =
-      m.hasDisclosedPrice && dealTierMeta?.key === 'ABOVE_MARKET'
-    const ribbonBlue = m.hasDisclosedPrice && dealTierMeta?.key === 'FAIR_MARKET'
-    const ribbonRed = m.hasDisclosedPrice && dealTierMeta?.key === 'OVERPRICED'
-
-    const ribbonClass = ribbonUndisclosed
-      ? 'border border-[rgba(122,138,158,0.4)] text-[var(--fh-text-dim)]'
-      : ribbonGreen
-        ? 'border border-[rgba(34,197,94,0.5)] text-[#22c55e]'
-        : ribbonOrange
-          ? 'border border-[rgba(255,153,0,0.5)] text-[var(--fh-orange)]'
-          : ribbonBlue
-            ? 'border border-[rgba(59,130,246,0.5)] text-[#3b82f6]'
-            : ribbonRed
-              ? 'border border-[rgba(239,68,68,0.5)] text-[#ef4444]'
-              : 'border border-[rgba(122,138,158,0.35)] text-[var(--fh-text-dim)]'
+    const tk = dealTierMeta?.key
+    let ribbonClass =
+      'border border-[rgba(122,138,158,0.35)] text-[var(--fh-text-dim)]'
+    let scoreBadgeColor = 'var(--fh-text-muted)'
+    if (ribbonUndisclosed) {
+      ribbonClass = 'border border-[rgba(122,138,158,0.4)] text-[var(--fh-text-dim)]'
+      scoreBadgeColor = 'var(--fh-text-muted)'
+    } else if (tk === 'EXCEPTIONAL_DEAL') {
+      ribbonClass = 'border border-[rgba(34,197,94,0.5)] text-[#22c55e]'
+      scoreBadgeColor = '#22c55e'
+    } else if (tk === 'GOOD_DEAL') {
+      ribbonClass = 'border border-[rgba(59,130,246,0.5)] text-[#3b82f6]'
+      scoreBadgeColor = '#3b82f6'
+    } else if (tk === 'FAIR_MARKET') {
+      ribbonClass = 'border border-[rgba(122,138,158,0.5)] text-[var(--fh-text-dim)]'
+      scoreBadgeColor = 'var(--fh-text-dim)'
+    } else if (tk === 'ABOVE_MARKET') {
+      ribbonClass = 'border border-[rgba(255,153,0,0.5)] text-[var(--fh-orange)]'
+      scoreBadgeColor = 'var(--fh-orange)'
+    } else if (tk === 'OVERPRICED') {
+      ribbonClass = 'border border-[rgba(239,68,68,0.5)] text-[#ef4444]'
+      scoreBadgeColor = '#ef4444'
+    }
 
     const ribbonText = ribbonUndisclosed
       ? 'PRICE UNDISCLOSED'
@@ -285,24 +308,12 @@ export default function ListingCard({
         ? dealTierMeta.label.toUpperCase()
         : 'DEAL'
 
-    const scoreBadgeColor = ribbonUndisclosed
-      ? 'var(--fh-text-muted)'
-      : ribbonGreen
-        ? '#22c55e'
-        : ribbonOrange
-          ? 'var(--fh-orange)'
-          : ribbonBlue
-            ? '#3b82f6'
-            : ribbonRed
-              ? '#ef4444'
-              : 'var(--fh-text-muted)'
-
     const locLine = `${locationText} — ${formatSourceLabel(m.sourceKey)}`
     const delayMs = Math.min(tileStaggerIndex, 6) * 50
 
     return (
       <article
-        className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(34,197,94,0.25)] hover:border-[rgba(34,197,94,0.5)]' : 'border-[var(--fh-border)]'}`}
+        className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[2px] hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(34,197,94,0.25)] hover:border-[rgba(34,197,94,0.5)]' : 'border-[var(--fh-border)]'}`}
         style={{ animationDelay: `${delayMs}ms` }}
       >
         <Link href={detailHref} className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]">
@@ -315,12 +326,13 @@ export default function ListingCard({
               </div>
             )}
             <div
-              className={`absolute left-2.5 top-2.5 z-[2] flex max-w-[calc(100%-56px)] items-center gap-1.5 rounded-full px-2.5 py-1 backdrop-blur-md ${ribbonClass}`}
+              className={`absolute left-2.5 top-2.5 z-[2] flex max-w-[calc(100%-56px)] items-center gap-1.5 rounded-[20px] px-2.5 py-1 backdrop-blur-md ${ribbonClass}`}
               style={{
                 fontFamily: 'var(--font-dm-sans), system-ui',
                 fontSize: '10px',
                 fontWeight: 700,
                 letterSpacing: '0.5px',
+                backdropFilter: 'blur(8px)',
                 background: 'rgba(0,0,0,0.7)',
               }}
             >
@@ -332,10 +344,16 @@ export default function ListingCard({
               style={{
                 color: scoreBadgeColor,
                 background: 'rgba(0,0,0,0.7)',
+                backdropFilter: 'blur(8px)',
                 fontFamily: 'var(--font-barlow-condensed), system-ui',
                 fontSize: ribbonUndisclosed ? 10 : 16,
                 fontWeight: 800,
               }}
+              aria-label={
+                m.hasDisclosedPrice && typeof m.valueScore === 'number'
+                  ? `Deal score: ${Math.round(m.valueScore)} out of 100`
+                  : 'Deal score not available — price undisclosed'
+              }
             >
               {m.hasDisclosedPrice && typeof m.valueScore === 'number'
                 ? Math.round(m.valueScore)
@@ -412,10 +430,10 @@ export default function ListingCard({
                   Call for Price
                 </span>
                 <div
-                  className="border-l-2 border-[rgba(122,138,158,0.3)] bg-[rgba(122,138,158,0.08)] px-2 py-1.5 text-[10px] italic text-[var(--fh-text-muted)]"
-                  style={{ fontFamily: 'var(--font-dm-sans)' }}
-                >
-                  ⚠ Deal scoring requires a disclosed price. Aircraft intelligence is still available on the report.
+                className="border-l-2 border-[rgba(122,138,158,0.3)] bg-[rgba(122,138,158,0.08)] px-2 py-1.5 text-[10px] italic text-[var(--fh-text-muted)]"
+                style={{ fontFamily: 'var(--font-dm-sans)' }}
+              >
+                  ⚠ Deal scoring requires a disclosed price…
                 </div>
               </div>
             )}
@@ -434,7 +452,13 @@ export default function ListingCard({
                     typeof m.engineLifePct === 'number' && Number.isFinite(m.engineLifePct)
                       ? `${Math.round(m.engineLifePct * 100)}% left`
                       : '—',
-                    m.engineLifePct != null && m.engineLifePct < 0.25 ? 'bad' : m.engineLifePct != null && m.engineLifePct >= 0.5 ? 'good' : 'normal',
+                    m.engineLifePct != null && m.engineLifePct < 0.25
+                      ? 'bad'
+                      : m.engineLifePct != null && m.engineLifePct >= 0.5
+                        ? 'good'
+                        : m.engineLifePct != null
+                          ? 'warn'
+                          : 'normal',
                   ],
                 ] as const
               ).map(([lab, val, tone]) => (
@@ -446,7 +470,15 @@ export default function ListingCard({
                     {lab}
                   </div>
                   <div
-                    className={`text-xs font-medium ${tone === 'good' ? 'text-[var(--fh-green)]' : tone === 'bad' ? 'text-[var(--fh-red)]' : 'text-[var(--fh-text)]'}`}
+                    className={`text-xs font-medium ${
+                      tone === 'good'
+                        ? 'text-[var(--fh-green)]'
+                        : tone === 'warn'
+                          ? 'text-[var(--fh-amber)]'
+                          : tone === 'bad'
+                            ? 'text-[var(--fh-red)]'
+                            : 'text-[var(--fh-text)]'
+                    }`}
                     style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
                   >
                     {val}
@@ -460,34 +492,44 @@ export default function ListingCard({
             {m.hasDisclosedPrice ? (
               <div className="flex items-end gap-1">
                 <PillarColumn
-                  short="ENG"
-                  label="Engine Health"
+                  letter="E"
+                  label="Engine"
                   score={m.engineScore}
                   gradient="linear-gradient(180deg, #22c55e, #059669)"
+                  tooltipHint="Overhaul timing, hours, and model fit vs. market."
+                  barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
-                  short="AVI"
+                  letter="A"
                   label="Avionics"
                   score={m.avionicsScore}
                   gradient="linear-gradient(180deg, #3b82f6, #7c3aed)"
+                  tooltipHint="Panel depth, ADS-B, autopilot, and installed value."
+                  barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
-                  short="QUAL"
-                  label="Listing Quality"
+                  letter="Q"
+                  label="Quality"
                   score={m.qualityScore}
                   gradient="linear-gradient(180deg, #FF9900, #AF4D27)"
+                  tooltipHint="Listing completeness, photos, and description signal."
+                  barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
-                  short="MKT"
-                  label="Market Value"
+                  letter="V"
+                  label="Value"
                   score={m.marketValueScore}
                   gradient="linear-gradient(180deg, #f59e0b, #d97706)"
+                  tooltipHint="Price vs. comps and market opportunity."
+                  barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
-                  short="STC"
+                  letter="S"
                   label="STC / Mods"
                   score={m.executionScore}
                   gradient="linear-gradient(180deg, #ec4899, #be185d)"
+                  tooltipHint="STC and modification value contribution."
+                  barsRevealed={pillarBarsRevealed}
                 />
               </div>
             ) : (
@@ -551,8 +593,15 @@ export default function ListingCard({
                   {ownershipBadgeText}
                 </span>
               ) : null}
-              {dealTierMeta ? (
-                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
+              {suppressTierForNoPrice ? (
+                <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+                  Price undisclosed
+                </span>
+              ) : dealTierMeta ? (
+                <span
+                  className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}
+                  aria-label={`Deal tier: ${dealTierMeta.label}`}
+                >
                   {dealTierMeta.label}
                 </span>
               ) : null}
@@ -590,8 +639,15 @@ export default function ListingCard({
                     {ownershipBadgeText}
                   </span>
                 ) : null}
-                {dealTierMeta ? (
-                  <span className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
+                {suppressTierForNoPrice ? (
+                  <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+                    Undisclosed
+                  </span>
+                ) : dealTierMeta ? (
+                  <span
+                    className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}
+                    aria-label={`Deal tier: ${dealTierMeta.label}`}
+                  >
                     {dealTierMeta.label}
                   </span>
                 ) : null}
@@ -628,7 +684,11 @@ export default function ListingCard({
             {ownershipBadgeText}
           </span>
         ) : null}
-        {dealTierMeta ? (
+        {suppressTierForNoPrice ? (
+          <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+            Price undisclosed
+          </span>
+        ) : dealTierMeta ? (
           <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
             {dealTierMeta.label}
           </span>

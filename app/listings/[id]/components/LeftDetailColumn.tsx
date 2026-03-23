@@ -13,6 +13,9 @@ type LeftDetailColumnProps = {
   logbookUrls: string[]
   dealTier?: string | null
   fallbackImageUrl?: string | null
+  /** When false, gallery is rendered in the page hero (detail overhaul). Default true for backward compatibility. */
+  includeGallery?: boolean
+  galleryLayoutVariant?: 'default' | 'detailHero'
   engineValuePanel?: {
     remainingValue: number | null
     overrunLiability: number | null
@@ -263,6 +266,8 @@ export default function LeftDetailColumn({
   logbookUrls,
   dealTier = null,
   fallbackImageUrl = null,
+  includeGallery = true,
+  galleryLayoutVariant = 'default',
   engineValuePanel = null,
 }: LeftDetailColumnProps) {
   const imageUrls = [
@@ -274,13 +279,13 @@ export default function LeftDetailColumn({
 
   return (
     <section className="panel flex flex-col">
-      <div className="order-1 flex flex-col gap-[0.9rem] md:order-2">
+      <div className={`flex flex-col gap-[0.9rem] ${includeGallery ? 'order-1 md:order-2' : 'order-1'}`}>
         <DetailTableCard title="Aircraft Details" rows={aircraftRows} />
         <DetailTableCard title="Airframe & Engine" rows={engineRows} />
         {engineValuePanel ? <EngineValuePanel {...engineValuePanel} /> : null}
       </div>
 
-      <div className="order-2 space-y-2 md:order-3">
+      <div className={`space-y-2 ${includeGallery ? 'order-2 md:order-3' : 'order-2'}`}>
         <h3>Seller Description</h3>
         <p>{descriptionText || 'No description available.'}</p>
 
@@ -308,14 +313,17 @@ export default function LeftDetailColumn({
         ) : null}
       </div>
 
-      <div className="order-3 w-full min-w-0 md:order-1">
-        <ListingImageGallery
-          title={title || "Aircraft listing"}
-          imageUrls={imageUrls}
-          dealTier={dealTier}
-          fallbackImageUrl={fallbackImageUrl}
-        />
-      </div>
+      {includeGallery ? (
+        <div className="order-3 w-full min-w-0 md:order-1">
+          <ListingImageGallery
+            title={title || "Aircraft listing"}
+            imageUrls={imageUrls}
+            dealTier={dealTier}
+            fallbackImageUrl={fallbackImageUrl}
+            layoutVariant={galleryLayoutVariant}
+          />
+        </div>
+      ) : null}
     </section>
   )
 }

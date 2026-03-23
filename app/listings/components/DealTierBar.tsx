@@ -29,6 +29,8 @@ type DealTierBarProps = {
   layoutMode: 'tiles' | 'rows' | 'compact'
   setLayoutMode: (m: 'tiles' | 'rows' | 'compact') => void
   sortBy: string
+  /** When set, sort changes update the URL via parent (full filter snapshot + replace). */
+  onSortByChange?: (value: string) => void
 }
 
 const TIERS: Array<{ id: DealScore; label: string; sub: string }> = [
@@ -38,7 +40,7 @@ const TIERS: Array<{ id: DealScore; label: string; sub: string }> = [
   { id: 'all', label: 'FAIR / ALL', sub: '' },
 ]
 
-export default function DealTierBar({ layoutMode, setLayoutMode, sortBy }: DealTierBarProps) {
+export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortByChange }: DealTierBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const rawScore = (searchParams.get('dealScore') ?? 'all').toLowerCase()
@@ -121,7 +123,11 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy }: DealT
           value={sortBy}
           onChange={(e) => {
             const v = e.target.value as SortOption
-            push({ sortBy: v })
+            if (onSortByChange) {
+              onSortByChange(v)
+            } else {
+              push({ sortBy: v })
+            }
           }}
           className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-xs text-[var(--fh-text)]"
           style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}

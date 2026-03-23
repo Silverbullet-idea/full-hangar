@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   calculateFlip,
@@ -25,6 +25,47 @@ const TAB_ORDER: Array<{ id: TabId; label: string }> = [
   { id: "sensitivity", label: "Sensitivity" },
 ];
 
+const WIZARD_STEPS: Array<{ step: number; label: string }> = [
+  { step: 1, label: "Aircraft" },
+  { step: 2, label: "Acquisition" },
+  { step: 3, label: "Upgrades" },
+  { step: 4, label: "Carrying" },
+  { step: 5, label: "Financing & exit" },
+  { step: 6, label: "Sensitivity" },
+];
+
+const WIZARD_STEP_META: Record<number, { title: string; subtitle: string }> = {
+  1: { title: "Aircraft & scenario", subtitle: "Purchase basis, resale band, hold, hours, and profit target." },
+  2: { title: "Acquisition capex", subtitle: "Pre-buy, closing, and immediate airworthiness line items." },
+  3: { title: "Upgrades & contingency", subtitle: "Must-do vs value-add work and maintenance contingency." },
+  4: { title: "Carrying costs", subtitle: "Fixed monthly burn, insurance, and variable hourly operating cost." },
+  5: { title: "Financing & exit", subtitle: "Loan or opportunity cost, then brokerage, escrow, and sale taxes." },
+  6: { title: "Sensitivity", subtitle: "Stress days-to-sell and margin before you lock the deal." },
+};
+
+const WIZARD_STEP_ICONS: Record<number, string> = {
+  1: "✈️",
+  2: "📥",
+  3: "🔧",
+  4: "📅",
+  5: "🏁",
+  6: "📊",
+};
+
+function normalizedEngineLifePercent(raw: number | null | undefined): number | null {
+  if (raw == null || !Number.isFinite(raw)) return null;
+  if (raw >= 0 && raw <= 1) return raw * 100;
+  if (raw > 1 && raw <= 100) return raw;
+  return null;
+}
+
+function accordionStepBadge(step: number, wizardStep: number, maxWizardStep: number): { label: string; tone: "orange" | "green" | "slate" } {
+  if (step > maxWizardStep) return { label: "LOCKED", tone: "slate" };
+  if (step < wizardStep) return { label: "DONE", tone: "green" };
+  if (step === wizardStep) return step === 6 ? { label: "WRAP UP", tone: "green" } : { label: "IN PROGRESS", tone: "orange" };
+  return { label: "NEXT", tone: "slate" };
+}
+
 const ACQUISITION_CATEGORY_META: Record<AcquisitionCategory, { title: string; icon: string }> = {
   prebuy: { title: "Pre-Buy", icon: "🔍" },
   closing: { title: "Closing", icon: "📋" },
@@ -40,6 +81,13 @@ function formatCurrency(value: number | null | undefined): string {
 function formatPercent(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "0.0%";
   return `${value.toFixed(1)}%`;
+}
+
+function formatSignedCurrency(value: number): string {
+  const n = Math.round(value);
+  const core = `$${Math.abs(n).toLocaleString("en-US")}`;
+  if (n < 0) return `−${core}`;
+  return n > 0 ? core : "$0";
 }
 
 function profitColor(value: number): string {
@@ -84,10 +132,66 @@ function extractMakeModelFromLabel(aircraftLabel: string): { make: string; model
   return { make, model };
 }
 
+function DealDeskChip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1.5 text-left text-xs font-medium transition-colors min-h-[40px] md:min-h-0 ${
+        selected
+          ? "border-brand-orange bg-brand-orange/20 text-brand-orange"
+          : "border-[var(--fh-border)] bg-[var(--fh-bg3)] text-brand-muted hover:border-brand-orange/40 hover:text-brand-orange"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DealDeskInsight({
+  variant,
+  title,
+  children,
+}: {
+  variant: "amber" | "blue" | "green" | "red";
+  title?: string;
+  children: ReactNode;
+}) {
+  const box =
+    variant === "amber"
+      ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
+      : variant === "blue"
+        ? "border-sky-500/35 bg-sky-500/10 text-sky-100"
+        : variant === "green"
+          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+          : "border-rose-500/40 bg-rose-500/10 text-rose-100";
+  return (
+    <div className={`rounded-lg border px-3 py-2 text-[12px] leading-snug ${box}`}>
+      {title ? <p className="mb-1 font-semibold">{title}</p> : null}
+      <div className="text-[11px] opacity-95 [&_strong]:font-semibold [&_strong]:text-inherit">{children}</div>
+    </div>
+  );
+}
+
+function DealDeskQuestionBlock({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div className="mb-5 space-y-2">
+      <div>
+        <p className="text-xs font-semibold text-brand-white">{label}</p>
+        {hint ? <p className="mt-0.5 text-[10px] italic text-brand-muted">{hint}</p> : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const classicMode = searchParams.get("classic") === "1";
+  const [wizardStep, setWizardStep] = useState(1);
+  const [maxWizardStep, setMaxWizardStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [scenarioId, setScenarioId] = useState<string | null>(null);
@@ -134,6 +238,9 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
   });
   const [selectedSensitivityDays, setSelectedSensitivityDays] = useState(180);
   const [resaleUpliftEstimate, setResaleUpliftEstimate] = useState(0);
+  const [financingIntent, setFinancingIntent] = useState<"cash" | "loan" | "partnership">("cash");
+  const financingIntentHydrated = useRef(false);
+  const [exitChannel, setExitChannel] = useState<string | null>(null);
   const [newAcquisitionDraft, setNewAcquisitionDraft] = useState<
     Record<AcquisitionCategory, { label: string; amount: number }>
   >({
@@ -149,6 +256,13 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
     category: "avionics" as UpgradeItem["category"],
   });
   const savePayloadRef = useRef("");
+
+  useEffect(() => {
+    if (loading || financingIntentHydrated.current) return;
+    financingIntentHydrated.current = true;
+    if (form.financing_enabled) setFinancingIntent("loan");
+  }, [loading, form.financing_enabled]);
+
   const makeModel =
     seed.make && seed.model ? { make: seed.make, model: seed.model } : extractMakeModelFromLabel(seed.aircraftLabel);
   const researchHref =
@@ -242,6 +356,58 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
     params.set("tab", next);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
+
+  useEffect(() => {
+    if (classicMode) return;
+    const s = Number(searchParams.get("step"));
+    if (Number.isFinite(s) && s >= 1 && s <= 6) {
+      setWizardStep(s);
+      setMaxWizardStep((m) => Math.max(m, s));
+    }
+  }, [classicMode, searchParams]);
+
+  const setWizardStepUrl = (n: number, options?: { advanceMax?: boolean }) => {
+    const next = Math.min(6, Math.max(1, n));
+    if (next > maxWizardStep && !options?.advanceMax) return;
+    setWizardStep(next);
+    if (options?.advanceMax) {
+      setMaxWizardStep((m) => Math.max(m, next));
+    }
+    if (!classicMode) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("step", String(next));
+      params.delete("tab");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  };
+
+  const [accordionPinnedSteps, setAccordionPinnedSteps] = useState<number[]>([]);
+
+  const accordionStepExpanded = (step: number) => {
+    if (classicMode) return true;
+    if (step === wizardStep) return true;
+    if (step < wizardStep) return accordionPinnedSteps.includes(step);
+    return false;
+  };
+
+  const handleAccordionHeaderClick = (step: number) => {
+    if (classicMode) return;
+    if (step > maxWizardStep) return;
+    if (step === wizardStep) return;
+    if (step < wizardStep) {
+      setAccordionPinnedSteps((prev) => (prev.includes(step) ? prev.filter((s) => s !== step) : [...prev, step]));
+      return;
+    }
+    setWizardStepUrl(step);
+  };
+
+  const showOverview = classicMode ? tab === "overview" : wizardStep === 1;
+  const showAcquisition = classicMode ? tab === "acquisition" : wizardStep === 2;
+  const showUpgrades = classicMode ? tab === "upgrades" : wizardStep === 3;
+  const showCarrying = classicMode ? tab === "carrying" : wizardStep === 4;
+  const showFinancing = classicMode ? tab === "financing" : wizardStep === 5;
+  const showExit = classicMode ? tab === "exit" : wizardStep === 5;
+  const showSensitivity = classicMode ? tab === "sensitivity" : wizardStep === 6;
 
   const outputs = useMemo(() => calculateFlip(form), [form]);
   const insuranceMonthly = form.insurance_annual_premium / 12;
@@ -375,49 +541,372 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         ? { label: "Marginal", className: "text-amber-300" as const }
         : { label: "Weak", className: "text-red-400" as const };
 
-  return (
-    <div className="space-y-3 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-0">
-      {researchHref ? (
-        <div className="flex justify-end">
-          <Link
-            href={researchHref}
-            className="rounded border border-brand-dark px-3 py-2 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+  const wizardVerdict =
+    outputs.base.net_profit >= form.target_profit_dollars
+      ? { key: "GO" as const, box: "border-emerald-500/40 bg-emerald-500/10", text: "text-emerald-300" }
+      : outputs.base.net_profit >= 0
+        ? { key: "CAUTION" as const, box: "border-amber-500/40 bg-amber-500/10", text: "text-amber-200" }
+        : { key: "NO-GO" as const, box: "border-rose-500/40 bg-rose-500/10", text: "text-rose-200" };
+
+  const purchaseVsAsking = form.purchase_price - seed.askingPrice;
+  const purchaseVsAskingPct = seed.askingPrice > 0 ? (purchaseVsAsking / seed.askingPrice) * 100 : 0;
+  const sellerMotivation =
+    Boolean(seed.priceReduced) || (typeof seed.daysOnMarket === "number" && seed.daysOnMarket >= 75);
+  const resaleVsAsk = form.resale_base - seed.askingPrice;
+  const resaleVsAskPct = seed.askingPrice > 0 ? (resaleVsAsk / seed.askingPrice) * 100 : 0;
+  const stretchExitVsAsk = seed.askingPrice > 0 && form.resale_base > seed.askingPrice * 1.1;
+
+  const financingSection = (
+    <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+      <DealDeskQuestionBlock
+        label="How are you financing?"
+        hint="Aviation loans stack interest + fees into carrying cost (see Live P&amp;L and the Carrying step)."
+      >
+        <div className="flex flex-wrap gap-2">
+          <DealDeskChip
+            selected={!form.financing_enabled && financingIntent === "cash"}
+            onClick={() => {
+              setFinancingIntent("cash");
+              setForm((previous) => ({ ...previous, financing_enabled: false }));
+            }}
           >
-            Research Market →
-          </Link>
+            All cash
+          </DealDeskChip>
+          <DealDeskChip
+            selected={form.financing_enabled}
+            onClick={() => {
+              setFinancingIntent("loan");
+              setForm((previous) => ({
+                ...previous,
+                financing_enabled: true,
+                loan_amount:
+                  previous.loan_amount > 0 ? previous.loan_amount : Math.round(previous.purchase_price * 0.85),
+              }));
+            }}
+          >
+            Aviation loan
+          </DealDeskChip>
+          <DealDeskChip
+            selected={!form.financing_enabled && financingIntent === "partnership"}
+            onClick={() => {
+              setFinancingIntent("partnership");
+              setForm((previous) => ({ ...previous, financing_enabled: false }));
+            }}
+          >
+            Partnership / LLC
+          </DealDeskChip>
         </div>
+      </DealDeskQuestionBlock>
+      {form.financing_enabled ? (
+        <DealDeskInsight variant="blue" title="Carrying cost heads-up">
+          Interest and origination fees feed <strong>Financing over hold</strong> in the phased P&amp;L. Tune rate, term, and loan amount to stress-test.
+        </DealDeskInsight>
+      ) : financingIntent === "partnership" ? (
+        <DealDeskInsight variant="amber" title="Split equity">
+          Keep using purchase + scenario fields for economics; finalize partner splits outside this calculator.
+        </DealDeskInsight>
       ) : null}
-      <div className="sticky top-2 z-20 rounded border border-brand-dark bg-card-bg/95 p-3 backdrop-blur">
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-          <SummaryStat label="All-in Basis" value={formatCurrency(outputs.section_totals.all_in_basis)} />
-          <SummaryStat label="Net Profit (base)" value={formatCurrency(outputs.base.net_profit)} className={profitColor(outputs.base.net_profit)} />
-          <SummaryStat label="ROI %" value={formatPercent(outputs.base.roi_pct)} className={profitColor(outputs.base.net_profit)} />
-          <SummaryStat label="Annualized ROI" value={formatPercent(outputs.base.annualized_roi_pct)} className={profitColor(outputs.base.net_profit)} />
-          <SummaryStat label="Break-even" value={formatCurrency(outputs.breakeven_sale_price)} />
+      {!form.financing_enabled ? (
+        <div className="space-y-2">
+          <NumberInput label="Opportunity cost rate %" value={form.opportunity_cost_rate_pct} onChange={(value) => setForm((previous) => ({ ...previous, opportunity_cost_rate_pct: value }))} />
+          <p className="text-sm text-brand-muted">Opportunity cost over hold: {formatCurrency(opportunityCost)} (not included in profit calculation).</p>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-2">
+          <CurrencyInput label="Loan amount" value={form.loan_amount} onChange={(value) => setForm((previous) => ({ ...previous, loan_amount: value }))} />
+          <StaticRow label="Down payment" value={formatCurrency(loanDownPayment)} />
+          <NumberInput label="Interest rate %" value={form.interest_rate_pct} onChange={(value) => setForm((previous) => ({ ...previous, interest_rate_pct: value }))} />
+          <label className="block">
+            <p className="mb-1 text-sm text-brand-muted">Loan term</p>
+            <select
+              value={form.loan_term_years}
+              onChange={(event) => setForm((previous) => ({ ...previous, loan_term_years: Number(event.target.value) }))}
+              className="deal-desk-inp w-full py-2"
+            >
+              <option value={10}>10 years</option>
+              <option value={15}>15 years</option>
+              <option value={20}>20 years</option>
+            </select>
+          </label>
+          <CurrencyInput label="Origination / doc fees" value={form.loan_origination_fees} onChange={(value) => setForm((previous) => ({ ...previous, loan_origination_fees: value }))} />
+          <StaticRow label="Total financing cost over hold" value={formatCurrency(outputs.section_totals.financing_cost_over_hold)} bold />
+          <p className="text-xs text-brand-muted">Required hull coverage minimum: {formatCurrency(form.loan_amount)}</p>
+        </div>
+      )}
+    </section>
+  );
 
-      <div className="flex flex-wrap gap-2">
-        {TAB_ORDER.map((tabOption) => (
-          <button
-            key={tabOption.id}
-            type="button"
-            onClick={() => setTab(tabOption.id)}
-            className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${
-              tab === tabOption.id
-                ? "border-brand-orange bg-brand-orange/20 text-brand-orange"
-                : "border-brand-dark bg-card-bg text-brand-muted hover:border-brand-orange"
-            }`}
+  const exitSection = (
+    <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+      <DealDeskQuestionBlock
+        label="Target sale price (base case)"
+        hint="This should mirror the exit you are underwriting — it drives headline net profit."
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <CurrencyInput label="Base resale target" value={form.resale_base} onChange={(value) => setForm((previous) => ({ ...previous, resale_base: value }))} />
+          <div className="flex flex-col justify-center rounded-lg border border-brand-dark bg-[var(--fh-bg3)] px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">vs live ask</p>
+            <p className={`text-sm font-semibold ${resaleVsAsk >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {resaleVsAsk >= 0 ? "↑" : "↓"} {formatCurrency(Math.abs(resaleVsAsk))} ({formatPercent(resaleVsAskPct)})
+            </p>
+            {typeof seed.vsMedianPricePct === "number" && Number.isFinite(seed.vsMedianPricePct) ? (
+              <p className="mt-1 text-[10px] text-brand-muted">Listing ask is {formatPercent(seed.vsMedianPricePct)} vs median comp band.</p>
+            ) : null}
+          </div>
+        </div>
+      </DealDeskQuestionBlock>
+      {stretchExitVsAsk ? (
+        <DealDeskInsight variant="amber" title="Stretch exit vs current ask">
+          Base resale is more than <strong>10% above</strong> the live ask — budget extra time-on-market and negotiation slack.
+        </DealDeskInsight>
+      ) : null}
+      <DealDeskQuestionBlock label="Where will you market it?" hint="Channel choice is strategic; fees below still drive the math.">
+        <div className="flex flex-wrap gap-2">
+          {(["Controller / TAP", "Barnstormers / classifieds", "Type club / wholesale", "Broker-managed"] as const).map((label) => (
+            <DealDeskChip key={label} selected={exitChannel === label} onClick={() => setExitChannel(label)}>
+              {label}
+            </DealDeskChip>
+          ))}
+        </div>
+        <p className="text-[10px] text-brand-muted">Tap a lane you are leaning toward — optional note for your deal memo.</p>
+      </DealDeskQuestionBlock>
+      <DealDeskQuestionBlock
+        label="Brokerage model"
+        hint="Presets set commission % — override the numeric field anytime for a custom split."
+      >
+        <div className="flex flex-wrap gap-2">
+          <DealDeskChip selected={form.broker_commission_pct < 0.5} onClick={() => setForm((previous) => ({ ...previous, broker_commission_pct: 0 }))}>
+            Self-listed (~0%)
+          </DealDeskChip>
+          <DealDeskChip
+            selected={form.broker_commission_pct >= 0.5 && form.broker_commission_pct < 6.5}
+            onClick={() => setForm((previous) => ({ ...previous, broker_commission_pct: 5 }))}
           >
-            {tabOption.label}
-          </button>
-        ))}
-        <div className="ml-auto text-xs text-brand-muted">{saveState === "saving" ? "Saving..." : saveState === "error" ? "Save failed" : "Saved"}</div>
-      </div>
+            Broker (~5%)
+          </DealDeskChip>
+          <DealDeskChip
+            selected={form.broker_commission_pct >= 6.5 && form.broker_commission_pct <= 10}
+            onClick={() => setForm((previous) => ({ ...previous, broker_commission_pct: 8 }))}
+          >
+            Dealer (~8%)
+          </DealDeskChip>
+        </div>
+        <p className="text-[10px] text-brand-muted">Self-listed: earmark ~$300/yr for photos, ads, or pre-sale spruce in &quot;Pre-sale spruce-up&quot;.</p>
+      </DealDeskQuestionBlock>
+      <NumberInput label="Broker commission %" value={form.broker_commission_pct} onChange={(value) => setForm((previous) => ({ ...previous, broker_commission_pct: value }))} />
+      <p className="text-xs text-brand-muted">{formatCurrency((form.resale_base * form.broker_commission_pct) / 100)} at base resale price.</p>
+      <CurrencyInput label="Exit escrow & title" value={form.exit_escrow_fees} onChange={(value) => setForm((previous) => ({ ...previous, exit_escrow_fees: value }))} />
+      <CurrencyInput label="Pre-sale spruce-up" value={form.presale_spruce_up} onChange={(value) => setForm((previous) => ({ ...previous, presale_spruce_up: value }))} />
+      <NumberInput label="Buyer squawk contingency %" value={form.buyer_squawk_contingency_pct} onChange={(value) => setForm((previous) => ({ ...previous, buyer_squawk_contingency_pct: value }))} />
+      <p className="text-xs text-brand-muted">{formatCurrency(outputs.section_totals.all_in_basis * (form.buyer_squawk_contingency_pct / 100))} contingency.</p>
+      <NumberInput label="Sales / use tax %" value={form.exit_sales_tax_pct} onChange={(value) => setForm((previous) => ({ ...previous, exit_sales_tax_pct: value }))} />
+      <p className="text-xs text-brand-muted">Check your state&apos;s resale exemption rules.</p>
+      <StaticRow label="Net sale proceeds (base)" value={formatCurrency(outputs.base.net_proceeds)} bold />
+      <p className="text-xs text-brand-muted">
+        Low {formatCurrency(outputs.low.net_proceeds)} · Stretch {formatCurrency(outputs.stretch.net_proceeds)}
+      </p>
+    </section>
+  );
 
-      {tab === "overview" ? (
+  const classicToggleHref =
+    `${pathname}?` +
+    (classicMode
+      ? new URLSearchParams({ step: String(wizardStep) }).toString()
+      : new URLSearchParams({ classic: "1", tab }).toString());
+
+  const wizardStepFooterFor = (stepNum: number) =>
+    classicMode || wizardStep !== stepNum
+      ? null
+      : {
+          onBack: () => setWizardStepUrl(wizardStep - 1),
+          onNext: () => setWizardStepUrl(wizardStep + 1, { advanceMax: true }),
+          backDisabled: wizardStep <= 1,
+          isLastStep: stepNum === 6,
+          onPrintAnalysis: () => window.print(),
+        };
+
+  return (
+    <div
+      id="deal-desk-print-root"
+      data-deal-desk-print=""
+      className={`deal-desk-print-root pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-0 ${!classicMode ? "lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-0 print:grid print:grid-cols-[1fr_260px] print:gap-4" : ""}`}
+    >
+      <div
+        className={`space-y-3 ${!classicMode ? "lg:min-w-0 lg:border-r lg:border-brand-dark lg:px-7 lg:pb-12 lg:pt-2 print:border-r-0 print:px-0" : ""}`}
+        style={
+          !classicMode
+            ? {
+                backgroundImage: "radial-gradient(rgba(255, 153, 0, 0.035) 1px, transparent 1px)",
+                backgroundSize: "48px 48px",
+              }
+            : undefined
+        }
+      >
+        <div className="deal-desk-print-header hidden print:block print:border-b print:border-neutral-400 print:pb-3 print:text-black">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-600">Full Hangar · Deal Desk</p>
+          <h1 className="mt-1 text-lg font-bold leading-tight text-neutral-900">{seed.aircraftLabel}</h1>
+          <p className="mt-1 text-sm text-neutral-800">Scenario: {scenarioLabel}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{new Date().toLocaleString()}</p>
+        </div>
+        {researchHref ? (
+          <div className="no-print flex flex-wrap items-center justify-end gap-2">
+            <Link
+              href={researchHref}
+              className="rounded border border-brand-dark px-3 py-2 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+            >
+              Research Market →
+            </Link>
+            <Link
+              href={classicToggleHref}
+              className="rounded border border-brand-dark px-3 py-2 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+              scroll={false}
+            >
+              {classicMode ? "Guided wizard" : "Classic tabs"}
+            </Link>
+          </div>
+        ) : (
+          <div className="no-print flex justify-end">
+            <Link
+              href={classicToggleHref}
+              className="rounded border border-brand-dark px-3 py-2 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+              scroll={false}
+            >
+              {classicMode ? "Guided wizard" : "Classic tabs"}
+            </Link>
+          </div>
+        )}
+        <div
+          className={`no-print sticky top-2 z-20 rounded border border-brand-dark bg-card-bg/95 p-3 backdrop-blur ${!classicMode ? "lg:hidden" : ""}`}
+        >
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+            <SummaryStat label="All-in Basis" value={formatCurrency(outputs.section_totals.all_in_basis)} />
+            <SummaryStat label="Net Profit (base)" value={formatCurrency(outputs.base.net_profit)} className={profitColor(outputs.base.net_profit)} />
+            <SummaryStat label="ROI %" value={formatPercent(outputs.base.roi_pct)} className={profitColor(outputs.base.net_profit)} />
+            <SummaryStat label="Annualized ROI" value={formatPercent(outputs.base.annualized_roi_pct)} className={profitColor(outputs.base.net_profit)} />
+            <SummaryStat label="Break-even" value={formatCurrency(outputs.breakeven_sale_price)} />
+          </div>
+        </div>
+
+        {classicMode ? (
+          <div className="no-print flex flex-wrap gap-2">
+            {TAB_ORDER.map((tabOption) => (
+              <button
+                key={tabOption.id}
+                type="button"
+                onClick={() => setTab(tabOption.id)}
+                className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${
+                  tab === tabOption.id
+                    ? "border-brand-orange bg-brand-orange/20 text-brand-orange"
+                    : "border-brand-dark bg-card-bg text-brand-muted hover:border-brand-orange"
+                }`}
+              >
+                {tabOption.label}
+              </button>
+            ))}
+            <div className="ml-auto text-xs text-brand-muted">
+              {saveState === "saving" ? "Saving..." : saveState === "error" ? "Save failed" : "Saved"}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="no-print flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1">
+                {WIZARD_STEPS.map((ws, idx) => {
+                  const locked = ws.step > maxWizardStep;
+                  const active = ws.step === wizardStep;
+                  const done = ws.step < wizardStep;
+                  return (
+                    <div key={ws.step} className="flex items-center">
+                      <button
+                        type="button"
+                        disabled={locked}
+                        title={locked ? "Use Next to unlock this step" : undefined}
+                        onClick={() => setWizardStepUrl(ws.step)}
+                        className={`flex h-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-full border-2 text-[11px] font-bold transition-[color,background-color,border-color,box-shadow,opacity] ${
+                          locked
+                            ? "cursor-not-allowed border-brand-dark text-brand-muted opacity-40"
+                            : active
+                              ? "border-brand-orange bg-brand-orange/20 text-brand-orange shadow-[0_0_0_4px_rgba(249,115,22,0.14)]"
+                              : done
+                                ? "border-emerald-600 bg-emerald-500/10 text-emerald-400"
+                                : "border-brand-dark text-brand-muted hover:border-brand-orange/45 hover:text-brand-orange"
+                        }`}
+                      >
+                        {done ? <span aria-hidden>✓</span> : ws.step}
+                      </button>
+                      {idx < WIZARD_STEPS.length - 1 ? (
+                        <div
+                          className={`mx-1 h-0.5 w-3 shrink-0 rounded ${maxWizardStep > ws.step ? "bg-emerald-600" : "bg-brand-dark"}`}
+                          aria-hidden
+                        />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="shrink-0 text-xs text-brand-muted">
+                {saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Saved"}
+              </div>
+            </div>
+            <p className="no-print text-[10px] uppercase tracking-wide text-brand-muted">
+              {WIZARD_STEPS.find((w) => w.step === wizardStep)?.label ?? "Step"}
+            </p>
+            <div className="rounded-xl border border-brand-orange/40 bg-card-bg/95 px-4 py-3 flex flex-wrap items-center gap-4 print:border-neutral-400 print:bg-white print:text-black">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 text-sm font-bold text-emerald-400">
+                {Math.round(Math.min(99, Math.max(0, outputs.base.roi_pct)))}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-brand-white print:text-neutral-900">{seed.aircraftLabel}</p>
+                <p className="text-xs text-brand-muted print:text-neutral-700">
+                  {formatCurrency(form.purchase_price)} basis · {dealGrade.label} · Auto-saves to scenario
+                </p>
+              </div>
+              <Link
+                href="/internal/deal-desk"
+                className="no-print shrink-0 rounded border border-brand-dark px-2 py-1 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+              >
+                Change aircraft
+              </Link>
+            </div>
+          </div>
+        )}
+
+      {((classicMode && showOverview) || !classicMode) ? (
+        <DealDeskWizardStep
+          classicMode={classicMode}
+          step={1}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={classicMode ? true : accordionStepExpanded(1)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(1)}
+          wizardFooter={wizardStepFooterFor(1)}
+        >
+        {(classicMode && !showOverview) ? null : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+            {!classicMode ? (
+              <DealDeskInsight variant="green" title="Aircraft context locked">
+                Pulled from this listing: <strong>{seed.aircraftLabel}</strong>. Edits below flow to the Live P&amp;L panel and auto-save.
+              </DealDeskInsight>
+            ) : null}
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Link
+                href="/listings"
+                className="rounded-full border border-brand-dark px-3 py-1 text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+              >
+                Browse listings
+              </Link>
+              {seed.sourceUrl ? (
+                <a
+                  href={seed.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-brand-dark px-3 py-1 text-brand-muted hover:border-brand-orange hover:text-brand-orange"
+                >
+                  Open source ad
+                </a>
+              ) : null}
+            </div>
             <TextInput label="Scenario Label" value={scenarioLabel} onChange={setScenarioLabel} />
             <CurrencyInput label="Purchase Price" value={form.purchase_price} onChange={(value) => setForm((previous) => ({ ...previous, purchase_price: value }))} />
             <div>
@@ -469,10 +958,68 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             </div>
           </section>
         </div>
+        )}
+        </DealDeskWizardStep>
       ) : null}
 
-      {tab === "acquisition" ? (
+      {((classicMode && showAcquisition) || !classicMode) ? (
+        <DealDeskWizardStep
+          classicMode={classicMode}
+          step={2}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={classicMode ? true : accordionStepExpanded(2)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(2)}
+          wizardFooter={wizardStepFooterFor(2)}
+        >
+        {(classicMode && !showAcquisition) ? null : (
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+          {!classicMode ? (
+            <>
+              <DealDeskQuestionBlock
+                label="What are you planning to offer?"
+                hint="Your modeled purchase versus the live asking price."
+              >
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <CurrencyInput label="Planned purchase / basis" value={form.purchase_price} onChange={(value) => setForm((previous) => ({ ...previous, purchase_price: value }))} />
+                  <div className="flex flex-col justify-center rounded-lg border border-brand-dark bg-[var(--fh-bg3)] px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">vs asking</p>
+                    <p className={`text-sm font-semibold ${purchaseVsAsking <= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {purchaseVsAsking <= 0 ? "↓" : "↑"} {formatCurrency(Math.abs(purchaseVsAsking))} ({formatPercent(purchaseVsAskingPct)})
+                    </p>
+                    <p className="mt-1 text-[10px] text-brand-muted">Negative = below ask (discount). Positive = premium to ask.</p>
+                  </div>
+                </div>
+              </DealDeskQuestionBlock>
+              {sellerMotivation ? (
+                <DealDeskInsight variant="amber" title="Seller motivation signal">
+                  {seed.priceReduced ? "Price has been reduced on this listing. " : null}
+                  {typeof seed.daysOnMarket === "number" && seed.daysOnMarket >= 75
+                    ? `On market ~${Math.round(seed.daysOnMarket)} days — watch carrying cost if diligence drags. `
+                    : null}
+                  Use negotiation table in step 1 / classic Overview to stress offers.
+                </DealDeskInsight>
+              ) : null}
+              {seed.deferredMaintenance > 0 ? (
+                <DealDeskInsight variant="red" title="Deferred maintenance (listing estimate)">
+                  Scorecard flags about <strong>{formatCurrency(seed.deferredMaintenance)}</strong> of deferred work — fold into must-do upgrades or carrying reserves.
+                </DealDeskInsight>
+              ) : null}
+              <DealDeskQuestionBlock
+                label="Annual inspection posture"
+                hint="Does not change math automatically — tune monthly accrual on the Carrying step."
+              >
+                <div className="flex flex-wrap gap-2">
+                  <DealDeskChip selected={form.annual_inspection_reserve_monthly <= 0} onClick={() => setForm((p) => ({ ...p, annual_inspection_reserve_monthly: 0 }))}>
+                    Current / just done
+                  </DealDeskChip>
+                  <DealDeskChip selected={form.annual_inspection_reserve_monthly > 0} onClick={() => setForm((p) => ({ ...p, annual_inspection_reserve_monthly: p.annual_inspection_reserve_monthly > 0 ? p.annual_inspection_reserve_monthly : 250 }))}>
+                    Budgeting accrual
+                  </DealDeskChip>
+                </div>
+              </DealDeskQuestionBlock>
+            </>
+          ) : null}
           {(Object.keys(ACQUISITION_CATEGORY_META) as AcquisitionCategory[]).map((category) => (
             <div key={category} className="rounded border border-brand-dark p-3">
               <div className="mb-2 flex items-center justify-between">
@@ -494,7 +1041,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
                 </tbody>
               </table>
               <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-[1fr,180px,100px]">
-                <input value={newAcquisitionDraft[category].label} onChange={(event) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], label: event.target.value } }))} placeholder="Add item label" className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white outline-none focus:border-brand-orange" />
+                <input value={newAcquisitionDraft[category].label} onChange={(event) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], label: event.target.value } }))} placeholder="Add item label" className="deal-desk-inp py-2 text-sm" />
                 <CurrencyInputInline value={newAcquisitionDraft[category].amount} onChange={(value) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], amount: value } }))} />
                 <button type="button" onClick={() => { if (!newAcquisitionDraft[category].label.trim()) return; setForm((previous) => ({ ...previous, acquisition_items: [...previous.acquisition_items, { id: crypto.randomUUID(), label: newAcquisitionDraft[category].label.trim(), amount: newAcquisitionDraft[category].amount, category }] })); setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { label: "", amount: 0 } })); }} className="rounded bg-brand-orange px-2 py-1 text-sm font-semibold !text-black hover:bg-brand-burn">Add item</button>
               </div>
@@ -502,17 +1049,60 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
           ))}
           <p className="text-lg font-semibold text-brand-orange">Total Acquisition Capex: {formatCurrency(outputs.section_totals.acquisition_capex)}</p>
         </section>
+        )}
+        </DealDeskWizardStep>
       ) : null}
 
-      {tab === "upgrades" ? (
+      {((classicMode && showUpgrades) || !classicMode) ? (
+        <DealDeskWizardStep
+          classicMode={classicMode}
+          step={3}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={classicMode ? true : accordionStepExpanded(3)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(3)}
+          wizardFooter={wizardStepFooterFor(3)}
+        >
+        {(classicMode && !showUpgrades) ? null : (
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+          {!classicMode ? (
+            <>
+              <DealDeskQuestionBlock label="Upgrade strategy focus" hint="Sets the category for the next line item you add — mix and match as needed.">
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["avionics", "Avionics"],
+                      ["paint", "Paint"],
+                      ["interior", "Interior"],
+                      ["engine", "Engine"],
+                      ["prop", "Prop"],
+                      ["mod", "Mod / STC"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <DealDeskChip
+                      key={id}
+                      selected={newUpgradeDraft.category === id}
+                      onClick={() => setNewUpgradeDraft((previous) => ({ ...previous, category: id }))}
+                    >
+                      {label}
+                    </DealDeskChip>
+                  ))}
+                </div>
+              </DealDeskQuestionBlock>
+              {seed.isSteamGauge === true && seed.hasGlassCockpit !== true ? (
+                <DealDeskInsight variant="blue" title="Panel modernization path">
+                  Steam-gauge stack detected — buyers often underwrite <strong>GTN 650-class</strong> glass. Model avionics as must-do or value-add; track ROI with the uplift field below.
+                </DealDeskInsight>
+              ) : null}
+            </>
+          ) : null}
           <div className="rounded border border-brand-dark p-3">
             <p className="mb-2 font-semibold">Add upgrade line item</p>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
-              <input value={newUpgradeDraft.label} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, label: event.target.value }))} placeholder="Upgrade label" className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white outline-none focus:border-brand-orange md:col-span-2" />
+              <input value={newUpgradeDraft.label} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, label: event.target.value }))} placeholder="Upgrade label" className="deal-desk-inp py-2 text-sm md:col-span-2" />
               <CurrencyInputInline value={newUpgradeDraft.amount} onChange={(value) => setNewUpgradeDraft((previous) => ({ ...previous, amount: value }))} />
-              <select value={newUpgradeDraft.type} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, type: event.target.value as UpgradeItem["type"] }))} className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white"><option value="must_do">Must Do</option><option value="value_add">Value Add</option></select>
-              <select value={newUpgradeDraft.category} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, category: event.target.value as UpgradeItem["category"] }))} className="rounded border border-brand-dark bg-[#121212] px-2 py-1 text-sm text-white"><option value="avionics">Avionics</option><option value="interior">Interior</option><option value="paint">Paint</option><option value="engine">Engine</option><option value="prop">Prop</option><option value="mod">Mod/STC</option></select>
+              <select value={newUpgradeDraft.type} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, type: event.target.value as UpgradeItem["type"] }))} className="deal-desk-inp py-2 text-sm"><option value="must_do">Must Do</option><option value="value_add">Value Add</option></select>
+              <select value={newUpgradeDraft.category} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, category: event.target.value as UpgradeItem["category"] }))} className="deal-desk-inp py-2 text-sm"><option value="avionics">Avionics</option><option value="interior">Interior</option><option value="paint">Paint</option><option value="engine">Engine</option><option value="prop">Prop</option><option value="mod">Mod/STC</option></select>
             </div>
             <button type="button" onClick={() => { if (!newUpgradeDraft.label.trim()) return; setForm((previous) => ({ ...previous, upgrade_items: [...previous.upgrade_items, { ...newUpgradeDraft, id: crypto.randomUUID(), label: newUpgradeDraft.label.trim() }] })); setNewUpgradeDraft({ label: "", amount: 0, type: "must_do", category: "avionics" }); }} className="mt-2 rounded bg-brand-orange px-3 py-1 text-sm font-semibold !text-black hover:bg-brand-burn">Add item</button>
           </div>
@@ -543,10 +1133,51 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             <p className="mt-2 text-sm text-brand-muted">If value-add work adds {formatCurrency(resaleUpliftEstimate)} to resale, return on {formatCurrency(outputs.section_totals.value_add_upgrades)} invested = {outputs.section_totals.value_add_upgrades > 0 ? formatPercent((resaleUpliftEstimate / outputs.section_totals.value_add_upgrades) * 100) : "0.0%"}</p>
           </div>
         </section>
+        )}
+        </DealDeskWizardStep>
       ) : null}
 
-      {tab === "carrying" ? (
+      {((classicMode && showCarrying) || !classicMode) ? (
+        <DealDeskWizardStep
+          classicMode={classicMode}
+          step={4}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={classicMode ? true : accordionStepExpanded(4)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(4)}
+          wizardFooter={wizardStepFooterFor(4)}
+        >
+        {(classicMode && !showCarrying) ? null : (
         <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {!classicMode ? (
+            <div className="xl:col-span-2 space-y-3">
+              <DealDeskQuestionBlock label="How long will you hold?" hint="Quick presets — fine-tune months in step 1 / Overview if needed.">
+                <div className="flex flex-wrap gap-2">
+                  <DealDeskChip selected={Math.round(form.hold_months) === 2} onClick={() => setForm((p) => ({ ...p, hold_months: 2 }))}>
+                    1–3 mo (2)
+                  </DealDeskChip>
+                  <DealDeskChip selected={Math.round(form.hold_months) === 5} onClick={() => setForm((p) => ({ ...p, hold_months: 5 }))}>
+                    3–6 mo (5)
+                  </DealDeskChip>
+                  <DealDeskChip selected={Math.round(form.hold_months) === 9} onClick={() => setForm((p) => ({ ...p, hold_months: 9 }))}>
+                    6–12 mo (9)
+                  </DealDeskChip>
+                  <DealDeskChip selected={Math.round(form.hold_months) >= 12} onClick={() => setForm((p) => ({ ...p, hold_months: 15 }))}>
+                    12+ mo (15)
+                  </DealDeskChip>
+                </div>
+              </DealDeskQuestionBlock>
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                <DealDeskInsight variant="green" title="Monthly burn rate">
+                  Fixed + variable spread across your hold ≈ <strong>{formatCurrency(outputs.monthly_burn_rate)}</strong> / mo (see Live P&amp;L for detail).
+                </DealDeskInsight>
+                <DealDeskInsight variant="amber" title="Est. total carry">
+                  Fixed carrying for <strong>{Math.round(form.hold_months)}</strong> mo = {formatCurrency(outputs.section_totals.fixed_carrying_total)} · Variable (planned hours) ={" "}
+                  {formatCurrency(outputs.section_totals.variable_operating_total)}
+                </DealDeskInsight>
+              </div>
+            </div>
+          ) : null}
           <div className="rounded border border-brand-dark bg-card-bg p-4 space-y-2">
             <p className="font-semibold">Fixed (per month)</p>
             <CurrencyInput label="Hangar / Tie-down" value={form.hangar_monthly} onChange={(value) => setForm((p) => ({ ...p, hangar_monthly: value }))} />
@@ -600,47 +1231,78 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             <StaticRow label="Total variable" value={formatCurrency(variableTotal)} bold />
           </div>
         </section>
+        )}
+        </DealDeskWizardStep>
       ) : null}
 
-      {tab === "financing" ? (
+      {classicMode && showFinancing ? financingSection : null}
+      {classicMode && showExit ? exitSection : null}
+      {!classicMode ? (
+        <DealDeskWizardStep
+          classicMode={false}
+          step={5}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={accordionStepExpanded(5)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(5)}
+          wizardFooter={wizardStepFooterFor(5)}
+        >
+          <>
+            {financingSection}
+            {exitSection}
+          </>
+        </DealDeskWizardStep>
+      ) : null}
+
+      {((classicMode && showSensitivity) || !classicMode) ? (
+        <DealDeskWizardStep
+          classicMode={classicMode}
+          step={6}
+          wizardStep={wizardStep}
+          maxWizardStep={maxWizardStep}
+          expanded={classicMode ? true : accordionStepExpanded(6)}
+          onAccordionHeaderClick={() => handleAccordionHeaderClick(6)}
+          wizardFooter={wizardStepFooterFor(6)}
+        >
+        {(classicMode && !showSensitivity) ? null : (
         <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: false }))} className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${!form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Cash Deal</button>
-            <button type="button" onClick={() => setForm((previous) => ({ ...previous, financing_enabled: true }))} className={`min-h-[44px] rounded border px-3 py-2 text-sm md:min-h-0 md:py-1 ${form.financing_enabled ? "border-brand-orange bg-brand-orange/20 text-brand-orange" : "border-brand-dark text-brand-muted"}`}>Financed</button>
-          </div>
-          {!form.financing_enabled ? (
-            <div className="space-y-2"><NumberInput label="Opportunity cost rate %" value={form.opportunity_cost_rate_pct} onChange={(value) => setForm((previous) => ({ ...previous, opportunity_cost_rate_pct: value }))} /><p className="text-sm text-brand-muted">Opportunity cost over hold: {formatCurrency(opportunityCost)} (not included in profit calculation).</p></div>
-          ) : (
-            <div className="space-y-2">
-              <CurrencyInput label="Loan amount" value={form.loan_amount} onChange={(value) => setForm((previous) => ({ ...previous, loan_amount: value }))} />
-              <StaticRow label="Down payment" value={formatCurrency(loanDownPayment)} />
-              <NumberInput label="Interest rate %" value={form.interest_rate_pct} onChange={(value) => setForm((previous) => ({ ...previous, interest_rate_pct: value }))} />
-              <label className="block"><p className="mb-1 text-sm text-brand-muted">Loan term</p><select value={form.loan_term_years} onChange={(event) => setForm((previous) => ({ ...previous, loan_term_years: Number(event.target.value) }))} className="w-full rounded border border-brand-dark bg-[#121212] px-2 py-2 text-sm text-white"><option value={10}>10 years</option><option value={15}>15 years</option><option value={20}>20 years</option></select></label>
-              <CurrencyInput label="Origination / doc fees" value={form.loan_origination_fees} onChange={(value) => setForm((previous) => ({ ...previous, loan_origination_fees: value }))} />
-              <StaticRow label="Total financing cost over hold" value={formatCurrency(outputs.section_totals.financing_cost_over_hold)} bold />
-              <p className="text-xs text-brand-muted">Required hull coverage minimum: {formatCurrency(form.loan_amount)}</p>
+          {!classicMode ? (
+            <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-4 text-center">
+              <p className="text-3xl leading-none text-emerald-400" aria-hidden>
+                ✅
+              </p>
+              <p className="mt-2 text-lg font-bold text-brand-white" style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}>
+                Analysis complete
+              </p>
+              <div className="mx-auto mt-3 max-w-md text-left">
+                <DealDeskInsight variant="green" title={`Verdict: ${wizardVerdict.key}`}>
+                  {outputs.base.net_profit >= form.target_profit_dollars
+                    ? "Base case clears your profit target with room — revisit sensitivity cells before you wire money."
+                    : outputs.base.net_profit >= 0
+                      ? "Base case is positive but shy of your profit target — tighten purchase, carry, or exit assumptions."
+                      : "Base case is underwater — rework purchase, upgrades, or exit pricing before committing."}
+                </DealDeskInsight>
+              </div>
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="rounded-lg border border-brand-orange bg-brand-orange/10 px-4 py-2 text-xs font-semibold text-brand-orange hover:bg-brand-orange/20 print:hidden"
+                  >
+                    Print / Save as PDF
+                  </button>
+                  <span className="text-[11px] text-brand-muted print:hidden">
+                    {saveState === "saving" ? "Saving…" : saveState === "error" ? "Save error — retry edits" : "💾 Scenario auto-saves"}
+                  </span>
+                </div>
+                <p className="max-w-md text-center text-[11px] text-brand-muted print:text-neutral-700">
+                  Opens the browser print dialog — choose <span className="font-semibold text-brand-white print:text-neutral-900">Save as PDF</span> as the
+                  destination.
+                </p>
+              </div>
             </div>
-          )}
-        </section>
-      ) : null}
-
-      {tab === "exit" ? (
-        <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-2">
-          <NumberInput label="Broker commission %" value={form.broker_commission_pct} onChange={(value) => setForm((previous) => ({ ...previous, broker_commission_pct: value }))} />
-          <p className="text-xs text-brand-muted">{formatCurrency((form.resale_base * form.broker_commission_pct) / 100)} at base resale price.</p>
-          <CurrencyInput label="Exit escrow & title" value={form.exit_escrow_fees} onChange={(value) => setForm((previous) => ({ ...previous, exit_escrow_fees: value }))} />
-          <CurrencyInput label="Pre-sale spruce-up" value={form.presale_spruce_up} onChange={(value) => setForm((previous) => ({ ...previous, presale_spruce_up: value }))} />
-          <NumberInput label="Buyer squawk contingency %" value={form.buyer_squawk_contingency_pct} onChange={(value) => setForm((previous) => ({ ...previous, buyer_squawk_contingency_pct: value }))} />
-          <p className="text-xs text-brand-muted">{formatCurrency(outputs.section_totals.all_in_basis * (form.buyer_squawk_contingency_pct / 100))} contingency.</p>
-          <NumberInput label="Sales / use tax %" value={form.exit_sales_tax_pct} onChange={(value) => setForm((previous) => ({ ...previous, exit_sales_tax_pct: value }))} />
-          <p className="text-xs text-brand-muted">Check your state's resale exemption rules.</p>
-          <StaticRow label="Net sale proceeds (base)" value={formatCurrency(outputs.base.net_proceeds)} bold />
-          <p className="text-xs text-brand-muted">Low {formatCurrency(outputs.low.net_proceeds)} · Stretch {formatCurrency(outputs.stretch.net_proceeds)}</p>
-        </section>
-      ) : null}
-
-      {tab === "sensitivity" ? (
-        <section className="rounded border border-brand-dark bg-card-bg p-4 space-y-3">
+          ) : null}
           <RangeInput label={`Days-to-sell: ${selectedSensitivityDays}`} min={90} max={270} step={90} value={selectedSensitivityDays} onChange={(value) => { setSelectedSensitivityDays(value); setForm((previous) => ({ ...previous, days_to_sell_slow: value })); }} />
           <RangeInput label={`Contingency: ${form.maintenance_contingency_pct}%`} min={5} max={25} step={5} value={form.maintenance_contingency_pct} onChange={(value) => setForm((previous) => ({ ...previous, maintenance_contingency_pct: value }))} />
           <div className="hidden md:block">
@@ -680,10 +1342,47 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
           </div>
           {selectedSensitivity.length > 0 ? <p className="text-xs text-brand-muted">Selected days scenario: {selectedSensitivity.map((cell) => `${cell.sale_price_pct}%: ${formatCurrency(cell.net_profit)}`).join(" · ")}</p> : null}
         </section>
+        )}
+        </DealDeskWizardStep>
+      ) : null}
+
+      {!classicMode && wizardStep >= 2 && wizardStep <= 5 ? (
+        <div className="no-print rounded-[10px] border border-brand-dark bg-card-bg/90 px-4 py-3 text-xs text-brand-muted">
+          <p className="font-semibold text-brand-white">Coming up</p>
+          <ul className="mt-2 list-inside list-disc space-y-1">
+            {WIZARD_STEPS.filter((w) => w.step > wizardStep).map((w) => (
+              <li key={w.step}>{WIZARD_STEP_META[w.step]?.title ?? w.label}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {!classicMode ? (
+        <div className="no-print mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-brand-dark pt-4 lg:hidden">
+          <button
+            type="button"
+            disabled={wizardStep <= 1}
+            onClick={() => setWizardStepUrl(wizardStep - 1)}
+            className="rounded border border-brand-dark px-4 py-2 text-sm font-semibold text-brand-muted hover:border-brand-orange disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Back
+          </button>
+          {wizardStep < 6 ? (
+            <button
+              type="button"
+              onClick={() => setWizardStepUrl(wizardStep + 1, { advanceMax: true })}
+              className="rounded bg-brand-orange px-5 py-2 text-sm font-semibold !text-black hover:bg-brand-burn"
+            >
+              Next
+            </button>
+          ) : (
+            <p className="text-xs text-emerald-400">Final step — refine sensitivity or jump back to any stage above.</p>
+          )}
+        </div>
       ) : null}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-2 border-t border-border bg-background py-3 shadow-lg md:hidden"
+        className="no-print fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-2 border-t border-border bg-background py-3 shadow-lg md:hidden"
         style={{
           paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
           paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
@@ -701,6 +1400,530 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
         <div className="shrink-0 text-sm">
           <span className={`font-bold ${dealGrade.className}`}>{dealGrade.label}</span>
         </div>
+      </div>
+      </div>
+
+      {!classicMode ? (
+        <aside className="hidden print:block lg:block lg:sticky lg:top-[52px] lg:h-[calc(100vh-52px)] lg:overflow-y-auto print:static print:h-auto print:overflow-visible lg:border-l lg:border-brand-dark lg:bg-card-bg lg:p-4 print:border print:border-neutral-400 print:p-3 print:text-black">
+          <DealDeskLivePLPanel
+            seed={seed}
+            verdict={wizardVerdict}
+            outputs={outputs}
+            form={form}
+            dealGrade={dealGrade}
+            formatCurrency={formatCurrency}
+            formatPercent={formatPercent}
+            profitColor={profitColor}
+          />
+        </aside>
+      ) : null}
+    </div>
+  );
+}
+
+type FlipOutputs = ReturnType<typeof calculateFlip>;
+
+const dealDeskPlBarlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const;
+const dealDeskPlMono = { fontFamily: "var(--font-dm-mono), ui-monospace, monospace" } as const;
+
+function PlSection({ emoji, title, children }: { emoji: string; title: string; children: ReactNode }) {
+  return (
+    <div className="border-b border-brand-dark pb-3">
+      <p className="pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-muted" style={dealDeskPlBarlow}>
+        {emoji} {title}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function PlRow({ label, value }: { label: string; value: number }) {
+  const cls = value < 0 ? "text-red-400" : value > 0 ? "text-emerald-400" : "text-brand-muted";
+  return (
+    <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] py-1 text-[12px]">
+      <span className="flex min-w-0 flex-1 items-center gap-2 text-brand-muted">
+        <span className="h-1 w-1 shrink-0 rounded-full bg-brand-orange/60" aria-hidden />
+        {label}
+      </span>
+      <span className={`shrink-0 tabular-nums ${cls}`} style={dealDeskPlMono}>
+        {formatSignedCurrency(value)}
+      </span>
+    </div>
+  );
+}
+
+function PlSubtotal({ label, value }: { label: string; value: number }) {
+  return (
+    <div
+      className={`mt-2 flex items-center justify-between border-t border-brand-dark pt-2 text-[13px] font-semibold ${value < 0 ? "text-red-300" : "text-brand-white"}`}
+      style={dealDeskPlMono}
+    >
+      <span>{label}</span>
+      <span>{formatSignedCurrency(value)}</span>
+    </div>
+  );
+}
+
+function DealDeskWizardStep({
+  classicMode,
+  step,
+  wizardStep,
+  maxWizardStep,
+  expanded,
+  onAccordionHeaderClick,
+  wizardFooter,
+  children,
+}: {
+  classicMode: boolean;
+  step: number;
+  wizardStep: number;
+  maxWizardStep: number;
+  expanded: boolean;
+  onAccordionHeaderClick: () => void;
+  wizardFooter?: {
+    onBack: () => void;
+    onNext: () => void;
+    backDisabled: boolean;
+    isLastStep: boolean;
+    onPrintAnalysis: () => void;
+  } | null;
+  children: ReactNode;
+}) {
+  if (classicMode) return <>{children}</>;
+  const meta = WIZARD_STEP_META[step];
+  const icon = WIZARD_STEP_ICONS[step];
+  const statusBadge = accordionStepBadge(step, wizardStep, maxWizardStep);
+  const locked = step > maxWizardStep;
+  const active = step === wizardStep;
+  const done = step < wizardStep;
+  const badgeClass =
+    statusBadge.tone === "green"
+      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+      : statusBadge.tone === "slate"
+        ? "border-brand-dark/60 bg-[var(--fh-bg3)] text-brand-muted"
+        : "border-brand-orange/45 bg-brand-orange/15 text-brand-orange";
+  const stepNoClass = active ? "text-brand-orange" : done ? "text-emerald-400" : "text-brand-muted";
+  return (
+    <div
+      className={`deal-desk-wizard-accordion-card mb-3.5 overflow-hidden rounded-[14px] border bg-card-bg print:mb-4 print:border-neutral-400 print:bg-white print:shadow-none ${
+        active ? "deal-desk-step-card border-[var(--fh-border)] print:animate-none" : ""
+      } ${done && !active ? "border-emerald-500/25" : ""} ${!done && !active && !locked ? "border-[var(--fh-border)]" : ""} ${locked ? "pointer-events-none opacity-45" : ""}`}
+    >
+      <button
+        type="button"
+        disabled={locked}
+        onClick={onAccordionHeaderClick}
+        className="flex w-full cursor-pointer select-none items-start gap-3 border-b border-[var(--fh-border)] px-[18px] py-4 text-left [data-theme=light]:border-slate-200 print:border-neutral-300 disabled:cursor-not-allowed"
+      >
+        <span
+          className={`mt-0.5 shrink-0 text-lg leading-none text-brand-muted transition-transform duration-200 print:text-xl ${expanded ? "rotate-90" : ""}`}
+          aria-hidden
+        >
+          ›
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {icon ? <span className="text-lg leading-none print:text-xl" aria-hidden>{icon}</span> : null}
+            <p
+              className={`font-mono text-[10px] font-bold uppercase tracking-wider print:text-neutral-600 ${stepNoClass}`}
+              style={{ fontFamily: "var(--font-dm-mono), ui-monospace, monospace" }}
+            >
+              Step {step}
+            </p>
+          </div>
+          <h2 className="mt-0.5 text-[17px] font-bold tracking-tight text-brand-white print:text-neutral-900" style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}>
+            {meta.title}
+          </h2>
+          <p className="mt-1 text-[11px] italic text-brand-muted print:text-neutral-700">{meta.subtitle}</p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide print:border-neutral-600 print:bg-neutral-100 print:text-neutral-800 ${badgeClass}`}
+          style={{ fontFamily: "var(--font-dm-mono), ui-monospace, monospace" }}
+        >
+          {statusBadge.label}
+        </span>
+      </button>
+      {children != null ? (
+        <div
+          className={`deal-desk-wizard-accordion-body space-y-3 px-[18px] pb-5 pt-1 print:block print:text-black ${expanded ? "block" : "hidden print:!block"}`}
+        >
+          {children}
+          {wizardFooter && expanded ? (
+            <footer className="no-print mt-5 flex flex-col-reverse gap-2 border-t border-[var(--fh-border)] pt-4 [data-theme=light]:border-slate-200 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+              <button
+                type="button"
+                onClick={wizardFooter.onBack}
+                disabled={wizardFooter.backDisabled}
+                className="min-h-[44px] rounded-lg border border-[var(--fh-border)] px-5 py-2 text-xs font-semibold text-brand-muted transition-colors hover:border-brand-orange hover:text-brand-orange disabled:cursor-not-allowed disabled:opacity-40 [data-theme=light]:border-slate-300 [data-theme=light]:text-slate-600"
+              >
+                Back
+              </button>
+              {wizardFooter.isLastStep ? (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={wizardFooter.onPrintAnalysis}
+                    className="min-h-[44px] rounded-lg bg-emerald-600 px-5 py-2 text-[15px] font-extrabold tracking-tight text-white transition-colors hover:bg-emerald-500"
+                    style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}
+                  >
+                    Save analysis as PDF →
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={wizardFooter.onNext}
+                  className="min-h-[44px] rounded-lg bg-brand-orange px-7 py-2 text-[15px] font-extrabold tracking-tight !text-black transition-transform hover:bg-brand-burn hover:!text-white"
+                  style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}
+                >
+                  Next
+                </button>
+              )}
+            </footer>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DealDeskHealthScoreDrilldown({
+  seed,
+  formatCurrency,
+}: {
+  seed: DealDeskSeed;
+  formatCurrency: (n: number | null | undefined) => string;
+}) {
+  const sn = (n: number | null | undefined): string | null => (n != null && Number.isFinite(n) ? String(Math.round(n)) : null);
+  const sf = (n: number | null | undefined) => (n != null && Number.isFinite(n) ? n.toFixed(2) : null);
+  const hasPillars =
+    seed.investmentScore != null ||
+    seed.marketOpportunityScore != null ||
+    seed.executionScore != null ||
+    seed.conditionScore != null ||
+    seed.engineScore != null ||
+    seed.propScore != null ||
+    seed.llpScore != null;
+  const hasComps =
+    seed.compMedianPrice != null ||
+    seed.compP25Price != null ||
+    seed.compP75Price != null ||
+    seed.mispricingZscore != null ||
+    seed.pricingConfidence != null ||
+    seed.compSelectionTier != null ||
+    seed.compExactCount != null ||
+    seed.compFamilyCount != null;
+  const hasEngine =
+    Boolean(seed.evExplanation?.trim()) ||
+    seed.evDataQuality != null ||
+    seed.evHoursSmoh != null ||
+    seed.evTboHours != null ||
+    seed.evHoursRemaining != null ||
+    seed.evScoreContribution != null;
+  const hasAccidents = seed.hasAccidentHistory === true || (seed.accidentCount != null && seed.accidentCount > 0);
+  if (!hasPillars && !hasComps && !hasEngine && !hasAccidents && !seed.intelligenceVersion) return null;
+
+  const row = (label: string, value: string | null) =>
+    value ? (
+      <p>
+        <span className="text-brand-muted">{label}: </span>
+        <strong>{value}</strong>
+      </p>
+    ) : null;
+
+  const detailBodyCls =
+    "mt-2 space-y-1.5 border-t border-brand-dark/60 pt-2 text-[10px] leading-snug text-brand-muted print:border-neutral-300 print:text-neutral-800 [&_strong]:font-semibold [&_strong]:text-brand-white print:[&_strong]:text-neutral-900";
+
+  return (
+    <div className="mt-3 space-y-2 print:mt-2">
+      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-muted print:text-neutral-600" style={dealDeskPlBarlow}>
+        Intelligence drill-down
+      </p>
+      {hasPillars ? (
+        <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              Pillar &amp; component scores
+              <span className="text-brand-muted print:text-neutral-600" aria-hidden>
+                +
+              </span>
+            </span>
+          </summary>
+          <div className={detailBodyCls}>
+            {row("Investment", sn(seed.investmentScore))}
+            {row("Market opportunity", sn(seed.marketOpportunityScore))}
+            {row("Execution", sn(seed.executionScore))}
+            {row("Condition", sn(seed.conditionScore))}
+            {row("Engine", sn(seed.engineScore))}
+            {row("Prop", sn(seed.propScore))}
+            {row("LLP", sn(seed.llpScore))}
+          </div>
+        </details>
+      ) : null}
+      {hasComps ? (
+        <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              Comps &amp; pricing context
+              <span className="text-brand-muted print:text-neutral-600" aria-hidden>
+                +
+              </span>
+            </span>
+          </summary>
+          <div className={detailBodyCls}>
+            {row("Comp tier", seed.compSelectionTier ?? null)}
+            {row("Pricing confidence", seed.pricingConfidence ?? null)}
+            {row("Median comp ask", seed.compMedianPrice != null ? formatCurrency(seed.compMedianPrice) : null)}
+            {row("P25 / P75 band", seed.compP25Price != null && seed.compP75Price != null ? `${formatCurrency(seed.compP25Price)} – ${formatCurrency(seed.compP75Price)}` : null)}
+            {row("Mispricing z-score", sf(seed.mispricingZscore))}
+            {row("Exact / family comps", seed.compExactCount != null && seed.compFamilyCount != null ? `${seed.compExactCount} exact · ${seed.compFamilyCount} family` : null)}
+            {row("Universe size", seed.compUniverseSize != null ? String(seed.compUniverseSize) : null)}
+          </div>
+        </details>
+      ) : null}
+      {hasEngine ? (
+        <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              Engine value (score_data)
+              <span className="text-brand-muted print:text-neutral-600" aria-hidden>
+                +
+              </span>
+            </span>
+          </summary>
+          <div className={detailBodyCls}>
+            {row("Data quality", seed.evDataQuality ?? null)}
+            {row("SMOH (scored)", seed.evHoursSmoh != null ? `${seed.evHoursSmoh} h` : null)}
+            {row("TBO reference", seed.evTboHours != null ? `${seed.evTboHours} h` : null)}
+            {row("Hours remaining (est.)", seed.evHoursRemaining != null ? `${seed.evHoursRemaining} h` : null)}
+            {row("Score contribution", seed.evScoreContribution != null ? String(seed.evScoreContribution) : null)}
+            {seed.evExplanation?.trim() ? (
+              <p className="whitespace-pre-wrap text-[10px] leading-relaxed text-brand-muted/95 print:text-neutral-800">{seed.evExplanation.trim()}</p>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
+      {hasAccidents ? (
+        <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              Accident / damage signals
+              <span className="text-brand-muted print:text-neutral-600" aria-hidden>
+                +
+              </span>
+            </span>
+          </summary>
+          <div className={detailBodyCls}>
+            {row("Accident history flag", seed.hasAccidentHistory === true ? "Yes" : seed.hasAccidentHistory === false ? "No" : null)}
+            {row("Accident count", seed.accidentCount != null ? String(seed.accidentCount) : null)}
+          </div>
+        </details>
+      ) : null}
+      {seed.intelligenceVersion ? (
+        <p className="text-[9px] text-brand-muted/80 print:text-neutral-600" style={dealDeskPlMono}>
+          Intelligence v{seed.intelligenceVersion}
+        </p>
+      ) : null}
+      <Link
+        href={`/listings/${seed.listingId}`}
+        prefetch={false}
+        className="inline-block text-[10px] font-semibold text-brand-orange underline-offset-2 hover:underline print:text-neutral-900"
+      >
+        Open full listing intelligence →
+      </Link>
+    </div>
+  );
+}
+
+function DealDeskLivePLPanel({
+  seed,
+  verdict,
+  outputs,
+  form,
+  dealGrade,
+  formatCurrency,
+  formatPercent,
+  profitColor,
+}: {
+  seed: DealDeskSeed;
+  verdict: { key: string; box: string; text: string };
+  outputs: FlipOutputs;
+  form: FlipCalcInputs;
+  dealGrade: { label: string; className: string };
+  formatCurrency: (n: number | null | undefined) => string;
+  formatPercent: (n: number | null | undefined) => string;
+  profitColor: (n: number) => string;
+}) {
+  const [profitBump, setProfitBump] = useState(false);
+  const lastProfit = useRef<number | null>(null);
+  useEffect(() => {
+    const v = outputs.base.net_profit;
+    if (lastProfit.current !== null && lastProfit.current !== v) {
+      setProfitBump(true);
+      const t = window.setTimeout(() => setProfitBump(false), 300);
+      return () => window.clearTimeout(t);
+    }
+    lastProfit.current = v;
+  }, [outputs.base.net_profit]);
+
+  const contingency =
+    (outputs.section_totals.must_do_upgrades + outputs.section_totals.value_add_upgrades) *
+    (form.maintenance_contingency_pct / 100);
+  const resale = form.resale_base;
+  const brokerExit = -resale * (form.broker_commission_pct / 100);
+  const taxExit = -resale * (form.exit_sales_tax_pct / 100);
+  const escrowExit = -form.exit_escrow_fees;
+  const spruceExit = -form.presale_spruce_up;
+  const squawkExit = -outputs.section_totals.all_in_basis * (form.buyer_squawk_contingency_pct / 100);
+  const exitPhaseSum = brokerExit + taxExit + escrowExit + spruceExit + squawkExit;
+
+  const purchase = -form.purchase_price;
+  const acqCapex = -outputs.section_totals.acquisition_capex;
+  const acqPhaseSum = purchase + acqCapex;
+
+  const must = -outputs.section_totals.must_do_upgrades;
+  const val = -outputs.section_totals.value_add_upgrades;
+  const cont = -contingency;
+  const upPhaseSum = must + val + cont;
+
+  const fixed = -outputs.section_totals.fixed_carrying_total;
+  const variable = -outputs.section_totals.variable_operating_total;
+  const fin = -outputs.section_totals.financing_cost_over_hold;
+  const carryPhaseSum = fixed + variable + fin;
+
+  const engineLifePct = normalizedEngineLifePercent(seed.evPctLifeRemaining);
+  const riskRaw = seed.riskLevel?.trim();
+  const riskLower = riskRaw?.toLowerCase() ?? "";
+  const riskIcon =
+    riskRaw == null
+      ? null
+      : riskLower === "critical" || riskLower === "high"
+        ? "⚠️"
+        : riskLower === "low" || riskLower === "medium" || riskLower === "moderate"
+          ? "✅"
+          : "ℹ️";
+
+  return (
+    <div className="space-y-4 print:text-black">
+      <div>
+        <p
+          className="text-[13px] font-bold uppercase tracking-[0.12em] text-brand-muted print:text-neutral-600"
+          style={dealDeskPlBarlow}
+        >
+          Live P&amp;L
+        </p>
+        <div className={`mt-2 rounded-lg border px-3 py-3 print:border-neutral-400 print:bg-neutral-50 ${verdict.box}`}>
+          <p
+            className={`text-[26px] font-extrabold leading-tight print:text-neutral-900 ${verdict.text}`}
+            style={dealDeskPlBarlow}
+          >
+            {verdict.key}
+          </p>
+          <p className="mt-1 text-[11px] text-brand-muted print:text-neutral-600" style={dealDeskPlMono}>
+            vs {formatCurrency(form.target_profit_dollars)} profit target
+          </p>
+        </div>
+      </div>
+      <div className="border-b border-brand-dark pb-4 text-center print:border-neutral-300">
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-muted print:text-neutral-600"
+          style={dealDeskPlMono}
+        >
+          Net profit (base)
+        </p>
+        <p
+          className={`mt-1 inline-block origin-center text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-none transition-transform duration-300 ease-out print:scale-100 ${profitColor(outputs.base.net_profit)} print:text-neutral-900 ${profitBump ? "scale-[1.04]" : "scale-100"}`}
+          style={dealDeskPlBarlow}
+        >
+          {formatCurrency(outputs.base.net_profit)}
+        </p>
+        <p
+          className={`text-[13px] font-semibold print:text-neutral-800 ${profitColor(outputs.base.net_profit)}`}
+          style={dealDeskPlMono}
+        >
+          {formatPercent(outputs.base.roi_pct)} ROI
+        </p>
+        <p className="text-xs text-brand-muted print:text-neutral-600" style={dealDeskPlMono}>
+          {formatPercent(outputs.base.annualized_roi_pct)} annualized
+        </p>
+      </div>
+      <div className="space-y-2 border-b border-brand-dark pb-4 print:border-neutral-300">
+        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-muted print:text-neutral-600" style={dealDeskPlBarlow}>
+          Health check
+        </p>
+        <ul className="space-y-1 text-[11px] text-brand-muted print:text-neutral-800">
+          <li>
+            {outputs.base.net_profit >= form.target_profit_dollars ? "✅" : "⚠️"} Meets profit target
+          </li>
+          <li>{outputs.monthly_burn_rate <= 1500 ? "✅" : "⚠️"} Monthly burn {formatCurrency(outputs.monthly_burn_rate)}</li>
+          <li>{outputs.base.net_profit >= 0 ? "✅" : "❌"} Base case above water</li>
+          <li>
+            <span className={`${dealGrade.className} print:text-neutral-900`}>Grade: {dealGrade.label}</span>
+          </li>
+          {riskRaw ? (
+            <li>
+              {riskIcon} Risk tier: {riskRaw}
+            </li>
+          ) : null}
+          {seed.valueScore != null && Number.isFinite(seed.valueScore) ? (
+            <li>📊 Value score {Math.round(seed.valueScore)}</li>
+          ) : null}
+          {seed.avionicsScore != null && Number.isFinite(seed.avionicsScore) ? (
+            <li>🎛️ Avionics score {Math.round(seed.avionicsScore)}</li>
+          ) : null}
+          {seed.dealRating != null && Number.isFinite(seed.dealRating) ? (
+            <li>⭐ Deal rating {seed.dealRating.toFixed(1)}</li>
+          ) : null}
+          {engineLifePct != null ? (
+            <li>
+              {engineLifePct >= 35 ? "✅" : "⚠️"} Engine life ~{engineLifePct.toFixed(0)}% remaining (est.)
+            </li>
+          ) : null}
+          {seed.faaMatched === true ? <li>✅ FAA registry matched</li> : null}
+          {seed.faaMatched === false ? <li>⚠️ FAA registry not matched on file</li> : null}
+        </ul>
+        <DealDeskHealthScoreDrilldown seed={seed} formatCurrency={formatCurrency} />
+      </div>
+      <div className="space-y-4 border-b border-brand-dark pb-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-muted" style={dealDeskPlBarlow}>
+          Phased cash flow (base)
+        </p>
+        <PlSection emoji="📥" title="Acquisition">
+          <PlRow label="Purchase price" value={purchase} />
+          <PlRow label="Acquisition capex" value={acqCapex} />
+          <PlSubtotal label="Subtotal" value={acqPhaseSum} />
+        </PlSection>
+        <PlSection emoji="🔧" title="Upgrades">
+          <PlRow label="Must-do upgrades" value={must} />
+          <PlRow label="Value-add upgrades" value={val} />
+          <PlRow label={`Maintenance contingency (${form.maintenance_contingency_pct}%)`} value={cont} />
+          <PlSubtotal label="Subtotal" value={upPhaseSum} />
+        </PlSection>
+        <PlSection emoji="📅" title="Carrying & financing">
+          <PlRow label="Fixed carrying (hangar, insurance, accruals…)" value={fixed} />
+          <PlRow label="Variable operating (planned hours)" value={variable} />
+          <PlRow label="Financing over hold" value={fin} />
+          <PlSubtotal label="Subtotal" value={carryPhaseSum} />
+        </PlSection>
+        <PlSection emoji="🎯" title="Exit (at base resale)">
+          <PlRow label="Broker commission" value={brokerExit} />
+          <PlRow label="Sales / use tax" value={taxExit} />
+          <PlRow label="Escrow & title" value={escrowExit} />
+          <PlRow label="Pre-sale spruce-up" value={spruceExit} />
+          <PlRow label="Buyer squawk contingency" value={squawkExit} />
+          <PlSubtotal label="Subtotal" value={exitPhaseSum} />
+        </PlSection>
+        <PlRow label="All-in basis (purchase → upgrades)" value={-outputs.section_totals.all_in_basis} />
+        <PlRow label="Total cash out (basis + carry + finance)" value={-outputs.base.total_cash_out} />
+        <PlRow label="Net sale proceeds (after exit costs)" value={outputs.base.net_proceeds} />
+        <p className="pt-2 text-[10px] text-brand-muted" style={dealDeskPlBarlow}>
+          3×3 sensitivity grid — refine on wizard step 6
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-2 text-xs">
+        <SummaryStat label="All-in basis" value={formatCurrency(outputs.section_totals.all_in_basis)} />
+        <SummaryStat label="Break-even sale" value={formatCurrency(outputs.breakeven_sale_price)} />
+        <SummaryStat label="Max buy @ target" value={formatCurrency(outputs.max_purchase_price_for_target)} />
       </div>
     </div>
   );
@@ -728,7 +1951,7 @@ function TextInput({ label, value, onChange }: { label: string; value: string; o
   return (
     <label className="block">
       <p className="mb-1 text-sm text-brand-muted">{label}</p>
-      <input value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-brand-dark bg-[#121212] px-2 py-2 text-sm text-white outline-none focus:border-brand-orange" />
+      <input value={value} onChange={(event) => onChange(event.target.value)} className="deal-desk-inp" />
     </label>
   );
 }
@@ -737,9 +1960,14 @@ function CurrencyInput({ label, value, onChange }: { label: string; value: numbe
   return (
     <label className="block">
       <p className="mb-1 text-sm text-brand-muted">{label}</p>
-      <div className="flex items-center rounded border border-brand-dark bg-[#121212] px-2">
+      <div className="deal-desk-inp-wrap">
         <span className="text-sm text-brand-muted">$</span>
-        <input inputMode="numeric" value={toCurrencyDisplay(value)} onChange={(event) => onChange(parseCurrencyInput(event.target.value))} className="w-full bg-transparent px-2 py-2 text-sm text-white outline-none" />
+        <input
+          inputMode="numeric"
+          value={toCurrencyDisplay(value)}
+          onChange={(event) => onChange(parseCurrencyInput(event.target.value))}
+          className="deal-desk-inp-inner"
+        />
       </div>
     </label>
   );
@@ -747,9 +1975,14 @@ function CurrencyInput({ label, value, onChange }: { label: string; value: numbe
 
 function CurrencyInputInline({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
-    <div className="flex items-center rounded border border-brand-dark bg-[#121212] px-2">
+    <div className="deal-desk-inp-wrap">
       <span className="text-sm text-brand-muted">$</span>
-      <input inputMode="numeric" value={toCurrencyDisplay(value)} onChange={(event) => onChange(parseCurrencyInput(event.target.value))} className="w-full bg-transparent px-2 py-1 text-sm text-white outline-none" />
+      <input
+        inputMode="numeric"
+        value={toCurrencyDisplay(value)}
+        onChange={(event) => onChange(parseCurrencyInput(event.target.value))}
+        className="deal-desk-inp-inner"
+      />
     </div>
   );
 }
@@ -763,7 +1996,7 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
         inputMode="decimal"
         value={Number.isFinite(value) ? value : 0}
         onChange={(event) => onChange(Number(event.target.value || "0"))}
-        className="w-full rounded border border-brand-dark bg-[#121212] px-2 py-2 text-sm text-white outline-none focus:border-brand-orange"
+        className="deal-desk-inp"
       />
     </label>
   );
@@ -773,7 +2006,15 @@ function RangeInput({ label, min, max, step, value, onChange }: { label: string;
   return (
     <label className="block">
       <p className="mb-1 text-sm text-brand-muted">{label}</p>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} className="w-full accent-brand-orange" />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="deal-desk-range w-full"
+      />
     </label>
   );
 }

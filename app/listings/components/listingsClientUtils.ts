@@ -12,6 +12,15 @@ export const CATEGORIES = [
 
 export const TOP_MENU_MIN_COUNT = 10
 
+/** Toggle a lowercase facet token in a sorted unique list (URL `engineLife`, `avionics`, `dealPattern`). */
+export function toggleFacetToken(tokens: readonly string[], token: string): string[] {
+  const k = token.toLowerCase()
+  const next = new Set(tokens.map((t) => t.toLowerCase()))
+  if (next.has(k)) next.delete(k)
+  else next.add(k)
+  return Array.from(next).sort()
+}
+
 export type CategoryValue = (typeof CATEGORIES)[number]['value'] | 'turboprop'
 
 export type ListingSourceKey =

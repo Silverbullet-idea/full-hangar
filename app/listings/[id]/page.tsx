@@ -1,9 +1,12 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { cache, type ReactNode } from "react"
-import LeftDetailColumn from "./components/LeftDetailColumn"
+import ListingDetailBodySections, { type LlpRow } from "./components/ListingDetailBodySections"
+import ListingDetailSidebarSections from "./components/ListingDetailSidebarSections"
+import ListingIdentityBar from "./components/ListingIdentityBar"
+import ListingImageGallery from "./components/ListingImageGallery"
+import ListingScoreHeroCards from "./components/ListingScoreHeroCards"
 import RightDetailColumn from "./components/RightDetailColumn"
-import DealDeskCard from "../../components/DealDeskCard"
 import {
   buildListingFallbackImagePath,
   buildPriceHistoryChart,
@@ -307,8 +310,10 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const scoreExplanation = collectTextList(raw, "score_explanation")
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
-  const detailDealTier = pickText(raw, ["deal_tier"]) || listingRow.deal_tier
   const resolvedAskingPrice = resolveAskingPrice(listingRow, raw)
+  const detailDealTierRaw = pickText(raw, ["deal_tier"]) || listingRow.deal_tier
+  const hasDisclosedListPrice = typeof resolvedAskingPrice === "number" && resolvedAskingPrice > 0
+  const displayDealTier = hasDisclosedListPrice ? detailDealTierRaw : null
   const fractionalPricingContext = descriptionIntelligence.pricingContext
   const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
   const fractionalPricingNote = buildFractionalPricingNote(fractionalBreakdown)
@@ -526,6 +531,144 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     ["Mode S (Oct / Hex)", safeDisplay([faaModeSBase8, faaModeSBase16].filter(Boolean).join(" / "))],
     ["Accident History", accidentHistoryValue],
   ]
+  const pillarNotes = buildPillarNotes(scoreExplanation)
+  const evPctRaw = pickNumber(raw, ["ev_pct_life_remaining"])
+  let engineLifePct = normalizeEngineLifePercent(evPctRaw)
+  if (
+    engineLifePct === null &&
+    typeof engineHoursSmoh === "number" &&
+    typeof engineTboHours === "number" &&
+    engineTboHours > 0
+  ) {
+    engineLifePct = Math.max(0, Math.min(100, (1 - engineHoursSmoh / engineTboHours) * 100))
+  }
+  const engineQuickValue =
+    typeof engineHoursSmoh === "number"
+      ? `${Math.round(engineHoursSmoh).toLocaleString("en-US")} SMOH${
+          engineLifePct !== null ? ` · ${Math.round(engineLifePct)}% life` : ""
+        }`
+      : "—"
+  const engineQuickTone: "default" | "good" | "warn" =
+    typeof engineHoursSmoh === "number" && engineLifePct !== null && engineLifePct < 22.5
+      ? "warn"
+      : typeof engineHoursSmoh === "number" && engineLifePct !== null && engineLifePct >= 50
+        ? "good"
+        : "default"
+  const intelligenceVersion = pickText(raw, ["intelligence_version"]) || listingRow.intelligence_version || null
+  const vsMedianPrice = listingRow.vs_median_price ?? pickNumber(raw, ["vs_median_price"])
+  const percentileLabel =
+    typeof vsMedianPrice === "number" && Number.isFinite(vsMedianPrice) && vsMedianPrice !== 0
+      ? `${vsMedianPrice < 0 ? "Below" : "Above"} active comp median by ${formatMoney(Math.abs(vsMedianPrice))}`
+      : null
+  const marketMedianLabel =
+    marketPricing && typeof marketPricing.median === "number"
+      ? `Similar listings median ${formatMoney(marketPricing.median)} (n=${marketPricing.sampleSize})`
+      : typeof compMedianPrice === "number"
+        ? `Comp set median ${formatMoney(compMedianPrice)}`
+        : null
+  const heroImageUrls = [
+    ...new Set(
+      [String(primaryImageUrl || "").trim(), ...galleryUrls.map((value) => String(value || "").trim())].filter(Boolean)
+    ),
+  ]
+  const sourceMetaLine = [listingRow.source, listingRow.source_id ? `#${listingRow.source_id}` : null]
+    .filter(Boolean)
+    .join(" · ")
+  const identityQuickStats = [
+    {
+      label: "TTAF",
+      value: typeof totalTimeHours === "number" ? `${Math.round(totalTimeHours).toLocaleString("en-US")} h` : "—",
+    },
+    { label: "Engine", value: engineQuickValue, tone: engineQuickTone },
+    {
+      label: "DOM",
+      value: typeof listingRow.days_on_market === "number" ? `${Math.round(listingRow.days_on_market).toLocaleString("en-US")} d` : "—",
+    },
+    { label: "Annual", value: parsedLastAnnual ? String(parsedLastAnnual) : "—" },
+  ]
+
+  const lastAnnualForLlp = parsedLastAnnual ? String(parsedLastAnnual) : null
+  const llpRows = buildListingLlpRows({
+    lastAnnualText: lastAnnualForLlp,
+    make: listingRow.make,
+    model: listingRow.model,
+  })
+  const annualAirframe = annualStatusDisplay(lastAnnualForLlp)
+  const makeModelLine = [listingRow.make, listingRow.model].filter(Boolean).join(" ").trim() || "—"
+  const registrationAirframeNode = registrationAlert ? (
+    <span className="text-red-400">
+      {safeDisplay(listingRow.n_number || nNumber)} — {registrationAlert}
+    </span>
+  ) : (
+    safeDisplay(listingRow.n_number || nNumber)
+  )
+  const airframeSpecRows: Array<[string, ReactNode]> = [
+    ["Year", safeDisplay(listingRow.year)],
+    ["Make & Model", makeModelLine],
+    ["Serial Number", safeDisplay(serialNumberText)],
+    ["Registration", registrationAirframeNode],
+    ["Total Time (TTAF)", safeDisplay(formatHours(totalTimeHours))],
+    ["FAA Registered Owner", safeDisplay(faaRegisteredOwnerName || faaOwner)],
+    ["FAA Cert Issued", safeDisplay(formatIsoDate(faaCertIssueDateDetail || faaCertDate))],
+    ["Aircraft / Engine Type", safeDisplay(normalizedEngineType || engineModelText || "—")],
+    [
+      "Annual Status",
+      <span key="annual-airframe" className={annualAirframe.ok ? "text-[#22c55e]" : "text-amber-500"}>
+        {annualAirframe.label}
+      </span>,
+    ],
+  ]
+  const faaModelCode =
+    pickText(raw, ["faa_aircraft_mfr_mdl_code", "faa_mfr_mdl_code", "mfr_mdl_code", "faa_model_code"]) || null
+  const faaCompactRows: Array<[string, ReactNode]> = [
+    ["N-Number", safeDisplay(nNumber)],
+    ["FAA Status", safeDisplay(faaStatusCodeDetail || faaStatus)],
+    ["Year Manufactured", safeDisplay(listingRow.year)],
+    ["Cert Issued", safeDisplay(formatIsoDate(faaCertIssueDateDetail || faaCertDate))],
+    ["Registered Owner", safeDisplay(faaRegisteredOwnerName || faaOwner)],
+    ["FAA Engine Type", safeDisplay(faaTypeEngine || engineModelText)],
+    ["MFR Model Code", safeDisplay(faaModelCode)],
+  ]
+  const faaFullTable = (
+    <table className="detail-table">
+      <tbody>
+        {faaRows.map(([label, value]) => (
+          <tr key={label}>
+            <th scope="row">{label}</th>
+            <td>{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+  const faaSidebarVerified = Boolean(faaMatched && !registrationAlert && hasFaaSnapshot)
+  const medianCompForBody =
+    typeof compMedianPrice === "number" && compMedianPrice > 0
+      ? compMedianPrice
+      : marketPricing && typeof marketPricing.median === "number"
+        ? marketPricing.median
+        : null
+  const compUniverseCountBody = Math.max(
+    0,
+    Math.round(
+      typeof compUniverseSize === "number" && compUniverseSize > 0
+        ? compUniverseSize
+        : typeof compExactCount === "number" && compExactCount > 0
+          ? compExactCount
+          : marketPricing?.sampleSize ?? 0
+    )
+  )
+  const compSampleLabelBody =
+    marketPricing && typeof marketPricing.sampleSize === "number"
+      ? `Similar listings (n=${marketPricing.sampleSize})`
+      : typeof compUniverseSize === "number" && compUniverseSize > 0
+        ? `Comp universe ~${Math.round(compUniverseSize)}`
+        : "From comparable set"
+  const parserVersionFootnote =
+    pickText(raw, ["description_parser_version", "parser_version", "avionics_parser_version"]) || null
+  const lastUpdatedFootnote = formatIsoDate(listingRow.last_seen_date)
+  const sourceFootnoteLabel = listingRow.source || "Multiple sources"
+
   const canonicalUrl = toAbsoluteUrl(`/listings/${id}`)
   const listingDisplayName = titleText || "Aircraft Listing"
   const detailJsonLd = {
@@ -581,110 +724,181 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         <Link href={backToListingsHref}>← Back to listings</Link>
       </p>
 
-      <h1 className="listing-title">
-        {titleText}
-      </h1>
-      {fractionalBreakdown.isFractional ? (
-        <div className="fractional-chip-row">
-          <span className="fractional-chip">Fractional Ownership</span>
-          {fractionalBreakdown.shareLabel ? <span className="fractional-chip-detail">{fractionalBreakdown.shareLabel}</span> : null}
+      <div className="fh-detail-shell mx-auto max-w-[1280px] px-4 pb-2 sm:px-5 lg:grid lg:grid-cols-[1fr_380px] lg:gap-6 lg:px-6">
+        <div className="mb-6 min-w-0 overflow-hidden rounded-xl border border-[var(--brand-dark)] shadow-sm lg:mb-0 [data-theme=light]:border-slate-200">
+          <ListingImageGallery
+            title={listingRow.title || "Aircraft listing"}
+            imageUrls={heroImageUrls}
+            dealTier={displayDealTier}
+            priceUndisclosed={!hasDisclosedListPrice}
+            fallbackImageUrl={fallbackImageUrl}
+            layoutVariant="detailHero"
+          />
+          <ListingIdentityBar
+            title={titleText}
+            nNumber={nNumber}
+            location={listingRow.location_label || null}
+            metaLine={sourceMetaLine || null}
+            fractionalRow={
+              fractionalBreakdown.isFractional ? (
+                <div className="fractional-chip-row mb-1">
+                  <span className="fractional-chip">Fractional Ownership</span>
+                  {fractionalBreakdown.shareLabel ? (
+                    <span className="fractional-chip-detail">{fractionalBreakdown.shareLabel}</span>
+                  ) : null}
+                </div>
+              ) : null
+            }
+            stats={identityQuickStats}
+          />
         </div>
-      ) : null}
-      {fractionalPricingNote ? <p className="fractional-pricing-note">{fractionalPricingNote}</p> : null}
 
-      <div className="detail-grid">
-        <div className="detail-grid-left order-2 min-w-0 md:order-1">
-        <LeftDetailColumn
-          primaryImageUrl={primaryImageUrl}
-          galleryUrls={galleryUrls}
-          fallbackImageUrl={fallbackImageUrl}
-          title={listingRow.title || "Aircraft listing"}
-          aircraftRows={aircraftRows}
-          engineRows={engineRows}
-          descriptionText={descriptionText}
-          sourceUrl={sourceUrl}
-          sourceLinkLabel={sourceLinkLabel}
-          logbookUrls={logbookUrls}
-          dealTier={detailDealTier}
-          engineValuePanel={{
-            remainingValue: engineRemainingValue,
-            overrunLiability: engineOverrunLiabilityAmount > 0 ? engineOverrunLiabilityAmount : null,
-            reservePerHour: engineReservePerHour,
-            hoursSmoh: engineHoursSmoh,
-            tboHours: typeof engineTboHours === "number" ? engineTboHours : null,
-            replacementCost: engineReplacementCost,
-            dataQuality: engineDataQuality,
-            explanation: engineValueExplanation,
-            tboReferenceLine: engineTboReferenceLine,
-            showCalendarWarning: showEngineCalendarWarning,
-          }}
-        />
+        <div className="mb-6 min-w-0 lg:mb-0">
+          <ListingScoreHeroCards
+            dealTier={displayDealTier}
+            primaryScore={hasDisclosedListPrice ? scoreBreakdown.primaryScore : null}
+            primaryLabel={scoreBreakdown.primaryLabel}
+            scoreColor={scoreColor}
+            formatScore={formatScore}
+            safeDisplay={safeDisplay}
+            intelligenceVersion={intelligenceVersion}
+            percentileLabel={percentileLabel}
+            askingPrice={resolvedAskingPrice}
+            formatMoney={formatMoney}
+            priceReduced={listingRow.price_reduced === true}
+            priceReductionAmount={listingRow.price_reduction_amount ?? null}
+            daysOnMarket={listingRow.days_on_market ?? null}
+            marketMedianLabel={marketMedianLabel}
+            trueCostEstimate={trueCostEstimate}
+            deferredMaintenanceTotal={deferredMaintenanceTotal}
+            marketScore={scoreBreakdown.marketScore}
+            conditionScore={scoreBreakdown.conditionScore}
+            executionScore={scoreBreakdown.executionScore}
+            pillarNotes={pillarNotes}
+          />
         </div>
-        <div className="detail-grid-right order-1 min-w-0 md:order-2">
-        <RightDetailColumn
-          listingId={id}
-          askingPrice={resolvedAskingPrice}
-          marketPricing={marketPricing}
-          formatMoney={formatMoney}
-          scoreColor={scoreColor}
-          primaryScore={scoreBreakdown.primaryScore}
-          primaryLabel={scoreBreakdown.primaryLabel}
-          formatScore={formatScore}
-          scoreMethodSummary={scoreMethodSummary}
-          confidenceSignals={confidenceSignals}
-          effectiveDataConfidence={effectiveDataConfidence}
-          marketScore={scoreBreakdown.marketScore}
-          conditionScore={scoreBreakdown.conditionScore}
-          executionScore={scoreBreakdown.executionScore}
-          compExactCount={compExactCount}
-          compFamilyCount={compFamilyCount}
-          compMakeCount={compMakeCount}
-          riskBadgeClass={getRiskClass(listingRow.risk_level)}
-          riskLabel={listingRow.risk_level || "UNKNOWN"}
-          scoreInputRows={scoreInputRows}
-          pricingConfidence={pricingConfidence}
-          compSelectionTier={compSelectionTier}
-          formatCompTier={formatCompTier}
-          scoreExplanation={scoreExplanation}
-          renderScoreExplanationItem={renderScoreExplanationItem}
-          showAvionicsPanel={avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number"}
-          installedAvionicsValue={installedAvionicsValue}
-          avionicsScore={listingRow.avionics_score}
-          stcPremiumTotal={stcPremiumTotal}
-          panelTypeLabel={hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}
-          avionicsMatchedItems={avionicsMatchedItems}
-          detectedStcs={detectedStcs}
-          toTitleCase={toTitleCase}
-          isSteamGauge={isSteamGauge}
-          priceHistory={priceHistory}
-          priceHistoryStats={priceHistoryStats}
-          priceHistoryChart={priceHistoryChart}
-          formatIsoDate={formatIsoDate}
-          safeDisplay={safeDisplay}
-          showFaaSnapshot={nNumber !== "—" || hasFaaSnapshot || Boolean(registrationAlert)}
-          verificationFlags={verificationFlags}
-          faaRows={faaRows}
-          faaLookupUrl={faaLookupUrl}
-        />
+
+        <div className="detail-grid-left min-w-0 lg:col-start-1">
+          <ListingDetailBodySections
+            listingId={id}
+            faaMatched={faaMatched}
+            airframeRows={airframeSpecRows}
+            engineLifePercent={engineLifePct}
+            engineModelText={engineModelText || "—"}
+            engineValuePanel={{
+              remainingValue: engineRemainingValue,
+              overrunLiability: engineOverrunLiabilityAmount > 0 ? engineOverrunLiabilityAmount : null,
+              reservePerHour: engineReservePerHour,
+              hoursSmoh: engineHoursSmoh,
+              tboHours: typeof engineTboHours === "number" ? engineTboHours : null,
+              replacementCost: engineReplacementCost,
+              dataQuality: engineDataQuality,
+              explanation: engineValueExplanation,
+              tboReferenceLine: engineTboReferenceLine,
+              showCalendarWarning: showEngineCalendarWarning,
+            }}
+            formatMoney={formatMoney}
+            formatHours={formatHours}
+            avionicsScore={listingRow.avionics_score}
+            installedAvionicsValue={installedAvionicsValue}
+            avionicsMatchedItems={avionicsMatchedItems}
+            detectedStcs={detectedStcs}
+            panelTypeLabel={hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}
+            isSteamGauge={isSteamGauge}
+            toTitleCase={toTitleCase}
+            llpRows={llpRows}
+            deferredMaintenanceTotal={deferredMaintenanceTotal}
+            askingPrice={resolvedAskingPrice}
+            medianCompPrice={medianCompForBody}
+            compSampleLabel={compSampleLabelBody}
+            compUniverseCount={compUniverseCountBody}
+            descriptionText={descriptionText}
+            sourceUrl={sourceUrl}
+            sourceLinkLabel={sourceLinkLabel}
+            logbookUrls={logbookUrls}
+          />
+        </div>
+        <div className="detail-grid-right flex min-w-0 flex-col gap-4 lg:col-start-2">
+          <ListingDetailSidebarSections
+            dealDeskHref={`/internal/deal-desk/${id}`}
+            aircraftLabel={dealDeskAircraftLabel}
+            faaVerified={faaSidebarVerified}
+            faaCompactRows={faaCompactRows}
+            faaLookupUrl={faaLookupUrl}
+            verificationFlags={verificationFlags}
+            faaFullTable={faaFullTable}
+            sellerBadge={faaDealer && String(faaDealer).trim() ? "Dealer listing" : "Private / broker"}
+            sellerHeadline={
+              [listingRow.source, listingRow.source_id ? `#${listingRow.source_id}` : null].filter(Boolean).join(" ") ||
+              "Listing source"
+            }
+            sellerLocation={listingRow.location_label}
+            sourceUrl={sourceUrl}
+            sourceLinkLabel={sourceLinkLabel}
+            scoreExplanation={scoreExplanation}
+            renderScoreExplanationItem={renderScoreExplanationItem}
+            footnote={{
+              sourceLabel: sourceFootnoteLabel,
+              intelligenceVersion,
+              parserVersion: parserVersionFootnote,
+              lastUpdated: lastUpdatedFootnote,
+            }}
+          />
+          <RightDetailColumn
+            listingId={id}
+            askingPrice={resolvedAskingPrice}
+            marketPricing={marketPricing}
+            formatMoney={formatMoney}
+            scoreColor={scoreColor}
+            primaryScore={scoreBreakdown.primaryScore}
+            primaryLabel={scoreBreakdown.primaryLabel}
+            formatScore={formatScore}
+            scoreMethodSummary={scoreMethodSummary}
+            confidenceSignals={confidenceSignals}
+            effectiveDataConfidence={effectiveDataConfidence}
+            marketScore={scoreBreakdown.marketScore}
+            conditionScore={scoreBreakdown.conditionScore}
+            executionScore={scoreBreakdown.executionScore}
+            compExactCount={compExactCount}
+            compFamilyCount={compFamilyCount}
+            compMakeCount={compMakeCount}
+            riskBadgeClass={getRiskClass(listingRow.risk_level)}
+            riskLabel={listingRow.risk_level || "UNKNOWN"}
+            scoreInputRows={scoreInputRows}
+            pricingConfidence={pricingConfidence}
+            compSelectionTier={compSelectionTier}
+            formatCompTier={formatCompTier}
+            scoreExplanation={scoreExplanation}
+            renderScoreExplanationItem={renderScoreExplanationItem}
+            showAvionicsPanel={avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number"}
+            installedAvionicsValue={installedAvionicsValue}
+            avionicsScore={listingRow.avionics_score}
+            stcPremiumTotal={stcPremiumTotal}
+            panelTypeLabel={hasGlassCockpit ? "Glass" : isSteamGauge ? "Steam" : "Mixed / Unknown"}
+            avionicsMatchedItems={avionicsMatchedItems}
+            detectedStcs={detectedStcs}
+            toTitleCase={toTitleCase}
+            isSteamGauge={isSteamGauge}
+            priceHistory={priceHistory}
+            priceHistoryStats={priceHistoryStats}
+            priceHistoryChart={priceHistoryChart}
+            formatIsoDate={formatIsoDate}
+            safeDisplay={safeDisplay}
+            showFaaSnapshot={nNumber !== "—" || hasFaaSnapshot || Boolean(registrationAlert)}
+            verificationFlags={verificationFlags}
+            faaRows={faaRows}
+            faaLookupUrl={faaLookupUrl}
+            hideAskingPriceInComps
+            suppressDuplicateHeroScores
+            phase3SecondaryColumn
+          />
         </div>
       </div>
-      <div style={{ marginTop: "1rem" }}>
-        <DealDeskCard
-          listingId={id}
-          askingPrice={resolvedAskingPrice ?? 0}
-          deferredMaintenance={deferredMaintenanceTotal}
-          aircraftLabel={dealDeskAircraftLabel}
-          sourceUrl={sourceUrl ?? ""}
-        />
-      </div>
+      {fractionalPricingNote ? (
+        <p className="fractional-pricing-note mx-auto max-w-[1280px] px-4 sm:px-5 lg:px-6">{fractionalPricingNote}</p>
+      ) : null}
 
       <style>{`
-        .listing-title {
-          margin: 0 0 1.25rem;
-          font-size: clamp(2rem, 4vw, 3rem);
-          line-height: 1.1;
-          white-space: nowrap;
-        }
         .fractional-pricing-note {
           margin: -8px 0 14px;
           color: #f5d284;
@@ -694,7 +908,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           display: flex;
           align-items: center;
           gap: 8px;
-          margin: -4px 0 10px;
+          flex-wrap: wrap;
         }
         .fractional-chip {
           display: inline-flex;
@@ -711,12 +925,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         .fractional-chip-detail {
           color: #d1d5db;
           font-size: 12px;
-        }
-        .detail-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 1rem;
-          align-items: start;
         }
         .panel,
         .table-card {
@@ -990,12 +1198,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           gap: 0.2rem;
         }
         @media (max-width: 980px) {
-          .listing-title {
-            white-space: normal;
-          }
-          .detail-grid {
-            grid-template-columns: 1fr;
-          }
           .price-history-metrics {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
@@ -1110,6 +1312,71 @@ function calculateTrueCost(
     return trueCost + engineOverrunLiability
   }
   return askingPrice + deferredTotal
+}
+
+function normalizeEngineLifePercent(raw: number | null): number | null {
+  if (raw === null || !Number.isFinite(raw)) return null
+  if (raw >= 0 && raw <= 1) return raw * 100
+  if (raw > 1 && raw <= 100) return raw
+  return null
+}
+
+function resolveAnnualInspectionStatus(lastAnnualText: string | null): LlpRow["status"] {
+  const t = lastAnnualText?.trim()
+  if (!t) return "NOT_DISCLOSED"
+  const d = Date.parse(t)
+  if (!Number.isNaN(d)) {
+    const months = (Date.now() - d) / (1000 * 60 * 60 * 24 * 30.44)
+    return months <= 12 ? "OK" : "CHECK_DATE"
+  }
+  const y = new Date().getFullYear()
+  const m = t.match(/20\d{2}/)
+  if (m) {
+    const yr = Number.parseInt(m[0], 10)
+    return y - yr <= 1 ? "OK" : "CHECK_DATE"
+  }
+  return "CHECK_DATE"
+}
+
+function buildListingLlpRows(args: { lastAnnualText: string | null; make: string | null; model: string | null }): LlpRow[] {
+  const annualStatus = resolveAnnualInspectionStatus(args.lastAnnualText)
+  const rows: LlpRow[] = [
+    { name: "Annual Inspection", status: annualStatus },
+    { name: "Altimeter / Pitot-Static", status: "NOT_DISCLOSED" },
+    { name: "Transponder / Encoder", status: "NOT_DISCLOSED" },
+    { name: "ELT Battery", status: "NOT_DISCLOSED" },
+    { name: "Seatbelts / 91.413", status: "NOT_DISCLOSED" },
+  ]
+  if (/cirrus/i.test(`${args.make ?? ""} ${args.model ?? ""}`)) {
+    rows.push({ name: "Cirrus CAPS (if equipped)", status: "NOT_DISCLOSED" })
+  }
+  return rows
+}
+
+function annualStatusDisplay(lastAnnualText: string | null): { label: string; ok: boolean } {
+  const st = resolveAnnualInspectionStatus(lastAnnualText)
+  if (st === "OK") return { label: "Current (≤12 mo)", ok: true }
+  if (st === "CHECK_DATE") return { label: "Check logbooks", ok: false }
+  return { label: "Not disclosed", ok: false }
+}
+
+function buildPillarNotes(explanations: string[]): {
+  market: string | null
+  condition: string | null
+  execution: string | null
+} {
+  const clip = (s: string) => (s.length > 140 ? `${s.slice(0, 137)}…` : s)
+  let market: string | null = null
+  let condition: string | null = null
+  let execution: string | null = null
+  for (const line of explanations) {
+    const l = line.toLowerCase()
+    if (!market && /market|comp|median|pricing|mispric|value vs|ask|deal/.test(l)) market = clip(line)
+    else if (!condition && /condition|airframe|maintenance|engine|annual|logbook|smoh|tbo/.test(l)) condition = clip(line)
+    else if (!execution && /execution|days on market|dom|price drop|reduced|seller|motivation|market time/.test(l))
+      execution = clip(line)
+  }
+  return { market, condition, execution }
 }
 
 function resolveAskingPrice(listing: AircraftListing, raw: UnknownRow): number | null {

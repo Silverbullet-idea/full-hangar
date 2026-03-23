@@ -1,9 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import GeoIntelMap from "@/app/components/GeoIntelMap";
+
+const GeoIntelMap = dynamic(() => import("@/app/components/GeoIntelMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex min-h-[320px] w-full items-center justify-center rounded border border-brand-dark bg-[#111] text-sm text-brand-muted"
+      aria-busy="true"
+      aria-label="Loading geographic intelligence map"
+    >
+      Loading map…
+    </div>
+  ),
+});
 
 type SummaryResponse = {
   market_pulse: {

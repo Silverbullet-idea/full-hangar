@@ -53,6 +53,19 @@ export type ListingsPageQuery = {
   minAvionicsScore?: number;
   minQualityScore?: number;
   minMarketValueScore?: number;
+  /**
+   * Comma-separated engine life bands (public_listings, OR). Tokens: snew, high, mid, low, neartbo, fresh (alias snew).
+   * When non-empty, overrides `engineTime` for `public_listings` queries.
+   */
+  engineLife?: string;
+  /**
+   * Comma-separated avionics facets (public_listings, AND). Tokens: glass, gtn, adsb, autopilot, steam.
+   */
+  avionics?: string;
+  /**
+   * Comma-separated deal pattern flags (public_listings, OR). Tokens: deferred, steam, geo, reduced, longdom.
+   */
+  dealPattern?: string;
 };
 
 function isTransientSupabaseUpstreamFailure(rawMessage: unknown): boolean {
@@ -479,7 +492,10 @@ export function isDefaultListingsLandingQuery(query: ListingsPageQuery): boolean
     Number(query.minEngineScore ?? 0) <= 0 &&
     Number(query.minAvionicsScore ?? 0) <= 0 &&
     Number(query.minQualityScore ?? 0) <= 0 &&
-    Number(query.minMarketValueScore ?? 0) <= 0
+    Number(query.minMarketValueScore ?? 0) <= 0 &&
+    !parseCommaSepTokens(String(query.engineLife ?? "")).length &&
+    !parseCommaSepTokens(String(query.avionics ?? "")).length &&
+    !parseCommaSepTokens(String(query.dealPattern ?? "")).length
   );
 }
 
@@ -598,7 +614,10 @@ function isSimpleSearchOnlyQuery(query: ListingsPageQuery): boolean {
     Number(query.minEngineScore ?? 0) <= 0 &&
     Number(query.minAvionicsScore ?? 0) <= 0 &&
     Number(query.minQualityScore ?? 0) <= 0 &&
-    Number(query.minMarketValueScore ?? 0) <= 0
+    Number(query.minMarketValueScore ?? 0) <= 0 &&
+    !parseCommaSepTokens(String(query.engineLife ?? "")).length &&
+    !parseCommaSepTokens(String(query.avionics ?? "")).length &&
+    !parseCommaSepTokens(String(query.dealPattern ?? "")).length
   );
 }
 
@@ -742,6 +761,75 @@ function applyEngineTimeFilter(query: any, value: string, table: string) {
   if (normalized === "approaching") return query.lt("ev_pct_life_remaining", 0.5);
   if (normalized === "hashours") return query.not("ev_hours_smoh", "is", null);
   return query;
+}
+
+function parseCommaSepTokens(raw: string): string[] {
+  return String(raw ?? "")
+    .split(/[,+]/)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** OR across selected life bands (public_listings). */
+function applyEngineLifeOrFilter(query: any, raw: string): any {
+  const tokens = new Set(parseCommaSepTokens(raw));
+  if (!tokens.size) return query;
+  const orParts: string[] = [];
+  if (tokens.has("snew") || tokens.has("fresh")) {
+    orParts.push("ev_pct_life_remaining.gte.0.92");
+  }
+  if (tokens.has("high")) {
+    orParts.push("ev_pct_life_remaining.gte.0.75");
+  }
+  if (tokens.has("mid")) {
+    orParts.push("and(ev_pct_life_remaining.gte.0.5,ev_pct_life_remaining.lt.0.75)");
+  }
+  if (tokens.has("low")) {
+    orParts.push("and(ev_pct_life_remaining.gte.0.25,ev_pct_life_remaining.lt.0.5)");
+  }
+  if (tokens.has("neartbo")) {
+    orParts.push("ev_pct_life_remaining.lt.0.25");
+    orParts.push("ev_hours_remaining.lt.0");
+  }
+  if (!orParts.length) return query;
+  return query.or(orParts.join(","));
+}
+
+/** AND across selected avionics signals (public_listings). */
+function applyAvionicsStackFilters(query: any, raw: string): any {
+  const tokens = new Set(parseCommaSepTokens(raw));
+  if (!tokens.size) return query;
+  let q = query;
+  if (tokens.has("glass")) q = q.eq("has_glass_cockpit", true);
+  if (tokens.has("steam")) q = q.eq("is_steam_gauge", true);
+  if (tokens.has("gtn")) {
+    q = q.or(
+      "description_full.ilike.%GTN%,description_full.ilike.%GNS 530%,description_full.ilike.%GNS530%,description_full.ilike.%GNS 430%"
+    );
+  }
+  if (tokens.has("adsb")) {
+    q = q.or("description_full.ilike.%ADS-B%,description_full.ilike.%ADSB%,description_full.ilike.%ADS B%");
+  }
+  if (tokens.has("autopilot")) {
+    q = q.or(
+      "description_full.ilike.%autopilot%,description_full.ilike.%S-TEC%,description_full.ilike.%STEC%,description_full.ilike.%KFC%,description_full.ilike.%Century%"
+    );
+  }
+  return q;
+}
+
+/** OR across selected deal-pattern flags (public_listings). */
+function applyDealPatternOrFilter(query: any, raw: string): any {
+  const tokens = new Set(parseCommaSepTokens(raw));
+  if (!tokens.size) return query;
+  const orParts: string[] = [];
+  if (tokens.has("deferred")) orParts.push("deferred_total.gte.15000");
+  if (tokens.has("steam")) orParts.push("is_steam_gauge.eq.true");
+  if (tokens.has("geo")) orParts.push("vs_median_price.lt.-2500");
+  if (tokens.has("reduced")) orParts.push("price_reduced.eq.true");
+  if (tokens.has("longdom")) orParts.push("days_on_market.gte.60");
+  if (!orParts.length) return query;
+  return query.or(orParts.join(","));
 }
 
 function applyHelicopterExclusion(query: any) {
@@ -967,6 +1055,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const totalTimeMax = Number(query.totalTimeMax ?? 0);
   const maintenanceBand = String(query.maintenanceBand ?? "any").trim().toLowerCase();
   const engineTime = String(query.engineTime ?? "any").trim().toLowerCase();
+  const engineLifeRaw = String(query.engineLife ?? "").trim();
+  const hasEngineLife = parseCommaSepTokens(engineLifeRaw).length > 0;
   const trueCostMin = Number(query.trueCostMin ?? 0);
   const trueCostMax = Number(query.trueCostMax ?? 0);
   const sortBy = String(query.sortBy ?? "value_desc");
@@ -1055,7 +1145,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   dbQuery = applyPositiveNumericRange(dbQuery, "year", yearMin, yearMax);
   dbQuery = applyPositiveNumericRange(dbQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
   dbQuery = applyMaintenanceBandFilter(dbQuery, maintenanceBand);
-  dbQuery = applyEngineTimeFilter(dbQuery, engineTime, listBaseTable);
+  if (listBaseTable === "public_listings" && hasEngineLife) {
+    dbQuery = applyEngineLifeOrFilter(dbQuery, engineLifeRaw);
+  } else {
+    dbQuery = applyEngineTimeFilter(dbQuery, engineTime, listBaseTable);
+  }
   dbQuery = applyPositiveNumericRange(dbQuery, "true_cost", trueCostMin, trueCostMax);
   dbQuery = applyCategoryFilter(dbQuery, category);
   if (listBaseTable === "public_listings") {
@@ -1069,6 +1163,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     if (minAvionicsScore > 0) dbQuery = dbQuery.gte("avionics_score", minAvionicsScore);
     if (minQualityScore > 0) dbQuery = dbQuery.gte("condition_score", minQualityScore);
     if (minMarketValueScore > 0) dbQuery = dbQuery.gte("market_opportunity_score", minMarketValueScore);
+    dbQuery = applyAvionicsStackFilters(dbQuery, String(query.avionics ?? ""));
+    dbQuery = applyDealPatternOrFilter(dbQuery, String(query.dealPattern ?? ""));
   }
 
   dbQuery = applyBrowseOrdering(dbQuery, sortBy, listBaseTable);
@@ -1099,7 +1195,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "year", yearMin, yearMax);
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
     fallbackQuery = applyMaintenanceBandFilter(fallbackQuery, maintenanceBand);
-    fallbackQuery = applyEngineTimeFilter(fallbackQuery, engineTime, listBaseTable);
+    if (listBaseTable === "public_listings" && hasEngineLife) {
+      fallbackQuery = applyEngineLifeOrFilter(fallbackQuery, engineLifeRaw);
+    } else {
+      fallbackQuery = applyEngineTimeFilter(fallbackQuery, engineTime, listBaseTable);
+    }
     fallbackQuery = applyPositiveNumericRange(fallbackQuery, "true_cost", trueCostMin, trueCostMax);
     fallbackQuery = applyCategoryFilter(fallbackQuery, category);
     if (listBaseTable === "public_listings") {
@@ -1115,6 +1215,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       if (minMarketValueScore > 0) {
         fallbackQuery = fallbackQuery.gte("market_opportunity_score", minMarketValueScore);
       }
+      fallbackQuery = applyAvionicsStackFilters(fallbackQuery, String(query.avionics ?? ""));
+      fallbackQuery = applyDealPatternOrFilter(fallbackQuery, String(query.dealPattern ?? ""));
     }
     fallbackQuery = applyBrowseOrdering(fallbackQuery, sortBy, listBaseTable);
     result = await fallbackQuery.range(from, to);
@@ -1155,10 +1257,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
         if (typeof parsedSearch.yearToken === "number") tableFallback = tableFallback.eq("year", parsedSearch.yearToken);
         if (parsedSearch.orClause) tableFallback = tableFallback.or(parsedSearch.orClause);
 
-        const tableResult = await tableFallback
-          .order("deal_rating", { ascending: false, nullsFirst: false })
-          .order("value_score", { ascending: false, nullsFirst: false })
-          .range(from, to);
+        tableFallback = applyBrowseOrdering(tableFallback, sortBy, "aircraft_listings");
+        const tableResult = await tableFallback.range(from, to);
 
         if (!tableResult.error) {
           const enrichedTableRows = await attachFractionalFields(
@@ -1208,7 +1308,11 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     countQuery = applyPositiveNumericRange(countQuery, "year", yearMin, yearMax);
     countQuery = applyPositiveNumericRange(countQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
     countQuery = applyMaintenanceBandFilter(countQuery, maintenanceBand);
-    countQuery = applyEngineTimeFilter(countQuery, engineTime, listBaseTable);
+    if (listBaseTable === "public_listings" && hasEngineLife) {
+      countQuery = applyEngineLifeOrFilter(countQuery, engineLifeRaw);
+    } else {
+      countQuery = applyEngineTimeFilter(countQuery, engineTime, listBaseTable);
+    }
     countQuery = applyPositiveNumericRange(countQuery, "true_cost", trueCostMin, trueCostMax);
     countQuery = applyCategoryFilter(countQuery, category);
     if (listBaseTable === "public_listings") {
@@ -1224,6 +1328,8 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
       if (minMarketValueScore > 0) {
         countQuery = countQuery.gte("market_opportunity_score", minMarketValueScore);
       }
+      countQuery = applyAvionicsStackFilters(countQuery, String(query.avionics ?? ""));
+      countQuery = applyDealPatternOrFilter(countQuery, String(query.dealPattern ?? ""));
     }
     const countResult = await countQuery;
     if (!countResult.error && typeof countResult.count === "number") {

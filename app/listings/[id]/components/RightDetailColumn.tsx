@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import CompsChartPanel from '../CompsChartPanel'
+import CompsChartPanel from '../CompsChartPanelLazy'
 
 type PriceHistoryPoint = {
   observedOn: string
@@ -62,78 +62,109 @@ type RightDetailColumnProps = {
   verificationFlags: VerificationFlag[]
   faaRows: Array<[string, ReactNode]>
   faaLookupUrl: string | null
+  /** Listing detail hero already shows ask + score ring; hide duplicates here. */
+  hideAskingPriceInComps?: boolean
+  suppressDuplicateHeroScores?: boolean
+  /** Phase 3B: comps/avionics/FAA live in left column + sidebar; keep score + price history only. */
+  phase3SecondaryColumn?: boolean
 }
 
 export default function RightDetailColumn(props: RightDetailColumnProps) {
+  const phase3 = props.phase3SecondaryColumn === true
   return (
     <div className="panel-stack flex flex-col">
-      <section className="table-card order-2 md:order-1">
-        <h3 className="section-title">Comp & Cost</h3>
-        {typeof props.askingPrice === 'number' && props.askingPrice > 0 ? (
-          <div style={{ marginBottom: '0.75rem' }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#22c55e', lineHeight: 1.1 }}>
-              {props.formatMoney(props.askingPrice)}
+      {!phase3 ? (
+        <section className="table-card order-2 md:order-1">
+          <h3 className="section-title">Comp & Cost</h3>
+          {!props.hideAskingPriceInComps ? (
+            typeof props.askingPrice === "number" && props.askingPrice > 0 ? (
+              <div style={{ marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#22c55e", lineHeight: 1.1 }}>
+                  {props.formatMoney(props.askingPrice)}
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginBottom: "0.75rem", color: "var(--brand-muted)", fontSize: "0.9rem" }}>Asking price not published.</div>
+            )
+          ) : null}
+          {props.marketPricing &&
+          typeof props.marketPricing.low === "number" &&
+          typeof props.marketPricing.high === "number" &&
+          typeof props.marketPricing.median === "number" ? (
+            <div style={{ marginBottom: "0.9rem" }}>
+              <div style={{ fontSize: "0.82rem", color: "var(--brand-muted)", marginBottom: "0.15rem" }}>Estimated Asking Range</div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, color: "#86efac" }}>
+                {`${props.formatMoney(props.marketPricing.low)} - ${props.formatMoney(props.marketPricing.high)}`}
+              </div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--brand-muted)", marginTop: "0.2rem" }}>
+                {`Median ${props.formatMoney(props.marketPricing.median)}`}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div style={{ marginBottom: '0.75rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
-            Asking price not published.
-          </div>
-        )}
-        {props.marketPricing &&
-        typeof props.marketPricing.low === 'number' &&
-        typeof props.marketPricing.high === 'number' &&
-        typeof props.marketPricing.median === 'number' ? (
-          <div style={{ marginBottom: '0.9rem' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--brand-muted)', marginBottom: '0.15rem' }}>Estimated Asking Range</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#86efac' }}>
-              {`${props.formatMoney(props.marketPricing.low)} - ${props.formatMoney(props.marketPricing.high)}`}
+          ) : (
+            <div style={{ marginBottom: "0.9rem", color: "var(--brand-muted)", fontSize: "0.86rem" }}>
+              No estimated market range available yet for this make/model.
             </div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--brand-muted)', marginTop: '0.2rem' }}>
-              {`Median ${props.formatMoney(props.marketPricing.median)}`}
-            </div>
+          )}
+          <div style={{ marginBottom: "0.55rem", fontSize: "0.9rem", fontWeight: 700, color: "#FF9900" }}>Comparable Market Intelligence</div>
+          <div className="w-full max-w-full overflow-x-hidden">
+            <CompsChartPanel listingId={props.listingId} hideChrome />
           </div>
-        ) : (
-          <div style={{ marginBottom: '0.9rem', color: 'var(--brand-muted)', fontSize: '0.86rem' }}>
-            No estimated market range available yet for this make/model.
-          </div>
-        )}
-        <div style={{ marginBottom: '0.55rem', fontSize: '0.9rem', fontWeight: 700, color: '#FF9900' }}>
-          Comparable Market Intelligence
-        </div>
-        <div className="w-full max-w-full overflow-x-hidden">
-          <CompsChartPanel listingId={props.listingId} hideChrome />
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="panel order-1 md:order-2">
+      <section className={`panel ${phase3 ? "order-1" : "order-1 md:order-2"}`}>
         <h3>Score Summary</h3>
-        <div className="score-badge" style={{ borderColor: props.scoreColor, boxShadow: `0 0 0 6px ${props.scoreColor}20 inset` }}>
-          <div className="score-readout">
-            <span className="score-value">{props.safeDisplay(props.formatScore(props.primaryScore))}</span>
-            <span className="score-max">/ 100</span>
-          </div>
-        </div>
-        <details className="score-notes" style={{ marginTop: '0.6rem' }}>
-          <summary>
-            {props.primaryLabel}
-          </summary>
-          <ul className="score-band-list" style={{ marginTop: '0.45rem' }}>
-            <li><strong>85-100</strong>: Strong buy candidate</li>
-            <li><strong>70-84</strong>: Good opportunity</li>
-            <li><strong>50-69</strong>: Mixed, inspect closely</li>
-            <li><strong>0-49</strong>: Weak edge / high risk</li>
-          </ul>
-          <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
-            {props.scoreMethodSummary
-              .split('\n')
-              .map((line) => line.trim())
-              .filter(Boolean)
-              .map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-          </ul>
-        </details>
+        {!props.suppressDuplicateHeroScores ? (
+          <>
+            <div
+              className="score-badge"
+              style={{ borderColor: props.scoreColor, boxShadow: `0 0 0 6px ${props.scoreColor}20 inset` }}
+              aria-label={
+                typeof props.primaryScore === "number" && Number.isFinite(props.primaryScore)
+                  ? `Deal score: ${Math.round(props.primaryScore)} out of 100`
+                  : "Deal score not available"
+              }
+            >
+              <div className="score-readout">
+                <span className="score-value">{props.safeDisplay(props.formatScore(props.primaryScore))}</span>
+                <span className="score-max">/ 100</span>
+              </div>
+            </div>
+            <details className="score-notes" style={{ marginTop: '0.6rem' }}>
+              <summary>
+                {props.primaryLabel}
+              </summary>
+              <ul className="score-band-list" style={{ marginTop: '0.45rem' }}>
+                <li><strong>85-100</strong>: Strong buy candidate</li>
+                <li><strong>70-84</strong>: Good opportunity</li>
+                <li><strong>50-69</strong>: Mixed, inspect closely</li>
+                <li><strong>0-49</strong>: Weak edge / high risk</li>
+              </ul>
+              <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
+                {props.scoreMethodSummary
+                  .split('\n')
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+              </ul>
+            </details>
+          </>
+        ) : (
+          <details className="score-notes" style={{ marginTop: '0.2rem' }}>
+            <summary>How scoring works</summary>
+            <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
+              {props.scoreMethodSummary
+                .split('\n')
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+            </ul>
+          </details>
+        )}
         <div className="score-notes">
           <div style={{ fontWeight: 600, color: 'var(--brand-white)' }}>
             Confidence breakdown{props.effectiveDataConfidence ? `: ${props.effectiveDataConfidence}` : ''}
@@ -150,20 +181,22 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </ul>
           )}
         </div>
-        <div
-          className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
-          style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}
-        >
-          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-            {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
+        {!props.suppressDuplicateHeroScores ? (
+          <div
+            className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
+            style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}
+          >
+            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
+              {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
+            </div>
+            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
+              {`Condition ${props.safeDisplay(props.formatScore(props.conditionScore))}`}
+            </div>
+            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
+              {`Execution ${props.safeDisplay(props.formatScore(props.executionScore))}`}
+            </div>
           </div>
-          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-            {`Condition ${props.safeDisplay(props.formatScore(props.conditionScore))}`}
-          </div>
-          <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-            {`Execution ${props.safeDisplay(props.formatScore(props.executionScore))}`}
-          </div>
-        </div>
+        ) : null}
         {(typeof props.compExactCount === 'number' || typeof props.compFamilyCount === 'number' || typeof props.compMakeCount === 'number') ? (
           <div style={{ marginTop: '0.55rem', fontSize: '0.78rem', color: 'var(--brand-muted)' }}>
             {`Comp universe - exact: ${props.safeDisplay(props.compExactCount)} | family: ${props.safeDisplay(props.compFamilyCount)} | make: ${props.safeDisplay(props.compMakeCount)}`}
@@ -210,7 +243,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
         ) : null}
       </section>
 
-      {props.showAvionicsPanel ? (
+      {!phase3 && props.showAvionicsPanel ? (
         <section className="table-card order-4 md:order-3">
           <h3 className="section-title">Avionics & Modifications</h3>
           <div className="price-history-metrics">
@@ -252,7 +285,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
       ) : null}
 
       {props.priceHistory.length > 0 ? (
-        <section className="table-card order-5 md:order-4">
+        <section className={`table-card ${phase3 ? "order-2" : "order-5 md:order-4"}`}>
           <h3 className="section-title">Price History</h3>
           <div className="price-history-metrics">
             <div><strong>{props.safeDisplay(props.formatMoney(props.priceHistoryStats.latestPrice))}</strong><div className="metric-label">Latest ask</div></div>
@@ -304,7 +337,7 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
         </section>
       ) : null}
 
-      {props.showFaaSnapshot ? (
+      {!phase3 && props.showFaaSnapshot ? (
         <section className="table-card order-3 md:order-5">
           <h3 className="section-title">FAA Snapshot & Verification</h3>
           {props.verificationFlags.length > 0 ? (

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { toggleFacetToken } from './listingsClientUtils'
 
 type ListingSourceKey =
   | 'trade-a-plane'
@@ -16,9 +17,86 @@ type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
+function SidebarSection({ title, badge, children }: { title: string; badge?: string; children: ReactNode }) {
+  return (
+    <div className="mb-2.5 border-b border-[var(--fh-border)] px-0 pb-2.5">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span
+          className="font-bold uppercase tracking-[1.5px] text-[var(--fh-text-muted)]"
+          style={{ fontFamily: 'var(--font-barlow-condensed), system-ui', fontSize: '10px' }}
+        >
+          {title}
+        </span>
+        {badge ? (
+          <span
+            className="rounded bg-[var(--fh-orange-dim)] px-1 py-px text-[9px] font-bold text-[var(--fh-orange)]"
+            style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function PillarMinRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (n: number) => void
+}) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span
+        className="w-[76px] shrink-0 text-[11px] text-[var(--fh-text-dim)]"
+        style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+      >
+        {label}
+      </span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="fh-checkbox-orange h-2 flex-1 accent-[var(--fh-orange)]"
+        aria-label={`${label} minimum score`}
+      />
+      <span
+        className="w-8 shrink-0 text-right font-mono text-[9px] text-[var(--fh-text-muted)]"
+        style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+      >
+        {value > 0 ? value : '—'}
+      </span>
+    </div>
+  )
+}
+
 type ListingsFiltersSidebarProps = {
   className?: string
   embedded?: boolean
+  /** Phase 2D — score pillar floors (0 = off) */
+  pillarMinEngine: number
+  setPillarMinEngine: (n: number) => void
+  pillarMinAvionics: number
+  setPillarMinAvionics: (n: number) => void
+  pillarMinQuality: number
+  setPillarMinQuality: (n: number) => void
+  pillarMinMkt: number
+  setPillarMinMkt: (n: number) => void
+  locationDraft: string
+  setLocationDraft: (s: string) => void
+  engineLifeTokens: string[]
+  setEngineLifeTokens: (next: string[] | ((prev: string[]) => string[])) => void
+  avionicsTokens: string[]
+  setAvionicsTokens: (next: string[] | ((prev: string[]) => string[])) => void
+  dealPatternTokens: string[]
+  setDealPatternTokens: (next: string[] | ((prev: string[]) => string[])) => void
   makeFilter: string
   setMakeFilter: (value: string) => void
   modelFilter: string
@@ -61,9 +139,49 @@ type ListingsFiltersSidebarProps = {
   riskTooltip: ReactNode
 }
 
+const ENGINE_LIFE_OPTS: Array<{ token: string; label: string }> = [
+  { token: 'snew', label: 'SNEW / very fresh' },
+  { token: 'high', label: '75%+ life' },
+  { token: 'mid', label: '50–75% life' },
+  { token: 'low', label: '25–50% life' },
+  { token: 'neartbo', label: 'Near / over TBO' },
+]
+
+const AVIONICS_OPTS: Array<{ token: string; label: string }> = [
+  { token: 'glass', label: 'Glass / G1000' },
+  { token: 'gtn', label: 'GTN 750/650 family' },
+  { token: 'adsb', label: 'ADS-B Out' },
+  { token: 'autopilot', label: 'Autopilot' },
+  { token: 'steam', label: 'Steam gauge only' },
+]
+
+const DEAL_PATTERN_OPTS: Array<{ token: string; label: string }> = [
+  { token: 'deferred', label: 'Deferred annual' },
+  { token: 'steam', label: 'Steam gauge discount' },
+  { token: 'geo', label: 'Geographic arbitrage' },
+  { token: 'reduced', label: 'Price reduced' },
+  { token: 'longdom', label: 'Long DOM (60+ d)' },
+]
+
 export default function ListingsFiltersSidebar({
   className = '',
   embedded = false,
+  pillarMinEngine,
+  setPillarMinEngine,
+  pillarMinAvionics,
+  setPillarMinAvionics,
+  pillarMinQuality,
+  setPillarMinQuality,
+  pillarMinMkt,
+  setPillarMinMkt,
+  locationDraft,
+  setLocationDraft,
+  engineLifeTokens,
+  setEngineLifeTokens,
+  avionicsTokens,
+  setAvionicsTokens,
+  dealPatternTokens,
+  setDealPatternTokens,
   makeFilter,
   setMakeFilter,
   modelFilter,
@@ -115,405 +233,414 @@ export default function ListingsFiltersSidebar({
     return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0
   }
 
+  const applyPricePreset = (lo: number, hi: number) => {
+    setMinPrice(lo)
+    setMaxPrice(hi)
+  }
+
   return (
     <aside
-      className={`h-fit rounded-lg border border-[#3A4454] bg-[#1A1A1A] p-4 ${embedded ? 'border-0 bg-transparent p-0' : ''} ${className}`.trim()}
+      className={`h-fit rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-3 ${embedded ? 'border-0 bg-transparent p-0' : ''} ${className}`.trim()}
     >
-      {!embedded ? <div className="mb-3 text-sm font-semibold text-white">Filters</div> : null}
-      <div className="flex flex-col gap-3">
-        <label className="text-xs text-brand-muted">
-          Make
-          <select
-            value={makeFilter}
-            onChange={(e) => {
-              setMakeFilter(e.target.value)
-              setModelFilter('')
-              setSubModelFilter('')
-            }}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All makes</option>
-            {makeOptions.map((make) => (
-              <option key={make} value={make}>
-                {make}
-              </option>
+      {!embedded ? (
+        <div className="mb-3 text-sm font-semibold text-[var(--fh-text)]" style={{ fontFamily: 'var(--font-barlow-condensed)' }}>
+          Filters
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-1">
+        <SidebarSection title="Score pillars" badge="MIN">
+          <PillarMinRow label="Engine" value={pillarMinEngine} onChange={setPillarMinEngine} />
+          <PillarMinRow label="Avionics" value={pillarMinAvionics} onChange={setPillarMinAvionics} />
+          <PillarMinRow label="Quality" value={pillarMinQuality} onChange={setPillarMinQuality} />
+          <PillarMinRow label="Mkt value" value={pillarMinMkt} onChange={setPillarMinMkt} />
+        </SidebarSection>
+
+        <SidebarSection title="Price">
+          <div className="mb-2 grid grid-cols-2 gap-2">
+            <label className="text-[10px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans), monospace' }}>
+              $
+              <input
+                type="text"
+                inputMode="numeric"
+                value={minPrice > 0 ? String(minPrice) : ''}
+                onChange={(e) => setMinPrice(parseNumberInput(e.target.value))}
+                placeholder="0"
+                className="mt-0.5 block w-full rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
+              />
+            </label>
+            <label className="text-[10px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans), monospace' }}>
+              $
+              <input
+                type="text"
+                inputMode="numeric"
+                value={maxPrice > 0 ? String(maxPrice) : ''}
+                onChange={(e) => setMaxPrice(parseNumberInput(e.target.value))}
+                placeholder="Any"
+                className="mt-0.5 block w-full rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                { label: 'Under $30K', lo: 0, hi: 30_000 },
+                { label: '$30–50K', lo: 30_000, hi: 50_000 },
+                { label: '$50–100K', lo: 50_000, hi: 100_000 },
+                { label: '$100K+', lo: 100_000, hi: 0 },
+              ] as const
+            ).map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => applyPricePreset(p.lo, p.hi)}
+                className="rounded-[10px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-0.5 text-[9px] font-semibold text-[var(--fh-text-dim)] hover:border-[var(--fh-orange)] hover:text-[var(--fh-orange)]"
+                style={{ fontFamily: 'var(--font-dm-sans)' }}
+              >
+                {p.label}
+              </button>
             ))}
-          </select>
-        </label>
-        <label className="text-xs text-brand-muted">
-          Model
-          <select
-            value={modelFilter}
-            onChange={(e) => {
-              setModelFilter(e.target.value)
-              setSubModelFilter('')
-            }}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="">{makeFilter === 'all' ? 'Any model family...' : 'Model family within selected make...'}</option>
-            {modelOptions.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
-        </label>
-        {modelFilter ? (
-          <label className="text-xs text-brand-muted">
-            Sub Model
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Year">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={yearMin > 0 ? String(yearMin) : ''}
+              onChange={(e) => setYearMin(parseNumberInput(e.target.value))}
+              placeholder="1960"
+              className="rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
+              style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={yearMax > 0 ? String(yearMax) : ''}
+              onChange={(e) => setYearMax(parseNumberInput(e.target.value))}
+              placeholder="2025"
+              className="rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
+              style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+            />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <select
-              value={subModelFilter}
-              onChange={(e) => setSubModelFilter(e.target.value)}
-              className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
+              value={yearMin}
+              onChange={(e) => setYearMin(Number(e.target.value))}
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-1 py-1 text-[10px] text-[var(--fh-text)]"
             >
-              <option value="">Any sub model...</option>
-              {subModelOptions.map((model) => (
+              {yearSteps.map((step) => (
+                <option key={`sy-${step}`} value={step}>
+                  {step === 0 ? 'Min preset' : String(step)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={yearMax}
+              onChange={(e) => setYearMax(Number(e.target.value))}
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-1 py-1 text-[10px] text-[var(--fh-text)]"
+            >
+              {yearSteps.map((step) => (
+                <option key={`ey-${step}`} value={step}>
+                  {step === 0 ? 'Max preset' : String(step)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Total time (hrs)">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={totalTimeMin > 0 ? String(totalTimeMin) : ''}
+              onChange={(e) => setTotalTimeMin(parseNumberInput(e.target.value))}
+              placeholder="0"
+              className="rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)]"
+              style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={totalTimeMax > 0 ? String(totalTimeMax) : ''}
+              onChange={(e) => setTotalTimeMax(parseNumberInput(e.target.value))}
+              placeholder="Any"
+              className="rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)]"
+              style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+            />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <select
+              value={totalTimeMin}
+              onChange={(e) => setTotalTimeMin(Number(e.target.value))}
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-1 py-1 text-[10px] text-[var(--fh-text)]"
+            >
+              {totalTimeSteps.map((step) => (
+                <option key={`ttmin-${step}`} value={step}>
+                  {step === 0 ? 'Min preset' : step.toLocaleString('en-US')}
+                </option>
+              ))}
+            </select>
+            <select
+              value={totalTimeMax}
+              onChange={(e) => setTotalTimeMax(Number(e.target.value))}
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-1 py-1 text-[10px] text-[var(--fh-text)]"
+            >
+              {totalTimeSteps.map((step) => (
+                <option key={`ttmax-${step}`} value={step}>
+                  {step === 0 ? 'Max preset' : step.toLocaleString('en-US')}
+                </option>
+              ))}
+            </select>
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Engine life">
+          <div className="space-y-1.5">
+            {ENGINE_LIFE_OPTS.map((o) => (
+              <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                <input
+                  type="checkbox"
+                  className="fh-checkbox-orange h-3 w-3 rounded border-[var(--fh-border)]"
+                  checked={engineLifeTokens.includes(o.token)}
+                  onChange={() => setEngineLifeTokens((prev) => toggleFacetToken(prev, o.token))}
+                />
+                {o.label}
+              </label>
+            ))}
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Avionics">
+          <div className="space-y-1.5">
+            {AVIONICS_OPTS.map((o) => (
+              <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                <input
+                  type="checkbox"
+                  className="fh-checkbox-orange h-3 w-3 rounded border-[var(--fh-border)]"
+                  checked={avionicsTokens.includes(o.token)}
+                  onChange={() => setAvionicsTokens((prev) => toggleFacetToken(prev, o.token))}
+                />
+                {o.label}
+              </label>
+            ))}
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Deal patterns">
+          <div className="space-y-1.5">
+            {DEAL_PATTERN_OPTS.map((o) => (
+              <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                <input
+                  type="checkbox"
+                  className="fh-checkbox-orange h-3 w-3 rounded border-[var(--fh-border)]"
+                  checked={dealPatternTokens.includes(o.token)}
+                  onChange={() => setDealPatternTokens((prev) => toggleFacetToken(prev, o.token))}
+                />
+                {o.label}
+              </label>
+            ))}
+          </div>
+        </SidebarSection>
+
+        <SidebarSection title="Location">
+          <input
+            type="text"
+            value={locationDraft}
+            onChange={(e) => setLocationDraft(e.target.value)}
+            placeholder="City, state, region…"
+            className="w-full rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
+            style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+          />
+        </SidebarSection>
+
+        <SidebarSection title="Aircraft & source">
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Make
+            <select
+              value={makeFilter}
+              onChange={(e) => {
+                setMakeFilter(e.target.value)
+                setModelFilter('')
+                setSubModelFilter('')
+              }}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All makes</option>
+              {makeOptions.map((make) => (
+                <option key={make} value={make}>
+                  {make}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Model
+            <select
+              value={modelFilter}
+              onChange={(e) => {
+                setModelFilter(e.target.value)
+                setSubModelFilter('')
+              }}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="">{makeFilter === 'all' ? 'Any model family…' : 'Model family…'}</option>
+              {modelOptions.map((model) => (
                 <option key={model} value={model}>
                   {model}
                 </option>
               ))}
             </select>
           </label>
-        ) : null}
-        <label className="text-xs text-brand-muted">
-          Source
-          <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as 'all' | ListingSourceKey)}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All sources</option>
-            <option value="controller">Controller</option>
-            <option value="trade-a-plane">Trade-A-Plane</option>
-            <option value="aerotrader">AeroTrader</option>
-            <option value="aircraftforsale">AircraftForSale</option>
-            <option value="aso">ASO</option>
-            <option value="globalair">GlobalAir</option>
-            <option value="barnstormers">Barnstormers</option>
-            <option value="controller_cdp">Controller CDP</option>
-          </select>
-        </label>
-        <label className="text-xs text-brand-muted">
-          Deal Type
-          <select
-            value={dealFilter}
-            onChange={(e) => setDealFilter(e.target.value as DealTierFilter)}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All Deals</option>
-            <option value="TOP_DEALS">Exceptional + Good</option>
-            <option value="EXCEPTIONAL_DEAL">Exceptional Deal</option>
-            <option value="GOOD_DEAL">Good Deal</option>
-            <option value="FAIR_MARKET">Fair Market</option>
-            <option value="ABOVE_MARKET">Above Market</option>
-            <option value="OVERPRICED">Overpriced</option>
-          </select>
-        </label>
-        <label className="text-xs text-brand-muted">
-          Price Status
-          <select
-            value={priceStatus}
-            onChange={(e) => setPriceStatus(e.target.value as PriceStatusFilter)}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All listings</option>
-            <option value="priced">Priced only</option>
-          </select>
-        </label>
-        <div className="rounded border border-[#2b3342] bg-[#121822] p-3">
-          <div className="mb-2 text-xs font-semibold text-[#d1d5db]">Price Range</div>
+          {modelFilter ? (
+            <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+              Sub model
+              <select
+                value={subModelFilter}
+                onChange={(e) => setSubModelFilter(e.target.value)}
+                className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+              >
+                <option value="">Any sub model…</option>
+                {subModelOptions.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Source
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value as 'all' | ListingSourceKey)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All sources</option>
+              <option value="controller">Controller</option>
+              <option value="trade-a-plane">Trade-A-Plane</option>
+              <option value="aerotrader">AeroTrader</option>
+              <option value="aircraftforsale">AircraftForSale</option>
+              <option value="aso">ASO</option>
+              <option value="globalair">GlobalAir</option>
+              <option value="barnstormers">Barnstormers</option>
+              <option value="controller_cdp">Controller CDP</option>
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Deal type
+            <select
+              value={dealFilter}
+              onChange={(e) => setDealFilter(e.target.value as DealTierFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All deals</option>
+              <option value="TOP_DEALS">Exceptional + good</option>
+              <option value="EXCEPTIONAL_DEAL">Exceptional</option>
+              <option value="GOOD_DEAL">Good</option>
+              <option value="FAIR_MARKET">Fair market</option>
+              <option value="ABOVE_MARKET">Above market</option>
+              <option value="OVERPRICED">Overpriced</option>
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Price status
+            <select
+              value={priceStatus}
+              onChange={(e) => setPriceStatus(e.target.value as PriceStatusFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All listings</option>
+              <option value="priced">Priced only</option>
+            </select>
+          </label>
+        </SidebarSection>
+
+        <SidebarSection title="Maintenance & risk">
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Maintenance burden
+            <select
+              value={maintenanceBand}
+              onChange={(e) => setMaintenanceBand(e.target.value as MaintenanceBandFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="any">Any</option>
+              <option value="light">Light (&lt;= $25k deferred)</option>
+              <option value="moderate">Moderate ($25k – $100k)</option>
+              <option value="heavy">Heavy ($100k – $250k)</option>
+              <option value="severe">Severe (&gt; $250k)</option>
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Legacy engine time (single)
+            <select
+              value={engineTime}
+              onChange={(e) => setEngineTime(e.target.value as EngineTimeFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="any">Any (use Engine life checkboxes above)</option>
+              <option value="fresh">Fresh (75%+)</option>
+              <option value="mid">Mid-life (50–75%)</option>
+              <option value="approaching">Approaching TBO</option>
+              <option value="hasHours">Has engine hours</option>
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Risk level
+            {riskTooltip}
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All</option>
+              <option value="low">Low</option>
+              <option value="moderate">Moderate</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </label>
+        </SidebarSection>
+
+        <SidebarSection title="True cost (exact)">
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Min
-              <select
-                value={minPrice}
-                onChange={(e) => setMinPrice(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {priceSteps.map((step) => (
-                  <option key={`min-price-${step}`} value={step}>
-                    {step === 0 ? 'Any' : `$${step.toLocaleString('en-US')}`}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Max
-              <select
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {priceSteps.map((step) => (
-                  <option key={`max-price-${step}`} value={step}>
-                    {step === 0 ? 'Any' : `$${step.toLocaleString('en-US')}`}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={trueCostMin > 0 ? String(trueCostMin) : ''}
+              onChange={(e) => setTrueCostMin(parseNumberInput(e.target.value))}
+              placeholder="Min"
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)]"
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={trueCostMax > 0 ? String(trueCostMax) : ''}
+              onChange={(e) => setTrueCostMax(parseNumberInput(e.target.value))}
+              placeholder="Max"
+              className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)]"
+            />
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Custom Min
-              <input
-                type="text"
-                inputMode="numeric"
-                value={minPrice > 0 ? String(minPrice) : ''}
-                onChange={(e) => setMinPrice(parseNumberInput(e.target.value))}
-                placeholder="e.g. 185000"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Custom Max
-              <input
-                type="text"
-                inputMode="numeric"
-                value={maxPrice > 0 ? String(maxPrice) : ''}
-                onChange={(e) => setMaxPrice(parseNumberInput(e.target.value))}
-                placeholder="e.g. 450000"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-          </div>
-        </div>
-        <div className="rounded border border-[#2b3342] bg-[#121822] p-3">
-          <div className="mb-2 text-xs font-semibold text-[#d1d5db]">Year Range</div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Min
-              <select
-                value={yearMin}
-                onChange={(e) => setYearMin(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {yearSteps.map((step) => (
-                  <option key={`min-year-${step}`} value={step}>
-                    {step === 0 ? 'Any' : String(step)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Max
-              <select
-                value={yearMax}
-                onChange={(e) => setYearMax(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {yearSteps.map((step) => (
-                  <option key={`max-year-${step}`} value={step}>
-                    {step === 0 ? 'Any' : String(step)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Custom Min
-              <input
-                type="text"
-                inputMode="numeric"
-                value={yearMin > 0 ? String(yearMin) : ''}
-                onChange={(e) => setYearMin(parseNumberInput(e.target.value))}
-                placeholder="e.g. 2008"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Custom Max
-              <input
-                type="text"
-                inputMode="numeric"
-                value={yearMax > 0 ? String(yearMax) : ''}
-                onChange={(e) => setYearMax(parseNumberInput(e.target.value))}
-                placeholder="e.g. 2022"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-          </div>
-        </div>
-        <div className="rounded border border-[#2b3342] bg-[#121822] p-3">
-          <div className="mb-2 text-xs font-semibold text-[#d1d5db]">Total Time Airframe (Hours)</div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Min
-              <select
-                value={totalTimeMin}
-                onChange={(e) => setTotalTimeMin(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {totalTimeSteps.map((step) => (
-                  <option key={`min-tt-${step}`} value={step}>
-                    {step === 0 ? 'Any' : step.toLocaleString('en-US')}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Max
-              <select
-                value={totalTimeMax}
-                onChange={(e) => setTotalTimeMax(Number(e.target.value))}
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-              >
-                {totalTimeSteps.map((step) => (
-                  <option key={`max-tt-${step}`} value={step}>
-                    {step === 0 ? 'Any' : step.toLocaleString('en-US')}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Custom Min
-              <input
-                type="text"
-                inputMode="numeric"
-                value={totalTimeMin > 0 ? String(totalTimeMin) : ''}
-                onChange={(e) => setTotalTimeMin(parseNumberInput(e.target.value))}
-                placeholder="e.g. 1200"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Custom Max
-              <input
-                type="text"
-                inputMode="numeric"
-                value={totalTimeMax > 0 ? String(totalTimeMax) : ''}
-                onChange={(e) => setTotalTimeMax(parseNumberInput(e.target.value))}
-                placeholder="e.g. 8500"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-          </div>
-        </div>
-        <label className="text-xs text-brand-muted">
-          Maintenance Burden
-          <select
-            value={maintenanceBand}
-            onChange={(e) => setMaintenanceBand(e.target.value as MaintenanceBandFilter)}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="any">Any</option>
-            <option value="light">Light (&lt;= $25k deferred)</option>
-            <option value="moderate">Moderate ($25k - $100k)</option>
-            <option value="heavy">Heavy ($100k - $250k)</option>
-            <option value="severe">Severe (&gt; $250k)</option>
-          </select>
-        </label>
-        <fieldset className="rounded border border-[#2b3342] bg-[#121822] p-3">
-          <legend className="px-1 text-xs font-semibold text-[#d1d5db]">Engine Time</legend>
-          <div className="mt-2 space-y-1.5 text-[11px] text-brand-muted">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="engine-time-filter"
-                checked={engineTime === 'any'}
-                onChange={() => setEngineTime('any')}
-              />
-              Any engine time
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="engine-time-filter"
-                checked={engineTime === 'fresh'}
-                onChange={() => setEngineTime('fresh')}
-              />
-              Fresh (75%+ life remaining)
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="engine-time-filter"
-                checked={engineTime === 'mid'}
-                onChange={() => setEngineTime('mid')}
-              />
-              Mid-life (50-75%)
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="engine-time-filter"
-                checked={engineTime === 'approaching'}
-                onChange={() => setEngineTime('approaching')}
-              />
-              Approaching TBO (under 50%)
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="engine-time-filter"
-                checked={engineTime === 'hasHours'}
-                onChange={() => setEngineTime('hasHours')}
-              />
-              Has engine hours listed
-            </label>
-          </div>
-        </fieldset>
-        <div className="rounded border border-[#2b3342] bg-[#121822] p-3">
-          <div className="mb-2 text-xs font-semibold text-[#d1d5db]">True Cost Range (Exact)</div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-brand-muted">
-              Min
-              <input
-                type="text"
-                inputMode="numeric"
-                value={trueCostMin > 0 ? String(trueCostMin) : ''}
-                onChange={(e) => setTrueCostMin(parseNumberInput(e.target.value))}
-                placeholder="e.g. 300000"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-            <label className="text-[11px] text-brand-muted">
-              Max
-              <input
-                type="text"
-                inputMode="numeric"
-                value={trueCostMax > 0 ? String(trueCostMax) : ''}
-                onChange={(e) => setTrueCostMax(parseNumberInput(e.target.value))}
-                placeholder="e.g. 700000"
-                className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white placeholder:text-[#7d8aa0] focus:border-brand-orange focus:outline-none"
-              />
-            </label>
-          </div>
-        </div>
-        <label className="text-xs text-brand-muted">
-          Risk Level
-          {riskTooltip}
-          <select
-            value={riskFilter}
-            onChange={(e) => setRiskFilter(e.target.value)}
-            className="mt-1 block w-full rounded border border-[#3A4454] bg-[#141922] px-3 py-2 text-sm text-white focus:border-brand-orange focus:outline-none"
-          >
-            <option value="all">All</option>
-            <option value="low">Low</option>
-            <option value="moderate">Moderate</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
-        </label>
+        </SidebarSection>
+
         {embedded ? null : (
-          <>
+          <div className="mt-2 flex flex-col gap-2 px-0">
             <button
               type="button"
               onClick={onResetFilters}
-              className="rounded border border-[#3A4454] bg-transparent px-3 py-2 text-sm text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]"
+              className="rounded border border-[var(--fh-border)] bg-transparent px-3 py-2 text-sm text-[var(--fh-text-dim)] hover:border-[var(--fh-orange)] hover:text-[var(--fh-orange)]"
             >
-              Reset Filters
+              Reset filters
             </button>
             <button
               type="button"
               onClick={onApplyFilters}
-              className="rounded border border-[#FF9900] bg-[#FF9900] px-3 py-2 text-sm font-bold text-black hover:bg-[#AF4D27] hover:text-white"
+              className="rounded border border-[var(--fh-orange)] bg-[var(--fh-orange)] px-3 py-2 text-sm font-bold text-black hover:bg-[var(--fh-orange-burn)] hover:text-white"
             >
-              Search
+              Apply filters
             </button>
-          </>
+          </div>
         )}
       </div>
     </aside>

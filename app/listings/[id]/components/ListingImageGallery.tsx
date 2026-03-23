@@ -8,7 +8,11 @@ type ListingImageGalleryProps = {
   title: string;
   imageUrls: string[];
   dealTier?: string | null;
+  /** When true, show PRICE UNDISCLOSED on hero (belt-and-suspenders vs stale deal_tier). */
+  priceUndisclosed?: boolean;
   fallbackImageUrl?: string | null;
+  /** Taller hero, synced main/thumb selection, compact thumbs (listing detail overhaul). */
+  layoutVariant?: "default" | "detailHero";
 };
 
 const SWIPE_THRESHOLD_PX = 40;
@@ -22,7 +26,9 @@ export default function ListingImageGallery({
   title,
   imageUrls,
   dealTier = null,
+  priceUndisclosed = false,
   fallbackImageUrl = null,
+  layoutVariant = "default",
 }: ListingImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +47,9 @@ export default function ListingImageGallery({
   const fallbackUrl = String(fallbackImageUrl || "").trim();
   const effectiveImageUrls = displayImageUrls.length > 0 ? displayImageUrls : (fallbackUrl ? [fallbackUrl] : []);
   const hasMultipleImages = effectiveImageUrls.length > 1;
-  const heroUrl = effectiveImageUrls[0] ?? "";
+  const isDetailHero = layoutVariant === "detailHero";
+  const mainIndex = isDetailHero ? activeIndex : 0;
+  const heroUrl = effectiveImageUrls[mainIndex] ?? effectiveImageUrls[0] ?? "";
   const dealTierMeta = getDealTierMeta(dealTier);
   const dealTierBadgeClass = dealTierMeta
     ? dealTierMeta.tone === "green"
@@ -124,7 +132,10 @@ export default function ListingImageGallery({
 
   if (!heroUrl) {
     return (
-      <div className="hero-image hero-placeholder">
+      <div
+        className={`hero-image hero-placeholder ${isDetailHero ? "rounded-t-xl" : ""}`}
+        style={isDetailHero ? { minHeight: 420, maxHeight: 420 } : undefined}
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             fill="currentColor"
@@ -135,64 +146,111 @@ export default function ListingImageGallery({
     );
   }
 
+  const heroFrameClass = isDetailHero
+    ? "relative block min-h-[44px] w-full overflow-hidden rounded-t-xl text-left"
+    : "relative block min-h-[44px] w-full text-left";
+
   return (
     <>
       <div className="relative">
         <button
           type="button"
-          onClick={() => openModalAt(0)}
-          className={`relative block min-h-[44px] w-full text-left ${hasMultipleImages ? "cursor-zoom-in" : "cursor-default"}`}
+          onClick={() => openModalAt(isDetailHero ? activeIndex : 0)}
+          className={`${heroFrameClass} ${hasMultipleImages ? "cursor-zoom-in" : "cursor-default"}`}
           title={hasMultipleImages ? "Open image carousel" : undefined}
           aria-label={hasMultipleImages ? "Open image carousel" : "Listing image"}
         >
-          <Image
-            className="hero-image"
-            src={toProxySrc(heroUrl)}
-            alt={title || "Aircraft listing"}
-            width={1200}
-            height={720}
-            sizes="(max-width: 980px) 100vw, 50vw"
-            unoptimized
-            priority
-            onError={() => markFailed(heroUrl)}
-          />
+          {isDetailHero ? (
+            <span className="relative block h-[420px] w-full max-h-[420px] min-h-[280px] bg-[var(--surface-muted)] sm:min-h-[420px] sm:max-h-[420px]">
+              <Image
+                className="object-cover"
+                src={toProxySrc(heroUrl)}
+                alt={title || "Aircraft listing"}
+                fill
+                sizes="(max-width: 1024px) 100vw, 65vw"
+                unoptimized
+                priority
+                onError={() => markFailed(heroUrl)}
+              />
+            </span>
+          ) : (
+            <Image
+              className="hero-image"
+              src={toProxySrc(heroUrl)}
+              alt={title || "Aircraft listing"}
+              width={1200}
+              height={720}
+              sizes="(max-width: 980px) 100vw, 50vw"
+              unoptimized
+              priority
+              onError={() => markFailed(heroUrl)}
+            />
+          )}
           {dealTierMeta ? (
             <span className={`absolute right-3 top-3 inline-flex rounded border px-2 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur-sm ${dealTierBadgeClass}`}>
               {dealTierMeta.label}
             </span>
+          ) : priceUndisclosed ? (
+            <span className="absolute right-3 top-3 inline-flex rounded border border-[rgba(122,138,158,0.45)] bg-[rgba(0,0,0,0.65)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#d1d5db] backdrop-blur-sm">
+              Price undisclosed
+            </span>
           ) : null}
           {hasMultipleImages ? (
-            <span className="absolute bottom-2 right-2 rounded px-2 py-1 text-[11px] font-semibold" style={counterPillStyle}>
-              {`1 / ${effectiveImageUrls.length}`}
+            <span className="absolute bottom-3 right-3 rounded px-2 py-1 text-[11px] font-semibold" style={counterPillStyle}>
+              {`${isDetailHero ? activeIndex + 1 : 1} / ${effectiveImageUrls.length}`}
             </span>
           ) : null}
         </button>
       </div>
 
       {effectiveImageUrls.length > 1 ? (
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch] snap-x snap-mandatory md:mt-[0.8rem] md:grid md:max-w-none md:grid-cols-3 md:gap-[0.6rem] md:overflow-visible md:pb-0">
-          {effectiveImageUrls.slice(1).map((url, index) => (
-            <button
-              key={url}
-              type="button"
-              onClick={() => openModalAt(index + 1)}
-              className="relative block w-72 shrink-0 cursor-zoom-in snap-start md:w-auto md:shrink"
-              title={`Open image ${index + 2}`}
-              aria-label={`Open image ${index + 2}`}
-            >
-              <Image
-                className="gallery-thumb"
-                src={toProxySrc(url)}
-                alt={`${title || "Aircraft"} gallery image ${index + 2}`}
-                width={320}
-                height={176}
-                sizes="(max-width: 980px) 33vw, 16vw"
-                unoptimized
-                loading="lazy"
-                onError={() => markFailed(url)}
-              />
-            </button>
-          ))}
+        <div
+          className={
+            isDetailHero
+              ? "mt-2 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] px-1"
+              : "mt-2 flex gap-2 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch] snap-x snap-mandatory md:mt-[0.8rem] md:grid md:max-w-none md:grid-cols-3 md:gap-[0.6rem] md:overflow-visible md:pb-0"
+          }
+        >
+          {(isDetailHero ? effectiveImageUrls : effectiveImageUrls.slice(1)).map((url, index) => {
+            const thumbIndex = isDetailHero ? index : index + 1;
+            const isActive = isDetailHero && index === activeIndex;
+            return (
+              <button
+                key={`${url}-${thumbIndex}`}
+                type="button"
+                onClick={() => {
+                  if (isDetailHero) {
+                    setActiveIndex(index);
+                  } else {
+                    openModalAt(thumbIndex);
+                  }
+                }}
+                onDoubleClick={() => {
+                  if (isDetailHero) openModalAt(index);
+                }}
+                className={`relative shrink-0 cursor-zoom-in snap-start ${
+                  isDetailHero
+                    ? `h-[50px] w-[60px] overflow-hidden rounded-md border ${isActive ? "border-[#ff9900] ring-2 ring-[#ff9900]/40" : "border-[var(--brand-dark)]"}`
+                    : "block w-72 md:w-auto md:shrink"
+                }`}
+                title={isDetailHero ? `Show image ${index + 1}` : `Open image ${thumbIndex + 1}`}
+                aria-label={isDetailHero ? `Show image ${index + 1}` : `Open image ${thumbIndex + 1}`}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <Image
+                  className={isDetailHero ? "h-full w-full object-cover" : "gallery-thumb"}
+                  src={toProxySrc(url)}
+                  alt={`${title || "Aircraft"} gallery image ${thumbIndex + 1}`}
+                  width={isDetailHero ? 60 : 320}
+                  height={isDetailHero ? 50 : 176}
+                  sizes={isDetailHero ? "60px" : "(max-width: 980px) 33vw, 16vw"}
+                  unoptimized
+                  loading="lazy"
+                  onError={() => markFailed(url)}
+                />
+              </button>
+            );
+          })}
         </div>
       ) : null}
 

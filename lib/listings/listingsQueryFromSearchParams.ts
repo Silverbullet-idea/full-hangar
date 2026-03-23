@@ -82,5 +82,16 @@ export function buildListingsPageQueryFromFlatParams(
     minAvionicsScore: num(search.minAvionics, 0),
     minQualityScore: num(search.minQuality, 0),
     minMarketValueScore: num(search.minValue, 0),
+    engineLife: search.engineLife ?? "",
+    avionics: search.avionics ?? "",
+    dealPattern: search.dealPattern ?? "",
   };
+}
+
+/** Comma / plus separated facet tokens (lowercased), for URL ↔ UI sync. */
+export function parseListingFacetTokens(raw: string): string[] {
+  return String(raw ?? "")
+    .split(/[,+]/)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
 }

@@ -44,10 +44,73 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
   const aircraftLabel = buildAircraftLabel(row, listingId);
   const make = asString(row?.make) || "";
   const model = asString(row?.model) || "";
+  const daysOnMarket = asNumber(row?.days_on_market);
+  const priceReduced =
+    typeof row?.price_reduced === "boolean"
+      ? row.price_reduced
+      : typeof row?.price_reduced === "string"
+        ? row.price_reduced.toLowerCase() === "true"
+        : null;
+  const vsMedianPricePct = asNumber(row?.vs_median_price);
+  const isSteamGauge =
+    typeof row?.is_steam_gauge === "boolean"
+      ? row.is_steam_gauge
+      : typeof row?.is_steam_gauge === "string"
+        ? row.is_steam_gauge.toLowerCase() === "true"
+        : null;
+  const hasGlassCockpit =
+    typeof row?.has_glass_cockpit === "boolean"
+      ? row.has_glass_cockpit
+      : typeof row?.has_glass_cockpit === "string"
+        ? row.has_glass_cockpit.toLowerCase() === "true"
+        : null;
+  const riskLevel = asString(row?.risk_level);
+  const valueScore = asNumber(row?.value_score);
+  const avionicsScore = asNumber(row?.avionics_score);
+  const dealRating = asNumber(row?.deal_rating);
+  const evPctLifeRemaining = asNumber(row?.ev_pct_life_remaining);
+  const faaMatched =
+    typeof row?.faa_matched === "boolean"
+      ? row.faa_matched
+      : typeof row?.faa_matched === "string"
+        ? row.faa_matched.toLowerCase() === "true"
+        : null;
+
+  const engineScore = asNumber(row?.engine_score);
+  const propScore = asNumber(row?.prop_score);
+  const llpScore = asNumber(row?.llp_score);
+  const investmentScore = asNumber(row?.investment_score);
+  const marketOpportunityScore = asNumber(row?.market_opportunity_score);
+  const executionScore = asNumber(row?.execution_score);
+  const conditionScore = asNumber(row?.condition_score);
+  const pricingConfidence = asString(row?.pricing_confidence);
+  const compSelectionTier = asString(row?.comp_selection_tier);
+  const compUniverseSize = asNumber(row?.comp_universe_size);
+  const compExactCount = asNumber(row?.comp_exact_count);
+  const compFamilyCount = asNumber(row?.comp_family_count);
+  const compMakeCount = asNumber(row?.comp_make_count);
+  const compMedianPrice = asNumber(row?.comp_median_price);
+  const compP25Price = asNumber(row?.comp_p25_price);
+  const compP75Price = asNumber(row?.comp_p75_price);
+  const mispricingZscore = asNumber(row?.mispricing_zscore);
+  const evExplanation = asString(row?.ev_explanation);
+  const evDataQuality = asString(row?.ev_data_quality);
+  const evHoursSmoh = asNumber(row?.ev_hours_smoh);
+  const evTboHours = asNumber(row?.ev_tbo_hours);
+  const evHoursRemaining = asNumber(row?.ev_hours_remaining);
+  const evScoreContribution = asNumber(row?.ev_score_contribution);
+  const intelligenceVersion = asString(row?.intelligence_version);
+  const hasAccidentHistory =
+    typeof row?.has_accident_history === "boolean"
+      ? row.has_accident_history
+      : typeof row?.has_accident_history === "string"
+        ? row.has_accident_history.toLowerCase() === "true"
+        : null;
+  const accidentCount = asNumber(row?.accident_count);
 
   return (
     <main className="space-y-3">
-      <p className="text-sm">
+      <p className="no-print text-sm">
         <Link href="/internal/deal-desk" className="text-brand-muted hover:text-brand-orange">
           ← Back to Deal Desk
         </Link>
@@ -62,6 +125,43 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
           engineReservePerHour: engineReservePerHour ?? undefined,
           make,
           model,
+          daysOnMarket: daysOnMarket ?? undefined,
+          priceReduced: priceReduced ?? undefined,
+          vsMedianPricePct: vsMedianPricePct ?? undefined,
+          isSteamGauge: isSteamGauge ?? undefined,
+          hasGlassCockpit: hasGlassCockpit ?? undefined,
+          riskLevel: riskLevel ?? undefined,
+          valueScore: valueScore ?? undefined,
+          avionicsScore: avionicsScore ?? undefined,
+          dealRating: dealRating ?? undefined,
+          evPctLifeRemaining: evPctLifeRemaining ?? undefined,
+          faaMatched: faaMatched ?? undefined,
+          engineScore: engineScore ?? undefined,
+          propScore: propScore ?? undefined,
+          llpScore: llpScore ?? undefined,
+          investmentScore: investmentScore ?? undefined,
+          marketOpportunityScore: marketOpportunityScore ?? undefined,
+          executionScore: executionScore ?? undefined,
+          conditionScore: conditionScore ?? undefined,
+          pricingConfidence: pricingConfidence ?? undefined,
+          compSelectionTier: compSelectionTier ?? undefined,
+          compUniverseSize: compUniverseSize ?? undefined,
+          compExactCount: compExactCount ?? undefined,
+          compFamilyCount: compFamilyCount ?? undefined,
+          compMakeCount: compMakeCount ?? undefined,
+          compMedianPrice: compMedianPrice ?? undefined,
+          compP25Price: compP25Price ?? undefined,
+          compP75Price: compP75Price ?? undefined,
+          mispricingZscore: mispricingZscore ?? undefined,
+          evExplanation: evExplanation ?? undefined,
+          evDataQuality: evDataQuality ?? undefined,
+          evHoursSmoh: evHoursSmoh ?? undefined,
+          evTboHours: evTboHours ?? undefined,
+          evHoursRemaining: evHoursRemaining ?? undefined,
+          evScoreContribution: evScoreContribution ?? undefined,
+          intelligenceVersion: intelligenceVersion ?? undefined,
+          hasAccidentHistory: hasAccidentHistory ?? undefined,
+          accidentCount: accidentCount ?? undefined,
         }}
       />
     </main>

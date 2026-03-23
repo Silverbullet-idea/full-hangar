@@ -9,6 +9,48 @@ export type DealDeskSeed = {
   engineReservePerHour?: number;
   make?: string;
   model?: string;
+  /** Listing intelligence for wizard insights (Phase 5F). */
+  daysOnMarket?: number | null;
+  priceReduced?: boolean | null;
+  /** Percent vs submodel median when present (e.g. +5 = 5% above). */
+  vsMedianPricePct?: number | null;
+  isSteamGauge?: boolean | null;
+  hasGlassCockpit?: boolean | null;
+  /** Listing score / risk signals for Live P&L health checklist. */
+  riskLevel?: string | null;
+  valueScore?: number | null;
+  avionicsScore?: number | null;
+  dealRating?: number | null;
+  /** Engine life remaining 0–1 (fraction) or 0–100 (percent) from `ev_pct_life_remaining`. */
+  evPctLifeRemaining?: number | null;
+  faaMatched?: boolean | null;
+  /** Flattened score_data / listing columns for Live P&L drill-down. */
+  engineScore?: number | null;
+  propScore?: number | null;
+  llpScore?: number | null;
+  investmentScore?: number | null;
+  marketOpportunityScore?: number | null;
+  executionScore?: number | null;
+  conditionScore?: number | null;
+  pricingConfidence?: string | null;
+  compSelectionTier?: string | null;
+  compUniverseSize?: number | null;
+  compExactCount?: number | null;
+  compFamilyCount?: number | null;
+  compMakeCount?: number | null;
+  compMedianPrice?: number | null;
+  compP25Price?: number | null;
+  compP75Price?: number | null;
+  mispricingZscore?: number | null;
+  evExplanation?: string | null;
+  evDataQuality?: string | null;
+  evHoursSmoh?: number | null;
+  evTboHours?: number | null;
+  evHoursRemaining?: number | null;
+  evScoreContribution?: number | null;
+  intelligenceVersion?: string | null;
+  hasAccidentHistory?: boolean | null;
+  accidentCount?: number | null;
 };
 
 export type DealDeskScenarioWithContext = {

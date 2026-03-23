@@ -20,7 +20,7 @@ from .reference_service import get_engine_reference, get_prop_reference, get_llp
 # v1.9.3 - Score distribution fix: age-differentiated imputed defaults,
 # widened risk tier bands (LOW threshold 78, HIGH band 25-44),
 # days_on_market tiebreaker nudge, _components_measured tracking.
-INTELLIGENCE_VERSION = "1.9.3"
+INTELLIGENCE_VERSION = "1.9.4"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -2212,8 +2212,28 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     if flip_signal.get("flip_candidate_triggered"):
         score_explanation.append("Flip trigger hit: sub-$50k + high deal rating + positive component gap")
 
+    _has_listing_price = (_deal_price(listing) or 0) > 0
+    _out_value_score = round(value_score, 1)
+    _out_deal_tier = deal_tier
+    if not _has_listing_price:
+        _out_value_score = None
+        _out_deal_tier = None
+        score_explanation = [
+            "Deal score suppressed — no price disclosed. "
+            "Price is required to compute market value pillar (30% weight).",
+            *score_explanation,
+        ]
+        risk = risk_level_from_score(
+            float(condition_score),
+            llp.get("any_unairworthy", False),
+            faa_alert=faa_registration_alert,
+            severe_ntsb=severe_ntsb,
+        )
+        if isinstance(accident_risk_override, str) and accident_risk_override:
+            risk = accident_risk_override
+
     return {
-        "value_score": round(value_score, 1),
+        "value_score": _out_value_score,
         "condition_score": round(condition_score, 1),
         "confidence_score": confidence_score,
         "rank_score": round(rank_score, 1),
@@ -2248,7 +2268,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "pricing_confidence": pricing_confidence,
         "_components_measured": components_measured,
         "deal_rating": deal_rating,
-        "deal_tier": deal_tier,
+        "deal_tier": _out_deal_tier,
         "comps_sample_size": deal["comps_sample_size"],
         "vs_median_price": deal["vs_median_price"],
         "deal_comparison_source": deal["deal_comparison_source"],

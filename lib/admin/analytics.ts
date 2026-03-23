@@ -118,6 +118,42 @@ function normalizeToken(value: unknown): string {
   return alnumSpaces.replace(/\s+/g, " ").trim();
 }
 
+const PISTON_SINGLE_TYPES = new Set([
+  "single_engine_piston",
+  "piston_single",
+  "single_piston",
+  "light_sport",
+  "light_sport_aircraft",
+  "lsa",
+  "ultralight",
+  "experimental",
+  "experimental_kit",
+  "amphibian",
+  "amphibious_float",
+  "float_plane",
+  "seaplane",
+]);
+
+const PISTON_MULTI_TYPES = new Set([
+  "multi_engine_piston",
+  "piston_multi",
+  "twin_piston",
+  "twin_engine_piston",
+]);
+
+/** Buckets avionics segment rollout bars (Wave 2/3 lanes). */
+function inferAvionicsSegment(row: ListingRow): string {
+  const t = String(row.aircraft_type ?? "").toLowerCase().trim();
+  if (!t || t === "unknown") return "piston_single";
+  if (t.includes("helicopter") || t.includes("rotor")) return "rotorcraft";
+  if (t.includes("jet")) return "jets";
+  if (t.includes("turboprop")) return "turboprop";
+  if (PISTON_MULTI_TYPES.has(t) || (t.includes("twin") && t.includes("piston"))) return "piston_multi";
+  if (PISTON_SINGLE_TYPES.has(t)) return "piston_single";
+  if (t.includes("multi")) return "piston_multi";
+  return "piston_single";
+}
+
 function compareSemver(a: string, b: string): number {
   const parse = (v: string) =>
     v
@@ -371,6 +407,14 @@ export async function computePlatformStats() {
   let priceReductions7d = 0;
   let avgDomNumerator = 0;
   let avgDomCount = 0;
+  let faaMatchedCount = 0;
+  let nNumberFilled = 0;
+  let exceptionalDeals = 0;
+  let noPriceListings = 0;
+  let engineValueScored = 0;
+  let dealTierWithoutDisclosedPrice = 0;
+  let exceptionalDealWithoutDisclosedPrice = 0;
+  const scoreBuckets = { tier_85_plus: 0, tier_70_84: 0, tier_50_69: 0, tier_25_49: 0, tier_under_25: 0, no_score: 0 };
 
   for (const row of rows) {
     const source = inferSource(row);
@@ -388,9 +432,29 @@ export async function computePlatformStats() {
     if (score !== null) withScore += 1;
     else withoutScore += 1;
     if (score !== null && score >= 75) highScoreListings += 1;
+    if (score === null) scoreBuckets.no_score += 1;
+    else if (score >= 85) scoreBuckets.tier_85_plus += 1;
+    else if (score >= 70) scoreBuckets.tier_70_84 += 1;
+    else if (score >= 50) scoreBuckets.tier_50_69 += 1;
+    else if (score >= 25) scoreBuckets.tier_25_49 += 1;
+    else scoreBuckets.tier_under_25 += 1;
+
+    if (row.faa_matched === true) faaMatchedCount += 1;
+    const tail = String(row.n_number ?? "").trim();
+    if (tail.length > 0 && tail !== "—") nNumberFilled += 1;
+    if (String(row.deal_tier ?? "").toUpperCase() === "EXCEPTIONAL_DEAL") exceptionalDeals += 1;
+
+    const evRem = asNumber(row.engine_remaining_value ?? row.ev_engine_remaining_value);
+    if (evRem !== null && Number.isFinite(evRem)) engineValueScored += 1;
 
     const price = asNumber(row.asking_price ?? row.price_asking);
-    if (price !== null) {
+    const tierUpper = String(row.deal_tier ?? "").trim().toUpperCase();
+    const hasMeaningfulDealTier = tierUpper.length > 0 && tierUpper !== "INSUFFICIENT_DATA";
+    const noDisclosedPrice = price === null || price <= 0;
+    if (hasMeaningfulDealTier && noDisclosedPrice) dealTierWithoutDisclosedPrice += 1;
+    if (tierUpper === "EXCEPTIONAL_DEAL" && noDisclosedPrice) exceptionalDealWithoutDisclosedPrice += 1;
+    if (price === null || price <= 0) noPriceListings += 1;
+    if (price !== null && price > 0) {
       if (price < 50000) under50k += 1;
       else if (price < 100000) under100k += 1;
       else if (price < 200000) under200k += 1;
@@ -435,6 +499,10 @@ export async function computePlatformStats() {
     .map(([make, count]) => ({ make, count }));
 
   const scoreCoveragePct = rows.length > 0 ? Number(((withScore / rows.length) * 100).toFixed(1)) : 0;
+  const faaMatchPct = rows.length > 0 ? Number(((faaMatchedCount / rows.length) * 100).toFixed(1)) : 0;
+  const nNumberPct = rows.length > 0 ? Number(((nNumberFilled / rows.length) * 100).toFixed(1)) : 0;
+  const engineValueCoveragePct = rows.length > 0 ? Number(((engineValueScored / rows.length) * 100).toFixed(1)) : 0;
+  const distinctSources = Object.keys(listingBySource).filter((s) => s && s !== "unknown").length;
   const avgDaysOnMarket = avgDomCount > 0 ? Number((avgDomNumerator / avgDomCount).toFixed(1)) : 0;
   const sourceFreshness = Array.from(freshnessBySource.entries())
     .map(([source, stats]) => ({
@@ -475,12 +543,24 @@ export async function computePlatformStats() {
         under_200k: under200k,
         over_200k: over200k,
       },
+      faa_matched_count: faaMatchedCount,
+      faa_match_pct: faaMatchPct,
+      n_number_filled: nNumberFilled,
+      n_number_pct: nNumberPct,
+      no_price_listings: noPriceListings,
+      engine_value_scored: engineValueScored,
+      engine_value_coverage_pct: engineValueCoveragePct,
+      distinct_sources: distinctSources,
+      score_distribution: scoreBuckets,
+      deal_tier_without_disclosed_price: dealTierWithoutDisclosedPrice,
+      exceptional_deal_without_disclosed_price: exceptionalDealWithoutDisclosedPrice,
     },
     deals: {
       high_score_listings: highScoreListings,
       price_reductions_last_7d: priceReductions7d,
       newly_flagged_deals: highScoreListings,
       avg_days_on_market: avgDaysOnMarket,
+      exceptional_deals: exceptionalDeals,
     },
     market_intelligence: {
       ownership_changes_detected_30d: ownershipChanges30d,
@@ -746,6 +826,20 @@ export async function computeBuyerIntelligence() {
     };
   });
 
+  const admin_inventory_highlights = rows
+    .map((row) => ({
+      listing_id: String(row.id ?? ""),
+      year: asNumber(row.year) ?? 0,
+      make: String(row.make ?? ""),
+      model: String(row.model ?? ""),
+      asking_price: listPrice(row),
+      value_score: asNumber(row.value_score) ?? 0,
+      deal_tier: String(row.deal_tier ?? ""),
+    }))
+    .filter((r) => r.value_score >= 65)
+    .sort((a, b) => b.value_score - a.value_score)
+    .slice(0, 12);
+
   return {
     market_snapshot: {
       price_trends: priceTrends,
@@ -767,6 +861,75 @@ export async function computeBuyerIntelligence() {
     ownership_transfer_feed: {
       recent_transfers: recentTransfers,
     },
+    admin_inventory_highlights,
+  };
+}
+
+export async function computeAdminAudienceMetrics() {
+  const supabase = createPrivilegedServerClient();
+  const [adminR, scenarioTotal, sessionTotal, recentSessions] = await Promise.all([
+    withTimeout(
+      supabase.from("admin_users").select("id", { count: "exact", head: true }).eq("is_active", true),
+      8000,
+      "admin users count"
+    ),
+    safeCount("deal_desk_scenarios"),
+    safeCount("beta_sessions"),
+    withTimeout(
+      supabase
+        .from("beta_sessions")
+        .select("id, invite_id, last_seen_at, created_at")
+        .order("last_seen_at", { ascending: false })
+        .limit(40),
+      10000,
+      "recent beta sessions"
+    ),
+  ]);
+
+  const admin_users_active = adminR.error || typeof adminR.count !== "number" ? 0 : adminR.count;
+
+  const inviteIds = [
+    ...new Set(
+      (recentSessions.data ?? [])
+        .map((s: { invite_id?: string | null }) => String(s.invite_id ?? "").trim())
+        .filter(Boolean)
+    ),
+  ];
+  const inviteMap = new Map<string, { label: string; email: string }>();
+  if (inviteIds.length > 0) {
+    const inv = await withTimeout(
+      supabase.from("beta_invites").select("id,label,email,used_by_email").in("id", inviteIds),
+      10000,
+      "invite lookup for sessions"
+    );
+    if (!inv.error) {
+      for (const r of inv.data ?? []) {
+        inviteMap.set(String(r.id), {
+          label: String(r.label ?? "Invite"),
+          email: String(r.used_by_email ?? r.email ?? ""),
+        });
+      }
+    }
+  }
+
+  const recent_beta_activity = (recentSessions.data ?? []).map((s: Record<string, unknown>) => {
+    const inviteId = String(s.invite_id ?? "");
+    const meta = inviteMap.get(inviteId);
+    return {
+      session_id: String(s.id ?? ""),
+      invite_label: meta?.label ?? "Unknown invite",
+      email_hint: meta?.email ?? "",
+      last_seen_at: String(s.last_seen_at ?? ""),
+      created_at: String(s.created_at ?? ""),
+    };
+  });
+
+  return {
+    computed_at: new Date().toISOString(),
+    admin_users_active,
+    beta_sessions_total: sessionTotal,
+    deal_desk_saved_scenarios: scenarioTotal,
+    recent_beta_activity,
   };
 }
 
@@ -872,12 +1035,16 @@ export async function computeAvionicsIntelligence(options?: { days?: number; top
     }
   >();
 
+  const segmentRollout = new Map<string, { avionics_text: number; with_obs_in_text: number }>();
+
   while (true) {
     const to = offset + pageSize - 1;
     const page = await withTimeout(
       supabase
         .from("aircraft_listings")
-        .select("source_site,last_seen_date,avionics_description,description_full,description,description_intelligence")
+        .select(
+          "source_site,last_seen_date,aircraft_type,avionics_description,description_full,description,description_intelligence"
+        )
         .gte("last_seen_date", cutoffDate)
         .order("last_seen_date", { ascending: false })
         .range(offset, to),
@@ -952,6 +1119,14 @@ export async function computeAvionicsIntelligence(options?: { days?: number; top
       observationRowsTotal += rowTotal;
       sourceRow.matched_rows += rowMatched;
       sourceRow.unresolved_rows += rowUnresolved;
+
+      const seg = inferAvionicsSegment(row);
+      if (!segmentRollout.has(seg)) segmentRollout.set(seg, { avionics_text: 0, with_obs_in_text: 0 });
+      const segStats = segmentRollout.get(seg)!;
+      if (hasAvionicsText) {
+        segStats.avionics_text += 1;
+        if (rowTotal > 0) segStats.with_obs_in_text += 1;
+      }
     }
 
     offset += rows.length;
@@ -977,12 +1152,71 @@ export async function computeAvionicsIntelligence(options?: { days?: number; top
     listingsWithAvionicsText > 0 ? Number(((listingsWithObservationsInAvionicsText / listingsWithAvionicsText) * 100).toFixed(2)) : 0;
   const avgMatchConfidence = confidenceCount > 0 ? Number((confidenceSum / confidenceCount).toFixed(4)) : 0;
 
-  const [unitsActive, aliasesTotal, marketValuesTotal, priceObservationsTotal] = await Promise.all([
-    safeCount("avionics_units"),
-    safeCount("avionics_aliases"),
-    safeCount("avionics_market_values"),
-    safeCount("avionics_price_observations"),
-  ]);
+  const [unitsActive, aliasesTotal, marketValuesTotal, priceObservationsTotal, basPricedCount, globalPricedCount, pricedActiveTotal] =
+    await Promise.all([
+      safeCount("avionics_units"),
+      safeCount("avionics_aliases"),
+      safeCount("avionics_market_values"),
+      safeCount("avionics_price_observations"),
+      (async () => {
+        const r = await withTimeout(
+          supabase
+            .from("avionics_price_observations")
+            .select("id", { count: "exact", head: true })
+            .gt("observed_price", 0)
+            .eq("is_active", true)
+            .eq("source_name", "bas_part_sales"),
+          8000,
+          "bas priced obs count"
+        );
+        return r.error || typeof r.count !== "number" ? 0 : r.count;
+      })(),
+      (async () => {
+        const r = await withTimeout(
+          supabase
+            .from("avionics_price_observations")
+            .select("id", { count: "exact", head: true })
+            .gt("observed_price", 0)
+            .eq("is_active", true)
+            .eq("source_name", "global_aircraft"),
+          8000,
+          "global priced obs count"
+        );
+        return r.error || typeof r.count !== "number" ? 0 : r.count;
+      })(),
+      (async () => {
+        const r = await withTimeout(
+          supabase
+            .from("avionics_price_observations")
+            .select("id", { count: "exact", head: true })
+            .gt("observed_price", 0)
+            .eq("is_active", true),
+          8000,
+          "priced obs active total"
+        );
+        return r.error || typeof r.count !== "number" ? 0 : r.count;
+      })(),
+    ]);
+
+  const pricedOtherCount = Math.max(0, pricedActiveTotal - basPricedCount - globalPricedCount);
+
+  const segmentLabels: Record<string, string> = {
+    piston_single: "Piston Single",
+    piston_multi: "Piston Multi",
+    turboprop: "Turboprop",
+    jets: "Jets",
+    rotorcraft: "Rotorcraft",
+  };
+  const segmentRolloutList = (["piston_single", "piston_multi", "turboprop", "jets", "rotorcraft"] as const).map((id) => {
+    const s = segmentRollout.get(id) ?? { avionics_text: 0, with_obs_in_text: 0 };
+    const pct = s.avionics_text > 0 ? Number(((s.with_obs_in_text / s.avionics_text) * 100).toFixed(1)) : 0;
+    return {
+      id,
+      label: segmentLabels[id],
+      listings_with_avionics_text: s.avionics_text,
+      extraction_coverage_pct: pct,
+    };
+  });
 
   const sourceBreakdown = Array.from(sourceStats.entries())
     .map(([source, stats]) => {
@@ -1021,5 +1255,114 @@ export async function computeAvionicsIntelligence(options?: { days?: number; top
       price_observations_total: priceObservationsTotal,
     },
     source_breakdown: sourceBreakdown,
+    segment_rollout: segmentRolloutList,
+    priced_observations_split: {
+      bas_part_sales: basPricedCount,
+      global_aircraft: globalPricedCount,
+      other: pricedOtherCount,
+      priced_active_total: pricedActiveTotal,
+    },
+  };
+}
+
+function rowHasSmoh(row: ListingRow): boolean {
+  const v = asNumber(row.time_since_overhaul ?? row.engine_time_since_overhaul ?? row.engine_hours_smoh);
+  return v !== null && v >= 0;
+}
+
+function rowEngineRemaining(row: ListingRow): number | null {
+  const a = asNumber(row.engine_remaining_value);
+  const b = asNumber(row.ev_engine_remaining_value);
+  if (a !== null && Number.isFinite(a)) return a;
+  if (b !== null && Number.isFinite(b)) return b;
+  return null;
+}
+
+/** Engine-value / TBO / pricing-gap intelligence for admin Engine tab (Phase 4F). */
+export async function computeEngineIntelligence() {
+  const rows = await getActiveListings();
+  const total = rows.length;
+
+  let smohRows = 0;
+  let engineValueScored = 0;
+  let pricingGaps = 0;
+  const mfr = {
+    lycoming: { total: 0, scored: 0 },
+    continental: { total: 0, scored: 0 },
+    rotax: { total: 0, scored: 0 },
+    pt6: { total: 0, scored: 0 },
+    pratt_other: { total: 0, scored: 0 },
+    other: { total: 0, scored: 0 },
+  };
+
+  const life = { high_remaining: 0, mid_remaining: 0, low_remaining: 0, past_tbo: 0, unknown: 0 };
+
+  for (const row of rows) {
+    const hasS = rowHasSmoh(row);
+    if (hasS) smohRows += 1;
+    const er = rowEngineRemaining(row);
+    if (er !== null) engineValueScored += 1;
+    if (hasS && er === null) pricingGaps += 1;
+
+    const em = `${String(row.engine_make ?? "")} ${String(row.engine_model ?? "")} ${String(row.faa_engine_model ?? "")}`.toLowerCase();
+    let bucket: keyof typeof mfr = "other";
+    if (em.includes("lycoming")) bucket = "lycoming";
+    else if (em.includes("continental") || em.includes("teledyne")) bucket = "continental";
+    else if (em.includes("rotax")) bucket = "rotax";
+    else if (em.includes("pt6")) bucket = "pt6";
+    else if (em.includes("pratt") || em.includes("pw545") || em.includes("pw615") || em.includes("pw127")) bucket = "pratt_other";
+
+    mfr[bucket].total += 1;
+    if (er !== null) mfr[bucket].scored += 1;
+
+    const pctLife = asNumber(row.ev_pct_life_remaining);
+    if (pctLife === null) life.unknown += 1;
+    else if (pctLife < 0) life.past_tbo += 1;
+    else if (pctLife >= 70) life.high_remaining += 1;
+    else if (pctLife >= 40) life.mid_remaining += 1;
+    else life.low_remaining += 1;
+  }
+
+  const gapByModel = new Map<string, number>();
+  for (const row of rows) {
+    if (!rowHasSmoh(row)) continue;
+    if (rowEngineRemaining(row) !== null) continue;
+    const m = String(row.engine_model ?? "").trim() || "(unspecified)";
+    gapByModel.set(m, (gapByModel.get(m) ?? 0) + 1);
+  }
+  const top_pricing_gaps = Array.from(gapByModel.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([engine_model, count]) => ({ engine_model, count }));
+
+  const engineTboRecords = await safeCount("engine_tbo_reference");
+
+  const manufacturer_bars = (
+    [
+      { id: "lycoming", label: "Lycoming" },
+      { id: "continental", label: "Continental" },
+      { id: "rotax", label: "Rotax" },
+      { id: "pt6", label: "PT6 family" },
+      { id: "pratt_other", label: "Pratt / PW" },
+      { id: "other", label: "Other / mixed" },
+    ] as const
+  ).map(({ id, label }) => {
+    const s = mfr[id];
+    const pct = s.total > 0 ? Number(((s.scored / s.total) * 100).toFixed(1)) : 0;
+    return { id, label, listings: s.total, value_scored: s.scored, coverage_pct: pct };
+  });
+
+  return {
+    computed_at: new Date().toISOString(),
+    total_active: total,
+    smoh_listings: smohRows,
+    smoh_coverage_pct: total > 0 ? Number(((smohRows / total) * 100).toFixed(1)) : 0,
+    engine_value_scored: engineValueScored,
+    engine_value_coverage_pct: total > 0 ? Number(((engineValueScored / total) * 100).toFixed(1)) : 0,
+    pricing_gap_listings: pricingGaps,
+    tbo_reference_rows: engineTboRecords,
+    manufacturer_bars,
+    top_pricing_gaps,
+    life_remaining_distribution: life,
   };
 }
