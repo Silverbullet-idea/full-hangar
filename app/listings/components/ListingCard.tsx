@@ -70,6 +70,7 @@ function pillarBarHeight(score: number | null | undefined): number | null {
 }
 
 function PillarColumn({
+  instanceId,
   letter,
   label,
   score,
@@ -77,6 +78,7 @@ function PillarColumn({
   tooltipHint,
   barsRevealed,
 }: {
+  instanceId: string
   letter: string
   label: string
   score: number | null
@@ -87,8 +89,14 @@ function PillarColumn({
   const h = pillarBarHeight(score)
   const targetPct = h != null ? h : 0
   const showFill = h != null
+  const tooltipBody = `${label}${score != null ? `, ${Math.round(score)} out of 100` : ', no score'}. ${tooltipHint}`
+  const tooltipSrId = `${instanceId}-tip`
   return (
-    <div className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1">
+    <div
+      className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1"
+      role="group"
+      aria-describedby={tooltipSrId}
+    >
       <span
         className="text-[11px] font-bold text-[var(--fh-text-dim)]"
         style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
@@ -115,9 +123,13 @@ function PillarColumn({
       >
         {label}
       </span>
+      <div id={tooltipSrId} role="tooltip" className="sr-only">
+        {tooltipBody}
+      </div>
       <div
         className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-10 max-w-[200px] -translate-x-1/2 whitespace-normal rounded border border-[var(--fh-border)] bg-[var(--fh-bg2)] px-2 py-1 text-[10px] leading-snug text-[var(--fh-text-dim)] opacity-0 shadow-lg transition-opacity group-hover/pillar:opacity-100"
         style={{ fontFamily: 'var(--font-dm-sans)' }}
+        aria-hidden="true"
       >
         <span className="font-semibold text-[var(--fh-text)]">{label}</span>
         {score != null ? ` · ${Math.round(score)}` : ''}
@@ -310,6 +322,7 @@ export default function ListingCard({
 
     const locLine = `${locationText} — ${formatSourceLabel(m.sourceKey)}`
     const delayMs = Math.min(tileStaggerIndex, 6) * 50
+    const pillarIdBase = listingKey.replace(/[^a-zA-Z0-9_-]/g, '_')
 
     return (
       <article
@@ -492,6 +505,7 @@ export default function ListingCard({
             {m.hasDisclosedPrice ? (
               <div className="flex items-end gap-1">
                 <PillarColumn
+                  instanceId={`${pillarIdBase}-p-E`}
                   letter="E"
                   label="Engine"
                   score={m.engineScore}
@@ -500,6 +514,7 @@ export default function ListingCard({
                   barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
+                  instanceId={`${pillarIdBase}-p-A`}
                   letter="A"
                   label="Avionics"
                   score={m.avionicsScore}
@@ -508,6 +523,7 @@ export default function ListingCard({
                   barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
+                  instanceId={`${pillarIdBase}-p-Q`}
                   letter="Q"
                   label="Quality"
                   score={m.qualityScore}
@@ -516,6 +532,7 @@ export default function ListingCard({
                   barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
+                  instanceId={`${pillarIdBase}-p-V`}
                   letter="V"
                   label="Value"
                   score={m.marketValueScore}
@@ -524,6 +541,7 @@ export default function ListingCard({
                   barsRevealed={pillarBarsRevealed}
                 />
                 <PillarColumn
+                  instanceId={`${pillarIdBase}-p-S`}
                   letter="S"
                   label="STC / Mods"
                   score={m.executionScore}
