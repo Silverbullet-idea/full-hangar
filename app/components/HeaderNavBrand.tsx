@@ -43,7 +43,7 @@ export default function HeaderNavBrand() {
   }, [sources])
 
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex shrink-0 items-center">
       {sources.length > 0 && sourceIndex < sources.length ? (
         <img
           src={sources[sourceIndex]}
@@ -54,15 +54,6 @@ export default function HeaderNavBrand() {
           onError={() => setSourceIndex((idx) => idx + 1)}
         />
       ) : null}
-      <span
-        className="fh-nav-wordmark whitespace-nowrap text-[22px] font-extrabold leading-none tracking-tight"
-        style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}
-        suppressHydrationWarning
-      >
-        <span className="text-[var(--fh-text)]">Full</span>{" "}
-        <span className="text-[var(--fh-orange)]">Hangar</span>
-      </span>
-      <span className="fh-beta-badge shrink-0">BETA</span>
     </div>
   )
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import HeaderLiveCountPill from "./HeaderLiveCountPill"
 import HeaderNavBrand from "./HeaderNavBrand"
 import HeaderSearchBar from "./HeaderSearchBar"
 import ThemeToggle from "./ThemeToggle"
@@ -20,7 +19,6 @@ export default function SiteHeader() {
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-          <HeaderLiveCountPill />
           <a href="/internal/deal-desk" className="fh-nav-quick-action no-underline">
             ⚡ Deal Desk
           </a>
