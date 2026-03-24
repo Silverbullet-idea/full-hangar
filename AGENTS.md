@@ -26,7 +26,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Keep the board accurate and lean while preserving completion tracking.
 - Maintain frontend polish and parity for both dark/light themes.
 - UI overhaul — Deal Desk Phase 5 complete including **5D per-step footers** (Back / Next / Save PDF on step 6 inside active accordion; global wizard nav **lg:hidden**, mobile unchanged). **Phase 6 (UI + scoring):** no-price listings suppress `value_score` + `deal_tier` in `aircraft_intelligence` (**v1.9.4**); browse + detail enforce **price undisclosed** UI even if DB is stale. **Phase 7 (polish):** comps panel + GeoIntelMap lazy-loaded via `next/dynamic` `{ ssr: false }` (`CompsChartPanelLazy`, market-intel); global `:focus-visible` rings; score/tier `aria-label`s on listing cards + detail score badge.
-- Full `backfill_scores.py --all --compute-comps` for **v1.9.4** propagation: log `scraper/logs/backfill_full_v194.log` / `*_err.log` (use **only** `.venv312\\Scripts\\python.exe`). If two `backfill_scores` PIDs appear, stop the stray non-venv process to avoid double writes.
+- **Scoring / DB (Mar 23, 2026):** full `backfill_scores.py --all --compute-comps` for **v1.9.4** finished (`attempted=10574`, `updated=10573`, one transient `ConnectionTerminated` row re-run with `--id f0c9bd6f-8426-4561-94f6-00d24b29dea0`). `validate_scores.py` + `npm run pipeline:score-dist:post-backfill` green; audit at `scraper/score_distribution_audit_post_fix.txt`. Remote **`supabase db push`** applied **`20260324000070_public_listings_undisclosed_price_sort.sql`** (idempotent column notice OK).
 - Continue data-source expansion where still incomplete (research-heavy tracks).
 - Keep scraper + scoring reliability stable (timeouts, fallback behavior, resumability).
 
@@ -96,6 +96,8 @@ This is the short, operational board for current work. Permanent standards stay 
 - UI overhaul Phase 7 (7C/7D): `app/listings/[id]/CompsChartPanelLazy.tsx` defers comps client bundle on listing detail; `/internal/market-intel` loads `GeoIntelMap` with `dynamic(..., { ssr: false })` + loading shell; `globals.css` adds low-specificity `:focus-visible` outline using `var(--fh-orange)`; `RightDetailColumn` score badge + `ListingCard` (tiles overall ring, rows/compact tier chips) gain screen-reader labels.
 - Listing tile pillar row: each `PillarColumn` exposes `role="tooltip"` copy in `.sr-only` with `aria-describedby` on `role="group"`; hover popover marked `aria-hidden` to avoid duplicate announcements.
 - Listings LCP: `ListingCard` accepts `imagePriority`; `ListingsClient` sets it for the first 12 tile cards, first 4 row cards, and first 10 compact cards (`next/image` `priority` replaces `loading="lazy"` for those slots only).
+- Listing detail hero: `ListingImageGallery` main hero `next/image` uses `priority` + **`fetchPriority="high"`** (detailHero + default layouts) for LCP.
+- Playwright **`npm run test:smoke:listings-all`**: 24 tests (incl. listing-detail not-found shell + conditional API matrix); latest local run **24 passed** with healthy Supabase.
 
 ### Backend, Pipeline, and Data Sources
 
@@ -212,7 +214,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Backfill ingest-path engine cleanup shipped in `scraper/backfill_scores.py`: `listing_for_intelligence()` now sanitizes `engine_model`/`faa_engine_model` before scoring, parser-derived engine-model updates are sanitized before writeback, and scoring now prefers cleaned parser engine values when existing listing engine text is missing/noisy/overlong so canonical engine tokens propagate earlier in the pipeline.
 - Targeted noisy-engine at-rest cleanup executed: rows matching `engine_model ILIKE '%HOURS SNEW%'` / `%PROGRAM TAP ADVANTAGE%` were reviewed and corrected with canonical candidates (`IO-540-AB1A5`, `IO-360-C1C6`, `TIO-540-AJ1A`, `IO-550-B39`, `FJ 44 SERIES`, etc.), followed by ID-scoped score backfill (`attempted=9`, `updated=9`, `failed=0`); residual noisy backlog reduced to `hours_snew=1`, `program_tap=0`.
 - Engine TBO reference expansion shipped: migration `20260321000063_expand_engine_tbo_reference.sql` added extension/provenance/scoring columns, compatibility upsert constraint migration `20260321000064_engine_tbo_reference_upsert_constraints.sql` was applied, and `scraper/engine_tbo_seed_update.py` seeded/upserted 249 Continental/Lycoming rows with all verification spot checks passing.
-- Score distribution fix implemented in `core/intelligence/aircraft_intelligence.py` (`v1.9.2` → `v1.9.3`): age-differentiated imputed defaults, widened risk tier bands (`LOW >= 78`, `HIGH 25-44`), days_on_market tiebreaker, `_components_measured` tracking, and hard-safety CRITICAL floor (`value_score <= 25`). Pre-deployment validation tooling at `scraper/validate_score_distribution_fix.py` and `scraper/audit_score_distribution.py`; deployment runbook at `SCORE_DISTRIBUTION_FIX_RUNBOOK.md`. Awaiting current backfill completion before deploying.
+- Score distribution fix implemented in `core/intelligence/aircraft_intelligence.py` (`v1.9.2` → `v1.9.3`): age-differentiated imputed defaults, widened risk tier bands (`LOW >= 78`, `HIGH 25-44`), days_on_market tiebreaker, `_components_measured` tracking, and hard-safety CRITICAL floor (`value_score <= 25`). Pre-deployment validation tooling at `scraper/validate_score_distribution_fix.py` and `scraper/audit_score_distribution.py`; deployment runbook at `SCORE_DISTRIBUTION_FIX_RUNBOOK.md`. **Post–full backfill verification** (`npm run pipeline:score-dist:post-backfill`) executed Mar 23, 2026 after v1.9.4 table sweep.
 
 ---
 
@@ -241,8 +243,6 @@ Each item should stay one-line actionable with clear completion criteria.
 - **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
 - **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.
 - **Pending migration decision:** add `stoh`, `sfoh`, and `no_damage_history` columns to `aircraft_listings` and wire into `backfill_scores.py` write path (currently stored in `description_intelligence` JSONB only).
-- **Score distribution deployment (ready):** after `backfill_scores.py --all --compute-comps` exits cleanly, run `npm run pipeline:score-dist:post-backfill` (or follow `SCORE_DISTRIBUTION_FIX_RUNBOOK.md` manually).
-
 ### Medium Priority
 
 - **DS-4 Type Clubs:** complete research matrix + scrapeability report and wire any allowed scrapers.

@@ -170,6 +170,7 @@ export default function ListingImageGallery({
                 sizes="(max-width: 1024px) 100vw, 65vw"
                 unoptimized
                 priority
+                fetchPriority="high"
                 onError={() => markFailed(heroUrl)}
               />
             </span>
@@ -183,6 +184,7 @@ export default function ListingImageGallery({
               sizes="(max-width: 980px) 100vw, 50vw"
               unoptimized
               priority
+              fetchPriority="high"
               onError={() => markFailed(heroUrl)}
             />
           )}

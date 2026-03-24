@@ -6,7 +6,7 @@ Run after each deploy to **`main`** (e.g. Vercel production). Primary public hos
 
 Do these **in order** after merging changes that touch listings or Supabase:
 
-1. **Apply DB migration** `supabase/migrations/20260322000067_listing_filter_options_aggregate_rpc.sql` to the production project (`supabase db push` or SQL editor). Without it, filter options still work via the **chunked fallback** but stay slow and may hit statement timeouts.
+1. **Apply DB migrations** to the production project (`supabase db push` or SQL editor): `20260322000067_listing_filter_options_aggregate_rpc.sql` (filter options RPC; without it, chunked fallback works but is slower). **`20260324000070_public_listings_undisclosed_price_sort.sql`** — `public_listings` undisclosed-price sort + related view fields (idempotent if `undisclosed_price_sort` already exists on `aircraft_listings`).
 2. **Deploy the Next.js app** so `/listings`, `/api/listings/options`, and CI match the same commit.
 3. **Smoke-check** `/api/listings/options` — expect **200** in a few hundred ms (not ~25s), JSON `data.makes` non-empty when inventory exists.
 4. **HAR / Network** — open `/listings`, confirm **no tight loop** on `/api/listings/options` and document request completes in reasonable time.
