@@ -12,6 +12,22 @@ type VerificationFlag = {
   text: string
 }
 
+type FlipExplanationSidebar = {
+  p1_pricing_edge?: { pts?: number; max?: number }
+  p2_airworthiness?: { pts?: number; max?: number }
+  p3_improvement_room?: { pts?: number; max?: number }
+  p4_exit_liquidity?: { pts?: number; max?: number }
+  suppressed?: string
+  error?: string
+} | null
+
+function flipExplanationShowsPillars(ex: FlipExplanationSidebar): ex is NonNullable<FlipExplanationSidebar> {
+  if (!ex || typeof ex !== "object") return false
+  if ("suppressed" in ex && ex.suppressed) return false
+  if ("error" in ex && ex.error) return false
+  return true
+}
+
 type RightDetailColumnProps = {
   listingId: string
   askingPrice: number | null
@@ -24,9 +40,7 @@ type RightDetailColumnProps = {
   scoreMethodSummary: string
   confidenceSignals: string[]
   effectiveDataConfidence: string | null
-  marketScore: number | null
-  conditionScore: number | null
-  executionScore: number | null
+  flipExplanation?: FlipExplanationSidebar
   compExactCount: number | null
   compFamilyCount: number | null
   compMakeCount: number | null
@@ -121,8 +135,8 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
               style={{ borderColor: props.scoreColor, boxShadow: `0 0 0 6px ${props.scoreColor}20 inset` }}
               aria-label={
                 typeof props.primaryScore === "number" && Number.isFinite(props.primaryScore)
-                  ? `Deal score: ${Math.round(props.primaryScore)} out of 100`
-                  : "Deal score not available"
+                  ? `Flip score: ${Math.round(props.primaryScore)} out of 100`
+                  : "Flip score not available"
               }
             >
               <div className="score-readout">
@@ -135,10 +149,10 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
                 {props.primaryLabel}
               </summary>
               <ul className="score-band-list" style={{ marginTop: '0.45rem' }}>
-                <li><strong>85-100</strong>: Strong buy candidate</li>
-                <li><strong>70-84</strong>: Good opportunity</li>
-                <li><strong>50-69</strong>: Mixed, inspect closely</li>
-                <li><strong>0-49</strong>: Weak edge / high risk</li>
+                <li><strong>80–100</strong>: HOT — top flip candidates</li>
+                <li><strong>65–79</strong>: GOOD — solid resale profile</li>
+                <li><strong>50–64</strong>: FAIR — selective / needs work</li>
+                <li><strong>0–49</strong>: PASS — weak flip edge</li>
               </ul>
               <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
                 {props.scoreMethodSummary
@@ -181,22 +195,31 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </ul>
           )}
         </div>
-        {!props.suppressDuplicateHeroScores ? (
-          <div
-            className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
-            style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}
-          >
-            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-              {`Market ${props.safeDisplay(props.formatScore(props.marketScore))}`}
+        {(() => {
+          const ex = props.flipExplanation
+          if (props.suppressDuplicateHeroScores || !flipExplanationShowsPillars(ex ?? null)) return null
+          const pillarRows: Array<[string, number | null | undefined, number]> = [
+            ["Pricing edge", ex.p1_pricing_edge?.pts, 35],
+            ["Airworthiness", ex.p2_airworthiness?.pts, 20],
+            ["Improvement", ex.p3_improvement_room?.pts, 30],
+            ["Exit liquidity", ex.p4_exit_liquidity?.pts, 15],
+          ]
+          return (
+            <div
+              className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
+              style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.45rem' }}
+            >
+              {pillarRows.map(([label, pts, max]) => (
+                <div
+                  key={label}
+                  style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}
+                >
+                  {`${label} ${typeof pts === "number" && Number.isFinite(pts) ? `${Math.round(pts)}/${max}` : props.safeDisplay(null)}`}
+                </div>
+              ))}
             </div>
-            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-              {`Condition ${props.safeDisplay(props.formatScore(props.conditionScore))}`}
-            </div>
-            <div style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}>
-              {`Execution ${props.safeDisplay(props.formatScore(props.executionScore))}`}
-            </div>
-          </div>
-        ) : null}
+          )
+        })()}
         {(typeof props.compExactCount === 'number' || typeof props.compFamilyCount === 'number' || typeof props.compMakeCount === 'number') ? (
           <div style={{ marginTop: '0.55rem', fontSize: '0.78rem', color: 'var(--brand-muted)' }}>
             {`Comp universe - exact: ${props.safeDisplay(props.compExactCount)} | family: ${props.safeDisplay(props.compFamilyCount)} | make: ${props.safeDisplay(props.compMakeCount)}`}

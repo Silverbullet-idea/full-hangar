@@ -18,9 +18,18 @@ export type DealDeskSeed = {
   hasGlassCockpit?: boolean | null;
   /** Listing score / risk signals for Live P&L health checklist. */
   riskLevel?: string | null;
-  valueScore?: number | null;
+  /** Primary displayed resale signal (intelligence v2+). */
+  flipScore?: number | null;
+  flipTier?: string | null;
+  flipExplanation?: {
+    p1_pricing_edge?: { pts?: number; max?: number };
+    p2_airworthiness?: { pts?: number; max?: number };
+    p3_improvement_room?: { pts?: number; max?: number };
+    p4_exit_liquidity?: { pts?: number; max?: number };
+    suppressed?: string;
+    error?: string;
+  } | null;
   avionicsScore?: number | null;
-  dealRating?: number | null;
   /** Engine life remaining 0–1 (fraction) or 0–100 (percent) from `ev_pct_life_remaining`. */
   evPctLifeRemaining?: number | null;
   faaMatched?: boolean | null;
@@ -28,6 +37,7 @@ export type DealDeskSeed = {
   engineScore?: number | null;
   propScore?: number | null;
   llpScore?: number | null;
+  /** Legacy v1 pillars — omitted from UI when flip score is primary. */
   investmentScore?: number | null;
   marketOpportunityScore?: number | null;
   executionScore?: number | null;

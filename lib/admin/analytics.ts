@@ -415,6 +415,8 @@ export async function computePlatformStats() {
   let dealTierWithoutDisclosedPrice = 0;
   let exceptionalDealWithoutDisclosedPrice = 0;
   const scoreBuckets = { tier_85_plus: 0, tier_70_84: 0, tier_50_69: 0, tier_25_49: 0, tier_under_25: 0, no_score: 0 };
+  const flipTierCounts = { HOT: 0, GOOD: 0, FAIR: 0, PASS: 0, NO_FLIP: 0 };
+  let flipMissingWithDisclosedPrice = 0;
 
   for (const row of rows) {
     const source = inferSource(row);
@@ -428,31 +430,44 @@ export async function computePlatformStats() {
     const make = String(row.make ?? "").trim();
     if (make) makeCounts.set(make, (makeCounts.get(make) ?? 0) + 1);
 
-    const score = asNumber(row.value_score);
-    if (score !== null) withScore += 1;
+    const price = asNumber(row.asking_price ?? row.price_asking);
+    const noDisclosedPrice = price === null || price <= 0;
+    const flipScore = asNumber(row.flip_score);
+    const flipTier = String(row.flip_tier ?? "").trim().toUpperCase();
+
+    if (flipScore !== null) withScore += 1;
     else withoutScore += 1;
-    if (score !== null && score >= 75) highScoreListings += 1;
-    if (score === null) scoreBuckets.no_score += 1;
-    else if (score >= 85) scoreBuckets.tier_85_plus += 1;
-    else if (score >= 70) scoreBuckets.tier_70_84 += 1;
-    else if (score >= 50) scoreBuckets.tier_50_69 += 1;
-    else if (score >= 25) scoreBuckets.tier_25_49 += 1;
+    if (flipScore !== null && flipScore >= 75) highScoreListings += 1;
+    if (flipScore === null) scoreBuckets.no_score += 1;
+    else if (flipScore >= 85) scoreBuckets.tier_85_plus += 1;
+    else if (flipScore >= 70) scoreBuckets.tier_70_84 += 1;
+    else if (flipScore >= 50) scoreBuckets.tier_50_69 += 1;
+    else if (flipScore >= 25) scoreBuckets.tier_25_49 += 1;
     else scoreBuckets.tier_under_25 += 1;
+
+    if (!noDisclosedPrice && flipScore !== null) {
+      if (flipTier === "HOT") {
+        flipTierCounts.HOT += 1;
+        exceptionalDeals += 1;
+      } else if (flipTier === "GOOD") flipTierCounts.GOOD += 1;
+      else if (flipTier === "FAIR") flipTierCounts.FAIR += 1;
+      else if (flipTier === "PASS") flipTierCounts.PASS += 1;
+      else flipTierCounts.NO_FLIP += 1;
+    } else {
+      flipTierCounts.NO_FLIP += 1;
+    }
 
     if (row.faa_matched === true) faaMatchedCount += 1;
     const tail = String(row.n_number ?? "").trim();
     if (tail.length > 0 && tail !== "—") nNumberFilled += 1;
-    if (String(row.deal_tier ?? "").toUpperCase() === "EXCEPTIONAL_DEAL") exceptionalDeals += 1;
 
     const evRem = asNumber(row.engine_remaining_value ?? row.ev_engine_remaining_value);
     if (evRem !== null && Number.isFinite(evRem)) engineValueScored += 1;
 
-    const price = asNumber(row.asking_price ?? row.price_asking);
-    const tierUpper = String(row.deal_tier ?? "").trim().toUpperCase();
-    const hasMeaningfulDealTier = tierUpper.length > 0 && tierUpper !== "INSUFFICIENT_DATA";
-    const noDisclosedPrice = price === null || price <= 0;
-    if (hasMeaningfulDealTier && noDisclosedPrice) dealTierWithoutDisclosedPrice += 1;
-    if (tierUpper === "EXCEPTIONAL_DEAL" && noDisclosedPrice) exceptionalDealWithoutDisclosedPrice += 1;
+    const flipSignal = flipScore !== null || (flipTier.length > 0 && flipTier !== "INSUFFICIENT_DATA");
+    if (flipSignal && noDisclosedPrice) dealTierWithoutDisclosedPrice += 1;
+    if (flipTier === "HOT" && noDisclosedPrice) exceptionalDealWithoutDisclosedPrice += 1;
+    if (!noDisclosedPrice && flipScore === null) flipMissingWithDisclosedPrice += 1;
     if (price === null || price <= 0) noPriceListings += 1;
     if (price !== null && price > 0) {
       if (price < 50000) under50k += 1;
@@ -552,6 +567,8 @@ export async function computePlatformStats() {
       engine_value_coverage_pct: engineValueCoveragePct,
       distinct_sources: distinctSources,
       score_distribution: scoreBuckets,
+      flip_tier_distribution: flipTierCounts,
+      flip_missing_with_disclosed_price: flipMissingWithDisclosedPrice,
       deal_tier_without_disclosed_price: dealTierWithoutDisclosedPrice,
       exceptional_deal_without_disclosed_price: exceptionalDealWithoutDisclosedPrice,
     },
@@ -650,7 +667,7 @@ export async function computeBuyerIntelligence() {
     .slice(0, 10);
 
   const agingHighValue = rows
-    .filter((row) => (asNumber(row.value_score) ?? 0) >= 75 && (asNumber(row.days_on_market) ?? 0) > 60)
+    .filter((row) => (asNumber(row.flip_score) ?? 0) >= 75 && (asNumber(row.days_on_market) ?? 0) > 60)
     .slice(0, 20)
     .map((row) => ({
       listing_id: String(row.id ?? ""),
@@ -658,7 +675,7 @@ export async function computeBuyerIntelligence() {
       model: String(row.model ?? ""),
       year: asNumber(row.year) ?? 0,
       price: listPrice(row) ?? 0,
-      value_score: asNumber(row.value_score) ?? 0,
+      flip_score: asNumber(row.flip_score) ?? 0,
       days_on_market: asNumber(row.days_on_market) ?? 0,
       source_url: String(row.source_url ?? row.listing_url ?? row.url ?? ""),
     }));
@@ -679,7 +696,7 @@ export async function computeBuyerIntelligence() {
         original_price: original,
         current_price: currentPrice,
         reduction_pct: reductionPct,
-        value_score: asNumber(row.value_score) ?? 0,
+        flip_score: asNumber(row.flip_score) ?? 0,
         days_on_market: asNumber(row.days_on_market) ?? 0,
       };
     });
@@ -703,7 +720,7 @@ export async function computeBuyerIntelligence() {
         price,
         estimated_market_value: comp,
         discount_pct: discountPct,
-        value_score: asNumber(row.value_score) ?? 0,
+        flip_score: asNumber(row.flip_score) ?? 0,
       };
     });
 
@@ -833,11 +850,11 @@ export async function computeBuyerIntelligence() {
       make: String(row.make ?? ""),
       model: String(row.model ?? ""),
       asking_price: listPrice(row),
-      value_score: asNumber(row.value_score) ?? 0,
-      deal_tier: String(row.deal_tier ?? ""),
+      flip_score: asNumber(row.flip_score) ?? 0,
+      flip_tier: String(row.flip_tier ?? ""),
     }))
-    .filter((r) => r.value_score >= 65)
-    .sort((a, b) => b.value_score - a.value_score)
+    .filter((r) => (r.flip_score ?? 0) >= 65)
+    .sort((a, b) => (b.flip_score ?? 0) - (a.flip_score ?? 0))
     .slice(0, 12);
 
   return {

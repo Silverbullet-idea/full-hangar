@@ -13,7 +13,9 @@ type CompRow = {
   model: string | null
   total_time_hours: number | null
   engine_smoh: number | null
+  /** @deprecated Prefer flip_score for UI; retained for older clients */
   value_score: number | null
+  flip_score: number | null
   risk_level: string | null
   listing_url: string | null
   source: string | null
@@ -21,6 +23,7 @@ type CompRow = {
   location_label: string | null
   primary_image_url: string | null
   deal_tier: string | null
+  flip_tier: string | null
 }
 
 function numberOrNull(value: unknown): number | null {
@@ -60,6 +63,7 @@ function toCompRow(raw: Record<string, unknown>): CompRow {
     total_time_hours: numberOrNull(raw.total_time_airframe),
     engine_smoh: numberOrNull(raw.engine_time_since_overhaul ?? raw.time_since_overhaul),
     value_score: numberOrNull(raw.value_score),
+    flip_score: numberOrNull(raw.flip_score),
     risk_level: typeof raw.risk_level === "string" ? raw.risk_level : null,
     listing_url:
       (typeof raw.listing_url === "string" && raw.listing_url) ||
@@ -70,6 +74,7 @@ function toCompRow(raw: Record<string, unknown>): CompRow {
     location_label: typeof raw.location_label === "string" ? raw.location_label : null,
     primary_image_url: typeof raw.primary_image_url === "string" ? raw.primary_image_url : null,
     deal_tier: typeof raw.deal_tier === "string" ? raw.deal_tier : null,
+    flip_tier: typeof raw.flip_tier === "string" ? raw.flip_tier : null,
   }
 }
 

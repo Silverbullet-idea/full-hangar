@@ -15,14 +15,14 @@ const DEALS_SORT_KEY = 'internal_deals_sort'
 const DEALS_PRESET_KEY = 'internal_deals_preset'
 const NAV_LOADING_START_EVENT = 'fullhangar:navigation-loading-start'
 const NAV_LOADING_END_EVENT = 'fullhangar:navigation-loading-end'
-const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKET', 'OVERPRICED'] as const
+const DEAL_TIERS = ['HOT', 'GOOD', 'FAIR', 'PASS'] as const
 const DEFAULT_TIERS = new Set(DEAL_TIERS)
 const DEFAULT_MAX_PRICE = 2000000
 const DEALS_PRICE_FILTER = `asking_price.lte.${DEFAULT_MAX_PRICE},asking_price.is.null`
 const DEALS_FALLBACK_COLUMNS_WITH_ENGINE =
-  'id,source_id,year,make,model,asking_price,deal_rating,deal_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at,engine_hours_smoh,engine_tbo_hours,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_data_quality'
+  'id,source_id,year,make,model,asking_price,flip_score,flip_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at,engine_hours_smoh,engine_tbo_hours,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_data_quality'
 const DEALS_FALLBACK_COLUMNS_BASE =
-  'id,source_id,year,make,model,asking_price,deal_rating,deal_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at'
+  'id,source_id,year,make,model,asking_price,flip_score,flip_tier,vs_median_price,total_time_airframe,time_since_overhaul,avionics_score,avionics_installed_value,location_city,location_state,location_label,days_on_market,price_reduced,price_reduction_amount,faa_registration_alert,url,n_number,deferred_total,description,description_full,risk_level,deal_comparison_source,created_at,scraped_at,listing_date,updated_at'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
@@ -31,7 +31,7 @@ function buildDealsListingQuery(selectColumns: string | null) {
     .from('public_listings')
     .select(selectColumns ?? '*')
     .or(DEALS_PRICE_FILTER)
-    .order('deal_rating', { ascending: false, nullsFirst: false })
+    .order('flip_score', { ascending: false, nullsFirst: false })
     .limit(2500)
   return query
 }
@@ -91,7 +91,7 @@ export default function InternalDealsPage() {
   const [engineApproachingOnly, setEngineApproachingOnly] = useState(false)
   const [engineOverrunOnly, setEngineOverrunOnly] = useState(false)
   const [hasEngineDataOnly, setHasEngineDataOnly] = useState(false)
-  const [sortKey, setSortKey] = useState<SortKey>('deal_rating')
+  const [sortKey, setSortKey] = useState<SortKey>('flip_score')
   const [activePreset, setActivePreset] = useState<PresetKey>('none')
   const [watchlist, setWatchlist] = useState<Record<string, WatchlistEntry>>({})
   const [recentSales, setRecentSales] = useState<RecentSoldRecord[]>([])
@@ -129,8 +129,17 @@ export default function InternalDealsPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem(DEALS_SORT_KEY)
-    if (raw === 'deal_rating' || raw === 'vs_median_price' || raw === 'days_on_market' || raw === 'price_reduction_amount' || raw === 'component_gap_value' || raw === 'engine_life_desc' || raw === 'engine_life_asc') {
-      setSortKey(raw)
+    if (
+      raw === 'flip_score' ||
+      raw === 'deal_rating' ||
+      raw === 'vs_median_price' ||
+      raw === 'days_on_market' ||
+      raw === 'price_reduction_amount' ||
+      raw === 'component_gap_value' ||
+      raw === 'engine_life_desc' ||
+      raw === 'engine_life_asc'
+    ) {
+      setSortKey(raw === 'deal_rating' ? 'flip_score' : (raw as SortKey))
     }
     const presetRaw = localStorage.getItem(DEALS_PRESET_KEY)
     if (presetRaw === 'none' || presetRaw === 'flip_fast' || presetRaw === 'motivated_sellers' || presetRaw === 'price_call_followup') {
@@ -153,7 +162,7 @@ export default function InternalDealsPage() {
         let baseRows: DealListing[] = []
         try {
           const apiResponse = await withTimeout(
-            fetch('/api/listings?page=1&pageSize=2500&sortBy=deal_desc'),
+            fetch('/api/listings?page=1&pageSize=2500&sortBy=flip_desc'),
             12000,
             'internal deals api listings fallback fetch'
           )
@@ -276,7 +285,7 @@ export default function InternalDealsPage() {
         if (excludeNoPrice && price == null) return false
         if (price != null && price > maxPrice) return false
 
-        const tier = normalizeTier(row.deal_tier)
+        const tier = effectiveFlipTierForFilter(row)
         if (selectedTiers.size > 0 && !selectedTiers.has(tier)) return false
 
         const normalizedMake = normalizeText(row.make)
@@ -331,14 +340,14 @@ export default function InternalDealsPage() {
     setEngineApproachingOnly(false)
     setEngineOverrunOnly(false)
     setHasEngineDataOnly(false)
-    setSortKey('deal_rating')
+    setSortKey('flip_score')
     setActiveTab('all')
     setActivePreset('none')
     setDidAutoRelaxFilters(true)
   }, [activeTab, didAutoRelaxFilters, filteredRows.length, rows.length])
 
   const topStats = useMemo(() => {
-    const exceptionalCount = baseUnder50k.filter((row) => normalizeTier(row.deal_tier) === 'EXCEPTIONAL_DEAL').length
+    const hotTierCount = baseUnder50k.filter((row) => effectiveFlipTierForFilter(row) === 'HOT').length
     const withTimestamp = baseUnder50k
       .map((row) => extractTimestamp(row))
       .filter((value): value is number => typeof value === 'number')
@@ -355,7 +364,7 @@ export default function InternalDealsPage() {
     const highPriorityCount = baseUnder50k.filter((row) => isHighPriorityDeal(row)).length
     return {
       total: baseUnder50k.length,
-      exceptionalCount,
+      hotTierCount,
       avgDays,
       makesWithComps: makesWithComps.size,
       highPriorityCount,
@@ -394,7 +403,7 @@ export default function InternalDealsPage() {
     setActivePreset(preset)
     if (preset === 'flip_fast') {
       setMaxPrice(50000)
-      setSelectedTiers(new Set(['EXCEPTIONAL_DEAL', 'GOOD_DEAL']))
+      setSelectedTiers(new Set(['HOT', 'GOOD']))
       setSelectedMakes([])
       setMinAvionicsScore(20)
       setExcludeNoPrice(true)
@@ -406,7 +415,7 @@ export default function InternalDealsPage() {
       setEngineApproachingOnly(false)
       setEngineOverrunOnly(false)
       setHasEngineDataOnly(false)
-      setSortKey('deal_rating')
+      setSortKey('flip_score')
       return
     }
     if (preset === 'motivated_sellers') {
@@ -457,7 +466,7 @@ export default function InternalDealsPage() {
     setEngineApproachingOnly(false)
     setEngineOverrunOnly(false)
     setHasEngineDataOnly(false)
-    setSortKey('deal_rating')
+    setSortKey('flip_score')
   }
 
   if (loading) {
@@ -560,28 +569,30 @@ function normalizeText(value: string | null | undefined): string {
 }
 
 function normalizeTier(value: string | null | undefined): string {
-  const normalized = (value ?? '').trim().toUpperCase()
-  if (normalized === 'EXCEPTIONAL') return 'EXCEPTIONAL_DEAL'
-  if (normalized === 'GOOD') return 'GOOD_DEAL'
-  if (normalized === 'FAIR') return 'FAIR_MARKET'
-  if (normalized === 'ABOVE') return 'ABOVE_MARKET'
-  return normalized || 'OVERPRICED'
+  const u = (value ?? '').trim().toUpperCase()
+  if (u === 'HOT' || u === 'GOOD' || u === 'FAIR' || u === 'PASS') return u
+  if (u === 'EXCEPTIONAL_DEAL' || u === 'EXCEPTIONAL') return 'HOT'
+  if (u === 'GOOD_DEAL') return 'GOOD'
+  if (u === 'FAIR_MARKET') return 'FAIR'
+  if (u === 'ABOVE_MARKET' || u === 'OVERPRICED' || u === 'WEAK' || u === 'POOR') return 'PASS'
+  return 'PASS'
+}
+
+function effectiveFlipTierForFilter(row: DealListing): string {
+  const price = getAskingPrice(row)
+  if (price == null || price <= 0) return 'PASS'
+  return normalizeTier(row.flip_tier ?? row.deal_tier ?? null)
 }
 
 function toTierBadgeText(tier: string): string {
-  if (tier === 'EXCEPTIONAL_DEAL') return 'EXCEPTIONAL'
-  if (tier === 'GOOD_DEAL') return 'GOOD'
-  if (tier === 'FAIR_MARKET') return 'FAIR'
-  if (tier === 'ABOVE_MARKET') return 'ABOVE'
-  return 'OVERPRICED'
+  return tier
 }
 
 function tierBadgeClass(tier: string): string {
-  if (tier === 'EXCEPTIONAL_DEAL') return 'bg-emerald-800 text-emerald-100'
-  if (tier === 'GOOD_DEAL') return 'bg-green-900 text-green-100'
-  if (tier === 'FAIR_MARKET') return 'bg-slate-700 text-slate-100'
-  if (tier === 'ABOVE_MARKET') return 'bg-amber-900 text-amber-100'
-  return 'bg-red-900 text-red-100'
+  if (tier === 'HOT') return 'bg-orange-600 text-white'
+  if (tier === 'GOOD') return 'bg-emerald-800 text-emerald-100'
+  if (tier === 'FAIR') return 'bg-amber-800 text-amber-100'
+  return 'bg-slate-700 text-slate-200'
 }
 
 function getAskingPrice(row: DealListing): number | null {
@@ -705,6 +716,11 @@ function priorityRank(row: DealListing): number {
 }
 
 function compareDeals(a: DealListing, b: DealListing, sortKey: SortKey): number {
+  if (sortKey === 'flip_score') {
+    const aFlip = typeof a.flip_score === 'number' ? a.flip_score : -1
+    const bFlip = typeof b.flip_score === 'number' ? b.flip_score : -1
+    if (aFlip !== bFlip) return bFlip - aFlip
+  }
   if (sortKey === 'vs_median_price') {
     const aVs = a.vs_median_price ?? Number.POSITIVE_INFINITY
     const bVs = b.vs_median_price ?? Number.POSITIVE_INFINITY
@@ -735,7 +751,9 @@ function compareDeals(a: DealListing, b: DealListing, sortKey: SortKey): number 
 
   const priorityDelta = priorityRank(b) - priorityRank(a)
   if (priorityDelta !== 0) return priorityDelta
-  return (b.deal_rating ?? -1) - (a.deal_rating ?? -1)
+  const aFlip = typeof a.flip_score === 'number' ? a.flip_score : -1
+  const bFlip = typeof b.flip_score === 'number' ? b.flip_score : -1
+  return bFlip - aFlip
 }
 
 function extractTimestamp(row: DealListing): number | null {

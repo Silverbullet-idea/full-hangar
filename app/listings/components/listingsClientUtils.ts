@@ -12,6 +12,17 @@ export const CATEGORIES = [
 
 export const TOP_MENU_MIN_COUNT = 10
 
+/** Minimum pillar scores offered in listings filter UI (dropdowns). */
+export const LISTING_PILLAR_MIN_STEPS = [0, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100] as const
+
+/** Clamp to 0–100 and snap to the nearest filter UI step so URL, state, and selects stay aligned. */
+export function normalizeListingPillarMin(n: number): number {
+  const v = Math.min(100, Math.max(0, Math.floor(Number(n) || 0)))
+  const opts = LISTING_PILLAR_MIN_STEPS as readonly number[]
+  if (opts.includes(v)) return v
+  return opts.reduce((best, x) => (Math.abs(x - v) < Math.abs(best - v) ? x : best), opts[0]!)
+}
+
 /** Toggle a lowercase facet token in a sorted unique list (URL `engineLife`, `avionics`, `dealPattern`). */
 export function toggleFacetToken(tokens: readonly string[], token: string): string[] {
   const k = token.toLowerCase()

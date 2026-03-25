@@ -14,13 +14,14 @@ import re
 import statistics
 
 from .avionics_intelligence import avionics_score
+from .flip_score import compute_flip_score
 from .model_normalizer import extract_engine_canonical_from_listing, extract_prop_canonical_from_listing
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
 
 # v1.9.3 - Score distribution fix: age-differentiated imputed defaults,
 # widened risk tier bands (LOW threshold 78, HIGH band 25-44),
 # days_on_market tiebreaker nudge, _components_measured tracking.
-INTELLIGENCE_VERSION = "1.9.4"
+INTELLIGENCE_VERSION = "2.0.0"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -2232,7 +2233,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         if isinstance(accident_risk_override, str) and accident_risk_override:
             risk = accident_risk_override
 
-    return {
+    score_result = {
         "value_score": _out_value_score,
         "condition_score": round(condition_score, 1),
         "confidence_score": confidence_score,
@@ -2303,3 +2304,8 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "engine_overrun_liability": engine_value_result.get("engine_overrun_liability"),
         "engine_reserve_per_hour": engine_value_result.get("engine_reserve_per_hour"),
     }
+    _flip = compute_flip_score(listing, score_result)
+    score_result["flip_score"] = _flip["flip_score"]
+    score_result["flip_tier"] = _flip["flip_tier"]
+    score_result["flip_explanation"] = _flip["flip_explanation"]
+    return score_result

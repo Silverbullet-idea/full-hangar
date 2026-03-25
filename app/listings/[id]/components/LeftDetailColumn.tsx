@@ -11,7 +11,7 @@ type LeftDetailColumnProps = {
   sourceUrl: string | null
   sourceLinkLabel: string
   logbookUrls: string[]
-  dealTier?: string | null
+  flipTier?: string | null
   fallbackImageUrl?: string | null
   /** When false, gallery is rendered in the page hero (detail overhaul). Default true for backward compatibility. */
   includeGallery?: boolean
@@ -264,7 +264,7 @@ export default function LeftDetailColumn({
   sourceUrl,
   sourceLinkLabel,
   logbookUrls,
-  dealTier = null,
+  flipTier = null,
   fallbackImageUrl = null,
   includeGallery = true,
   galleryLayoutVariant = 'default',
@@ -318,7 +318,7 @@ export default function LeftDetailColumn({
           <ListingImageGallery
             title={title || "Aircraft listing"}
             imageUrls={imageUrls}
-            dealTier={dealTier}
+            flipTier={flipTier}
             fallbackImageUrl={fallbackImageUrl}
             layoutVariant={galleryLayoutVariant}
           />

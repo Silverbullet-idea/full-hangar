@@ -81,6 +81,16 @@ function engineOverrun(row: DealListing): number {
   return typeof overrun === 'number' && overrun > 0 ? overrun : 0
 }
 
+function rowAskingPrice(row: DealListing): number | null {
+  const price = row.asking_price ?? row.price_asking
+  return typeof price === 'number' && price > 0 ? price : null
+}
+
+function rowFlipScore(row: DealListing): number | null {
+  if (rowAskingPrice(row) == null) return null
+  return typeof row.flip_score === 'number' ? row.flip_score : null
+}
+
 function deferredTotal(row: DealListing): number | null {
   const base = typeof row.deferred_total === 'number' ? row.deferred_total : null
   const overrun = engineOverrun(row)
@@ -155,8 +165,8 @@ export default function DealsTable({
         <thead className="bg-[#1c1c1c] text-brand-muted">
           <tr>
             <th className="px-2 py-2 text-left">Watch</th>
-            <th className="px-2 py-2 text-left">Deal Score</th>
-            <th className="px-2 py-2 text-left">Deal Tier</th>
+            <th className="px-2 py-2 text-left">Flip score</th>
+            <th className="px-2 py-2 text-left">Flip tier</th>
             <th className="px-2 py-2 text-left">Aircraft</th>
             <th className="px-2 py-2 text-left">Price</th>
             <th className="px-2 py-2 text-left">vs Market</th>
@@ -186,6 +196,9 @@ export default function DealsTable({
             const isExpanded = expandedId === row.id
             const isStarred = Boolean(watchlist[row.id])
             const summary = buildDealExplanation(row)
+            const fScore = rowFlipScore(row)
+            const tierKey =
+              fScore == null ? null : normalizeTier(row.flip_tier ?? row.deal_tier ?? null)
             return (
               <FragmentRow key={row.id}>
                 <tr
@@ -206,11 +219,15 @@ export default function DealsTable({
                     </button>
                   </td>
                   <td className="px-2 py-2 align-top">
-                    <span className={`text-lg font-extrabold ${dealScoreColor(row.deal_rating)}`}>{formatScore(row.deal_rating)}</span>
+                    <span className={`text-lg font-extrabold ${dealScoreColor(fScore)}`}>{formatScore(fScore)}</span>
                   </td>
                   <td className="px-2 py-2 align-top">
-                    <span className={`rounded px-2 py-1 text-[10px] font-bold ${tierBadgeClass(normalizeTier(row.deal_tier))}`}>
-                      {toTierBadgeText(normalizeTier(row.deal_tier))}
+                    <span
+                      className={`rounded px-2 py-1 text-[10px] font-bold ${
+                        tierKey == null ? 'bg-[#252525] text-brand-muted' : tierBadgeClass(tierKey)
+                      }`}
+                    >
+                      {tierKey == null ? '—' : toTierBadgeText(tierKey)}
                     </span>
                   </td>
                   <td className="px-2 py-2 align-top font-semibold text-white">{aircraftName(row)}</td>

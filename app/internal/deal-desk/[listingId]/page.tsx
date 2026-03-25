@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createPrivilegedServerClient } from "@/lib/supabase/server";
+import type { DealDeskSeed } from "../types";
 import DealDeskPageClient from "./DealDeskPageClient";
 
 type ListingRow = Record<string, unknown>;
@@ -17,6 +18,24 @@ function asString(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function parseFlipExplanation(raw: unknown): DealDeskSeed["flipExplanation"] {
+  if (raw == null) return null;
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as DealDeskSeed["flipExplanation"];
+  }
+  if (typeof raw === "string") {
+    try {
+      const v: unknown = JSON.parse(raw);
+      return typeof v === "object" && v !== null && !Array.isArray(v)
+        ? (v as DealDeskSeed["flipExplanation"])
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 function buildAircraftLabel(row: ListingRow | null, listingId: string): string {
@@ -65,9 +84,10 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
         ? row.has_glass_cockpit.toLowerCase() === "true"
         : null;
   const riskLevel = asString(row?.risk_level);
-  const valueScore = asNumber(row?.value_score);
   const avionicsScore = asNumber(row?.avionics_score);
-  const dealRating = asNumber(row?.deal_rating);
+  const flipScoreRaw = asNumber(row?.flip_score);
+  const flipTierRaw = asString(row?.flip_tier);
+  const flipExplanation = parseFlipExplanation(row?.flip_explanation);
   const evPctLifeRemaining = asNumber(row?.ev_pct_life_remaining);
   const faaMatched =
     typeof row?.faa_matched === "boolean"
@@ -79,10 +99,6 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
   const engineScore = asNumber(row?.engine_score);
   const propScore = asNumber(row?.prop_score);
   const llpScore = asNumber(row?.llp_score);
-  const investmentScore = asNumber(row?.investment_score);
-  const marketOpportunityScore = asNumber(row?.market_opportunity_score);
-  const executionScore = asNumber(row?.execution_score);
-  const conditionScore = asNumber(row?.condition_score);
   const pricingConfidence = asString(row?.pricing_confidence);
   const compSelectionTier = asString(row?.comp_selection_tier);
   const compUniverseSize = asNumber(row?.comp_universe_size);
@@ -131,18 +147,15 @@ export default async function DealDeskListingPage({ params }: { params: Promise<
           isSteamGauge: isSteamGauge ?? undefined,
           hasGlassCockpit: hasGlassCockpit ?? undefined,
           riskLevel: riskLevel ?? undefined,
-          valueScore: valueScore ?? undefined,
           avionicsScore: avionicsScore ?? undefined,
-          dealRating: dealRating ?? undefined,
+          flipScore: askingPrice > 0 ? flipScoreRaw ?? undefined : undefined,
+          flipTier: askingPrice > 0 ? flipTierRaw ?? undefined : undefined,
+          flipExplanation: askingPrice > 0 ? flipExplanation ?? undefined : undefined,
           evPctLifeRemaining: evPctLifeRemaining ?? undefined,
           faaMatched: faaMatched ?? undefined,
           engineScore: engineScore ?? undefined,
           propScore: propScore ?? undefined,
           llpScore: llpScore ?? undefined,
-          investmentScore: investmentScore ?? undefined,
-          marketOpportunityScore: marketOpportunityScore ?? undefined,
-          executionScore: executionScore ?? undefined,
-          conditionScore: conditionScore ?? undefined,
           pricingConfidence: pricingConfidence ?? undefined,
           compSelectionTier: compSelectionTier ?? undefined,
           compUniverseSize: compUniverseSize ?? undefined,

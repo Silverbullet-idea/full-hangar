@@ -1,0 +1,271 @@
+{
+  "version": 3,
+  "make_display_aliases": [
+    { "match": "BELL HELICOPTER TEXTRON CANADA", "canonical": "Bell" },
+    { "match": "BELL HELICOPTER TEXTRON", "canonical": "Bell" },
+    { "match": "CESSNA AIRCRAFT COMPANY", "canonical": "Cessna" },
+    { "match": "CESSNA AIRCRAFT CO", "canonical": "Cessna" },
+    { "match": "CESSNA AIRCRAFT", "canonical": "Cessna" },
+    { "match": "DASSAULT AVIATION", "canonical": "Dassault" },
+    { "match": "DASSAULT-BREGUET", "canonical": "Dassault" },
+    { "match": "GULFSTREAM AEROSPACE", "canonical": "Gulfstream" },
+    { "match": "DIAMOND AIRCRAFT INDUSTRIES", "canonical": "Diamond" },
+    { "match": "DIAMOND AIRCRAFT", "canonical": "Diamond" },
+    { "match": "PILATUS AIRCRAFT", "canonical": "Pilatus" },
+    { "match": "ROBINSON HELICOPTER", "canonical": "Robinson" },
+    { "match": "CUBCRAFTERS", "canonical": "CubCrafters" },
+    { "match": "AMERICAN CHAMPION AIRCRAFT", "canonical": "American Champion" },
+    { "match": "VAN'S AIRCRAFT", "canonical": "Van's" },
+    { "match": "HONDA AIRCRAFT", "canonical": "Honda" },
+    { "match": "BEECHJET", "canonical": "Beechjet", "exact_only": true },
+    { "match": "CESSNA", "canonical": "Cessna" },
+    { "match": "AIRBUS", "canonical": "Airbus" },
+    { "match": "AVIAT", "canonical": "Aviat" },
+    { "match": "PIPER", "canonical": "Piper" },
+    { "match": "BEECHCRAFT", "canonical": "Beechcraft" },
+    { "match": "BEECH", "canonical": "Beechcraft" },
+    { "match": "BELL HELICOPTER", "canonical": "Bell" },
+    { "match": "BELL HELICOPTERS", "canonical": "Bell" },
+    { "match": "AIRBUS EUROCOPTER", "canonical": "Airbus" },
+    { "match": "EUROCOPTER", "canonical": "Airbus" },
+    { "match": "CIRRUS AIRCRAFT", "canonical": "Cirrus" },
+    { "match": "EMBRAER", "canonical": "Embraer" },
+    { "match": "BOEING", "canonical": "Boeing" },
+    { "match": "DASSAULT", "canonical": "Dassault" },
+    { "match": "GULFSTREAM", "canonical": "Gulfstream" },
+    { "match": "MOONEY", "canonical": "Mooney" },
+    { "match": "DIAMOND", "canonical": "Diamond" },
+    { "match": "PILATUS", "canonical": "Pilatus" },
+    { "match": "ROBINSON", "canonical": "Robinson" },
+    { "match": "GRUMMAN", "canonical": "Grumman" },
+    { "match": "SOCATA", "canonical": "Socata" },
+    { "match": "DAHER", "canonical": "Daher" },
+    { "match": "BELL", "canonical": "Bell" }
+  ],
+  "make_prefix_merge": [
+    {
+      "id": "bombardier_family",
+      "prefix": "Bombardier ",
+      "canonical_make": "Bombardier",
+      "rest_goes_to_model_prefix": true
+    },
+    {
+      "id": "cessna_citation",
+      "prefix": "Cessna Citation",
+      "canonical_make": "Cessna",
+      "rest_goes_to_model_prefix": true,
+      "model_prefix_default": "Citation"
+    },
+    {
+      "id": "dassault_falcon",
+      "prefix": "Dassault Falcon",
+      "canonical_make": "Dassault",
+      "rest_goes_to_model_prefix": true,
+      "model_prefix_default": "Falcon"
+    }
+  ],
+  "model_as_make": [
+    {
+      "id": "piper_comanche",
+      "wrong_make": "Comanche",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "piper_cheyenne",
+      "wrong_make": "Cheyenne",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "piper_cherokee_word",
+      "wrong_make": "Cherokee",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "piper_archer_word",
+      "wrong_make": "Archer",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "piper_arrow_word",
+      "wrong_make": "Arrow",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "piper_cadet_word",
+      "wrong_make": "Cadet",
+      "canonical_make": "Piper",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "beech_bonanza",
+      "wrong_make": "Bonanza",
+      "canonical_make": "Beechcraft",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "beech_baron_word",
+      "wrong_make": "Baron",
+      "canonical_make": "Beechcraft",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "cessna_caravan",
+      "wrong_make": "Caravan",
+      "canonical_make": "Cessna",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "cessna_citation_word",
+      "wrong_make": "Citation",
+      "canonical_make": "Cessna",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "bombardier_challenger_word",
+      "wrong_make": "Challenger",
+      "canonical_make": "Bombardier",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "bombardier_learjet_word",
+      "wrong_make": "Learjet",
+      "canonical_make": "Bombardier",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "bombardier_global_word",
+      "wrong_make": "Global",
+      "canonical_make": "Bombardier",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "dassault_falcon_word",
+      "wrong_make": "Falcon",
+      "canonical_make": "Dassault",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "embraer_phenom_word",
+      "wrong_make": "Phenom",
+      "canonical_make": "Embraer",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "bell_505_numeric",
+      "wrong_make": "505",
+      "canonical_make": "Bell",
+      "prepend_wrong_make_to_model": true
+    },
+    {
+      "id": "airbus_as350",
+      "wrong_make": "As350",
+      "canonical_make": "Airbus",
+      "prepend_wrong_make_to_model": true
+    }
+  ],
+  "legacy_make_url_filters": [
+    {
+      "token": "Comanche",
+      "clauses": [
+        { "make_contains": "Comanche" },
+        { "make_contains": "Piper", "model_contains": "Comanche" }
+      ]
+    },
+    {
+      "token": "Cheyenne",
+      "clauses": [
+        { "make_contains": "Cheyenne" },
+        { "make_contains": "Piper", "model_contains": "Cheyenne" }
+      ]
+    },
+    {
+      "token": "505",
+      "clauses": [
+        { "make_contains": "505" },
+        { "make_contains": "Bell", "model_contains": "505" }
+      ]
+    },
+    {
+      "token": "Bonanza",
+      "clauses": [
+        { "make_contains": "Bonanza" },
+        { "make_contains": "Beechcraft", "model_contains": "Bonanza" }
+      ]
+    },
+    {
+      "token": "Citation",
+      "clauses": [
+        { "make_contains": "Citation" },
+        { "make_contains": "Cessna", "model_contains": "Citation" }
+      ]
+    },
+    {
+      "token": "Caravan",
+      "clauses": [
+        { "make_contains": "Caravan" },
+        { "make_contains": "Cessna", "model_contains": "Caravan" }
+      ]
+    },
+    {
+      "token": "Cherokee",
+      "clauses": [
+        { "make_contains": "Cherokee" },
+        { "make_contains": "Piper", "model_contains": "Cherokee" }
+      ]
+    },
+    {
+      "token": "Archer",
+      "clauses": [
+        { "make_contains": "Archer" },
+        { "make_contains": "Piper", "model_contains": "Archer" }
+      ]
+    },
+    {
+      "token": "Arrow",
+      "clauses": [
+        { "make_contains": "Arrow" },
+        { "make_contains": "Piper", "model_contains": "Arrow" }
+      ]
+    },
+    {
+      "token": "Challenger",
+      "clauses": [
+        { "make_contains": "Challenger" },
+        { "make_contains": "Bombardier", "model_contains": "Challenger" }
+      ]
+    },
+    {
+      "token": "Learjet",
+      "clauses": [
+        { "make_contains": "Learjet" },
+        { "make_contains": "Bombardier", "model_contains": "Learjet" }
+      ]
+    },
+    {
+      "token": "Global",
+      "clauses": [
+        { "make_contains": "Global" },
+        { "make_contains": "Bombardier", "model_contains": "Global" }
+      ]
+    },
+    {
+      "token": "Falcon",
+      "clauses": [
+        { "make_contains": "Falcon" },
+        { "make_contains": "Dassault", "model_contains": "Falcon" }
+      ]
+    },
+    {
+      "token": "Phenom",
+      "clauses": [
+        { "make_contains": "Phenom" },
+        { "make_contains": "Embraer", "model_contains": "Phenom" }
+      ]
+    }
+  ]
+}

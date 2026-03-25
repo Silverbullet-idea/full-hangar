@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       const existing = submodelBuckets.get(submodel) ?? { prices: [], dom: [], scores: [], years: [] };
       const price = toNumber(row.asking_price);
       const dom = toNumber(row.days_on_market);
-      const score = toNumber(row.value_score);
+      const score = toNumber(row.flip_score) ?? toNumber(row.value_score);
       const year = toNumber(row.year);
       if (price != null && price > 0) existing.prices.push(price);
       if (dom != null && dom >= 0) existing.dom.push(dom);

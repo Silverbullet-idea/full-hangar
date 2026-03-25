@@ -8,8 +8,12 @@ export type DealListing = {
   model: string | null
   asking_price: number | null
   price_asking: number | null
-  deal_rating: number | null
-  deal_tier: string | null
+  /** @deprecated Internal only; UI uses flip_score */
+  deal_rating?: number | null
+  /** @deprecated Internal only; UI uses flip_tier */
+  deal_tier?: string | null
+  flip_score?: number | null
+  flip_tier?: string | null
   vs_median_price: number | null
   total_time_airframe: number | null
   time_since_overhaul: number | null
@@ -82,7 +86,7 @@ export type RecentSoldRecord = {
 }
 
 export type SortKey =
-  | 'deal_rating'
+  | 'flip_score'
   | 'vs_median_price'
   | 'days_on_market'
   | 'price_reduction_amount'

@@ -70,6 +70,8 @@ const EMPTY_PLATFORM = {
     },
     deal_tier_without_disclosed_price: 0,
     exceptional_deal_without_disclosed_price: 0,
+    flip_tier_distribution: { HOT: 0, GOOD: 0, FAIR: 0, PASS: 0, NO_FLIP: 0 },
+    flip_missing_with_disclosed_price: 0,
   },
   deals: {
     high_score_listings: 0,
@@ -110,8 +112,8 @@ const EMPTY_BUYER = {
     make: string;
     model: string;
     asking_price: number | null;
-    value_score: number;
-    deal_tier: string;
+    flip_score: number;
+    flip_tier: string;
   }>,
 };
 
@@ -270,7 +272,7 @@ export default async function InternalAdminPage() {
   const avionics = avionicsResult.status === "fulfilled" ? avionicsResult.value : EMPTY_AVIONICS;
   const engineIntel = engineResult.status === "fulfilled" ? engineResult.value : EMPTY_ENGINE;
 
-  const avgValueScore = platform.listings.total_active
+  const avgHighFlipInventoryPct = platform.listings.total_active
     ? Math.round((platform.deals.high_score_listings / platform.listings.total_active) * 100)
     : 0;
   const hiddenSources = new Set(["unknown", "unkown"]);
@@ -302,7 +304,7 @@ export default async function InternalAdminPage() {
         audience={audience}
         sourceCounts={sourceCounts}
         freshnessBySource={freshnessBySource}
-        avgValueScore={avgValueScore}
+        avgHighFlipInventoryPct={avgHighFlipInventoryPct}
       />
     </main>
   );

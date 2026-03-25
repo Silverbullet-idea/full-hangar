@@ -32,7 +32,7 @@ export default function HomePage() {
               </Link>
             ))}
             <Link
-              href="/listings?dealTier=TOP_DEALS&sortBy=deal_desc"
+              href="/listings?dealTier=TOP_DEALS&sortBy=flip_desc"
               className="flex h-8 items-center justify-center rounded-md border border-[#166534] bg-[#166534] px-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#15803d]"
             >
               Deals

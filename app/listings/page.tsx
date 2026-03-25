@@ -1,10 +1,13 @@
 import type { Metadata } from "next"
+import { connection } from "next/server"
 import ListingsClient from './ListingsClient'
 import { aggregateListingFilterOptionsFromRows } from '../../lib/listings/filterOptionsAggregate'
 import type { ListingsPageQuery } from '../../lib/db/listingsRepository'
 import {
   buildListingsPageQueryFromFlatParams,
   dealScoreToBounds,
+  parseSearchParamValue,
+  toFlatSearchParamsRecord,
 } from '../../lib/listings/listingsQueryFromSearchParams'
 import {
   getListingFilterOptionsClientPayload,
@@ -19,8 +22,8 @@ import {
   toAbsoluteUrl,
 } from "../../lib/seo/site"
 
-/** ISR: revalidate listing index + filter SSR payload every 2 minutes per URL. */
-export const revalidate = 120
+/** Fresh searchParams + DB filters per request (avoids ISR/cache collisions on filtered URLs). */
+export const dynamic = "force-dynamic"
 
 type SearchParams = Record<string, string | string[] | undefined>
 type CategoryValue =
@@ -34,10 +37,12 @@ type CategoryValue =
   | 'lsp'
   | 'sea'
   | null
-type DealTierValue = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+type DealTierValue = 'all' | 'TOP_DEALS' | 'HOT' | 'GOOD' | 'FAIR' | 'PASS'
 type SortOption =
   | 'price_low'
   | 'price_high'
+  | 'flip_desc'
+  | 'flip_asc'
   | 'deal_desc'
   | 'market_best'
   | 'market_worst'
@@ -57,17 +62,7 @@ type MaintenanceBand = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
 function parseParam(searchParams: SearchParams | undefined, key: string): string {
-  const raw = searchParams?.[key]
-  const value = Array.isArray(raw) ? raw[0] : raw
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function toFlatSearchParams(searchParams?: SearchParams): Record<string, string> {
-  if (!searchParams) return {}
-  return Object.keys(searchParams).reduce<Record<string, string>>((acc, key) => {
-    acc[key] = parseParam(searchParams, key)
-    return acc
-  }, {})
+  return parseSearchParamValue(searchParams?.[key])
 }
 
 function parseSearchTerm(searchParams?: SearchParams): string {
@@ -98,8 +93,19 @@ function parseDealTier(searchParams?: SearchParams): DealTierValue {
   const raw = searchParams?.dealTier
   const value = (Array.isArray(raw) ? raw[0] : raw)?.trim().toUpperCase()
   if (!value) return 'all'
-  if (value === 'TOP_DEALS' || value === 'EXCEPTIONAL_DEAL' || value === 'GOOD_DEAL' || value === 'FAIR_MARKET' || value === 'ABOVE_MARKET' || value === 'OVERPRICED') {
+  if (value === 'TOP_DEALS' || value === 'HOT' || value === 'GOOD' || value === 'FAIR' || value === 'PASS') {
     return value
+  }
+  if (
+    value === 'EXCEPTIONAL_DEAL' ||
+    value === 'GOOD_DEAL' ||
+    value === 'FAIR_MARKET' ||
+    value === 'ABOVE_MARKET' ||
+    value === 'OVERPRICED' ||
+    value === 'DEALRATING' ||
+    value === 'TIER'
+  ) {
+    return 'all'
   }
   return 'all'
 }
@@ -107,13 +113,27 @@ function parseDealTier(searchParams?: SearchParams): DealTierValue {
 function parseSortBy(searchParams?: SearchParams): SortOption {
   const value = parseParam(searchParams, 'sortBy').toLowerCase()
   const validSorts: SortOption[] = [
-    'price_low', 'price_high', 'deal_desc',
-    'market_best', 'market_worst', 'risk_low', 'risk_high',
-    'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life',
-    'dom_asc', 'recent_add',
+    'price_low',
+    'price_high',
+    'flip_desc',
+    'flip_asc',
+    'deal_desc',
+    'market_best',
+    'market_worst',
+    'risk_low',
+    'risk_high',
+    'deferred_low',
+    'deferred_high',
+    'tt_low',
+    'tt_high',
+    'year_newest',
+    'year_oldest',
+    'engine_life',
+    'dom_asc',
+    'recent_add',
   ]
   if (value && validSorts.includes(value as SortOption)) return value as SortOption
-  return 'deal_desc'
+  return 'flip_desc'
 }
 
 function parsePositiveInt(searchParams: SearchParams | undefined, key: string, fallback = 0): number {
@@ -146,13 +166,14 @@ export default async function ListingsPage({
 }: {
   searchParams?: Promise<SearchParams>
 }) {
-  const resolvedSearchParams = await searchParams
-  const flat = toFlatSearchParams(resolvedSearchParams)
+  await connection()
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const flat = toFlatSearchParamsRecord(resolvedSearchParams)
   const initialDealFilter: DealTierValue =
     dealScoreToBounds(flat.dealScore ?? "").min > 0 ? "all" : parseDealTier(resolvedSearchParams)
   const requestedSortBy = parseSortBy(resolvedSearchParams)
   const initialSortBy: SortOption =
-    initialDealFilter === 'TOP_DEALS' ? 'deal_desc' : requestedSortBy
+    initialDealFilter === 'TOP_DEALS' ? 'flip_desc' : requestedSortBy === 'deal_desc' ? 'flip_desc' : requestedSortBy
 
   const listingsQuery: ListingsPageQuery = {
     ...buildListingsPageQueryFromFlatParams(flat),
@@ -310,8 +331,8 @@ export async function generateMetadata({
 }: {
   searchParams?: Promise<SearchParams>
 }): Promise<Metadata> {
-  const resolvedSearchParams = await searchParams
-  const seoParams = toFlatSearchParams(resolvedSearchParams)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const seoParams = toFlatSearchParamsRecord(resolvedSearchParams)
   const isIndexable = isListingsCuratedIndexable(seoParams)
   const canonicalPath = buildListingsCanonicalPath(seoParams)
 

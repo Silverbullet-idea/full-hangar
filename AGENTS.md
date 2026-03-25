@@ -1,7 +1,7 @@
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 22, 2026
+> Last updated: March 25, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -23,12 +23,15 @@ This is the short, operational board for current work. Permanent standards stay 
 
 ## Current Focus
 
+- **Make/model identity program:** migrations `20260324100071` (provenance + `faa_ref_*`) + `20260324100072` (CI-sorted filter RPC); `npm run pipeline:identity:audit` → `scraper/data/identity/make_model_audit_latest.{json,md}`; `npm run pipeline:identity:backfill:dry` then `:apply` (optional `--recompute-scores`); rules in `scraper/data/identity/make_model_rules.json`; legacy `?make=` OR expansion in `lib/listings/makeFilterLegacy.ts`; **`backfill_make_model_identity.py --apply` completed Mar 24, 2026** on active inventory (`examined=10536`, final pass `updates=815`; prior batch `500→68` + resumed after transient Supabase 502). `enrich_faa.py` adds **retry + warn/skip** on transient `faa_registry` / `faa_aircraft_ref` errors; always fills `faa_ref_*` when ACFTREF matches — optional `FULL_HANGAR_FAA_PROMOTE_MAKE_MODEL=1` to promote into `make`/`model` only when `identity_correction` is still empty.
 - Keep the board accurate and lean while preserving completion tracking.
 - Maintain frontend polish and parity for both dark/light themes.
 - UI overhaul — Deal Desk Phase 5 complete including **5D per-step footers** (Back / Next / Save PDF on step 6 inside active accordion; global wizard nav **lg:hidden**, mobile unchanged). **Phase 6 (UI + scoring):** no-price listings suppress `value_score` + `deal_tier` in `aircraft_intelligence` (**v1.9.4**); browse + detail enforce **price undisclosed** UI even if DB is stale. **Phase 7 (polish):** comps panel + GeoIntelMap lazy-loaded via `next/dynamic` `{ ssr: false }` (`CompsChartPanelLazy`, market-intel); global `:focus-visible` rings; score/tier `aria-label`s on listing cards + detail score badge.
 - **Scoring / DB (Mar 23, 2026):** full `backfill_scores.py --all --compute-comps` for **v1.9.4** finished (`attempted=10574`, `updated=10573`, one transient `ConnectionTerminated` row re-run with `--id f0c9bd6f-8426-4561-94f6-00d24b29dea0`). `validate_scores.py` + `npm run pipeline:score-dist:post-backfill` green; audit at `scraper/score_distribution_audit_post_fix.txt`. Remote **`supabase db push`** applied **`20260324000070_public_listings_undisclosed_price_sort.sql`** (idempotent column notice OK).
 - Continue data-source expansion where still incomplete (research-heavy tracks).
 - Keep scraper + scoring reliability stable (timeouts, fallback behavior, resumability).
+- **Listings browse DB load:** `getListingsPage` non-curated browse uses a **plain** `.select` + `.range` (no count) on `public_listings`. On transient failure (e.g. `statement_timeout`), **service-role** paths retry the same filters on **`aircraft_listings`** with `publicBrowseOnAircraft` (indexed score columns + `value_score` NOT NULL ≈ view WHERE) and `LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK` so the UI shape stays aligned without per-row JSON view work.
+- **Flip score (intelligence v2.0.0):** migrations `20260324200075`–`76` applied; full **`backfill_scores.py --all`** + **`--all --compute-comps`** completed (Mar 25, 2026). **Admin** overview + scoring tab + buyer-intel proxy tables use flip metrics; **beta dashboard** top deals + **comps chart** tooltips use **`flip_score` / `flip_tier`** (legacy `value_score`/`deal_tier` only as API fallbacks). `PUBLIC_LISTINGS_VIEW.md` documents `flip_*` columns. Optional next: SQL tier distribution sanity check + tighten P1 thresholds if HOT share drifts.
 
 ---
 
@@ -61,6 +64,8 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listings browsing UX significantly improved (banner controls, layout modes, row/compact density, filtering polish, return-state persistence).
 - Listings filter reliability pass shipped: make/model family filtering now uses wildcard matching (preventing zero-result false negatives), max-price filtering now enforces positive non-null prices (excluding call-for-price/$0 rows), top-category make dropdowns now include low-count makes, and helicopter detection/isolation was tightened so rotorcraft no longer leak into fixed-wing category lanes.
 - Listings sidebar filter expansion shipped: added deal-type selection, priced-only toggle, min/max price range (preset + manual), year range (preset + manual), total-time range (preset + manual), maintenance-burden bands, and true-cost exact range filters wired through URL params + API + DB query pipeline.
+- Listings year-range API: when both `yearMin` and `yearMax` are set, filter is `year.is.null OR (year between bounds)` (`applyYearRangeFilter`); URL integer parsing uses `parseInt` fallback when `Number()` is NaN (e.g. stray `?` in `yearMax`). Migration `20260324100073` adds `parse_listing_year()` + title fallback on the view.
+- Listings browse performance: `getListingsPage` runs **data + count in parallel** (`Promise.all`) and uses PostgREST **`count: planned`** (planner estimate) instead of **`exact`** for the filtered head count—cuts duplicate full-scan work; `meta.total` may differ slightly from a true row count.
 - Listings SSR reliability hardening shipped: `/listings` now degrades gracefully on initial data-load failures and prefers privileged server-side Supabase reads (with anon fallback) to avoid public-role permission crashes.
 - Listings filter-options fetch loop fixed: `/listings` now SSR-loads `getListingFilterOptions()` into `ListingsClient` (replacing always-empty `buildFilterOptions([])`), sync no longer clobbers client-hydrated options with empty props, `/api/listings/options` fallback runs at most once, and `getListingFilterOptions()` no longer returns silent `[]` after transient retry exhaustion (throws so the route can 500 instead of misleading empty 200). Smoke: `npm run test:smoke:listings-options` (Playwright `webServer` + `tests/smoke/listings-options-no-loop.spec.js`).
 - Listings performance pass: migration `20260322000067_listing_filter_options_aggregate_rpc.sql` adds `get_listing_filter_options_payload()` (set-based JSON); app uses RPC + chunked fallback via `getListingFilterOptionsClientPayload()`; default `/listings` (page 1, 24 rows, `deal_desc`, no filters) uses `unstable_cache` 90s; `export const revalidate = 120` on listings page; category/deal/pagination links use `prefetch={false}`; `app/listings/loading.tsx` skeleton. Rollout order: `docs/PRODUCTION_VERIFY.md` §0.
@@ -96,6 +101,8 @@ This is the short, operational board for current work. Permanent standards stay 
 - UI overhaul Phase 7 (7C/7D): `app/listings/[id]/CompsChartPanelLazy.tsx` defers comps client bundle on listing detail; `/internal/market-intel` loads `GeoIntelMap` with `dynamic(..., { ssr: false })` + loading shell; `globals.css` adds low-specificity `:focus-visible` outline using `var(--fh-orange)`; `RightDetailColumn` score badge + `ListingCard` (tiles overall ring, rows/compact tier chips) gain screen-reader labels.
 - Listing tile pillar row: each `PillarColumn` exposes `role="tooltip"` copy in `.sr-only` with `aria-describedby` on `role="group"`; hover popover marked `aria-hidden` to avoid duplicate announcements.
 - Listings LCP: `ListingCard` accepts `imagePriority`; `ListingsClient` sets it for the first 12 tile cards, first 4 row cards, and first 10 compact cards (`next/image` `priority` replaces `loading="lazy"` for those slots only).
+- Listings filters regression fixed: `ListingsClient` no longer resets `hasSkippedInitialFetch` when RSC props sync, so soft navigations run `/api/listings` instead of skipping fetch and showing empty/stale grids (non–make/model filters work again after Apply).
+- Listings pillar filters (engine/avionics/quality/mkt): migration `20260324180074` adds indexed `pillar_*` columns on `public_listings` + `getListingsPage` filters those (pushdown to `aircraft_listings.*_score`); removes full-view scans/timeouts that returned empty 200s; transient browse failures no longer fake `{ total: 0 }` without a text `q` search.
 - Listing detail hero: `ListingImageGallery` main hero `next/image` uses `priority` + **`fetchPriority="high"`** (detailHero + default layouts) for LCP.
 - Playwright **`npm run test:smoke:listings-all`**: 24 tests (incl. listing-detail not-found shell + conditional API matrix); latest local run **24 passed** with healthy Supabase.
 
@@ -243,6 +250,8 @@ Each item should stay one-line actionable with clear completion criteria.
 - **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
 - **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.
 - **Pending migration decision:** add `stoh`, `sfoh`, and `no_damage_history` columns to `aircraft_listings` and wire into `backfill_scores.py` write path (currently stored in `description_intelligence` JSONB only).
+- **Make/model canonicalization — scraper alignment (TODO):** after DB rows are corrected using FAA `faa_registry` → `faa_aircraft_ref` (`mfr_name` / `model_name`) plus curated make-alias rules (case folds, Bell/Bell Helicopter, Bombardier family merges, model-as-make repairs), update ingestion per source using the make-quality audit’s `source` × bad-pattern counts (Controller, ASO, TAP, AvBuyer, GlobalAir, Barnstormers, etc.); do not rely on corrected DB alone or the next scrape will reintroduce bad splits.
+
 ### Medium Priority
 
 - **DS-4 Type Clubs:** complete research matrix + scrapeability report and wire any allowed scrapers.

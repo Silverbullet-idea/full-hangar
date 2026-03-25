@@ -1,82 +1,40 @@
-# PUBLIC_LISTINGS_VIEW
+-- Browse pillar filters (minEngine/minAvionics/minQuality/minValue) used PostgREST predicates on
+-- computed CASE(...) AS engine_score columns, so Postgres could not use btree indexes on
+-- aircraft_listings.engine_score — full scans + statement timeouts produced empty API payloads.
+-- Expose the physical score columns as separate view fields for filter pushdown + partial indexes.
 
-## 1) Purpose
+CREATE INDEX IF NOT EXISTS aircraft_listings_active_engine_score_idx
+  ON public.aircraft_listings (is_active, engine_score)
+  WHERE is_active = true AND engine_score IS NOT NULL;
 
-`public_listings` is the public-safe Supabase read model used by listing browse/detail flows and repository APIs.
+CREATE INDEX IF NOT EXISTS aircraft_listings_active_avionics_score_idx
+  ON public.aircraft_listings (is_active, avionics_score)
+  WHERE is_active = true AND avionics_score IS NOT NULL;
 
----
+CREATE INDEX IF NOT EXISTS aircraft_listings_active_condition_score_idx
+  ON public.aircraft_listings (is_active, condition_score)
+  WHERE is_active = true AND condition_score IS NOT NULL;
 
-## 2) Current Column Inventory
-
-Source of truth: `supabase/migrations/20260320000066_add_missing_fields_to_public_listings_view.sql`.
-
-### Newly added in 20260320000066
-
-| Column | Source Table | Type | Group |
-|--------|--------------|------|-------|
-| accident_count | aircraft_listings | integer | Accident / NTSB |
-| most_recent_accident_date | aircraft_listings | date | Accident / NTSB |
-| most_severe_damage | aircraft_listings | text | Accident / NTSB |
-| has_accident_history | aircraft_listings | boolean | Accident / NTSB |
-| faa_matched | aircraft_listings | boolean | FAA panel |
-| faa_owner | aircraft_listings | text | FAA panel |
-| faa_status | aircraft_listings | text | FAA panel |
-| faa_cert_date | aircraft_listings | date | FAA panel |
-| faa_type_aircraft | aircraft_listings | text | FAA panel |
-| investment_score | aircraft_listings | numeric | New scoring |
-| market_opportunity_score | aircraft_listings | numeric | New scoring |
-| execution_score | aircraft_listings | numeric | New scoring |
-| condition_score | aircraft_listings | numeric | New scoring |
-| pricing_confidence | aircraft_listings | text | New scoring |
-| comp_selection_tier | aircraft_listings | text | New scoring |
-| comp_universe_size | aircraft_listings | integer | New scoring |
-| comp_exact_count | aircraft_listings | integer | New scoring |
-| comp_family_count | aircraft_listings | integer | New scoring |
-| comp_make_count | aircraft_listings | integer | New scoring |
-| comp_median_price | aircraft_listings | numeric | New scoring |
-| comp_p25_price | aircraft_listings | numeric | New scoring |
-| comp_p75_price | aircraft_listings | numeric | New scoring |
-| mispricing_zscore | aircraft_listings | numeric | New scoring |
-| deal_comparison_source | aircraft_listings | text | Attribution |
-| manufacturer_tier | aircraft_listings | text | Attribution |
-
-### Added in `20260324200075_add_flip_score_columns`
-
-| Column | Source Table | Type | Group |
-|--------|--------------|------|-------|
-| flip_score | aircraft_listings | integer | Flip scoring (v2.0.0) |
-| flip_tier | aircraft_listings | text | HOT / GOOD / FAIR / PASS |
-| flip_explanation | aircraft_listings | jsonb | Pillar breakdown for UI |
-
----
-
-## 3) Canonical View SQL
-
-```sql
--- Added columns by group:
--- Group 1 (Accident / NTSB): accident_count, most_recent_accident_date, most_severe_damage, has_accident_history
--- Group 2 (FAA panel): faa_matched, faa_owner, faa_status, faa_cert_date, faa_type_aircraft
--- Group 3 (Scoring): investment_score, market_opportunity_score, execution_score, condition_score,
---                    pricing_confidence, comp_selection_tier, comp_universe_size, comp_exact_count,
---                    comp_family_count, comp_make_count, comp_median_price, comp_p25_price,
---                    comp_p75_price, mispricing_zscore
--- Group 4 (Attribution): deal_comparison_source, manufacturer_tier
--- SKIPPED: none (all requested columns exist on aircraft_listings)
+CREATE INDEX IF NOT EXISTS aircraft_listings_active_market_opp_score_idx
+  ON public.aircraft_listings (is_active, market_opportunity_score)
+  WHERE is_active = true AND market_opportunity_score IS NOT NULL;
 
 CREATE OR REPLACE VIEW public.public_listings AS
 WITH base AS (
   SELECT
     id,
-    to_jsonb(al) AS j
+    to_jsonb(al) AS j,
+    al.engine_score AS pillar_engine_score,
+    al.avionics_score AS pillar_avionics_score,
+    al.condition_score AS pillar_quality_score,
+    al.market_opportunity_score AS pillar_market_score,
+    COALESCE(al.undisclosed_price_sort, 0::smallint) AS undisclosed_price_sort
   FROM public.aircraft_listings AS al
 )
 SELECT
   id::text AS id,
   NULLIF(j ->> 'title', '') AS title,
-  CASE
-    WHEN NULLIF(j ->> 'year', '') ~ '^\d{4}$' THEN (j ->> 'year')::integer
-    ELSE NULL
-  END AS year,
+  public.parse_listing_year(j) AS year,
   NULLIF(j ->> 'make', '') AS make,
   NULLIF(j ->> 'model', '') AS model,
   COALESCE(NULLIF(j ->> 'source', ''), NULLIF(j ->> 'source_site', '')) AS source,
@@ -384,68 +342,16 @@ SELECT
     ELSE NULL
   END AS mispricing_zscore,
   NULLIF(j ->> 'deal_comparison_source', '') AS deal_comparison_source,
-  NULLIF(j ->> 'manufacturer_tier', '') AS manufacturer_tier
+  NULLIF(j ->> 'manufacturer_tier', '') AS manufacturer_tier,
+  NULLIF(j ->> 'aircraft_type', '') AS aircraft_type,
+  COALESCE(NULLIF(j ->> 'aircraft_category', ''), NULLIF(j ->> 'aircraft_type', '')) AS aircraft_category,
+  undisclosed_price_sort,
+  base.pillar_engine_score,
+  base.pillar_avionics_score,
+  base.pillar_quality_score,
+  base.pillar_market_score
 FROM base
 WHERE
   NULLIF(j ->> 'value_score', '') ~ '^-?\d+(\.\d+)?$';
 
 GRANT SELECT ON public.public_listings TO anon, authenticated;
-```
-
----
-
-## 4) Before You Touch This View (Checklist)
-
-```text
-[ ] 1. Read this file from top to bottom first.
-[ ] 2. Confirm the target column already exists on aircraft_listings.
-[ ] 3. Create a new migration with CREATE OR REPLACE VIEW (no DROP VIEW).
-[ ] 4. Start from full canonical SQL (Section 3), then append fields.
-[ ] 5. Apply migration, verify public_listings column presence.
-[ ] 6. Run npm run build and check downstream type usage.
-```
-
----
-
-## 5) Known Gaps / Follow-up Items
-
-Remaining likely-needed fields still not exposed in `public_listings`:
-
-| Column | Why It Might Be Needed | Risk If Missing |
-|--------|-------------------------|-----------------|
-| pricing_mad | Used in robustness diagnostics | Pricing confidence transparency gap |
-| description_intelligence | Used to enrich detail parsing paths | Detail parser falls back to heuristics |
-| avionics_value_source_primary (and related source-breakdown fields) | Attribution for avionics valuation | Value-attribution opacity in public model |
-
-### Deferred (column not yet on aircraft_listings table)
-
-No deferred items from `20260320000066_add_missing_fields_to_public_listings_view.sql` (all requested columns existed on `aircraft_listings` at migration time).
-
----
-
-## 6) Migration History
-
-| Migration File | What Changed |
-|----------------|-------------|
-| `20250301000009_public_listings_view_and_rls.sql` | Initial `public_listings` view with RLS policy setup and grants |
-| `20260301000010_align_public_listings_view_shape.sql` | Added aligned aliases (`url`, `listing_url`, `price_asking`, `asking_price`) and expanded baseline fields |
-| `20260301000012_add_avionics_to_public_listings_view.sql` | Added `avionics_score` and `avionics_installed_value` |
-| `20260301000015_add_deal_fields_to_public_listings_view.sql` | Added deal/comps fields (`deal_rating`, `deal_tier`, `vs_median_price`, `comps_sample_size`) |
-| `20260301000017_add_accident_fields_to_public_listings_view.sql` | Added FAA + accident fields (`faa_matched`, owner/status/cert, accident columns) |
-| `20260301000020_add_deal_comparison_source_to_public_listings_view.sql` | Rebuilt view with `deal_comparison_source` and grant |
-| `20260301000022_add_market_time_and_price_reduction_to_public_listings_view.sql` | Added lifecycle/price-history fields (`days_on_market`, `price_reduced`, `first_seen_date`, etc.) |
-| `20260302000025_add_media_fields_to_public_listings_view.sql` | Added media/modification fields (`image_urls`, `logbook_urls`, `listing_fingerprint`, STC/mod arrays) |
-| `20260313000058_add_registration_fields_to_public_listings_view.sql` | Added global registration identity columns (`registration_raw`, `registration_normalized`, scheme/country/confidence) |
-| `20260322000065_public_listings_engine_value_fields.sql` | Added engine-value and EV derivation fields |
-| `20260320000066_add_missing_fields_to_public_listings_view.sql` | Added accident/NTSB fields, FAA panel fields, new scoring fields (`investment_score` etc.), and attribution fields |
-
----
-
-## 7) Live Verification Snapshot
-
-Last runtime verification: `2026-03-20`.
-
-- Live query to `public_listings?select=*&limit=1` succeeded.
-- Column count after migration: `101`.
-- Spot checks present: `has_accident_history`, `faa_owner`, `investment_score`, `deal_comparison_source`.
-

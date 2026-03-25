@@ -51,7 +51,7 @@ export default function DealsControlsBar({
         onChange={(event) => setSortKey(event.target.value as SortKey)}
         className="rounded border border-[#3A4454] bg-[#141922] px-2 py-1 text-xs text-white"
       >
-        <option value="deal_rating">Sort: Deal score</option>
+        <option value="flip_score">Sort: Flip score</option>
         <option value="vs_median_price">Sort: % below market</option>
         <option value="days_on_market">Sort: Days listed</option>
         <option value="price_reduction_amount">Sort: Price reduction</option>

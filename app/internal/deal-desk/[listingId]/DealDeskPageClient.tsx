@@ -1596,14 +1596,17 @@ function DealDeskHealthScoreDrilldown({
 }) {
   const sn = (n: number | null | undefined): string | null => (n != null && Number.isFinite(n) ? String(Math.round(n)) : null);
   const sf = (n: number | null | undefined) => (n != null && Number.isFinite(n) ? n.toFixed(2) : null);
-  const hasPillars =
-    seed.investmentScore != null ||
-    seed.marketOpportunityScore != null ||
-    seed.executionScore != null ||
-    seed.conditionScore != null ||
-    seed.engineScore != null ||
-    seed.propScore != null ||
-    seed.llpScore != null;
+  const flipEx = seed.flipExplanation;
+  const flipExOk =
+    flipEx &&
+    typeof flipEx === "object" &&
+    !flipEx.suppressed &&
+    !flipEx.error;
+  const hasFlipPillars =
+    (seed.flipScore != null && Number.isFinite(seed.flipScore)) ||
+    Boolean(flipExOk);
+  const hasComponentMini =
+    seed.engineScore != null || seed.propScore != null || seed.llpScore != null;
   const hasComps =
     seed.compMedianPrice != null ||
     seed.compP25Price != null ||
@@ -1621,7 +1624,8 @@ function DealDeskHealthScoreDrilldown({
     seed.evHoursRemaining != null ||
     seed.evScoreContribution != null;
   const hasAccidents = seed.hasAccidentHistory === true || (seed.accidentCount != null && seed.accidentCount > 0);
-  if (!hasPillars && !hasComps && !hasEngine && !hasAccidents && !seed.intelligenceVersion) return null;
+  if (!hasFlipPillars && !hasComponentMini && !hasComps && !hasEngine && !hasAccidents && !seed.intelligenceVersion)
+    return null;
 
   const row = (label: string, value: string | null) =>
     value ? (
@@ -1639,21 +1643,61 @@ function DealDeskHealthScoreDrilldown({
       <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-muted print:text-neutral-600" style={dealDeskPlBarlow}>
         Intelligence drill-down
       </p>
-      {hasPillars ? (
+      {hasFlipPillars ? (
         <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
           <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
             <span className="flex items-center justify-between gap-2">
-              Pillar &amp; component scores
+              Flip score pillars
               <span className="text-brand-muted print:text-neutral-600" aria-hidden>
                 +
               </span>
             </span>
           </summary>
           <div className={detailBodyCls}>
-            {row("Investment", sn(seed.investmentScore))}
-            {row("Market opportunity", sn(seed.marketOpportunityScore))}
-            {row("Execution", sn(seed.executionScore))}
-            {row("Condition", sn(seed.conditionScore))}
+            {row("Flip score", sn(seed.flipScore))}
+            {row("Flip tier", seed.flipTier ?? null)}
+            {flipExOk ? (
+              <>
+                {row(
+                  "Pricing edge",
+                  flipEx.p1_pricing_edge?.pts != null
+                    ? `${Math.round(flipEx.p1_pricing_edge.pts)}/${flipEx.p1_pricing_edge.max ?? 35}`
+                    : null
+                )}
+                {row(
+                  "Airworthiness",
+                  flipEx.p2_airworthiness?.pts != null
+                    ? `${Math.round(flipEx.p2_airworthiness.pts)}/${flipEx.p2_airworthiness.max ?? 20}`
+                    : null
+                )}
+                {row(
+                  "Improvement room",
+                  flipEx.p3_improvement_room?.pts != null
+                    ? `${Math.round(flipEx.p3_improvement_room.pts)}/${flipEx.p3_improvement_room.max ?? 30}`
+                    : null
+                )}
+                {row(
+                  "Exit liquidity",
+                  flipEx.p4_exit_liquidity?.pts != null
+                    ? `${Math.round(flipEx.p4_exit_liquidity.pts)}/${flipEx.p4_exit_liquidity.max ?? 15}`
+                    : null
+                )}
+              </>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
+      {hasComponentMini ? (
+        <details className="deal-desk-health-details rounded-lg border border-brand-dark/80 bg-[var(--fh-bg3)]/40 px-3 py-2 print:border-neutral-400 print:bg-neutral-50">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-brand-white marker:content-none print:text-neutral-900 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              Component scores
+              <span className="text-brand-muted print:text-neutral-600" aria-hidden>
+                +
+              </span>
+            </span>
+          </summary>
+          <div className={detailBodyCls}>
             {row("Engine", sn(seed.engineScore))}
             {row("Prop", sn(seed.propScore))}
             {row("LLP", sn(seed.llpScore))}
@@ -1865,14 +1909,16 @@ function DealDeskLivePLPanel({
               {riskIcon} Risk tier: {riskRaw}
             </li>
           ) : null}
-          {seed.valueScore != null && Number.isFinite(seed.valueScore) ? (
-            <li>📊 Value score {Math.round(seed.valueScore)}</li>
+          {seed.askingPrice > 0 && seed.flipScore != null && Number.isFinite(seed.flipScore) ? (
+            <li>
+              🔥 Flip score {Math.round(seed.flipScore)}
+              {seed.flipTier ? ` (${seed.flipTier})` : ""}
+            </li>
+          ) : seed.askingPrice <= 0 ? (
+            <li className="text-brand-muted/90">Flip score withheld (price undisclosed)</li>
           ) : null}
           {seed.avionicsScore != null && Number.isFinite(seed.avionicsScore) ? (
             <li>🎛️ Avionics score {Math.round(seed.avionicsScore)}</li>
-          ) : null}
-          {seed.dealRating != null && Number.isFinite(seed.dealRating) ? (
-            <li>⭐ Deal rating {seed.dealRating.toFixed(1)}</li>
           ) : null}
           {engineLifePct != null ? (
             <li>

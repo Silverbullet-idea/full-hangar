@@ -1,47 +1,14 @@
-import type { ReactNode } from 'react'
-import { toggleFacetToken } from './listingsClientUtils'
+'use client'
 
-type ListingSourceKey =
-  | 'trade-a-plane'
-  | 'controller'
-  | 'aerotrader'
-  | 'aircraftforsale'
-  | 'aso'
-  | 'globalair'
-  | 'barnstormers'
-  | 'controller_cdp'
-  | 'unknown'
+import { useState, type ReactNode } from 'react'
+import { LISTING_PILLAR_MIN_STEPS, normalizeListingPillarMin, toggleFacetToken } from './listingsClientUtils'
 
-type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+type DealTierFilter = 'all' | 'TOP_DEALS' | 'HOT' | 'GOOD' | 'FAIR' | 'PASS'
 type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
 
-function SidebarSection({ title, badge, children }: { title: string; badge?: string; children: ReactNode }) {
-  return (
-    <div className="mb-2.5 border-b border-[var(--fh-border)] px-0 pb-2.5">
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <span
-          className="font-bold uppercase tracking-[1.5px] text-[var(--fh-text-muted)]"
-          style={{ fontFamily: 'var(--font-barlow-condensed), system-ui', fontSize: '10px' }}
-        >
-          {title}
-        </span>
-        {badge ? (
-          <span
-            className="rounded bg-[var(--fh-orange-dim)] px-1 py-px text-[9px] font-bold text-[var(--fh-orange)]"
-            style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
-          >
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function PillarMinRow({
+function PillarMinSelectRow({
   label,
   value,
   onChange,
@@ -50,29 +17,74 @@ function PillarMinRow({
   value: number
   onChange: (n: number) => void
 }) {
+  const safe = normalizeListingPillarMin(value)
   return (
-    <div className="mb-2 flex items-center gap-2">
+    <div className="mb-2 grid min-w-0 grid-cols-1 gap-1 sm:grid-cols-[76px_1fr] sm:items-center sm:gap-2">
       <span
-        className="w-[76px] shrink-0 text-[11px] text-[var(--fh-text-dim)]"
+        className="text-[11px] text-[var(--fh-text-dim)]"
         style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
       >
         {label}
       </span>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
+      <select
+        value={safe}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="fh-checkbox-orange h-2 flex-1 accent-[var(--fh-orange)]"
-        aria-label={`${label} minimum score`}
-      />
-      <span
-        className="w-8 shrink-0 text-right font-mono text-[9px] text-[var(--fh-text-muted)]"
-        style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+        className="min-w-0 max-w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-1.5 py-1.5 text-[11px] text-[var(--fh-text)]"
+        style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+        aria-label={`${label} minimum pillar score`}
       >
-        {value > 0 ? value : '—'}
-      </span>
+        {LISTING_PILLAR_MIN_STEPS.map((n) => (
+          <option key={n} value={n}>
+            {n === 0 ? 'Any' : `${n}+ minimum`}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function FilterAccordion({
+  title,
+  badge,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string
+  badge?: string
+  open: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  return (
+    <div className="mb-2.5 border-b border-[var(--fh-border)] pb-2.5">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full min-w-0 items-center justify-between gap-2 rounded py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fh-bg2)]"
+      >
+        <span className="flex min-w-0 flex-wrap items-center gap-2">
+          <span
+            className="text-sm font-bold uppercase tracking-wide text-[var(--fh-text)]"
+            style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+          >
+            {title}
+          </span>
+          {badge ? (
+            <span
+              className="rounded bg-[var(--fh-orange-dim)] px-1 py-px text-[9px] font-bold text-[var(--fh-orange)]"
+              style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
+            >
+              {badge}
+            </span>
+          ) : null}
+        </span>
+        <span className="shrink-0 text-sm font-bold leading-none text-[var(--fh-text-muted)]" aria-hidden>
+          {open ? '▾' : '▸'}
+        </span>
+      </button>
+      {open ? <div className="mt-2 min-w-0 max-w-full">{children}</div> : null}
     </div>
   )
 }
@@ -89,12 +101,8 @@ type ListingsFiltersSidebarProps = {
   setPillarMinQuality: (n: number) => void
   pillarMinMkt: number
   setPillarMinMkt: (n: number) => void
-  locationDraft: string
-  setLocationDraft: (s: string) => void
   engineLifeTokens: string[]
   setEngineLifeTokens: (next: string[] | ((prev: string[]) => string[])) => void
-  avionicsTokens: string[]
-  setAvionicsTokens: (next: string[] | ((prev: string[]) => string[])) => void
   dealPatternTokens: string[]
   setDealPatternTokens: (next: string[] | ((prev: string[]) => string[])) => void
   makeFilter: string
@@ -103,8 +111,6 @@ type ListingsFiltersSidebarProps = {
   setModelFilter: (value: string) => void
   subModelFilter: string
   setSubModelFilter: (value: string) => void
-  sourceFilter: 'all' | ListingSourceKey
-  setSourceFilter: (value: 'all' | ListingSourceKey) => void
   dealFilter: DealTierFilter
   setDealFilter: (value: DealTierFilter) => void
   priceStatus: PriceStatusFilter
@@ -147,14 +153,6 @@ const ENGINE_LIFE_OPTS: Array<{ token: string; label: string }> = [
   { token: 'neartbo', label: 'Near / over TBO' },
 ]
 
-const AVIONICS_OPTS: Array<{ token: string; label: string }> = [
-  { token: 'glass', label: 'Glass / G1000' },
-  { token: 'gtn', label: 'GTN 750/650 family' },
-  { token: 'adsb', label: 'ADS-B Out' },
-  { token: 'autopilot', label: 'Autopilot' },
-  { token: 'steam', label: 'Steam gauge only' },
-]
-
 const DEAL_PATTERN_OPTS: Array<{ token: string; label: string }> = [
   { token: 'deferred', label: 'Deferred annual' },
   { token: 'steam', label: 'Steam gauge discount' },
@@ -174,12 +172,8 @@ export default function ListingsFiltersSidebar({
   setPillarMinQuality,
   pillarMinMkt,
   setPillarMinMkt,
-  locationDraft,
-  setLocationDraft,
   engineLifeTokens,
   setEngineLifeTokens,
-  avionicsTokens,
-  setAvionicsTokens,
   dealPatternTokens,
   setDealPatternTokens,
   makeFilter,
@@ -188,8 +182,6 @@ export default function ListingsFiltersSidebar({
   setModelFilter,
   subModelFilter,
   setSubModelFilter,
-  sourceFilter,
-  setSourceFilter,
   dealFilter,
   setDealFilter,
   priceStatus,
@@ -223,7 +215,27 @@ export default function ListingsFiltersSidebar({
   onApplyFilters,
   riskTooltip,
 }: ListingsFiltersSidebarProps) {
-  const priceSteps = [0, 50000, 100000, 200000, 300000, 500000, 750000, 1000000, 1500000, 2000000]
+  const [accOpen, setAccOpen] = useState(() => ({
+    scorePillars:
+      normalizeListingPillarMin(pillarMinEngine) > 0 ||
+      normalizeListingPillarMin(pillarMinAvionics) > 0 ||
+      normalizeListingPillarMin(pillarMinQuality) > 0 ||
+      normalizeListingPillarMin(pillarMinMkt) > 0,
+    price: minPrice > 0 || maxPrice > 0,
+    year: yearMin > 0 || yearMax > 0,
+    totalTime: totalTimeMin > 0 || totalTimeMax > 0,
+    engineLife: engineLifeTokens.length > 0,
+    dealPatterns: dealPatternTokens.length > 0,
+    aircraft:
+      makeFilter !== 'all' ||
+      Boolean(modelFilter) ||
+      Boolean(subModelFilter) ||
+      dealFilter !== 'all' ||
+      priceStatus !== 'all',
+    maintenanceRisk: maintenanceBand !== 'any' || engineTime !== 'any' || riskFilter !== 'all',
+    trueCost: trueCostMin > 0 || trueCostMax > 0,
+  }))
+
   const yearSteps = [0, 1960, 1970, 1980, 1990, 2000, 2010, 2015, 2020, 2023, 2024, 2025, 2026]
   const totalTimeSteps = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000]
 
@@ -240,7 +252,7 @@ export default function ListingsFiltersSidebar({
 
   return (
     <aside
-      className={`h-fit rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-3 ${embedded ? 'border-0 bg-transparent p-0' : ''} ${className}`.trim()}
+      className={`h-fit min-w-0 max-w-full rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-3 ${embedded ? 'border-0 bg-transparent p-0' : ''} ${className}`.trim()}
     >
       {!embedded ? (
         <div className="mb-3 text-sm font-semibold text-[var(--fh-text)]" style={{ fontFamily: 'var(--font-barlow-condensed)' }}>
@@ -248,15 +260,24 @@ export default function ListingsFiltersSidebar({
         </div>
       ) : null}
       <div className="flex flex-col gap-1">
-        <SidebarSection title="Score pillars" badge="MIN">
-          <PillarMinRow label="Engine" value={pillarMinEngine} onChange={setPillarMinEngine} />
-          <PillarMinRow label="Avionics" value={pillarMinAvionics} onChange={setPillarMinAvionics} />
-          <PillarMinRow label="Quality" value={pillarMinQuality} onChange={setPillarMinQuality} />
-          <PillarMinRow label="Mkt value" value={pillarMinMkt} onChange={setPillarMinMkt} />
-        </SidebarSection>
+        <FilterAccordion
+          title="Score pillars"
+          badge="MIN"
+          open={accOpen.scorePillars}
+          onToggle={() => setAccOpen((p) => ({ ...p, scorePillars: !p.scorePillars }))}
+        >
+          <PillarMinSelectRow label="Engine" value={pillarMinEngine} onChange={setPillarMinEngine} />
+          <PillarMinSelectRow label="Avionics" value={pillarMinAvionics} onChange={setPillarMinAvionics} />
+          <PillarMinSelectRow label="Quality" value={pillarMinQuality} onChange={setPillarMinQuality} />
+          <PillarMinSelectRow label="Mkt value" value={pillarMinMkt} onChange={setPillarMinMkt} />
+        </FilterAccordion>
 
-        <SidebarSection title="Price">
-          <div className="mb-2 grid grid-cols-2 gap-2">
+        <FilterAccordion
+          title="Price"
+          open={accOpen.price}
+          onToggle={() => setAccOpen((p) => ({ ...p, price: !p.price }))}
+        >
+          <div className="mb-2 grid min-w-0 grid-cols-2 gap-2">
             <label className="text-[10px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans), monospace' }}>
               $
               <input
@@ -300,10 +321,14 @@ export default function ListingsFiltersSidebar({
               </button>
             ))}
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Year">
-          <div className="grid grid-cols-2 gap-2">
+        <FilterAccordion
+          title="Year"
+          open={accOpen.year}
+          onToggle={() => setAccOpen((p) => ({ ...p, year: !p.year }))}
+        >
+          <div className="grid min-w-0 grid-cols-2 gap-2">
             <input
               type="text"
               inputMode="numeric"
@@ -347,10 +372,14 @@ export default function ListingsFiltersSidebar({
               ))}
             </select>
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Total time (hrs)">
-          <div className="grid grid-cols-2 gap-2">
+        <FilterAccordion
+          title="Total time (hrs)"
+          open={accOpen.totalTime}
+          onToggle={() => setAccOpen((p) => ({ ...p, totalTime: !p.totalTime }))}
+        >
+          <div className="grid min-w-0 grid-cols-2 gap-2">
             <input
               type="text"
               inputMode="numeric"
@@ -394,9 +423,13 @@ export default function ListingsFiltersSidebar({
               ))}
             </select>
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Engine life">
+        <FilterAccordion
+          title="Engine life"
+          open={accOpen.engineLife}
+          onToggle={() => setAccOpen((p) => ({ ...p, engineLife: !p.engineLife }))}
+        >
           <div className="space-y-1.5">
             {ENGINE_LIFE_OPTS.map((o) => (
               <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
@@ -410,25 +443,13 @@ export default function ListingsFiltersSidebar({
               </label>
             ))}
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Avionics">
-          <div className="space-y-1.5">
-            {AVIONICS_OPTS.map((o) => (
-              <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                <input
-                  type="checkbox"
-                  className="fh-checkbox-orange h-3 w-3 rounded border-[var(--fh-border)]"
-                  checked={avionicsTokens.includes(o.token)}
-                  onChange={() => setAvionicsTokens((prev) => toggleFacetToken(prev, o.token))}
-                />
-                {o.label}
-              </label>
-            ))}
-          </div>
-        </SidebarSection>
-
-        <SidebarSection title="Deal patterns">
+        <FilterAccordion
+          title="Deal patterns"
+          open={accOpen.dealPatterns}
+          onToggle={() => setAccOpen((p) => ({ ...p, dealPatterns: !p.dealPatterns }))}
+        >
           <div className="space-y-1.5">
             {DEAL_PATTERN_OPTS.map((o) => (
               <label key={o.token} className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--fh-text-dim)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
@@ -442,20 +463,13 @@ export default function ListingsFiltersSidebar({
               </label>
             ))}
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Location">
-          <input
-            type="text"
-            value={locationDraft}
-            onChange={(e) => setLocationDraft(e.target.value)}
-            placeholder="City, state, region…"
-            className="w-full rounded-[5px] border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)] placeholder:text-[var(--fh-text-muted)]"
-            style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
-          />
-        </SidebarSection>
-
-        <SidebarSection title="Aircraft & source">
+        <FilterAccordion
+          title="Aircraft"
+          open={accOpen.aircraft}
+          onToggle={() => setAccOpen((p) => ({ ...p, aircraft: !p.aircraft }))}
+        >
           <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
             Make
             <select
@@ -511,37 +525,18 @@ export default function ListingsFiltersSidebar({
             </label>
           ) : null}
           <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-            Source
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value as 'all' | ListingSourceKey)}
-              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-            >
-              <option value="all">All sources</option>
-              <option value="controller">Controller</option>
-              <option value="trade-a-plane">Trade-A-Plane</option>
-              <option value="aerotrader">AeroTrader</option>
-              <option value="aircraftforsale">AircraftForSale</option>
-              <option value="aso">ASO</option>
-              <option value="globalair">GlobalAir</option>
-              <option value="barnstormers">Barnstormers</option>
-              <option value="controller_cdp">Controller CDP</option>
-            </select>
-          </label>
-          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
             Deal type
             <select
               value={dealFilter}
               onChange={(e) => setDealFilter(e.target.value as DealTierFilter)}
               className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
             >
-              <option value="all">All deals</option>
-              <option value="TOP_DEALS">Exceptional + good</option>
-              <option value="EXCEPTIONAL_DEAL">Exceptional</option>
-              <option value="GOOD_DEAL">Good</option>
-              <option value="FAIR_MARKET">Fair market</option>
-              <option value="ABOVE_MARKET">Above market</option>
-              <option value="OVERPRICED">Overpriced</option>
+              <option value="all">All listings</option>
+              <option value="TOP_DEALS">HOT + GOOD (top flips)</option>
+              <option value="HOT">HOT — top flip opportunities</option>
+              <option value="GOOD">GOOD — solid deals</option>
+              <option value="FAIR">FAIR — worth a look</option>
+              <option value="PASS">PASS — not competitive</option>
             </select>
           </label>
           <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
@@ -555,9 +550,13 @@ export default function ListingsFiltersSidebar({
               <option value="priced">Priced only</option>
             </select>
           </label>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="Maintenance & risk">
+        <FilterAccordion
+          title="Maintenance & risk"
+          open={accOpen.maintenanceRisk}
+          onToggle={() => setAccOpen((p) => ({ ...p, maintenanceRisk: !p.maintenanceRisk }))}
+        >
           <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
             Maintenance burden
             <select
@@ -601,9 +600,13 @@ export default function ListingsFiltersSidebar({
               <option value="critical">Critical</option>
             </select>
           </label>
-        </SidebarSection>
+        </FilterAccordion>
 
-        <SidebarSection title="True cost (exact)">
+        <FilterAccordion
+          title="True cost (exact)"
+          open={accOpen.trueCost}
+          onToggle={() => setAccOpen((p) => ({ ...p, trueCost: !p.trueCost }))}
+        >
           <div className="grid grid-cols-2 gap-2">
             <input
               type="text"
@@ -622,7 +625,7 @@ export default function ListingsFiltersSidebar({
               className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-[10px] text-[var(--fh-text)]"
             />
           </div>
-        </SidebarSection>
+        </FilterAccordion>
 
         {embedded ? null : (
           <div className="mt-2 flex flex-col gap-2 px-0">

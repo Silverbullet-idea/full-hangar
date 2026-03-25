@@ -26,6 +26,14 @@ type ScoreDistribution = {
   no_score: number;
 };
 
+type FlipTierDistribution = {
+  HOT: number;
+  GOOD: number;
+  FAIR: number;
+  PASS: number;
+  NO_FLIP: number;
+};
+
 type SourceStatRow = {
   source: string;
   listing_count: number;
@@ -51,6 +59,8 @@ type AdminPortalClientProps = {
       engine_value_coverage_pct?: number;
       distinct_sources?: number;
       score_distribution?: ScoreDistribution;
+      flip_tier_distribution?: FlipTierDistribution;
+      flip_missing_with_disclosed_price?: number;
       deal_tier_without_disclosed_price?: number;
       exceptional_deal_without_disclosed_price?: number;
     };
@@ -74,8 +84,8 @@ type AdminPortalClientProps = {
       make: string;
       model: string;
       asking_price: number | null;
-      value_score: number;
-      deal_tier: string;
+      flip_score: number;
+      flip_tier: string;
     }>;
   };
   audience: {
@@ -154,7 +164,8 @@ type AdminPortalClientProps = {
   };
   sourceCounts: Array<[string, number]>;
   freshnessBySource: SourceFreshnessRow[];
-  avgValueScore: number;
+  /** Approximate share of active rows with flip_score ≥ 75 (high-opportunity lane). */
+  avgHighFlipInventoryPct: number;
 };
 
 function statValue(value: number | string) {
@@ -369,9 +380,9 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
                 accent="warn"
               />
               <KpiCard
-                label="Exceptional deals"
+                label="HOT flip tier"
                 value={props.platform.deals.exceptional_deals ?? 0}
-                hint="deal_tier = EXCEPTIONAL_DEAL"
+                hint="flip_tier = HOT with disclosed ask"
                 accent="success"
               />
               <KpiCard
@@ -381,17 +392,17 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
                 accent="default"
               />
               <KpiCard
-                label="Value score coverage"
+                label="Flip score coverage"
                 value={`${props.platform.listings.score_coverage_pct}%`}
-                hint={`High-score lane ≥75: ${props.platform.deals.high_score_listings.toLocaleString()}`}
+                hint={`Flip ≥75: ${props.platform.deals.high_score_listings.toLocaleString()} · ~${props.avgHighFlipInventoryPct}% of active`}
                 accent="default"
               />
             </section>
 
             <div className="grid gap-4 lg:grid-cols-2">
               <section className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg-elevated)] p-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-                <h2 className="text-lg font-semibold">Value score distribution</h2>
-                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Active inventory buckets (value_score)</p>
+                <h2 className="text-lg font-semibold">Flip score distribution</h2>
+                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Active inventory buckets (flip_score 0–100)</p>
                 <div className="mt-4 space-y-2">
                   {(() => {
                     const sd = props.platform.listings.score_distribution ?? {
@@ -846,7 +857,7 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold">Engine intelligence</h2>
                 <span className="rounded bg-[var(--fh-orange-dim)] px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--fh-orange)]">
-                  scoring v1.9.3
+                  scoring v2.0.0 (flip)
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -962,73 +973,93 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
               className="rounded-lg border border-amber-500/25 px-4 py-3 text-xs leading-relaxed text-amber-200 [data-theme=light]:border-amber-400/40 [data-theme=light]:bg-amber-50 [data-theme=light]:text-amber-900"
               style={{ background: "rgba(245, 158, 11, 0.08)" }}
             >
-              <p className="font-semibold text-amber-300 [data-theme=light]:text-amber-900">Pricing integrity warning</p>
+              <p className="font-semibold text-amber-300 [data-theme=light]:text-amber-900">Flip score integrity</p>
               <p className="mt-1 text-amber-100/95 [data-theme=light]:text-amber-900/90">
-                &quot;Call for price&quot; and null-price listings should have deal scoring suppressed. A listing cannot be
-                &quot;Exceptional&quot; without a disclosed ask — value scoring is not fully grounded.{" "}
+                Disclosed-price rows should have a computed <span className="font-semibold">flip_score</span> after v2.0.0
+                backfill. Missing flip on priced rows:{" "}
                 <span className="font-semibold">
-                  {(props.platform.listings.deal_tier_without_disclosed_price ?? 0).toLocaleString()} active rows
+                  {(props.platform.listings.flip_missing_with_disclosed_price ?? 0).toLocaleString()}
+                </span>
+                . Rows with flip fields but no positive ask (should be rare):{" "}
+                <span className="font-semibold">
+                  {(props.platform.listings.deal_tier_without_disclosed_price ?? 0).toLocaleString()}
                 </span>{" "}
-                carry a deal tier while missing a positive price (
-                {(props.platform.listings.exceptional_deal_without_disclosed_price ?? 0).toLocaleString()} flagged
-                EXCEPTIONAL without price).
+                (including{" "}
+                <span className="font-semibold">
+                  {(props.platform.listings.exceptional_deal_without_disclosed_price ?? 0).toLocaleString()}
+                </span>{" "}
+                HOT without price).
               </p>
             </div>
 
+            <section className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg-elevated)] p-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
+              <h2 className="text-lg font-semibold">Flip tier mix (active)</h2>
+              <p className="mt-1 text-xs text-[var(--fh-text-muted)]">HOT / GOOD / FAIR / PASS vs no flip (undisclosed ask or null score)</p>
+              <div className="mt-4 space-y-2">
+                {(() => {
+                  const fd = props.platform.listings.flip_tier_distribution ?? {
+                    HOT: 0,
+                    GOOD: 0,
+                    FAIR: 0,
+                    PASS: 0,
+                    NO_FLIP: 0,
+                  };
+                  const rows = [
+                    { label: "HOT", count: fd.HOT, color: "rgb(249 115 22)" },
+                    { label: "GOOD", count: fd.GOOD, color: "rgb(34 197 94)" },
+                    { label: "FAIR", count: fd.FAIR, color: "rgb(251 191 36)" },
+                    { label: "PASS", count: fd.PASS, color: "rgb(148 163 184)" },
+                    { label: "No flip / undisclosed", count: fd.NO_FLIP, color: "rgb(71 85 105)" },
+                  ];
+                  const max = Math.max(...rows.map((r) => r.count), 1);
+                  return rows.map((row) => (
+                    <div key={row.label}>
+                      <div className="flex justify-between text-xs text-[var(--fh-text-muted)]">
+                        <span>{row.label}</span>
+                        <span className="tabular-nums text-[var(--fh-text)]">{row.count.toLocaleString()}</span>
+                      </div>
+                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/15 [data-theme=light]:bg-slate-200">
+                        <div
+                          className="h-2 rounded-full transition-[width] duration-500 ease-out"
+                          style={{ width: `${(row.count / max) * 100}%`, backgroundColor: row.color }}
+                        />
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </section>
+
             <div className="grid gap-4 lg:grid-cols-2">
               <section className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg-elevated)] p-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-                <h2 className="text-lg font-semibold">Five-pillar matrix</h2>
-                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Hybrid score inputs (v1.9.x family)</p>
-                <div className="mt-3 overflow-x-auto">
-                  <table className="w-full min-w-[420px] text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-[var(--fh-border)] text-[var(--fh-text-muted)] [data-theme=light]:border-slate-200">
-                        <th className="py-2 font-semibold">Pillar</th>
-                        <th className="py-2 font-semibold">Weight</th>
-                        <th className="py-2 font-semibold">Status</th>
-                        <th className="py-2 font-semibold">Key inputs</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-[var(--fh-text)]">
-                      {[
-                        { pillar: "Market value", weight: "High", status: "REQUIRES PRICE", statusTone: "amber" as const, keys: "Comps, DOM, ask vs median" },
-                        { pillar: "Condition / deferred", weight: "High", status: "Active", statusTone: "emerald" as const, keys: "Paint, interior, maintenance narrative" },
-                        { pillar: "Avionics", weight: "Medium", status: "Active", statusTone: "emerald" as const, keys: "Catalog valuation + installed stack" },
-                        { pillar: "Engine health", weight: "High", status: "Active", statusTone: "emerald" as const, keys: "SMOH, TBO, engine-value lane" },
-                        { pillar: "Risk / execution", weight: "Medium", status: "Active", statusTone: "emerald" as const, keys: "Relists, registration, data completeness" },
-                      ].map((row) => (
-                        <tr key={row.pillar} className="border-t border-[var(--fh-border)] [data-theme=light]:border-slate-100">
-                          <td className="py-2 font-medium">{row.pillar}</td>
-                          <td className="py-2 text-[var(--fh-text-muted)]">{row.weight}</td>
-                          <td className="py-2">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                row.statusTone === "amber"
-                                  ? "bg-amber-500/20 text-amber-300 [data-theme=light]:bg-amber-100 [data-theme=light]:text-amber-900"
-                                  : "bg-emerald-500/15 text-emerald-300 [data-theme=light]:bg-emerald-100 [data-theme=light]:text-emerald-900"
-                              }`}
-                            >
-                              {row.status}
-                            </span>
-                          </td>
-                          <td className="py-2 text-[var(--fh-text-muted)]">{row.keys}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <h2 className="text-lg font-semibold">Flip score pillars</h2>
+                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Single displayed score (0–100) from four pillars — see listing detail for breakdown</p>
+                <ul className="mt-3 space-y-2 text-sm text-[var(--fh-text)]">
+                  <li>
+                    <span className="font-semibold text-[var(--fh-orange)]">P1</span> Pricing edge (35) — true cost vs comps
+                  </li>
+                  <li>
+                    <span className="font-semibold text-sky-400 [data-theme=light]:text-sky-700">P2</span> Airworthiness (20) — engine life + risk
+                  </li>
+                  <li>
+                    <span className="font-semibold text-teal-400 [data-theme=light]:text-teal-700">P3</span> Improvement headroom (30) — avionics + condition gap
+                  </li>
+                  <li>
+                    <span className="font-semibold text-violet-400 [data-theme=light]:text-violet-700">P4</span> Exit liquidity (15) — model demand + DOM
+                  </li>
+                </ul>
               </section>
 
               <section className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg-elevated)] p-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-                <h2 className="text-lg font-semibold">Deal tier thresholds</h2>
-                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Illustrative bands (see scoring engine for source of truth)</p>
+                <h2 className="text-lg font-semibold">Flip tier thresholds</h2>
+                <p className="mt-1 text-xs text-[var(--fh-text-muted)]">Bands from flip_score (see core/intelligence/flip_score.py)</p>
                 <div className="mt-4 space-y-3">
                   {[
-                    { label: "Exceptional", range: "Top decile rating", sub: "Strong vs comps + clean risk", border: "border-emerald-500/40", bg: "bg-emerald-500/10", text: "text-emerald-300 [data-theme=light]:text-emerald-900" },
-                    { label: "Good deal", range: "Above-median rating", sub: "Cushion vs ask / market", border: "border-sky-500/35", bg: "bg-sky-500/10", text: "text-sky-200 [data-theme=light]:text-sky-900" },
-                    { label: "Fair / neutral", range: "Near median", sub: "Sensitive to carrying + exit", border: "border-amber-500/35", bg: "bg-amber-500/10", text: "text-amber-200 [data-theme=light]:text-amber-900" },
-                    { label: "Weak / avoid", range: "Below median", sub: "Thin margin or elevated risk", border: "border-rose-500/40", bg: "bg-rose-500/10", text: "text-rose-200 [data-theme=light]:text-rose-900" },
-                    { label: "Price undisclosed", range: "N/A", sub: "Suppress tier until ask is known", border: "border-slate-500/40", bg: "bg-slate-500/10", text: "text-slate-300 [data-theme=light]:text-slate-800" },
+                    { label: "HOT", range: "flip_score ≥ 80", sub: "Top flip opportunity lane", border: "border-orange-500/40", bg: "bg-orange-500/10", text: "text-orange-300 [data-theme=light]:text-orange-900" },
+                    { label: "GOOD", range: "65 – 79", sub: "Solid resale profile", border: "border-emerald-500/40", bg: "bg-emerald-500/10", text: "text-emerald-300 [data-theme=light]:text-emerald-900" },
+                    { label: "FAIR", range: "50 – 64", sub: "Marginal — diligence heavy", border: "border-amber-500/35", bg: "bg-amber-500/10", text: "text-amber-200 [data-theme=light]:text-amber-900" },
+                    { label: "PASS", range: "Under 50", sub: "Not competitive on flip math", border: "border-slate-500/40", bg: "bg-slate-500/10", text: "text-slate-300 [data-theme=light]:text-slate-800" },
+                    { label: "Undisclosed ask", range: "N/A", sub: "flip_score suppressed until price known", border: "border-slate-500/40", bg: "bg-slate-500/10", text: "text-slate-300 [data-theme=light]:text-slate-800" },
                   ].map((tier) => (
                     <div key={tier.label} className={`rounded-lg border px-3 py-3 ${tier.border} ${tier.bg}`}>
                       <p className={`text-sm font-bold ${tier.text}`}>{tier.label}</p>
@@ -1268,7 +1299,7 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
                 <div className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg-elevated)] p-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
                   <h3 className="text-sm font-semibold">High-attention inventory (proxy)</h3>
                   <p className="text-xs text-[var(--fh-text-muted)]">
-                    Top value_score rows — not watch counts. Flag rows with missing ask for deal-tier caveats.
+                    Top flip_score rows (≥65) — not watch counts. Undisclosed ask rows are flagged.
                   </p>
                   <div className="mt-3 max-h-72 overflow-auto text-xs">
                     <table className="w-full text-left">
@@ -1276,7 +1307,8 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
                         <tr className="border-b border-[var(--fh-border)] text-[var(--fh-text-muted)] [data-theme=light]:border-slate-200">
                           <th className="py-2 pr-2">Aircraft</th>
                           <th className="py-2 pr-2">Price</th>
-                          <th className="py-2 pr-2">Score</th>
+                          <th className="py-2 pr-2">Flip</th>
+                          <th className="py-2 pr-2">Tier</th>
                           <th className="py-2">Watches</th>
                         </tr>
                       </thead>
@@ -1293,7 +1325,8 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
                               <td className="py-1.5 pr-2">
                                 {noPrice ? <span className="text-amber-400 [data-theme=light]:text-amber-700">Undisclosed</span> : `$${Math.round(row.asking_price!).toLocaleString()}`}
                               </td>
-                              <td className="py-1.5 pr-2 tabular-nums">{row.value_score}</td>
+                              <td className="py-1.5 pr-2 tabular-nums">{row.flip_score}</td>
+                              <td className="py-1.5 pr-2 font-mono text-[11px] text-[var(--fh-text-muted)]">{row.flip_tier || "—"}</td>
                               <td className="py-1.5 text-[var(--fh-text-dim)]">—</td>
                             </tr>
                           );

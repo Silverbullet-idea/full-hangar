@@ -77,6 +77,8 @@ def fetch_listings(
             "asking_price",
             "risk_level",
             "value_score",
+            "flip_score",
+            "flip_tier",
             "engine_score",
             "deferred_total",
         ]

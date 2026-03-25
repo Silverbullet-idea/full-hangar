@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FLIP_TIER_CONFIG } from "@/lib/scoring/flipTierConfig";
 
 type DashboardPayload = any;
 
@@ -72,7 +73,7 @@ export default function BetaDashboardPage() {
           <p className="text-2xl font-semibold">{platform.listings.total_active.toLocaleString()}</p>
         </article>
         <article className="rounded border border-brand-dark bg-card-bg p-3">
-          <p className="text-xs uppercase text-brand-muted">High-Value Deals Today</p>
+          <p className="text-xs uppercase text-brand-muted">High flip scores today</p>
           <p className="text-2xl font-semibold">{platform.deals.high_score_listings.toLocaleString()}</p>
         </article>
         <article className="rounded border border-brand-dark bg-card-bg p-3">
@@ -88,17 +89,26 @@ export default function BetaDashboardPage() {
       <section className="rounded border border-brand-dark bg-card-bg p-4">
         <h2 className="mb-2 text-lg font-semibold">Active Deal Highlights</h2>
         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-          {topDeals.map((row: any) => (
+          {topDeals.map((row: any) => {
+            const tierKey = String(row.flip_tier ?? "").toUpperCase();
+            const tierCfg = FLIP_TIER_CONFIG[tierKey];
+            return (
             <article key={String(row.id)} className="rounded border border-brand-dark p-3 text-sm">
               <p className="font-semibold">{row.year} {row.make} {row.model}</p>
               <p>Price: {row.asking_price ? `$${Math.round(Number(row.asking_price)).toLocaleString()}` : "Call for price"}</p>
-              <p>Value Score: {Math.round(Number(row.value_score ?? 0))}</p>
+              <p className="flex flex-wrap items-center gap-2">
+                <span>Flip score: {Math.round(Number(row.flip_score ?? 0))}</span>
+                {tierCfg ? (
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${tierCfg.bg} ${tierCfg.text}`}>{tierCfg.label}</span>
+                ) : null}
+              </p>
               <p>Days On Market: {Math.round(Number(row.days_on_market ?? 0))}</p>
               <a className="mt-1 inline-block text-brand-orange hover:text-brand-burn" href={String(row.listing_url ?? row.url ?? "#")} target="_blank" rel="noreferrer">
                 View Listing →
               </a>
             </article>
-          ))}
+            );
+          })}
         </div>
       </section>
 

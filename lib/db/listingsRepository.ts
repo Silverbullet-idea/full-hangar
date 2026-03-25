@@ -5,6 +5,7 @@ import {
   type ListingsFilterOptionsClientShape,
 } from "../listings/filterOptionsAggregate";
 import { CATEGORY_PARAM_TO_DB } from "../listings/categoryMap";
+import { applyLegacyMakeFilter } from "../listings/makeFilterLegacy";
 import { createPrivilegedServerClient, createReadServerClient, createServerClient } from "../supabase/server";
 
 export type ListingFilters = {
@@ -155,8 +156,8 @@ function hasMultipleListingPhotos(row: Record<string, unknown>): boolean {
 }
 
 function shouldIncludeInDefaultListings(row: Record<string, unknown>): boolean {
-  const tier = String(row.deal_tier ?? "").trim().toUpperCase();
-  if (tier !== "EXCEPTIONAL_DEAL") return false;
+  const tier = String(row.flip_tier ?? "").trim().toUpperCase();
+  if (tier !== "HOT") return false;
   if (!hasMultipleListingPhotos(row)) return false;
   return countDefaultListingDetails(row) >= 5;
 }
@@ -174,7 +175,7 @@ export async function getListings(filters: ListingFilters = {}) {
     .from("public_listings")
     .select("*")
     .gte("deal_rating", minDealRating)
-    .order("deal_rating", { ascending: false, nullsFirst: false })
+    .order("flip_score", { ascending: false, nullsFirst: false })
     .limit(limit);
 
   if (onlyActive) query = query.eq("is_active", true);
@@ -188,9 +189,12 @@ export async function getListings(filters: ListingFilters = {}) {
 }
 
 const LISTINGS_PAGE_COLUMNS_PUBLIC =
-  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_exchange_price,ev_engine_remaining_value,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_score_contribution,ev_data_quality,ev_explanation,days_on_market,price_reduced,price_reduction_amount,first_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort";
+  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,flip_score,flip_tier,flip_explanation,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_exchange_price,ev_engine_remaining_value,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_score_contribution,ev_data_quality,ev_explanation,days_on_market,price_reduced,price_reduction_amount,first_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort";
 const LISTINGS_PAGE_COLUMNS_AIRCRAFT =
-  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,undisclosed_price_sort";
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,undisclosed_price_sort";
+/** Base-table columns only (`ev_*` are view-only; `normalizeEngineValueRows` derives them from `engine_*`). */
+const LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK =
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,days_on_market,price_reduced,price_reduction_amount,first_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort,aircraft_type";
 
 function columnsForListingsTable(table: string): string {
   return table === "aircraft_listings"
@@ -505,11 +509,10 @@ function normalizeDealTier(value: unknown): string {
 
 function getDealTierPriority(value: unknown): number {
   const tier = normalizeDealTier(value);
-  if (tier === "EXCEPTIONAL_DEAL") return 0;
-  if (tier === "GOOD_DEAL") return 1;
-  if (tier === "FAIR_MARKET") return 2;
-  if (tier === "ABOVE_MARKET") return 3;
-  if (tier === "OVERPRICED") return 4;
+  if (tier === "HOT") return 0;
+  if (tier === "GOOD") return 1;
+  if (tier === "FAIR") return 2;
+  if (tier === "PASS") return 3;
   return 5;
 }
 
@@ -519,7 +522,7 @@ function applyDealTierPreference(
 ): Record<string, unknown>[] {
   if (!enabled || rows.length < 2) return rows;
   return rows
-    .map((row, index) => ({ row, index, priority: getDealTierPriority(row.deal_tier) }))
+    .map((row, index) => ({ row, index, priority: getDealTierPriority(row.flip_tier) }))
     .sort((a, b) => {
       if (a.priority !== b.priority) return a.priority - b.priority;
       // Keep existing DB sort behavior inside each deal-tier bucket.
@@ -716,6 +719,23 @@ function applyPositiveNumericRange(
   return next;
 }
 
+/**
+ * Rows with NULL `year` fail plain `gte`/`lte`. When both bounds are set, always OR `year.is.null`
+ * so browse does not empty out if the view still has unknown model years (parsing migration helps,
+ * but NULLs remain). Single-sided filters stay strict on the bound that is set.
+ */
+function applyYearRangeFilter(query: any, yearMin: number, yearMax: number) {
+  const hasMin = Number.isFinite(yearMin) && yearMin > 0;
+  const hasMax = Number.isFinite(yearMax) && yearMax > 0;
+  if (!hasMin && !hasMax) return query;
+
+  if (hasMin && hasMax) {
+    return query.or(`year.is.null,and(year.gte.${yearMin},year.lte.${yearMax})`);
+  }
+  if (hasMin) return query.gte("year", yearMin);
+  return query.lte("year", yearMax);
+}
+
 function applyPriceFilters(
   query: any,
   opts: { minPrice: number; maxPrice: number; priceStatus: string }
@@ -738,8 +758,11 @@ function applyPriceFilters(
 function applyMaintenanceBandFilter(query: any, band: string) {
   const normalized = String(band ?? "").trim().toLowerCase();
   if (!normalized || normalized === "any") return query;
+  // "Light" includes unknown/null deferred totals — most listings have no deferred estimate yet.
+  if (normalized === "light") {
+    return query.or("deferred_total.is.null,deferred_total.lte.25000");
+  }
   let next = query.not("deferred_total", "is", null);
-  if (normalized === "light") return next.lte("deferred_total", 25000);
   if (normalized === "moderate") return next.gt("deferred_total", 25000).lte("deferred_total", 100000);
   if (normalized === "heavy") return next.gt("deferred_total", 100000).lte("deferred_total", 250000);
   if (normalized === "severe") return next.gt("deferred_total", 250000);
@@ -899,38 +922,42 @@ function applyCategoryFilter(query: any, categoryInput: string) {
 }
 
 function applyBrowseOrdering(query: any, sortBy: string, listBaseTable: string) {
+  const sb =
+    sortBy === "deal_desc" || sortBy === "value_desc"
+      ? "flip_desc"
+      : sortBy === "value_asc"
+        ? "flip_asc"
+        : sortBy;
   let q = query.order("undisclosed_price_sort", { ascending: true });
-  q = q.order("deal_rating", { ascending: false, nullsFirst: false });
-  if (sortBy === "value_desc") q = q.order("value_score", { ascending: false, nullsFirst: false });
-  else if (sortBy === "value_asc") q = q.order("value_score", { ascending: true, nullsFirst: false });
-  else if (sortBy === "price_low") q = q.order("asking_price", { ascending: true, nullsFirst: false });
-  else if (sortBy === "price_high") q = q.order("asking_price", { ascending: false, nullsFirst: false });
-  else if (sortBy === "market_best") q = q.order("vs_median_price", { ascending: true, nullsFirst: false });
-  else if (sortBy === "market_worst") q = q.order("vs_median_price", { ascending: false, nullsFirst: false });
-  else if (sortBy === "risk_low") q = q.order("risk_level", { ascending: false, nullsFirst: false });
-  else if (sortBy === "risk_high") q = q.order("risk_level", { ascending: true, nullsFirst: false });
-  else if (sortBy === "deferred_low") q = q.order("deferred_total", { ascending: true, nullsFirst: false });
-  else if (sortBy === "deferred_high") q = q.order("deferred_total", { ascending: false, nullsFirst: false });
-  else if (sortBy === "tt_low") q = q.order("total_time_airframe", { ascending: true, nullsFirst: false });
-  else if (sortBy === "tt_high") q = q.order("total_time_airframe", { ascending: false, nullsFirst: false });
-  else if (sortBy === "year_newest") q = q.order("year", { ascending: false, nullsFirst: false });
-  else if (sortBy === "year_oldest") q = q.order("year", { ascending: true, nullsFirst: false });
-  else if (sortBy === "dom_asc") {
+  if (sb === "flip_desc") q = q.order("flip_score", { ascending: false, nullsFirst: false });
+  else if (sb === "flip_asc") q = q.order("flip_score", { ascending: true, nullsFirst: false });
+  else if (sb === "price_low") q = q.order("asking_price", { ascending: true, nullsFirst: false });
+  else if (sb === "price_high") q = q.order("asking_price", { ascending: false, nullsFirst: false });
+  else if (sb === "market_best") q = q.order("vs_median_price", { ascending: true, nullsFirst: false });
+  else if (sb === "market_worst") q = q.order("vs_median_price", { ascending: false, nullsFirst: false });
+  else if (sb === "risk_low") q = q.order("risk_level", { ascending: false, nullsFirst: false });
+  else if (sb === "risk_high") q = q.order("risk_level", { ascending: true, nullsFirst: false });
+  else if (sb === "deferred_low") q = q.order("deferred_total", { ascending: true, nullsFirst: false });
+  else if (sb === "deferred_high") q = q.order("deferred_total", { ascending: false, nullsFirst: false });
+  else if (sb === "tt_low") q = q.order("total_time_airframe", { ascending: true, nullsFirst: false });
+  else if (sb === "tt_high") q = q.order("total_time_airframe", { ascending: false, nullsFirst: false });
+  else if (sb === "year_newest") q = q.order("year", { ascending: false, nullsFirst: false });
+  else if (sb === "year_oldest") q = q.order("year", { ascending: true, nullsFirst: false });
+  else if (sb === "dom_asc") {
     if (listBaseTable === "public_listings") {
       q = q.order("days_on_market", { ascending: true, nullsFirst: false });
     } else {
-      q = q.order("value_score", { ascending: false, nullsFirst: false });
+      q = q.order("flip_score", { ascending: false, nullsFirst: false });
     }
-  } else if (sortBy === "recent_add") {
+  } else if (sb === "recent_add") {
     if (listBaseTable === "public_listings") {
       q = q.order("first_seen_date", { ascending: false, nullsFirst: false });
     } else {
-      q = q.order("value_score", { ascending: false, nullsFirst: false });
+      q = q.order("flip_score", { ascending: false, nullsFirst: false });
     }
-  } else if (sortBy === "engine_life" && listBaseTable === "public_listings") {
+  } else if (sb === "engine_life" && listBaseTable === "public_listings") {
     q = q.order("ev_pct_life_remaining", { ascending: false, nullsFirst: false });
-  } else if (sortBy === "deal_desc") q = q.order("value_score", { ascending: false, nullsFirst: false });
-  else q = q.order("value_score", { ascending: false, nullsFirst: false });
+  } else q = q.order("flip_score", { ascending: false, nullsFirst: false });
   return q;
 }
 
@@ -977,6 +1004,163 @@ async function runSimpleSearchListingsPage(
   };
 }
 
+/** Shared PostgREST filter chain for browse (no sort / range / count options). */
+type ListingsBrowseFilterArgs = {
+  listBaseTable: string;
+  parsedSearch: ParsedListingsSearch;
+  pageQuery: ListingsPageQuery;
+  make: string;
+  model: string;
+  modelFamily: string;
+  subModel: string;
+  source: string;
+  state: string;
+  risk: string;
+  dealTier: string;
+  minValueScore: number;
+  maxValueScore: number;
+  minPrice: number;
+  maxPrice: number;
+  priceStatus: string;
+  yearMin: number;
+  yearMax: number;
+  totalTimeMin: number;
+  totalTimeMax: number;
+  maintenanceBand: string;
+  engineTime: string;
+  engineLifeRaw: string;
+  hasEngineLife: boolean;
+  trueCostMin: number;
+  trueCostMax: number;
+  category: string;
+  locationQ: string;
+  minEngineScore: number;
+  minAvionicsScore: number;
+  minQualityScore: number;
+  minMarketValueScore: number;
+  /** When true with `aircraft_listings`, apply public browse filters/scores (indexed base table) for parity with `public_listings`. */
+  publicBrowseOnAircraft?: boolean;
+};
+
+function applyListingsPageBrowseFilters(q: any, args: ListingsBrowseFilterArgs): any {
+  const {
+    listBaseTable,
+    parsedSearch,
+    pageQuery,
+    make,
+    model,
+    modelFamily,
+    subModel,
+    source,
+    state,
+    risk,
+    dealTier,
+    minValueScore,
+    maxValueScore,
+    minPrice,
+    maxPrice,
+    priceStatus,
+    yearMin,
+    yearMax,
+    totalTimeMin,
+    totalTimeMax,
+    maintenanceBand,
+    engineTime,
+    engineLifeRaw,
+    hasEngineLife,
+    trueCostMin,
+    trueCostMax,
+    category,
+    locationQ,
+    minEngineScore,
+    minAvionicsScore,
+    minQualityScore,
+    minMarketValueScore,
+    publicBrowseOnAircraft = false,
+  } = args;
+  let dbQuery = q;
+  if (parsedSearch.makeToken) dbQuery = dbQuery.ilike("make", `%${parsedSearch.makeToken}%`);
+  if (parsedSearch.modelToken) dbQuery = dbQuery.ilike("model", `%${parsedSearch.modelToken}%`);
+  if (typeof parsedSearch.yearToken === "number") dbQuery = dbQuery.eq("year", parsedSearch.yearToken);
+  if (parsedSearch.orClause) dbQuery = dbQuery.or(parsedSearch.orClause);
+  if (make) dbQuery = applyLegacyMakeFilter(dbQuery, make);
+  if (subModel) dbQuery = dbQuery.ilike("model", subModel);
+  else if (modelFamily) dbQuery = dbQuery.ilike("model", `%${modelFamily}%`);
+  else if (model) dbQuery = dbQuery.ilike("model", `%${model}%`);
+  dbQuery = applySourceFilter(dbQuery, source, listBaseTable === "aircraft_listings");
+  if (state) dbQuery = dbQuery.eq("location_state", state.toUpperCase());
+  if (risk) dbQuery = dbQuery.eq("risk_level", risk.toUpperCase());
+  if (dealTier === "TOP_DEALS") dbQuery = dbQuery.or("flip_tier.eq.HOT,flip_tier.eq.GOOD");
+  else if (dealTier) dbQuery = dbQuery.eq("flip_tier", dealTier.toUpperCase());
+  if (Number.isFinite(minValueScore) && minValueScore > 0) dbQuery = dbQuery.gte("flip_score", minValueScore);
+  if (Number.isFinite(maxValueScore) && maxValueScore > 0) dbQuery = dbQuery.lte("flip_score", maxValueScore);
+  dbQuery = applyPriceFilters(dbQuery, { minPrice, maxPrice, priceStatus });
+  dbQuery = applyYearRangeFilter(dbQuery, yearMin, yearMax);
+  dbQuery = applyPositiveNumericRange(dbQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
+  dbQuery = applyMaintenanceBandFilter(dbQuery, maintenanceBand);
+  const usePublicEngineSemantics =
+    listBaseTable === "public_listings" ||
+    (listBaseTable === "aircraft_listings" && publicBrowseOnAircraft);
+  const isAircraftPublicFallback = listBaseTable === "aircraft_listings" && publicBrowseOnAircraft;
+  // `ev_pct_life_remaining` / `ev_hours_smoh` exist on the view only, not on `aircraft_listings`.
+  if (hasEngineLife && usePublicEngineSemantics && !isAircraftPublicFallback) {
+    dbQuery = applyEngineLifeOrFilter(dbQuery, engineLifeRaw);
+  } else {
+    dbQuery = applyEngineTimeFilter(
+      dbQuery,
+      engineTime,
+      isAircraftPublicFallback ? "aircraft_listings" : usePublicEngineSemantics ? "public_listings" : listBaseTable
+    );
+  }
+  dbQuery = applyPositiveNumericRange(dbQuery, "true_cost", trueCostMin, trueCostMax);
+  dbQuery = applyCategoryFilter(dbQuery, category);
+  if (listBaseTable === "public_listings" || publicBrowseOnAircraft) {
+    if (pageQuery.priceReducedOnly === true) dbQuery = dbQuery.eq("price_reduced", true);
+    if (pageQuery.addedToday === true) {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      dbQuery = dbQuery.gte("first_seen_date", todayIso);
+    }
+    if (locationQ) {
+      if (listBaseTable === "public_listings") {
+        dbQuery = dbQuery.ilike("location_label", `%${locationQ}%`);
+      } else {
+        dbQuery = dbQuery.ilike("location_raw", `%${locationQ}%`);
+      }
+    }
+    if (publicBrowseOnAircraft) {
+      dbQuery = dbQuery.not("flip_score", "is", null);
+    }
+    // public_listings: pillar_* aliases; aircraft fallback: physical score columns (indexed).
+    if (minEngineScore > 0) {
+      dbQuery = dbQuery.gte(
+        listBaseTable === "public_listings" ? "pillar_engine_score" : "engine_score",
+        minEngineScore
+      );
+    }
+    if (minAvionicsScore > 0) {
+      dbQuery = dbQuery.gte(
+        listBaseTable === "public_listings" ? "pillar_avionics_score" : "avionics_score",
+        minAvionicsScore
+      );
+    }
+    if (minQualityScore > 0) {
+      dbQuery = dbQuery.gte(
+        listBaseTable === "public_listings" ? "pillar_quality_score" : "condition_score",
+        minQualityScore
+      );
+    }
+    if (minMarketValueScore > 0) {
+      dbQuery = dbQuery.gte(
+        listBaseTable === "public_listings" ? "pillar_market_score" : "market_opportunity_score",
+        minMarketValueScore
+      );
+    }
+    dbQuery = applyAvionicsStackFilters(dbQuery, String(pageQuery.avionics ?? ""));
+    dbQuery = applyDealPatternOrFilter(dbQuery, String(pageQuery.dealPattern ?? ""));
+  }
+  return dbQuery;
+}
+
 async function runDefaultCuratedListingsPage(
   supabase: ReturnType<typeof createServerClient>,
   opts: {
@@ -994,12 +1178,11 @@ async function runDefaultCuratedListingsPage(
     .from(listBaseTable)
     .select(columns)
     .eq("is_active", true)
-    .eq("deal_tier", "EXCEPTIONAL_DEAL")
+    .eq("flip_tier", "HOT")
     .not("primary_image_url", "is", null)
     .not("image_urls", "is", null)
     .order("undisclosed_price_sort", { ascending: true })
-    .order("deal_rating", { ascending: false, nullsFirst: false })
-    .order("value_score", { ascending: false, nullsFirst: false })
+    .order("flip_score", { ascending: false, nullsFirst: false })
     .limit(1500);
 
   const result = await candidateQuery;
@@ -1059,7 +1242,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
   const hasEngineLife = parseCommaSepTokens(engineLifeRaw).length > 0;
   const trueCostMin = Number(query.trueCostMin ?? 0);
   const trueCostMax = Number(query.trueCostMax ?? 0);
-  const sortBy = String(query.sortBy ?? "value_desc");
+  const sortBy = String(query.sortBy ?? "flip_desc");
   const requestedOwnershipType = ownershipType === "fractional" || ownershipType === "full";
   const listBaseTable =
     requestedOwnershipType
@@ -1102,11 +1285,6 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     throw lastError instanceof Error ? lastError : new Error(String(lastError ?? "default listings load failed"));
   }
 
-  let dbQuery = supabase
-    .from(listBaseTable)
-    .select(listBaseColumns)
-    .eq("is_active", true);
-
   const parsedSearch = parseListingsSearch(q);
 
   if (isSimpleSearchOnlyQuery(query)) {
@@ -1126,100 +1304,70 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     }
   }
 
-  if (parsedSearch.makeToken) dbQuery = dbQuery.ilike("make", `%${parsedSearch.makeToken}%`);
-  if (parsedSearch.modelToken) dbQuery = dbQuery.ilike("model", `%${parsedSearch.modelToken}%`);
-  if (typeof parsedSearch.yearToken === "number") dbQuery = dbQuery.eq("year", parsedSearch.yearToken);
-  if (parsedSearch.orClause) dbQuery = dbQuery.or(parsedSearch.orClause);
-  if (make) dbQuery = dbQuery.ilike("make", `%${make}%`);
-  if (subModel) dbQuery = dbQuery.ilike("model", subModel);
-  else if (modelFamily) dbQuery = dbQuery.ilike("model", `%${modelFamily}%`);
-  else if (model) dbQuery = dbQuery.ilike("model", `%${model}%`);
-  dbQuery = applySourceFilter(dbQuery, source, listBaseTable === "aircraft_listings");
-  if (state) dbQuery = dbQuery.eq("location_state", state.toUpperCase());
-  if (risk) dbQuery = dbQuery.eq("risk_level", risk.toUpperCase());
-  if (dealTier === "TOP_DEALS") dbQuery = dbQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
-  else if (dealTier) dbQuery = dbQuery.eq("deal_tier", dealTier.toUpperCase());
-  if (Number.isFinite(minValueScore) && minValueScore > 0) dbQuery = dbQuery.gte("value_score", minValueScore);
-  if (Number.isFinite(maxValueScore) && maxValueScore > 0) dbQuery = dbQuery.lte("value_score", maxValueScore);
-  dbQuery = applyPriceFilters(dbQuery, { minPrice, maxPrice, priceStatus });
-  dbQuery = applyPositiveNumericRange(dbQuery, "year", yearMin, yearMax);
-  dbQuery = applyPositiveNumericRange(dbQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
-  dbQuery = applyMaintenanceBandFilter(dbQuery, maintenanceBand);
-  if (listBaseTable === "public_listings" && hasEngineLife) {
-    dbQuery = applyEngineLifeOrFilter(dbQuery, engineLifeRaw);
-  } else {
-    dbQuery = applyEngineTimeFilter(dbQuery, engineTime, listBaseTable);
-  }
-  dbQuery = applyPositiveNumericRange(dbQuery, "true_cost", trueCostMin, trueCostMax);
-  dbQuery = applyCategoryFilter(dbQuery, category);
-  if (listBaseTable === "public_listings") {
-    if (query.priceReducedOnly === true) dbQuery = dbQuery.eq("price_reduced", true);
-    if (query.addedToday === true) {
-      const todayIso = new Date().toISOString().slice(0, 10);
-      dbQuery = dbQuery.gte("first_seen_date", todayIso);
-    }
-    if (locationQ) dbQuery = dbQuery.ilike("location_label", `%${locationQ}%`);
-    if (minEngineScore > 0) dbQuery = dbQuery.gte("engine_score", minEngineScore);
-    if (minAvionicsScore > 0) dbQuery = dbQuery.gte("avionics_score", minAvionicsScore);
-    if (minQualityScore > 0) dbQuery = dbQuery.gte("condition_score", minQualityScore);
-    if (minMarketValueScore > 0) dbQuery = dbQuery.gte("market_opportunity_score", minMarketValueScore);
-    dbQuery = applyAvionicsStackFilters(dbQuery, String(query.avionics ?? ""));
-    dbQuery = applyDealPatternOrFilter(dbQuery, String(query.dealPattern ?? ""));
-  }
+  const browseFilterArgs: ListingsBrowseFilterArgs = {
+    listBaseTable,
+    parsedSearch,
+    pageQuery: query,
+    make,
+    model,
+    modelFamily,
+    subModel,
+    source,
+    state,
+    risk,
+    dealTier,
+    minValueScore,
+    maxValueScore,
+    minPrice,
+    maxPrice,
+    priceStatus,
+    yearMin,
+    yearMax,
+    totalTimeMin,
+    totalTimeMax,
+    maintenanceBand,
+    engineTime,
+    engineLifeRaw,
+    hasEngineLife,
+    trueCostMin,
+    trueCostMax,
+    category,
+    locationQ,
+    minEngineScore,
+    minAvionicsScore,
+    minQualityScore,
+    minMarketValueScore,
+  };
 
-  dbQuery = applyBrowseOrdering(dbQuery, sortBy, listBaseTable);
+  // No count on the hot path: `public_listings` materializes JSON per row; keep the statement lean.
+  let dataQuery = applyListingsPageBrowseFilters(
+    supabase.from(listBaseTable).select(listBaseColumns).eq("is_active", true),
+    browseFilterArgs
+  );
+  dataQuery = applyBrowseOrdering(dataQuery, sortBy, listBaseTable);
+  dataQuery = dataQuery.range(from, to);
 
-  dbQuery = dbQuery.range(from, to);
-  let result = await dbQuery;
-  if (result.error && isTransientSupabaseUpstreamFailure(result.error.message)) {
-    let fallbackQuery = supabase
-      .from(listBaseTable)
-      .select(listBaseColumns)
-      .eq("is_active", true);
-    if (parsedSearch.makeToken) fallbackQuery = fallbackQuery.ilike("make", `%${parsedSearch.makeToken}%`);
-    if (parsedSearch.modelToken) fallbackQuery = fallbackQuery.ilike("model", `%${parsedSearch.modelToken}%`);
-    if (typeof parsedSearch.yearToken === "number") fallbackQuery = fallbackQuery.eq("year", parsedSearch.yearToken);
-    if (parsedSearch.orClause) fallbackQuery = fallbackQuery.or(parsedSearch.orClause);
-    if (make) fallbackQuery = fallbackQuery.ilike("make", `%${make}%`);
-    if (subModel) fallbackQuery = fallbackQuery.ilike("model", subModel);
-    else if (modelFamily) fallbackQuery = fallbackQuery.ilike("model", `%${modelFamily}%`);
-    else if (model) fallbackQuery = fallbackQuery.ilike("model", `%${model}%`);
-    fallbackQuery = applySourceFilter(fallbackQuery, source, listBaseTable === "aircraft_listings");
-    if (state) fallbackQuery = fallbackQuery.eq("location_state", state.toUpperCase());
-    if (risk) fallbackQuery = fallbackQuery.eq("risk_level", risk.toUpperCase());
-    if (dealTier === "TOP_DEALS") fallbackQuery = fallbackQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
-    else if (dealTier) fallbackQuery = fallbackQuery.eq("deal_tier", dealTier.toUpperCase());
-    if (Number.isFinite(minValueScore) && minValueScore > 0) fallbackQuery = fallbackQuery.gte("value_score", minValueScore);
-    if (Number.isFinite(maxValueScore) && maxValueScore > 0) fallbackQuery = fallbackQuery.lte("value_score", maxValueScore);
-    fallbackQuery = applyPriceFilters(fallbackQuery, { minPrice, maxPrice, priceStatus });
-    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "year", yearMin, yearMax);
-    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
-    fallbackQuery = applyMaintenanceBandFilter(fallbackQuery, maintenanceBand);
-    if (listBaseTable === "public_listings" && hasEngineLife) {
-      fallbackQuery = applyEngineLifeOrFilter(fallbackQuery, engineLifeRaw);
-    } else {
-      fallbackQuery = applyEngineTimeFilter(fallbackQuery, engineTime, listBaseTable);
-    }
-    fallbackQuery = applyPositiveNumericRange(fallbackQuery, "true_cost", trueCostMin, trueCostMax);
-    fallbackQuery = applyCategoryFilter(fallbackQuery, category);
-    if (listBaseTable === "public_listings") {
-      if (query.priceReducedOnly === true) fallbackQuery = fallbackQuery.eq("price_reduced", true);
-      if (query.addedToday === true) {
-        const todayIso = new Date().toISOString().slice(0, 10);
-        fallbackQuery = fallbackQuery.gte("first_seen_date", todayIso);
-      }
-      if (locationQ) fallbackQuery = fallbackQuery.ilike("location_label", `%${locationQ}%`);
-      if (minEngineScore > 0) fallbackQuery = fallbackQuery.gte("engine_score", minEngineScore);
-      if (minAvionicsScore > 0) fallbackQuery = fallbackQuery.gte("avionics_score", minAvionicsScore);
-      if (minQualityScore > 0) fallbackQuery = fallbackQuery.gte("condition_score", minQualityScore);
-      if (minMarketValueScore > 0) {
-        fallbackQuery = fallbackQuery.gte("market_opportunity_score", minMarketValueScore);
-      }
-      fallbackQuery = applyAvionicsStackFilters(fallbackQuery, String(query.avionics ?? ""));
-      fallbackQuery = applyDealPatternOrFilter(fallbackQuery, String(query.dealPattern ?? ""));
-    }
-    fallbackQuery = applyBrowseOrdering(fallbackQuery, sortBy, listBaseTable);
-    result = await fallbackQuery.range(from, to);
+  let result = await dataQuery;
+  if (
+    result.error &&
+    isTransientSupabaseUpstreamFailure(result.error.message) &&
+    listBaseTable === "public_listings" &&
+    !requestedOwnershipType
+  ) {
+    const aircraftBrowseArgs: ListingsBrowseFilterArgs = {
+      ...browseFilterArgs,
+      listBaseTable: "aircraft_listings",
+      publicBrowseOnAircraft: true,
+    };
+    let aircraftQuery = applyListingsPageBrowseFilters(
+      supabase
+        .from("aircraft_listings")
+        .select(LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK)
+        .eq("is_active", true),
+      aircraftBrowseArgs
+    );
+    aircraftQuery = applyBrowseOrdering(aircraftQuery, sortBy, "aircraft_listings");
+    result = await aircraftQuery.range(from, to);
   }
   if (result.error && isTransientSupabaseUpstreamFailure(result.error.message) && q) {
     // Last-resort fallback: keep search responsive on hot terms.
@@ -1275,69 +1423,17 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
           };
         }
       }
-
-      return {
-        rows: [],
-        total: 0,
-        page,
-        pageSize,
-      };
+      // Do not return a fake empty success for browse filters (no q): that hides timeouts as "0 results".
+      throw new Error(result.error.message);
     }
     throw new Error(result.error.message);
   }
 
-  let total = result.data?.length ?? 0;
-  try {
-    let countQuery = supabase.from(listBaseTable).select("id", { count: "exact", head: true }).eq("is_active", true);
-    if (parsedSearch.makeToken) countQuery = countQuery.ilike("make", `%${parsedSearch.makeToken}%`);
-    if (parsedSearch.modelToken) countQuery = countQuery.ilike("model", `%${parsedSearch.modelToken}%`);
-    if (typeof parsedSearch.yearToken === "number") countQuery = countQuery.eq("year", parsedSearch.yearToken);
-    if (parsedSearch.orClause) countQuery = countQuery.or(parsedSearch.orClause);
-    if (make) countQuery = countQuery.ilike("make", `%${make}%`);
-    if (subModel) countQuery = countQuery.ilike("model", subModel);
-    else if (modelFamily) countQuery = countQuery.ilike("model", `%${modelFamily}%`);
-    else if (model) countQuery = countQuery.ilike("model", `%${model}%`);
-    countQuery = applySourceFilter(countQuery, source, listBaseTable === "aircraft_listings");
-    if (state) countQuery = countQuery.eq("location_state", state.toUpperCase());
-    if (risk) countQuery = countQuery.eq("risk_level", risk.toUpperCase());
-    if (dealTier === "TOP_DEALS") countQuery = countQuery.or("deal_tier.eq.EXCEPTIONAL_DEAL,deal_tier.eq.GOOD_DEAL");
-    else if (dealTier) countQuery = countQuery.eq("deal_tier", dealTier.toUpperCase());
-    if (Number.isFinite(minValueScore) && minValueScore > 0) countQuery = countQuery.gte("value_score", minValueScore);
-    if (Number.isFinite(maxValueScore) && maxValueScore > 0) countQuery = countQuery.lte("value_score", maxValueScore);
-    countQuery = applyPriceFilters(countQuery, { minPrice, maxPrice, priceStatus });
-    countQuery = applyPositiveNumericRange(countQuery, "year", yearMin, yearMax);
-    countQuery = applyPositiveNumericRange(countQuery, "total_time_airframe", totalTimeMin, totalTimeMax);
-    countQuery = applyMaintenanceBandFilter(countQuery, maintenanceBand);
-    if (listBaseTable === "public_listings" && hasEngineLife) {
-      countQuery = applyEngineLifeOrFilter(countQuery, engineLifeRaw);
-    } else {
-      countQuery = applyEngineTimeFilter(countQuery, engineTime, listBaseTable);
-    }
-    countQuery = applyPositiveNumericRange(countQuery, "true_cost", trueCostMin, trueCostMax);
-    countQuery = applyCategoryFilter(countQuery, category);
-    if (listBaseTable === "public_listings") {
-      if (query.priceReducedOnly === true) countQuery = countQuery.eq("price_reduced", true);
-      if (query.addedToday === true) {
-        const todayIso = new Date().toISOString().slice(0, 10);
-        countQuery = countQuery.gte("first_seen_date", todayIso);
-      }
-      if (locationQ) countQuery = countQuery.ilike("location_label", `%${locationQ}%`);
-      if (minEngineScore > 0) countQuery = countQuery.gte("engine_score", minEngineScore);
-      if (minAvionicsScore > 0) countQuery = countQuery.gte("avionics_score", minAvionicsScore);
-      if (minQualityScore > 0) countQuery = countQuery.gte("condition_score", minQualityScore);
-      if (minMarketValueScore > 0) {
-        countQuery = countQuery.gte("market_opportunity_score", minMarketValueScore);
-      }
-      countQuery = applyAvionicsStackFilters(countQuery, String(query.avionics ?? ""));
-      countQuery = applyDealPatternOrFilter(countQuery, String(query.dealPattern ?? ""));
-    }
-    const countResult = await countQuery;
-    if (!countResult.error && typeof countResult.count === "number") {
-      total = countResult.count;
-    }
-  } catch {
-    // Ignore count failures and fall back to current page length.
-  }
+  const rc = result.data?.length ?? 0;
+  let total: number;
+  if (rc === 0) total = from;
+  else if (rc < pageSize) total = from + rc;
+  else total = from + rc + 1;
 
   const enrichedRows = await attachFractionalFields(
     supabase,
@@ -1404,8 +1500,8 @@ async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOpti
     const maxRows = 50000;
     const selectColumns =
       table === "aircraft_listings"
-        ? "make,model,location_state,state,source,source_site,deal_tier,value_score"
-        : "make,model,location_state,source,deal_tier,value_score";
+        ? "make,model,location_state,state,source,source_site,flip_tier,flip_score"
+        : "make,model,location_state,source,flip_tier,flip_score";
 
     for (const chunkSize of chunkSizes) {
       const allRows: Array<Record<string, unknown>> = [];
@@ -1440,11 +1536,11 @@ async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOpti
             table === "aircraft_listings"
               ? ((row.source ?? row.source_site) as string | null | undefined) ?? null
               : ((row.source as string | null | undefined) ?? null),
-          dealTier: (row.deal_tier as string | null | undefined) ?? null,
+          dealTier: (row.flip_tier as string | null | undefined) ?? null,
           valueScore:
-            typeof row.value_score === "number"
-              ? row.value_score
-              : toNumericOrNull(row.value_score),
+            typeof row.flip_score === "number"
+              ? row.flip_score
+              : toNumericOrNull(row.flip_score),
         }));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error ?? "");
@@ -1472,7 +1568,7 @@ async function fetchDefaultListingsHomeUncached(): Promise<{
   const query: ListingsPageQuery = {
     page: 1,
     pageSize: 24,
-    sortBy: "deal_desc",
+    sortBy: "flip_desc",
     q: "",
     make: "",
     model: "",
@@ -1509,7 +1605,7 @@ const getCachedDefaultListingsHome = unstable_cache(fetchDefaultListingsHomeUnca
 });
 
 /**
- * Cached first paint for the common case: /listings page 1, 24 rows, deal_desc, no filters.
+ * Cached first paint for the common case: /listings page 1, 24 rows, flip_desc, no filters.
  * Call only when URL-derived query matches `isDefaultListingsLandingQuery` and sort/page/size match.
  */
 export async function loadCachedDefaultListingsHomeIfEligible(
@@ -1517,7 +1613,12 @@ export async function loadCachedDefaultListingsHomeIfEligible(
   resolved: { page: number; pageSize: number; sortBy: string }
 ): Promise<{ rows: Record<string, unknown>[]; total: number; filterOptions: ListingsFilterOptionsClientShape } | null> {
   if (!isDefaultListingsLandingQuery(query)) return null;
-  if (resolved.page !== 1 || resolved.pageSize !== 24 || resolved.sortBy !== "deal_desc") return null;
+  if (
+    resolved.page !== 1 ||
+    resolved.pageSize !== 24 ||
+    (resolved.sortBy !== "flip_desc" && resolved.sortBy !== "deal_desc")
+  )
+    return null;
   return getCachedDefaultListingsHome();
 }
 
@@ -1669,6 +1770,8 @@ export type InternalDealSignal = {
   component_gap_value: number | null;
   flip_candidate_triggered: boolean | null;
   flip_candidate_threshold: number | null;
+  flip_score: number | null;
+  flip_tier: string | null;
 };
 
 export async function getRecentOwnershipChanges(opts: { days?: number; limit?: number } = {}): Promise<RecentOwnershipChange[]> {
@@ -1735,7 +1838,7 @@ export async function getInternalDealSignals(ids: string[]): Promise<InternalDea
     const result = await supabase
       .from("aircraft_listings")
       .select(
-        "id,normalized_engine_value,sold_engine_median_price,engine_remaining_time_factor,avionics_bundle_multiplier,avionics_bundle_adjusted_value,estimated_component_value,component_gap_value,flip_candidate_triggered,flip_candidate_threshold"
+        "id,normalized_engine_value,sold_engine_median_price,engine_remaining_time_factor,avionics_bundle_multiplier,avionics_bundle_adjusted_value,estimated_component_value,component_gap_value,flip_candidate_triggered,flip_candidate_threshold,flip_score,flip_tier"
       )
       .in("id", chunk);
     if (result.error) throw new Error(result.error.message);
@@ -1752,6 +1855,8 @@ export async function getInternalDealSignals(ids: string[]): Promise<InternalDea
         component_gap_value: row.component_gap_value ?? null,
         flip_candidate_triggered: row.flip_candidate_triggered ?? null,
         flip_candidate_threshold: row.flip_candidate_threshold ?? null,
+        flip_score: row.flip_score ?? null,
+        flip_tier: row.flip_tier != null ? String(row.flip_tier) : null,
       });
     }
   }

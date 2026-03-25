@@ -89,6 +89,8 @@ function mapRow(row: GenericRow) {
     model: toString(row.model),
     asking_price: toNumber(row.asking_price),
     value_score: toNumber(row.value_score),
+    flip_score: toNumber(row.flip_score),
+    flip_tier: toString(row.flip_tier),
     ttaf: toNumber(row.ttaf ?? row.total_time_airframe),
     smoh: toNumber(row.smoh ?? row.time_since_overhaul),
     avionics_value: toNumber(scoreData.avionics_value),
@@ -112,8 +114,9 @@ function sortRows(
     if (sort === "price") return row.asking_price ?? Number.POSITIVE_INFINITY;
     if (sort === "days_on_market") return row.days_on_market ?? Number.POSITIVE_INFINITY;
     if (sort === "ttaf") return row.ttaf ?? Number.POSITIVE_INFINITY;
+    if (sort === "flip_score") return row.flip_score ?? Number.NEGATIVE_INFINITY;
     if (sort === "value_score") return row.value_score ?? Number.NEGATIVE_INFINITY;
-    return row.value_score ?? Number.NEGATIVE_INFINITY;
+    return row.flip_score ?? row.value_score ?? Number.NEGATIVE_INFINITY;
   };
   return [...rows].sort((a, b) => {
     const aVal = getSortValue(a);
@@ -127,7 +130,7 @@ function sortRows(
 
 export async function GET(request: NextRequest) {
   const access = await ensureInternalApiAccess(request);
-  if (access.ok !== true) return access.response;
+  if (access.ok === false) return access.response;
 
   try {
     const params = request.nextUrl.searchParams;
@@ -172,7 +175,7 @@ export async function GET(request: NextRequest) {
     }
 
     const page = Math.max(1, Number(params.get("page") ?? "1") || 1);
-    const sort = (params.get("sort") ?? "value_score").trim();
+    const sort = (params.get("sort") ?? "flip_score").trim();
     const directionParam = (params.get("direction") ?? "desc").toLowerCase();
     const direction: "asc" | "desc" = directionParam === "asc" ? "asc" : "desc";
 

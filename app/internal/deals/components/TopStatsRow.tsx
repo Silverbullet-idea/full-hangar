@@ -1,6 +1,6 @@
 type TopStats = {
   total: number
-  exceptionalCount: number
+  hotTierCount: number
   avgDays: number | null
   makesWithComps: number
   highPriorityCount: number
@@ -19,7 +19,7 @@ export default function TopStatsRow({ topStats }: { topStats: TopStats }) {
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
       <StatCard label="Total listings under $50k" value={String(topStats.total)} />
-      <StatCard label="Exceptional deals under $50k" value={String(topStats.exceptionalCount)} />
+      <StatCard label="HOT flip tier under $50k" value={String(topStats.hotTierCount)} />
       <StatCard label="High-priority candidates" value={String(topStats.highPriorityCount)} />
       <StatCard label="Average days since scraped" value={topStats.avgDays == null ? 'N/A' : `${topStats.avgDays.toFixed(1)} days`} />
       <StatCard label="Makes with 10+ comps available" value={String(topStats.makesWithComps)} />

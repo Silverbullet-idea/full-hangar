@@ -301,19 +301,30 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     executionScore,
     investmentScore,
   })
-  const scoreColor = getScoreColor(scoreBreakdown.primaryScore)
   const primaryImageUrl = typeof listingRow.primary_image_url === "string" ? listingRow.primary_image_url.trim() : ""
   const galleryUrls = primaryImageUrl
     ? imageUrls.filter((url) => url !== primaryImageUrl)
     : imageUrls
   const logbookUrls = collectLinkUrls(raw, "logbook_urls")
-  const scoreExplanation = collectTextList(raw, "score_explanation")
+  const scoreExplanation = filterLegacyScoreExplanationLines(collectTextList(raw, "score_explanation"))
   const dataConfidence = pickText(raw, ["data_confidence"])
   const dealComparisonSource = pickText(raw, ["deal_comparison_source"]) || listingRow.deal_comparison_source
   const resolvedAskingPrice = resolveAskingPrice(listingRow, raw)
-  const detailDealTierRaw = pickText(raw, ["deal_tier"]) || listingRow.deal_tier
   const hasDisclosedListPrice = typeof resolvedAskingPrice === "number" && resolvedAskingPrice > 0
-  const displayDealTier = hasDisclosedListPrice ? detailDealTierRaw : null
+  const flipScoreRaw =
+    pickNumber(raw, ["flip_score"]) ??
+    (typeof (listingRow as { flip_score?: number }).flip_score === "number"
+      ? (listingRow as { flip_score?: number }).flip_score
+      : null)
+  const flipTierRaw =
+    pickText(raw, ["flip_tier"]) || (listingRow as { flip_tier?: string | null }).flip_tier || null
+  const flipExplanationParsed = parseFlipExplanationField(
+    (raw as { flip_explanation?: unknown }).flip_explanation ??
+      (listingRow as { flip_explanation?: unknown }).flip_explanation
+  )
+  const displayFlipTier = hasDisclosedListPrice ? flipTierRaw : null
+  const displayFlipScore = hasDisclosedListPrice ? flipScoreRaw : null
+  const scoreColor = getScoreColor(displayFlipScore ?? scoreBreakdown.primaryScore)
   const fractionalPricingContext = descriptionIntelligence.pricingContext
   const fractionalBreakdown = resolveFractionalBreakdown(raw, fractionalPricingContext, resolvedAskingPrice)
   const fractionalPricingNote = buildFractionalPricingNote(fractionalBreakdown)
@@ -332,7 +343,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const effectiveCompSource = resolveCompSource(dealComparisonSource, marketPricing?.sampleSize ?? null)
   const effectiveDataConfidence = resolveDataConfidence(dataConfidence, listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null)
   const scoreMethodSummary = buildScoreMethodSummary(
-    scoreBreakdown,
+    displayFlipScore,
+    displayFlipTier,
+    hasDisclosedListPrice,
     effectiveDataConfidence,
     pricingConfidence,
     effectiveCompSource,
@@ -432,7 +445,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   )
   const scoreInputRows = buildScoreInputRows({
     listing: listingRow,
-    scoreBreakdown,
+    flipScore: displayFlipScore,
+    flipTier: displayFlipTier,
+    hasDisclosedPrice: hasDisclosedListPrice,
     pricingConfidence,
     compInsights: {
       compSelectionTier,
@@ -531,7 +546,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     ["Mode S (Oct / Hex)", safeDisplay([faaModeSBase8, faaModeSBase16].filter(Boolean).join(" / "))],
     ["Accident History", accidentHistoryValue],
   ]
-  const pillarNotes = buildPillarNotes(scoreExplanation)
   const evPctRaw = pickNumber(raw, ["ev_pct_life_remaining"])
   let engineLifePct = normalizeEngineLifePercent(evPctRaw)
   if (
@@ -555,11 +569,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         ? "good"
         : "default"
   const intelligenceVersion = pickText(raw, ["intelligence_version"]) || listingRow.intelligence_version || null
-  const vsMedianPrice = listingRow.vs_median_price ?? pickNumber(raw, ["vs_median_price"])
-  const percentileLabel =
-    typeof vsMedianPrice === "number" && Number.isFinite(vsMedianPrice) && vsMedianPrice !== 0
-      ? `${vsMedianPrice < 0 ? "Below" : "Above"} active comp median by ${formatMoney(Math.abs(vsMedianPrice))}`
-      : null
   const marketMedianLabel =
     marketPricing && typeof marketPricing.median === "number"
       ? `Similar listings median ${formatMoney(marketPricing.median)} (n=${marketPricing.sampleSize})`
@@ -729,7 +738,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           <ListingImageGallery
             title={listingRow.title || "Aircraft listing"}
             imageUrls={heroImageUrls}
-            dealTier={displayDealTier}
+            flipTier={displayFlipTier}
             priceUndisclosed={!hasDisclosedListPrice}
             fallbackImageUrl={fallbackImageUrl}
             layoutVariant="detailHero"
@@ -755,12 +764,10 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
 
         <div className="mb-6 min-w-0 lg:mb-0">
           <ListingScoreHeroCards
-            dealTier={displayDealTier}
-            primaryScore={hasDisclosedListPrice ? scoreBreakdown.primaryScore : null}
-            primaryLabel={scoreBreakdown.primaryLabel}
-            scoreColor={scoreColor}
+            flipTier={displayFlipTier}
+            flipScore={displayFlipScore}
+            flipExplanation={flipExplanationParsed}
             intelligenceVersion={intelligenceVersion}
-            percentileLabel={percentileLabel}
             askingPrice={resolvedAskingPrice}
             priceReduced={listingRow.price_reduced === true}
             priceReductionAmount={listingRow.price_reduction_amount ?? null}
@@ -768,10 +775,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             marketMedianLabel={marketMedianLabel}
             trueCostEstimate={trueCostEstimate}
             deferredMaintenanceTotal={deferredMaintenanceTotal}
-            marketScore={scoreBreakdown.marketScore}
-            conditionScore={scoreBreakdown.conditionScore}
-            executionScore={scoreBreakdown.executionScore}
-            pillarNotes={pillarNotes}
           />
         </div>
 
@@ -847,15 +850,13 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             marketPricing={marketPricing}
             formatMoney={formatMoney}
             scoreColor={scoreColor}
-            primaryScore={scoreBreakdown.primaryScore}
-            primaryLabel={scoreBreakdown.primaryLabel}
+            primaryScore={displayFlipScore}
+            primaryLabel="Flip score"
+            flipExplanation={flipExplanationParsed}
             formatScore={formatScore}
             scoreMethodSummary={scoreMethodSummary}
             confidenceSignals={confidenceSignals}
             effectiveDataConfidence={effectiveDataConfidence}
-            marketScore={scoreBreakdown.marketScore}
-            conditionScore={scoreBreakdown.conditionScore}
-            executionScore={scoreBreakdown.executionScore}
             compExactCount={compExactCount}
             compFamilyCount={compFamilyCount}
             compMakeCount={compMakeCount}
@@ -1357,23 +1358,46 @@ function annualStatusDisplay(lastAnnualText: string | null): { label: string; ok
   return { label: "Not disclosed", ok: false }
 }
 
-function buildPillarNotes(explanations: string[]): {
-  market: string | null
-  condition: string | null
-  execution: string | null
-} {
-  const clip = (s: string) => (s.length > 140 ? `${s.slice(0, 137)}…` : s)
-  let market: string | null = null
-  let condition: string | null = null
-  let execution: string | null = null
-  for (const line of explanations) {
-    const l = line.toLowerCase()
-    if (!market && /market|comp|median|pricing|mispric|value vs|ask|deal/.test(l)) market = clip(line)
-    else if (!condition && /condition|airframe|maintenance|engine|annual|logbook|smoh|tbo/.test(l)) condition = clip(line)
-    else if (!execution && /execution|days on market|dom|price drop|reduced|seller|motivation|market time/.test(l))
-      execution = clip(line)
+type FlipExplanationPayload = {
+  p1_pricing_edge?: { pts?: number; max?: number }
+  p2_airworthiness?: { pts?: number; max?: number }
+  p3_improvement_room?: { pts?: number; max?: number }
+  p4_exit_liquidity?: { pts?: number; max?: number }
+  suppressed?: string
+  error?: string
+} | null
+
+function parseFlipExplanationField(raw: unknown): FlipExplanationPayload {
+  if (raw == null || raw === "") return null
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as NonNullable<FlipExplanationPayload>
   }
-  return { market, condition, execution }
+  if (typeof raw === "string") {
+    try {
+      const parsed: unknown = JSON.parse(raw)
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as NonNullable<FlipExplanationPayload>)
+        : null
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+function shouldSuppressScoreExplanationLine(line: string): boolean {
+  const l = line.toLowerCase()
+  if (/\b45%\s*market\b/i.test(line) && /\b35%\s*condition\b/i.test(line)) return true
+  if (/\b20%\s*execution\b/i.test(line) && /\bmarket opportunity\b/i.test(l)) return true
+  if (/\b(exceptional_deal|good_deal|fair_deal|weak_deal)\b/i.test(line)) return true
+  if (l.includes("deal tier") && !l.includes("flip")) return true
+  if (l.includes("value_score") && l.includes("suppressed")) return true
+  if (l.includes("value score") && (l.includes("pillar") || l.includes("weighted"))) return true
+  return false
+}
+
+function filterLegacyScoreExplanationLines(lines: string[]): string[] {
+  return lines.filter((line) => !shouldSuppressScoreExplanationLine(line))
 }
 
 function resolveAskingPrice(listing: AircraftListing, raw: UnknownRow): number | null {
@@ -1508,8 +1532,9 @@ function deriveScoreBreakdown(args: {
   executionScore: number | null
 } {
   const { listing } = args
-  const fallbackMarket = typeof listing.deal_rating === "number" ? listing.deal_rating : listing.value_score
-  const fallbackCondition = typeof listing.value_score === "number" ? listing.value_score : null
+  const flip = typeof (listing as { flip_score?: number }).flip_score === "number" ? (listing as { flip_score?: number }).flip_score : null
+  const fallbackMarket = typeof listing.deal_rating === "number" ? listing.deal_rating : flip ?? listing.value_score
+  const fallbackCondition = typeof flip === "number" ? flip : typeof listing.value_score === "number" ? listing.value_score : null
   const fallbackExecution = deriveExecutionFallback(listing)
   const marketScore = args.marketOpportunityScore ?? fallbackMarket ?? null
   const conditionScore = args.conditionScore ?? fallbackCondition ?? null
@@ -1518,7 +1543,7 @@ function deriveScoreBreakdown(args: {
     typeof marketScore === "number" && typeof conditionScore === "number" && typeof executionScore === "number"
       ? marketScore * 0.45 + conditionScore * 0.35 + executionScore * 0.2
       : null
-  const primaryScore = args.investmentScore ?? weightedFallback ?? listing.value_score
+  const primaryScore = args.investmentScore ?? weightedFallback ?? flip ?? listing.value_score
   return {
     primaryScore: primaryScore !== null ? Number(primaryScore.toFixed(1)) : null,
     primaryLabel: args.investmentScore !== null ? "Investment score" : "Investment score (derived)",
@@ -1543,13 +1568,9 @@ function deriveExecutionFallback(listing: AircraftListing): number | null {
 
 function buildScoreInputRows(args: {
   listing: AircraftListing
-  scoreBreakdown: {
-    primaryScore: number | null
-    primaryLabel: string
-    marketScore: number | null
-    conditionScore: number | null
-    executionScore: number | null
-  }
+  flipScore: number | null
+  flipTier: string | null
+  hasDisclosedPrice: boolean
   pricingConfidence: string | null
   compInsights: {
     compSelectionTier: string | null
@@ -1581,7 +1602,9 @@ function buildScoreInputRows(args: {
   const rows: ScoreMetricRow[] = []
   const {
     listing,
-    scoreBreakdown,
+    flipScore,
+    flipTier,
+    hasDisclosedPrice,
     pricingConfidence,
     compInsights,
     askingPrice,
@@ -1595,12 +1618,15 @@ function buildScoreInputRows(args: {
     marketPricing,
   } = args
 
-  rows.push([scoreBreakdown.primaryLabel, `${safeDisplay(formatScore(scoreBreakdown.primaryScore))} / 100`])
-  rows.push(["Market opportunity", `${safeDisplay(formatScore(scoreBreakdown.marketScore))} / 100`])
-  rows.push(["Condition score", `${safeDisplay(formatScore(scoreBreakdown.conditionScore))} / 100`])
-  rows.push(["Execution score", `${safeDisplay(formatScore(scoreBreakdown.executionScore))} / 100`])
-  rows.push(["Legacy value score", `${safeDisplay(formatScore(listing.value_score))} / 100`])
-  rows.push(["Deal rating", `${safeDisplay(formatScore(listing.deal_rating))} / 100`])
+  if (hasDisclosedPrice) {
+    rows.push(["Flip score", `${safeDisplay(formatScore(flipScore))} / 100`])
+    const fk = String(flipTier ?? "").trim().toUpperCase()
+    if (fk) {
+      rows.push(["Flip tier", fk])
+    }
+  } else {
+    rows.push(["Flip score", "Unavailable (price undisclosed)"])
+  }
   if (compInsights.compSelectionTier) {
     rows.push(["Comp selection tier", formatCompTier(compInsights.compSelectionTier)])
   }
@@ -1731,40 +1757,25 @@ function buildVerificationFlags(input: {
 }
 
 function buildScoreMethodSummary(
-  scoreBreakdown: {
-    primaryScore: number | null
-    primaryLabel: string
-    marketScore: number | null
-    conditionScore: number | null
-    executionScore: number | null
-  },
+  flipScore: number | null,
+  flipTier: string | null,
+  hasDisclosedPrice: boolean,
   dataConfidence: string | null,
   pricingConfidence: string | null,
   dealComparisonSource: string | null,
   scoreExplanationCount: number
 ): string {
   const lines: string[] = []
-  lines.push(`${scoreBreakdown.primaryLabel}: 45% Market Opportunity + 35% Condition + 20% Execution Readiness.`)
-
-  const hasAllSubscores =
-    typeof scoreBreakdown.marketScore === "number" &&
-    typeof scoreBreakdown.conditionScore === "number" &&
-    typeof scoreBreakdown.executionScore === "number"
-
-  if (hasAllSubscores) {
-    const marketScore = scoreBreakdown.marketScore as number
-    const conditionScore = scoreBreakdown.conditionScore as number
-    const executionScore = scoreBreakdown.executionScore as number
-    const marketContribution = marketScore * 0.45
-    const conditionContribution = conditionScore * 0.35
-    const executionContribution = executionScore * 0.2
-    const blended = marketContribution + conditionContribution + executionContribution
+  if (hasDisclosedPrice) {
     lines.push(
-      `Current scores: Market ${formatScore(marketScore)}, Condition ${formatScore(conditionScore)}, Execution ${formatScore(executionScore)}.`
+      "Flip score blends four pillars: pricing edge vs comps (~35 pts), airworthiness & maintenance burden (~20 pts), improvement/upgrade headroom (~30 pts), and resale liquidity (~15 pts)."
     )
-    lines.push(
-      `Weighted result: ${marketContribution.toFixed(1)} + ${conditionContribution.toFixed(1)} + ${executionContribution.toFixed(1)} = ${blended.toFixed(1)}.`
-    )
+    const fk = String(flipTier ?? "").trim().toUpperCase()
+    if (typeof flipScore === "number" && fk) {
+      lines.push(`Current: ${formatScore(flipScore)} / 100 (${fk} tier).`)
+    }
+  } else {
+    lines.push("Flip score and tier are withheld when the asking price is not disclosed.")
   }
   if (dealComparisonSource) {
     lines.push(`Market pricing source: ${dealComparisonSource} (exact-first comps waterfall, then broader fallback tiers).`)
@@ -1776,7 +1787,7 @@ function buildScoreMethodSummary(
     lines.push(`Pricing confidence: ${pricingConfidence}.`)
   }
   if (scoreExplanationCount > 0) {
-    lines.push("See the factor list below for the strongest positive and negative score drivers.")
+    lines.push("See the factor list below for supporting signals.")
   }
   return lines.join("\n")
 }

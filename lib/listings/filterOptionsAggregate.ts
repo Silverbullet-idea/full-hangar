@@ -2,6 +2,8 @@
  * Shared filter-options aggregation for /listings (SSR, API route, RPC fallback).
  * Keep in sync with app/api/listings/options/route.ts source normalization.
  */
+
+import { mergeCanonicalMakeInFilterOptions } from './canonicalMake'
 export type ListingFilterOptionInput = {
   make: string | null
   model: string | null
@@ -23,11 +25,10 @@ export type ListingsFilterOptionsClientShape = {
   dealTierCounts: {
     all: number
     TOP_DEALS: number
-    EXCEPTIONAL_DEAL: number
-    GOOD_DEAL: number
-    FAIR_MARKET: number
-    ABOVE_MARKET: number
-    OVERPRICED: number
+    HOT: number
+    GOOD: number
+    FAIR: number
+    PASS: number
   }
   minimumValueScoreCounts: {
     any: number
@@ -93,11 +94,13 @@ export function aggregateListingFilterOptionsFromRows(
     }
   }
 
-  const exceptionalDeals = dealTierCounts.get('EXCEPTIONAL_DEAL') ?? 0
-  const goodDeals = dealTierCounts.get('GOOD_DEAL') ?? 0
+  const hot = dealTierCounts.get('HOT') ?? 0
+  const good = dealTierCounts.get('GOOD') ?? 0
+  const fair = dealTierCounts.get('FAIR') ?? 0
+  const pass = dealTierCounts.get('PASS') ?? 0
   const allCount = rows.length
 
-  return {
+  return mergeCanonicalMakeInFilterOptions({
     makes: Array.from(makes).sort((a, b) => a.localeCompare(b)),
     models: Array.from(models).sort((a, b) => a.localeCompare(b)),
     states: Array.from(states).sort((a, b) => a.localeCompare(b)),
@@ -113,19 +116,18 @@ export function aggregateListingFilterOptionsFromRows(
     sourceCounts: Object.fromEntries(sourceCounts),
     dealTierCounts: {
       all: allCount,
-      TOP_DEALS: exceptionalDeals + goodDeals,
-      EXCEPTIONAL_DEAL: exceptionalDeals,
-      GOOD_DEAL: goodDeals,
-      FAIR_MARKET: dealTierCounts.get('FAIR_MARKET') ?? 0,
-      ABOVE_MARKET: dealTierCounts.get('ABOVE_MARKET') ?? 0,
-      OVERPRICED: dealTierCounts.get('OVERPRICED') ?? 0,
+      TOP_DEALS: hot + good,
+      HOT: hot,
+      GOOD: good,
+      FAIR: fair,
+      PASS: pass,
     },
     minimumValueScoreCounts: {
       any: allCount,
       '60': score60Count,
       '80': score80Count,
     },
-  }
+  })
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -150,22 +152,20 @@ export function parseListingFilterOptionsRpcPayload(raw: unknown): ListingsFilte
     typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null
   const dAll = num(dt.all)
   const dTop = num(dt.TOP_DEALS)
-  const dEx = num(dt.EXCEPTIONAL_DEAL)
-  const dGd = num(dt.GOOD_DEAL)
-  const dFm = num(dt.FAIR_MARKET)
-  const dAm = num(dt.ABOVE_MARKET)
-  const dOp = num(dt.OVERPRICED)
+  const dHot = num(dt.HOT)
+  const dGood = num(dt.GOOD)
+  const dFair = num(dt.FAIR)
+  const dPass = num(dt.PASS)
   const mAny = num(ms.any)
   const m60 = num(ms['60'])
   const m80 = num(ms['80'])
   if (
     dAll === null ||
     dTop === null ||
-    dEx === null ||
-    dGd === null ||
-    dFm === null ||
-    dAm === null ||
-    dOp === null ||
+    dHot === null ||
+    dGood === null ||
+    dFair === null ||
+    dPass === null ||
     mAny === null ||
     m60 === null ||
     m80 === null
@@ -175,7 +175,7 @@ export function parseListingFilterOptionsRpcPayload(raw: unknown): ListingsFilte
   for (const pair of modelPairs) {
     if (!isRecord(pair) || typeof pair.make !== 'string' || typeof pair.model !== 'string') return null
   }
-  return {
+  return mergeCanonicalMakeInFilterOptions({
     makes: makes.map((m) => String(m)),
     models: models.map((m) => String(m)),
     states: states.map((m) => String(m)),
@@ -187,16 +187,15 @@ export function parseListingFilterOptionsRpcPayload(raw: unknown): ListingsFilte
     dealTierCounts: {
       all: dAll,
       TOP_DEALS: dTop,
-      EXCEPTIONAL_DEAL: dEx,
-      GOOD_DEAL: dGd,
-      FAIR_MARKET: dFm,
-      ABOVE_MARKET: dAm,
-      OVERPRICED: dOp,
+      HOT: dHot,
+      GOOD: dGood,
+      FAIR: dFair,
+      PASS: dPass,
     },
     minimumValueScoreCounts: {
       any: mAny,
       '60': m60,
       '80': m80,
     },
-  }
+  })
 }

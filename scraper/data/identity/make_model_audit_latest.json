@@ -1,0 +1,7539 @@
+{
+  "generated_at": "2026-03-24T16:44:04.651416+00:00",
+  "rules_file": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\identity\\make_model_rules.json",
+  "listing_sample_limit": null,
+  "active_listings_scanned": 10536,
+  "distinct_make_strings": 283,
+  "distinct_make_casefold_groups": 267,
+  "case_collision_groups": {
+    "cessna": [
+      "CESSNA",
+      "Cessna"
+    ],
+    "aviat": [
+      "AVIAT",
+      "Aviat"
+    ],
+    "piper": [
+      "PIPER",
+      "Piper"
+    ],
+    "airbus": [
+      "AIRBUS",
+      "Airbus"
+    ],
+    "beechcraft": [
+      "BEECHCRAFT",
+      "Beechcraft"
+    ],
+    "diamond": [
+      "DIAMOND",
+      "Diamond"
+    ],
+    "icon": [
+      "ICON",
+      "Icon"
+    ],
+    "pzl": [
+      "PZL",
+      "Pzl"
+    ],
+    "tecnam": [
+      "TECNAM",
+      "Tecnam"
+    ],
+    "pipistrel": [
+      "PIPISTREL",
+      "Pipistrel"
+    ],
+    "cubcrafters": [
+      "CubCrafters",
+      "Cubcrafters"
+    ],
+    "tl": [
+      "TL",
+      "Tl"
+    ],
+    "brm": [
+      "BRM",
+      "Brm"
+    ],
+    "mcdonnell": [
+      "McDonnell",
+      "Mcdonnell"
+    ],
+    "rans": [
+      "RANS",
+      "Rans"
+    ],
+    "vashon": [
+      "VASHON",
+      "Vashon"
+    ]
+  },
+  "case_collision_group_count": 16,
+  "numeric_make_counts": {
+    "505": 3
+  },
+  "top_makes": [
+    [
+      "Cessna",
+      2124
+    ],
+    [
+      "Cirrus",
+      825
+    ],
+    [
+      "Piper",
+      772
+    ],
+    [
+      "Beechcraft",
+      492
+    ],
+    [
+      "BEECHCRAFT",
+      238
+    ],
+    [
+      "Gulfstream",
+      237
+    ],
+    [
+      "Robinson",
+      217
+    ],
+    [
+      "CESSNA",
+      197
+    ],
+    [
+      "Mooney",
+      187
+    ],
+    [
+      "Diamond",
+      179
+    ],
+    [
+      "Citation",
+      152
+    ],
+    [
+      "Pilatus",
+      141
+    ],
+    [
+      "Hawker",
+      105
+    ],
+    [
+      "Cessna Citation",
+      103
+    ],
+    [
+      "Cirrus Aircraft",
+      95
+    ],
+    [
+      "DIAMOND",
+      84
+    ],
+    [
+      "Falcon",
+      78
+    ],
+    [
+      "Bell",
+      71
+    ],
+    [
+      "Learjet",
+      70
+    ],
+    [
+      "Agusta",
+      70
+    ],
+    [
+      "Dassault Falcon",
+      62
+    ],
+    [
+      "Bell Helicopters",
+      62
+    ],
+    [
+      "Airbus",
+      59
+    ],
+    [
+      "King",
+      59
+    ],
+    [
+      "Airbus Eurocopter",
+      59
+    ],
+    [
+      "Embraer",
+      52
+    ],
+    [
+      "American",
+      49
+    ],
+    [
+      "Beech",
+      49
+    ],
+    [
+      "Bombardier",
+      47
+    ],
+    [
+      "Challenger",
+      47
+    ],
+    [
+      "Bombardier Global",
+      47
+    ],
+    [
+      "Vans",
+      44
+    ],
+    [
+      "Tecnam",
+      43
+    ],
+    [
+      "Bonanza",
+      42
+    ],
+    [
+      "Global",
+      39
+    ],
+    [
+      "Socata",
+      38
+    ],
+    [
+      "Bombardier Challenger",
+      38
+    ],
+    [
+      "Cubcrafters",
+      37
+    ],
+    [
+      "Commander",
+      32
+    ],
+    [
+      "Maule",
+      31
+    ],
+    [
+      "Leonardo",
+      30
+    ],
+    [
+      "PIPER",
+      30
+    ],
+    [
+      "Bellanca",
+      29
+    ],
+    [
+      "Lancair",
+      28
+    ],
+    [
+      "Eurocopter",
+      27
+    ],
+    [
+      "Grumman/American",
+      25
+    ],
+    [
+      "Bombardier Learjet",
+      25
+    ],
+    [
+      "Dassault",
+      24
+    ],
+    [
+      "Dehavilland",
+      23
+    ],
+    [
+      "Columbia",
+      23
+    ],
+    [
+      "Daher",
+      21
+    ],
+    [
+      "Phenom",
+      21
+    ],
+    [
+      "Da",
+      21
+    ],
+    [
+      "Aviat",
+      19
+    ],
+    [
+      "Boeing",
+      19
+    ],
+    [
+      "Vision",
+      18
+    ],
+    [
+      "Sikorsky",
+      17
+    ],
+    [
+      "Brm",
+      16
+    ],
+    [
+      "Grumman",
+      15
+    ],
+    [
+      "Legacy",
+      13
+    ],
+    [
+      "Extra",
+      13
+    ],
+    [
+      "Fairchild",
+      13
+    ],
+    [
+      "Aeronca",
+      13
+    ],
+    [
+      "Aerostar",
+      13
+    ],
+    [
+      "North",
+      13
+    ],
+    [
+      "Schweizer",
+      12
+    ],
+    [
+      "Twin",
+      12
+    ],
+    [
+      "Icon",
+      11
+    ],
+    [
+      "Thrush",
+      11
+    ],
+    [
+      "PIPISTREL",
+      11
+    ],
+    [
+      "CubCrafters",
+      11
+    ],
+    [
+      "Mcdonnell",
+      11
+    ],
+    [
+      "Baron",
+      11
+    ],
+    [
+      "Veloce",
+      9
+    ],
+    [
+      "Czech",
+      9
+    ],
+    [
+      "Bombardier/Challenger",
+      9
+    ],
+    [
+      "Epic",
+      8
+    ],
+    [
+      "Pipistrel",
+      8
+    ],
+    [
+      "Siai",
+      8
+    ],
+    [
+      "Glasair",
+      8
+    ]
+  ],
+  "curated_rule_hits": 1528,
+  "faa_suggestion_hits": 1188,
+  "curated_fixes_by_source": {
+    "globalair": 555,
+    "controller": 456,
+    "avbuyer": 396,
+    "aso": 74,
+    "aerotrader": 25,
+    "trade_a_plane": 22
+  },
+  "curated_fixes_by_kind": {
+    "make_display_alias": 763,
+    "model_as_make": 490,
+    "make_prefix_merge": 275
+  },
+  "curated_top_rules": [
+    [
+      "alias:BEECHCRAFT",
+      238
+    ],
+    [
+      "alias:CESSNA",
+      197
+    ],
+    [
+      "cessna_citation_word",
+      152
+    ],
+    [
+      "bombardier_family",
+      110
+    ],
+    [
+      "cessna_citation",
+      103
+    ],
+    [
+      "alias:CIRRUS AIRCRAFT",
+      95
+    ],
+    [
+      "dassault_falcon_word",
+      78
+    ],
+    [
+      "bombardier_learjet_word",
+      70
+    ],
+    [
+      "dassault_falcon",
+      62
+    ],
+    [
+      "alias:BELL HELICOPTERS",
+      62
+    ],
+    [
+      "alias:AIRBUS EUROCOPTER",
+      59
+    ],
+    [
+      "alias:BEECH",
+      49
+    ],
+    [
+      "bombardier_challenger_word",
+      47
+    ],
+    [
+      "beech_bonanza",
+      42
+    ],
+    [
+      "bombardier_global_word",
+      39
+    ],
+    [
+      "alias:PIPER",
+      30
+    ],
+    [
+      "alias:EUROCOPTER",
+      27
+    ],
+    [
+      "embraer_phenom_word",
+      21
+    ],
+    [
+      "beech_baron_word",
+      11
+    ],
+    [
+      "piper_arrow_word",
+      7
+    ],
+    [
+      "piper_cherokee_word",
+      5
+    ],
+    [
+      "piper_comanche",
+      4
+    ],
+    [
+      "piper_archer_word",
+      4
+    ],
+    [
+      "alias:AIRBUS",
+      4
+    ],
+    [
+      "piper_cheyenne",
+      3
+    ]
+  ],
+  "faa_fixes_by_source": {
+    "avbuyer": 307,
+    "trade_a_plane": 305,
+    "globalair": 278,
+    "controller": 193,
+    "aso": 82,
+    "aerotrader": 23
+  },
+  "faa_mismatch_sample_count": 500,
+  "samples": {
+    "faa_mismatches": [
+      {
+        "id": "0008fc35-cb73-435a-9f73-957232ffdf53",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Aviat",
+          "model": "HUSKY A-1"
+        },
+        "faa": {
+          "mfr_name": "AVIAT INC",
+          "model_name": "A-1",
+          "mfr_mdl_code": "2210302"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "001231c9-bbec-4c3f-b3db-cf50487cb157",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20 G7+ Premium"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "001cc183-6b72-414e-b4c5-d684f69d2bfd",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Dassault",
+          "model": "FALCON 900EX"
+        },
+        "faa": {
+          "mfr_name": "DASSAULT AVIATION",
+          "model_name": "FALCON 900EX",
+          "mfr_mdl_code": "2730013"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "00202ad5-24f5-4803-902c-9b6c5a5ee7cb",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cessna",
+          "model": "172"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "172D",
+          "mfr_mdl_code": "2072410"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "003034e8-b598-45e8-a29e-361ed117c725",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "M700 FURY"
+        },
+        "faa": {
+          "mfr_name": "PIPER AIRCRAFT INC",
+          "model_name": "PA-46-701TP",
+          "mfr_mdl_code": "7105752"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "003ea8bf-365d-4d4d-b9c9-6f6a3de7aaf0",
+        "source": "globalair",
+        "listing": {
+          "make": "Citation",
+          "model": "500"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "500",
+          "mfr_mdl_code": "2076602"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "00426a95-3e24-4482-a2e9-ec2d133d1a27",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARROW III"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-201",
+          "mfr_mdl_code": "7102816"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0047c237-2c47-42ba-801a-aa0cbc8ea5bd",
+        "source": "globalair",
+        "listing": {
+          "make": "Learjet",
+          "model": "40XR"
+        },
+        "faa": {
+          "mfr_name": "LEARJET INC",
+          "model_name": "45",
+          "mfr_mdl_code": "5170805"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0047ec46-67e8-49f7-a973-d6effedb15d9",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "III"
+        },
+        "faa": {
+          "mfr_name": "GULFSTREAM AMERICAN CORP.",
+          "model_name": "G-1159A",
+          "mfr_mdl_code": "3970109"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "004b91b8-4613-4cfc-b195-136accfe8748",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20-G3"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "0054a306-73bd-4d1b-aa91-bb82710cab5b",
+        "source": "controller",
+        "listing": {
+          "make": "Dassault",
+          "model": "FALCON 7X"
+        },
+        "faa": {
+          "mfr_name": "DASSAULT AVIATION",
+          "model_name": "FALCON 7X",
+          "mfr_mdl_code": "2730176"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "00572902-29ab-4309-8f6f-514cd4571c23",
+        "source": "globalair",
+        "listing": {
+          "make": "Falcon",
+          "model": "7X"
+        },
+        "faa": {
+          "mfr_name": "DASSAULT AVIATION",
+          "model_name": "FALCON 7X",
+          "mfr_mdl_code": "2730176"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "005b2547-b210-42f2-87aa-d5747bfa73ec",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "KING AIR B200"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "B200",
+          "mfr_mdl_code": "1152922"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "0086925f-3e17-4524-b315-1a02c970edfe",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "TURBO ARROW III"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-201T",
+          "mfr_mdl_code": "7102813"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "008dcd3a-4046-431e-bcdc-5b73f528f98f",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Grumman/American",
+          "model": "GENERAL AA5A CHEETAH"
+        },
+        "faa": {
+          "mfr_name": "GULFSTREAM AMERICAN CORP",
+          "model_name": "AA-5A",
+          "mfr_mdl_code": "3970104"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "00b841b3-75a9-4966-b82a-53ea1b1ab4ff",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARCHER"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28-151",
+          "mfr_mdl_code": "7102805"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "00cb8c94-3692-4f88-9a54-353e74d38507",
+        "source": "globalair",
+        "listing": {
+          "make": "Learjet",
+          "model": "60"
+        },
+        "faa": {
+          "mfr_name": "LEARJET INC",
+          "model_name": "60",
+          "mfr_mdl_code": "5170707"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "00cd6e75-9c80-4f56-a8ff-938e8e8436fc",
+        "source": "aerotrader",
+        "listing": {
+          "make": "Piper",
+          "model": "TURBO ARROW III"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-201T",
+          "mfr_mdl_code": "7102813"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "00f521e8-55b4-4fff-83da-d8c56a95518a",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Diamond",
+          "model": "DA50 RG"
+        },
+        "faa": {
+          "mfr_name": "DIAMOND AIRCRAFT IND GMBH",
+          "model_name": "DA 50 C",
+          "mfr_mdl_code": "2990305"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "00fc2782-f11d-4673-9cdd-575afc6441af",
+        "source": "controller",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "KING AIR 350ER"
+        },
+        "faa": {
+          "mfr_name": "HAWKER BEECHCRAFT CORP",
+          "model_name": "B300",
+          "mfr_mdl_code": "4220003"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "011d4b51-db04-43b8-9f1c-da3c45c2bc40",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "G36 BONANZA"
+        },
+        "faa": {
+          "mfr_name": "BEECHCRAFT CORP",
+          "model_name": "G36",
+          "mfr_mdl_code": "4220034"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "011ed8c9-4055-4d25-93ab-3771597964e3",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARCHER"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28-180",
+          "mfr_mdl_code": "7102808"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0128364d-e2c0-44e5-9aca-c44ab9d2cc7a",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "faa": {
+          "mfr_name": "RAYTHEON AIRCRAFT COMPANY",
+          "model_name": "58",
+          "mfr_mdl_code": "7150003"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "012da173-a9f1-4201-a624-680a9630d3ec",
+        "source": "controller",
+        "listing": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "faa": {
+          "mfr_name": "DIAMOND AIRCRAFT INDUSTRIES GM",
+          "model_name": "DA 62",
+          "mfr_mdl_code": "05634V3"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "015fac3d-685a-4ec4-ac5e-e397f8f0750c",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Robinson",
+          "model": "R44 RAVEN II"
+        },
+        "faa": {
+          "mfr_name": "ROBINSON HELICOPTER COMPANY",
+          "model_name": "R44 II",
+          "mfr_mdl_code": "7640122"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.667
+      },
+      {
+        "id": "01909251-73aa-4d8c-a769-356c3b6852df",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "01cfb887-9d60-4404-b2d6-d14d7574f353",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T-G5 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22T",
+          "mfr_mdl_code": "2130004"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "01f24f21-b708-4e0d-92d4-434ca5397ec4",
+        "source": "controller",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "G150"
+        },
+        "faa": {
+          "mfr_name": "ISRAEL AIRCRAFT INDUSTRIES",
+          "model_name": "GULFSTREAM G150",
+          "mfr_mdl_code": "4500304"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "020e0bf1-b424-4616-b81e-0df9a2c8d90a",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "A36 BONANZA"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "A36",
+          "mfr_mdl_code": "1151604"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "021019de-9c9d-4499-bc88-f37eb2dc2e6e",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "faa": {
+          "mfr_name": "FOUND AIRCRAFT CANADA INC",
+          "model_name": "FBA-2C3",
+          "mfr_mdl_code": "3640105"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "022af729-d8b6-4a0a-bbae-1c70b1b901cd",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T-G6 GTS"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "140",
+          "mfr_mdl_code": "2071602"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02408329-7ad3-4e08-849c-e0ee30abda62",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Vans",
+          "model": "RV-14A"
+        },
+        "faa": {
+          "mfr_name": "KREH KENNETH C",
+          "model_name": "RV14A",
+          "mfr_mdl_code": "056419B"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0242c661-b119-423e-8dbb-909d5baba7a1",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20 G6"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "024a31bc-4726-41cf-87e8-647b68b89f5d",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "C23 SUNDOWNER 180"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "C23",
+          "mfr_mdl_code": "1151242"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "02543e73-4802-4ef3-b41f-7d6cd6a1a7c3",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARROW"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-180",
+          "mfr_mdl_code": "7102809"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "025e46fb-9866-4495-872c-ce805c84b082",
+        "source": "controller",
+        "listing": {
+          "make": "CESSNA",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "faa": {
+          "mfr_name": "TEXTRON AVIATION INC",
+          "model_name": "T182T",
+          "mfr_mdl_code": "2072779"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0275c077-45a3-45a7-b365-f0f9d97f792c",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T-G6 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22T",
+          "mfr_mdl_code": "2130004"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "02770e06-0b41-4f39-97e9-22d9617e8840",
+        "source": "controller",
+        "listing": {
+          "make": "Cessna",
+          "model": "CITATION CJ1"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "525",
+          "mfr_mdl_code": "2076601"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02778de3-5a8a-4341-9a46-edaf7c615d28",
+        "source": "controller",
+        "listing": {
+          "make": "Epic",
+          "model": "E1000 GX"
+        },
+        "faa": {
+          "mfr_name": "EPIC AIRCRAFT LLC",
+          "model_name": "E1000",
+          "mfr_mdl_code": "3390119"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "028bb1d0-657d-4391-9158-5f60d242c1b3",
+        "source": "controller",
+        "listing": {
+          "make": "Pilatus",
+          "model": "PC-12/45"
+        },
+        "faa": {
+          "mfr_name": "PILATUS AIRCRAFT LTD",
+          "model_name": "PC-12",
+          "mfr_mdl_code": "7090550"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.667
+      },
+      {
+        "id": "02adf9cd-7c5d-4299-b474-7ec8e4e21617",
+        "source": "globalair",
+        "listing": {
+          "make": "Hondajet",
+          "model": "Elite S"
+        },
+        "faa": {
+          "mfr_name": "HONDA AIRCRAFT CO LLC",
+          "model_name": "HA-420",
+          "mfr_mdl_code": "4400000"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02ae38df-dd34-4caf-920d-6cba2f449221",
+        "source": "globalair",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "02b31ce8-0d18-4709-8561-b5ca8780434d",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20-G6 PREMIUM"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "02bc1c39-729a-49b6-aa01-6e55b2eceb52",
+        "source": "aerotrader",
+        "listing": {
+          "make": "Piper",
+          "model": "CHEROKEE 180C"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28-180",
+          "mfr_mdl_code": "7102808"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02bd154f-b3de-4bc6-9f0a-bbd12788be66",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "SARATOGA II HP"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-32R-301",
+          "mfr_mdl_code": "7103218"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02bda5f3-daef-4509-b2b3-7cb00c8a25e5",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T-G6 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22T",
+          "mfr_mdl_code": "2130004"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "02d611f0-615b-4bad-bc37-0da2cbcbf70f",
+        "source": "controller",
+        "listing": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "faa": {
+          "mfr_name": "DIAMOND AIRCRAFT IND INC",
+          "model_name": "DA 62",
+          "mfr_mdl_code": "2990107"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "02ed5b35-6d94-4b4c-ad2d-6e7635edbc49",
+        "source": "globalair",
+        "listing": {
+          "make": "Hawker",
+          "model": "800XP"
+        },
+        "faa": {
+          "mfr_name": "RAYTHEON AIRCRAFT COMPANY",
+          "model_name": "HAWKER 800XP",
+          "mfr_mdl_code": "7150012"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "03070317-8e31-41c3-91ab-8091bcd53857",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "AERONCA",
+          "model_name": "7AC",
+          "mfr_mdl_code": "2110102"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03116a21-ea51-489e-9416-4aa60679b80a",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "DOUGLAS",
+          "model_name": "AD-4N(A)",
+          "mfr_mdl_code": "3026013"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03331bf4-b411-4480-82b5-52b10353a434",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARROW"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-200",
+          "mfr_mdl_code": "7102811"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03392a80-de71-45d7-9bbb-f9af7fcdb9b7",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20-G3"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "0346e1fd-8029-48f1-93c8-f09279e4b9f5",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20 - G1"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "03526ae6-eb5a-4aa3-a8ee-1b52aac20f4b",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Hawker",
+          "model": "800A"
+        },
+        "faa": {
+          "mfr_name": "BRITISH AEROSPACE",
+          "model_name": "BAE 125 SERIES 800A",
+          "mfr_mdl_code": "1500285"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.25
+      },
+      {
+        "id": "03595562-d9e8-43f0-bdba-811ce3b12535",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "P35 BONANZA"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "P35",
+          "mfr_mdl_code": "1151530"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "0362123f-022e-4d52-95d1-796e28ec8882",
+        "source": "globalair",
+        "listing": {
+          "make": "Citation",
+          "model": "XLS+"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "560XL",
+          "mfr_mdl_code": "2076702"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0375e1b0-a733-41d8-b3b0-dc75f8ad25c4",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "KING AIR C90"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "C90",
+          "mfr_mdl_code": "1152913"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "037f7964-cedb-4c3e-be65-824eb4f21d0c",
+        "source": "aerotrader",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "B36TC BONANZA"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "B36TC",
+          "mfr_mdl_code": "1151609"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "038c721f-1efc-465e-b71d-eedc51082ebe",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Aviat",
+          "model": "HUSKY A-1C"
+        },
+        "faa": {
+          "mfr_name": "AVIAT AIRCRAFT INC",
+          "model_name": "A-1C-200",
+          "mfr_mdl_code": "2210411"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "038f55e6-9d8f-4e96-a40a-04d62abf05f8",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "SUPER CUB"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-18-150",
+          "mfr_mdl_code": "7101828"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03a1be4e-62e3-4d8c-ba86-239d007d967f",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Columbia",
+          "model": "400"
+        },
+        "faa": {
+          "mfr_name": "LANCAIR COMPANY",
+          "model_name": "LC41-550FG",
+          "mfr_mdl_code": "5150001"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03b66774-c4c0-467f-8a07-3d362253ab3a",
+        "source": "aerotrader",
+        "listing": {
+          "make": "CESSNA",
+          "model": "210"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "210C",
+          "mfr_mdl_code": "2073412"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03c1fe7b-56e8-4f4d-a1ec-327e72cf9fef",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Robinson",
+          "model": "R22"
+        },
+        "faa": {
+          "mfr_name": "ROBINSON HELICOPTER",
+          "model_name": "R22 ALPHA",
+          "mfr_mdl_code": "7640104"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "03c8f41f-5acd-44c3-a757-cea392c15761",
+        "source": "globalair",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "P210N",
+          "mfr_mdl_code": "2073454"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03c9c76c-20f0-489b-8427-57f9a0177f5f",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Grumman/American",
+          "model": "GENERAL AA5A CHEETAH"
+        },
+        "faa": {
+          "mfr_name": "GULFSTREAM AMERICAN CORP",
+          "model_name": "AA-5A",
+          "mfr_mdl_code": "3970104"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03d358e3-ce24-48d9-b203-11685a369558",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Cessna Citation",
+          "model": "M2"
+        },
+        "faa": {
+          "mfr_name": "HAWKER BEECHCRAFT CORP",
+          "model_name": "G58",
+          "mfr_mdl_code": "4220005"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03f07fb2-a904-4576-936a-caf46cc1823f",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Columbia",
+          "model": "400"
+        },
+        "faa": {
+          "mfr_name": "COLUMBIA AIRCRAFT MFG",
+          "model_name": "LC41-550FG",
+          "mfr_mdl_code": "5150011"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "03faeb2a-c095-48e6-ba1c-1eca415b7251",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "B58 BARON"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "58",
+          "mfr_mdl_code": "1152740"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0416d7ef-06ce-46a5-901f-e072c8fb0688",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22T",
+          "mfr_mdl_code": "2130004"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "042c7bfb-8637-4e58-8986-fea742b40cf6",
+        "source": "aso",
+        "listing": {
+          "make": "Lancair",
+          "model": "Columbia 400"
+        },
+        "faa": {
+          "mfr_name": "COLUMBIA AIRCRAFT MFG",
+          "model_name": "LC41-550FG",
+          "mfr_mdl_code": "5150011"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "044078a4-71d9-428e-b946-978acfe5825d",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Cessna Citation",
+          "model": "Iisp"
+        },
+        "faa": {
+          "mfr_name": "MEYERS",
+          "model_name": "MAC-145",
+          "mfr_mdl_code": "5650104"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "046cfaf3-eaca-4699-9a84-314a5194e97b",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cessna",
+          "model": "172"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "172N",
+          "mfr_mdl_code": "2072434"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "04760d14-2c0e-4328-94b4-afbe9b7380ae",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-200",
+          "mfr_mdl_code": "7102811"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0477219e-6d34-4027-97e8-2c660da7df87",
+        "source": "globalair",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22-G3 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22",
+          "mfr_mdl_code": "2130001"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "04789c38-2191-45fb-bb0f-9bfcc8448be2",
+        "source": "aso",
+        "listing": {
+          "make": "Bombardier",
+          "model": "Challenger 601..."
+        },
+        "faa": {
+          "mfr_name": "CANADAIR LTD",
+          "model_name": "CL-600-2B16",
+          "mfr_mdl_code": "1900305"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "048ee4cb-37e0-4c2b-aa91-4422de2b07ec",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Robinson",
+          "model": "R66"
+        },
+        "faa": {
+          "mfr_name": "ROBINSON HELICOPTER CO",
+          "model_name": "R66",
+          "mfr_mdl_code": "7640130"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "049dfb52-5928-45fa-b703-cb95a7f330e7",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "AMERICAN CHAMPION AIRCRAFT",
+          "model_name": "8GCBC",
+          "mfr_mdl_code": "2121005"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "049ec654-2cdd-4b80-bd90-f1181a868804",
+        "source": "aso",
+        "listing": {
+          "make": "Piper",
+          "model": "Saratoga II HP"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-32R-301",
+          "mfr_mdl_code": "7103218"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "04c413c2-b7f1-40d7-80ed-c055d50464ad",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Grumman/American",
+          "model": "GENERAL AA5B TIGER"
+        },
+        "faa": {
+          "mfr_name": "GRUMMAN AMERICAN AVN. CORP.",
+          "model_name": "AA-5B",
+          "mfr_mdl_code": "3960105"
+        },
+        "jaccard_make": 0.5,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "04d51e6b-9705-45d4-a96a-e474879a7a34",
+        "source": "globalair",
+        "listing": {
+          "make": "Hawker",
+          "model": "800A"
+        },
+        "faa": {
+          "mfr_name": "BRITISH AEROSPACE",
+          "model_name": "BAE 125 SERIES 800A",
+          "mfr_mdl_code": "1500285"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.25
+      },
+      {
+        "id": "04db377f-b23f-49fb-8c21-f667a8e5e5a0",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "faa": {
+          "mfr_name": "CHAMPION",
+          "model_name": "7GCA",
+          "mfr_mdl_code": "21101N7"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "04dbc0be-5ac5-4682-8ad7-6826635295b5",
+        "source": "controller",
+        "listing": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 350"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "300LW",
+          "mfr_mdl_code": "1152931"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "04eb43a9-abad-4156-acdd-0ff0f4cea147",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "H35 BONANZA"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "H35",
+          "mfr_mdl_code": "1151520"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "04f45a03-c9a4-4735-8bcc-96a46412a542",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22-G6 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22",
+          "mfr_mdl_code": "2130001"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "04ffd4d4-23fc-4577-8ba7-32c1f50be42c",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARCHER II"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28-181",
+          "mfr_mdl_code": "7102807"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0510de4f-605f-402b-a76c-edf62061afec",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "TURBO ARROW III"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-201T",
+          "mfr_mdl_code": "7102813"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "051b26c6-432d-43c4-8d78-9ea3de3796e1",
+        "source": "globalair",
+        "listing": {
+          "make": "Falcon",
+          "model": "50EX"
+        },
+        "faa": {
+          "mfr_name": "DASSAULT AVIATION",
+          "model_name": "MYSTERE-FALCON 50",
+          "mfr_mdl_code": "2730173"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "052b06f8-9a3d-4e5d-b287-cc9d8319b4d7",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Diamond",
+          "model": "DA62"
+        },
+        "faa": {
+          "mfr_name": "DIAMOND AIRCRAFT IND INC",
+          "model_name": "DA 62",
+          "mfr_mdl_code": "2990107"
+        },
+        "jaccard_make": 0.25,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "053838a0-808c-4e3d-a07e-87679cd35ef1",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Zlin",
+          "model": "Z242L"
+        },
+        "faa": {
+          "mfr_name": "MORAVAN",
+          "model_name": "Z242L",
+          "mfr_mdl_code": "5920207"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "0557dc06-dd9c-41c6-a7a8-8f558cc6f6c4",
+        "source": "globalair",
+        "listing": {
+          "make": "Citation",
+          "model": "Encore+"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "560",
+          "mfr_mdl_code": "2076750"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0576db36-f6bb-4966-a3ec-6f99ccc9d365",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22-G3"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22",
+          "mfr_mdl_code": "2130001"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "05795a66-dfb0-42c5-8326-4c9be2ff891f",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "faa": {
+          "mfr_name": "GRUMMAN",
+          "model_name": "G-164A",
+          "mfr_mdl_code": "3952704"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0579b950-8037-450f-a34e-4bbead6ef0b8",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "55 BARON"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "D55",
+          "mfr_mdl_code": "1152730"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "058b5825-621f-4be7-8445-a0b51b078aae",
+        "source": "controller",
+        "listing": {
+          "make": "CESSNA",
+          "model": "TURBO 206H STATIONAIR"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "T206H",
+          "mfr_mdl_code": "2073303"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "058d7568-7d47-4a79-9d74-3200000f1f48",
+        "source": "globalair",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "182T",
+          "mfr_mdl_code": "2072703"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "05ae1299-56f7-4986-82fa-e7d350fe0ccb",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "BAKER EUGENE L",
+          "model_name": "RV6-A",
+          "mfr_mdl_code": "0560716"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "05c2964d-f478-40a1-b120-73e2ae01e2b2",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "TURBO ARROW III"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-201T",
+          "mfr_mdl_code": "7102813"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "05cdc1ee-799b-4806-abeb-2f249465a7c6",
+        "source": "globalair",
+        "listing": {
+          "make": "Challenger",
+          "model": "350"
+        },
+        "faa": {
+          "mfr_name": "BOMBARDIER INC",
+          "model_name": "BD-100-1A10",
+          "mfr_mdl_code": "1390044"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "05cec5fb-6a82-4eee-affd-0f90163cd3cb",
+        "source": "controller",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "G280"
+        },
+        "faa": {
+          "mfr_name": "IAI LTD",
+          "model_name": "GULFSTREAM G280",
+          "mfr_mdl_code": "4500314"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "05d64076-e1e9-44fb-87ee-d471e9d7c4bd",
+        "source": "controller",
+        "listing": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "58",
+          "mfr_mdl_code": "1152740"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "05d7ec2c-839b-4a4b-a5f6-3cc484af94ec",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "B60 DUKE"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "B-60",
+          "mfr_mdl_code": "1153605"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "05ed96dc-5855-4b7b-9b8f-b30b040142a2",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Beechcraft",
+          "model": "KING AIR F90"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "F90",
+          "mfr_mdl_code": "1152909"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "05f6aed1-6081-4ea9-a4e8-08755e6d22ad",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22 CENTENNIAL"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22",
+          "mfr_mdl_code": "2130001"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "060130e6-7abd-4af3-b065-ff0ddbd794c9",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Schweizer",
+          "model": "300CBI"
+        },
+        "faa": {
+          "mfr_name": "SCHWEIZER",
+          "model_name": "269C-1",
+          "mfr_mdl_code": "8059504"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0601cfde-a2ff-48a2-a3a0-9c1ee8b354af",
+        "source": "aerotrader",
+        "listing": {
+          "make": "CESSNA",
+          "model": "CITATION XLS"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "560XL",
+          "mfr_mdl_code": "2076702"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0616f84f-db79-4834-ab60-14c2bc26313e",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Pipistrel",
+          "model": "ALPHA TRAINER"
+        },
+        "faa": {
+          "mfr_name": "PIPISTREL D O O",
+          "model_name": "ALPHA TRAINER",
+          "mfr_mdl_code": "06001C6"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "06469fed-f4c8-4d58-b7e1-f099a19ab1e5",
+        "source": "aso",
+        "listing": {
+          "make": "Cirrus",
+          "model": "Vision SF50 G2+ El..."
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SF50",
+          "mfr_mdl_code": "2130010"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.25
+      },
+      {
+        "id": "06668a06-8576-4648-821c-408faabe186e",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "CHEROKEE 140/160"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28-140",
+          "mfr_mdl_code": "7102802"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.2
+      },
+      {
+        "id": "067bfb61-d107-4782-b3ce-69c3a4088678",
+        "source": "controller",
+        "listing": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "faa": {
+          "mfr_name": "BEECH",
+          "model_name": "58",
+          "mfr_mdl_code": "1152740"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "0681a48b-fdea-4ffc-9133-10cd025d645f",
+        "source": "globalair",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR22T G5 GTS"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR22T",
+          "mfr_mdl_code": "2130004"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.333
+      },
+      {
+        "id": "069d81f8-ebf9-43b3-b253-06365915b724",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "G280"
+        },
+        "faa": {
+          "mfr_name": "IAI LTD",
+          "model_name": "GULFSTREAM G280",
+          "mfr_mdl_code": "4500314"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "06a7a50f-1467-44c6-94db-aae979c6c05f",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "PA-46 MALIBU"
+        },
+        "faa": {
+          "mfr_name": "PIPER AIRCRAFT INC",
+          "model_name": "PA46R-350T",
+          "mfr_mdl_code": "7104610"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "06c96fa3-bb66-4cdd-9b8a-6bd0922209d4",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "G550"
+        },
+        "faa": {
+          "mfr_name": "BARNARD S/STANCIL D L",
+          "model_name": "GLASTAR",
+          "mfr_mdl_code": "056144T"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "06eba4fc-9db1-475e-8dcc-0389103ba250",
+        "source": "globalair",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20 G6"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "06fcb09d-41da-4a17-ac41-9de9d2bfafd5",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Commander",
+          "model": "690B-II"
+        },
+        "faa": {
+          "mfr_name": "ROCKWELL INTERNATIONAL",
+          "model_name": "690B",
+          "mfr_mdl_code": "7630516"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.5
+      },
+      {
+        "id": "07002c39-aa65-4b44-9af1-9705997a3682",
+        "source": "trade_a_plane",
+        "listing": {
+          "make": "Piper",
+          "model": "ARROW"
+        },
+        "faa": {
+          "mfr_name": "PIPER",
+          "model_name": "PA-28R-200",
+          "mfr_mdl_code": "7102811"
+        },
+        "jaccard_make": 1.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "0739ab11-676d-4900-9473-f63798e715cc",
+        "source": "aerotrader",
+        "listing": {
+          "make": "",
+          "model": ""
+        },
+        "faa": {
+          "mfr_name": "AERO COMMANDER",
+          "model_name": "100",
+          "mfr_mdl_code": "0140202"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "073bf4af-01f3-476a-8df6-9c3c508aae19",
+        "source": "avbuyer",
+        "listing": {
+          "make": "Gulfstream",
+          "model": "V"
+        },
+        "faa": {
+          "mfr_name": "CESSNA",
+          "model_name": "U206B",
+          "mfr_mdl_code": "2073322"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 0.0
+      },
+      {
+        "id": "073f8267-6fe1-4ec7-be82-141c45c692ba",
+        "source": "aso",
+        "listing": {
+          "make": "Cessna",
+          "model": "172S"
+        },
+        "faa": {
+          "mfr_name": "TEXTRON AVIATION INC",
+          "model_name": "172S",
+          "mfr_mdl_code": "2072449"
+        },
+        "jaccard_make": 0.0,
+        "jaccard_model": 1.0
+      },
+      {
+        "id": "074e91bf-7d10-4478-9569-0d272ced2aa2",
+        "source": "globalair",
+        "listing": {
+          "make": "Cirrus",
+          "model": "SR20 G6"
+        },
+        "faa": {
+          "mfr_name": "CIRRUS DESIGN CORP",
+          "model_name": "SR20",
+          "mfr_mdl_code": "2130000"
+        },
+        "jaccard_make": 0.333,
+        "jaccard_model": 0.5
+      }
+    ],
+    "curated_would_fix": [
+      {
+        "id": "003ea8bf-365d-4d4d-b9c9-6f6a3de7aaf0",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "500"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation 500"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0047c237-2c47-42ba-801a-aa0cbc8ea5bd",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "40XR"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 40XR"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "00572902-29ab-4309-8f6f-514cd4571c23",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 7X"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "00572ace-e14b-418f-938f-0879cd2346ac",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Sovereign Plus"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Sovereign Plus"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "00a405f3-c026-4538-aa47-a8382e6c3103",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "900Ex"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900Ex"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "00cb8c94-3692-4f88-9a54-353e74d38507",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "60"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 60"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "00e42bf1-f090-4417-bd20-f91da713bc5c",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "012c1cdc-5a3d-4941-811e-951a87894c02",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 8X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "01dec064-825f-4430-ac37-422445ac12fd",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 6000"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "021019de-9c9d-4499-bc88-f37eb2dc2e6e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000Lxs"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "021cbfa9-a239-40c4-a6ee-a50eb8c2e1ec",
+        "source": "aso",
+        "before": {
+          "make": "Beech",
+          "model": "Bonanza A36"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza A36"
+        },
+        "rule": "alias:BEECH",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "025e46fb-9866-4495-872c-ce805c84b082",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "02f18226-fa7e-401c-ad8d-d460157615aa",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "VII"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation VII"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "02f24c1d-1d65-49e0-a694-b3eb864e3d1a",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "505 Jetranger X"
+        },
+        "after": {
+          "make": "Bell",
+          "model": "505 Jetranger X"
+        },
+        "rule": "alias:BELL HELICOPTERS",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "030057a2-2045-485b-a0f6-8485839d1f04",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0362123f-022e-4d52-95d1-796e28ec8882",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation XLS+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "03b66774-c4c0-467f-8a07-3d362253ab3a",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "210"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "210"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "03d358e3-ce24-48d9-b203-11685a369558",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "M2"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation M2"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "044078a4-71d9-428e-b946-978acfe5825d",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Iisp"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Iisp"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "045a5e81-a6c8-4d98-b2e4-956f17ef3bf6",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION MUSTANG"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION MUSTANG"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "046f7056-6fda-44c9-a66c-f7be0410df9c",
+        "source": "globalair",
+        "before": {
+          "make": "Arrow",
+          "model": "IV PA-28RT-201T"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "Arrow IV PA-28RT-201T"
+        },
+        "rule": "piper_arrow_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "047a79e8-ac19-4710-90d7-2d2976b3b9fa",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "04ae208a-27e2-4880-83d7-71a89a7bfef4",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CARAVAN 208B GRAND"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CARAVAN 208B GRAND"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "04d0dd12-f0c7-480c-ad3b-1806353bb40c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "407"
+        },
+        "after": {
+          "make": "Bell",
+          "model": "407"
+        },
+        "rule": "alias:BELL HELICOPTERS",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "04d228cb-b1c4-4ed4-bf12-9041623acb27",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Mustang"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Mustang"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "04db377f-b23f-49fb-8c21-f667a8e5e5a0",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000Lxs"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "04dbc0be-5ac5-4682-8ad7-6826635295b5",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 350"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "KING AIR 350"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "05127981-6a2f-4b95-a24e-0ad67fa44463",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 206H STATIONAIR HD"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 206H STATIONAIR HD"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "051b26c6-432d-43c4-8d78-9ea3de3796e1",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50EX"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 50EX"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "052a15cb-dbfc-4909-8450-b0d2d580cf0f",
+        "source": "globalair",
+        "before": {
+          "make": "Cherokee",
+          "model": "PA-28-140"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "Cherokee PA-28-140"
+        },
+        "rule": "piper_cherokee_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "053277d6-b6f8-4f90-a33f-d67c43e5e93a",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Encore"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Encore"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0557dc06-dd9c-41c6-a7a8-8f558cc6f6c4",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Encore+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Encore+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "05795a66-dfb0-42c5-8326-4c9be2ff891f",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 8X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "057c3ffd-689a-43a7-bdec-c30e521ec9e4",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "B60 DUKE"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "B60 DUKE"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "058b5825-621f-4be7-8445-a0b51b078aae",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 206H STATIONAIR"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 206H STATIONAIR"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "05cdc1ee-799b-4806-abeb-2f249465a7c6",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "350"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 350"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "05d64076-e1e9-44fb-87ee-d471e9d7c4bd",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0601cfde-a2ff-48a2-a3a0-9c1ee8b354af",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION XLS"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION XLS"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "067bfb61-d107-4782-b3ce-69c3a4088678",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "06edcd86-acd7-49e4-bfb6-27bd32f28d5c",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 6000"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "06fc7475-5b40-4224-90ea-67a2e4d8c360",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "429"
+        },
+        "after": {
+          "make": "Bell",
+          "model": "429"
+        },
+        "rule": "alias:BELL HELICOPTERS",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "072f996c-8056-403d-8cbe-7222516eb9b1",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 120B"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "Ec 120B"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0787610c-99df-409e-8879-e1b5e53a00f9",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "35A"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 35A"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "07b6a1cb-5b42-4166-b73d-ff35658b6bec",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "G58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "G58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "07baaf16-4bca-4a69-9d25-59cf1530ae3a",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "7500"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 7500"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "07f16f72-10b6-42d1-9731-0ee5b3c31786",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "900Ex Easy"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900Ex Easy"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "07f5723c-39ea-4f72-a246-bacc7c28f9d9",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "172N SKYHAWK"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "172N SKYHAWK"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0846fb7c-611c-4197-8475-0f787f5d2477",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "X"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation X"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0850d88b-c800-42a9-8cc6-a56f816826e2",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "2000"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "08648cac-8fc3-4ba3-b328-273148a388fa",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 7X"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "086d5183-7c05-4041-8ced-8bee6f03bf3f",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "G58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "G58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "087cb7c9-8305-4ac0-877e-05813ff47095",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "900B"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900B"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "08b3eaae-6e01-485a-9a35-e557f85295a4",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "08caaf6e-2ec2-486f-9e3c-4bf3fcece738",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "421C"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "421C"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "08d4cf45-7b25-4829-a8bb-2cbd2dd642fc",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 120"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "Ec 120"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0900089c-7ccf-437d-9f5f-78e0b95e2c7d",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "5500"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 5500"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "09b35e77-7542-4827-b6b4-7804006dea18",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Ii"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Ii"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "09bfa044-6dfb-4a96-8c9b-149618ab9e9f",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "5000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 5000"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0a344c82-3df0-4cca-9648-d76fccadd09c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 31A"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0a4f5517-eea0-4cd9-b980-e697f0672f52",
+        "source": "aso",
+        "before": {
+          "make": "Beech",
+          "model": "Bonanza A36"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza A36"
+        },
+        "rule": "alias:BEECH",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0a64590f-3d3f-4d0d-a32b-c8c32145f1ea",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0aa9207b-c0a1-423b-aa61-a0c80b8d37c4",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "5000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 5000"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0ab4d527-4acd-4da7-80d0-3d96c966cf41",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "50"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 50"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0ab8570d-c2ce-4501-8dd2-a115364573e9",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 350Sd2"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 350Sd2"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0ad364d1-5aaa-4aab-b117-4ab20b23709e",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ3+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation CJ3+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0af12890-f68d-4a7e-a8b2-646f971168f0",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "900B"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900B"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0b70211c-7046-4dd8-b0ff-cf78c4d51202",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 206H STATIONAIR"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 206H STATIONAIR"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0b8aafa6-064b-489d-93fc-9d774d0aa968",
+        "source": "controller",
+        "before": {
+          "make": "PIPER",
+          "model": "TURBO AZTEC D"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "TURBO AZTEC D"
+        },
+        "rule": "alias:PIPER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0b8abe05-5df1-4db6-b4f1-8f279a17a1e4",
+        "source": "controller",
+        "before": {
+          "make": "PIPER",
+          "model": "AEROSTAR"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "AEROSTAR"
+        },
+        "rule": "alias:PIPER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0b9d395e-bef3-4b23-8e6c-356a9ac8d8db",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 355N"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 355N"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0ba9bfc1-66e2-48c8-a268-76b5e1fff11d",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "B36 TC"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza B36 TC"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0be288f8-c5ec-4361-a40b-a4f134b66e40",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "V"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation V"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0bed5521-a51d-4ad1-b035-5216cb312dbe",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "B36 TC"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza B36 TC"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0bf40677-2983-4307-876e-a6e533becc30",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "VII"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation VII"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0c0dbb76-e329-4bc8-b424-1ae90a93e3f1",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 350B"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 350B"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0c14a4dd-aaa2-43cb-be6b-fe70473c7d6c",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "182T SKYLANE"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "182T SKYLANE"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0c2d8d28-209f-4826-9a4f-fffd2f7e4b32",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "V35"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza V35"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0c39e3fb-b239-41fa-9ac1-e30b8424a785",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "M35 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "M35 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0c3d0fdc-c825-43a0-b126-a6a83aa36903",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "C55 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "C55 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0c5e2e77-383f-4a64-aceb-186121f28490",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "P210N"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "P210N"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0c751d1d-ae01-41b1-b6fb-b043c831cf86",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "Express Xrs"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global Express Xrs"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0c885278-7ddc-4c59-bd98-d15edccf778f",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "850"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 850"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0c96149e-67c4-47e6-8498-88098bd46dc8",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "II"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation II"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0ca58ca8-57c0-4900-a463-85953effb98e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 135T1"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "Ec 135T1"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0cded2a1-142e-4a67-b2e7-0a2f6295626b",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 350B3"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 350B3"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0ce6a60c-d7e3-41ee-b0ff-7b88d402a3d6",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0d068278-1ae3-44d8-8a43-2f2fe2cc7c39",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0db79535-e2bd-4c6f-aa3e-bc0eb06af662",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "2000"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0dc7a46b-799e-4483-a2cf-6e6c140974a5",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Isp"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Isp"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0dedff9e-ef8f-4fb3-b5f3-d8943b173c5a",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "25B"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 25B"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0e1be811-064f-4143-82d7-1f0f1abd73f6",
+        "source": "controller",
+        "before": {
+          "make": "PIPER",
+          "model": "AEROSTAR"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "AEROSTAR"
+        },
+        "rule": "alias:PIPER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0e213eca-e9d5-4626-ab3f-d2193a62a701",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "900Ex"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900Ex"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0e2490dd-8ae6-4fc1-9994-8214d57ef7cb",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Cj4"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Cj4"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "0e473183-9ca3-4ba4-844c-92ff51610734",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "DUCHESS"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "DUCHESS"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0e4e50c6-caba-46ee-9837-fd5f5f38e823",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0e8c2c5c-0f9b-410a-bb77-1729ebf0c609",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "XRS"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global XRS"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0ea57c53-2ffe-49d6-9cce-13fae411232d",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION ENCORE+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION ENCORE+"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0edb7716-7a4f-44cf-99a1-375a7a879fd0",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0eeb4783-43c8-4745-b979-4a62f717a837",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "V"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation V"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0efb7074-ee1c-4f56-bcbd-aba899d217ea",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Bravo"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Bravo"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0f28b70c-0360-4b1d-bb9d-3b3bce0cf097",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation XLS+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0f518d30-56b7-4385-8c6c-5bb2a536e3e7",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 120B"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "Ec 120B"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0f6b0386-4165-4829-8588-291badbf48cb",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 6000"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0f9f1bd5-97e2-4e68-9a02-b42e26cfb9e4",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0fa02bc6-5df8-4989-af18-29398a873e6c",
+        "source": "aso",
+        "before": {
+          "make": "Beech",
+          "model": "Bonanza V35B"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza V35B"
+        },
+        "rule": "alias:BEECH",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0fdcbfaa-2961-45c8-bf24-2a45762f2690",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION XLS"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION XLS"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0fe4c123-611e-408e-99d9-528a631a0d13",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "0fe960de-65aa-472b-acf6-1efb8f4cdba8",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "0ffa1d45-7d8f-4498-88b1-804e79a1e3d5",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CARAVAN 208B GRAND EX"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CARAVAN 208B GRAND EX"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "10564951-5e1d-44f0-bee7-423d47cfa58e",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Sovereign"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Sovereign"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "107aa5db-4696-4e17-b336-7d0c395be27c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "605"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 605"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1119c0a1-7951-4ad1-8df5-a0a253e67010",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "A36 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "A36 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "115585ab-b99a-4f60-a549-f0d7f10f8a1c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "11663136-9b8d-4489-8905-1772f119cc71",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "117c97f6-a608-4fb6-a2e2-ab9a03202a87",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "11879c06-25b4-4a7d-95d8-3659ef768ca1",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "60XR"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 60XR"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "11abf9a2-aeea-4391-87f5-6ab444166d2a",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 31A"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "11d48369-d457-49bb-bfbd-ce5bb8cfb126",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "V35B BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "V35B BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "120507c7-0eb1-43ca-9356-cb524d52b7d1",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "12128835-88b0-46f2-a753-cd4fe27d72b7",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Sovereign"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Sovereign"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "121349e6-1849-4860-b2a7-2a7083a43810",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION V ULTRA"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION V ULTRA"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "124cfaf3-54dd-4938-9314-aa6d45b4fbdf",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "300E"
+        },
+        "after": {
+          "make": "Embraer",
+          "model": "Phenom 300E"
+        },
+        "rule": "embraer_phenom_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "128bc9e8-69c8-41a1-8a8c-71ab213cd919",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "G36 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "G36 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "12bc86b3-3742-4b24-861e-775767a41d10",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION BRAVO"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION BRAVO"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "13381690-6d12-4b66-90d7-9d175f38f422",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION JET"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION JET"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1349fd3b-5ce3-4810-bfac-babdf67fb3bb",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "F33A"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza F33A"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "13d331d2-5c37-4e9d-8c5f-6782ad00a1b3",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 250"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "KING AIR 250"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "141b5568-b8be-4249-bf18-29121d61e421",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "2000EX EASy"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000EX EASy"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "146a49d6-87ff-4be5-b385-9a504382157c",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "414"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "414"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1483a15d-2210-43de-a1b6-ac57ee05dc0c",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "14aabf36-58b7-45b6-bd30-58fba7bb4164",
+        "source": "controller",
+        "before": {
+          "make": "Learjet",
+          "model": "60SE"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 60SE"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "14b846bd-e44b-461d-b29f-b98ab925a0f7",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CARAVAN 208B GRAND"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CARAVAN 208B GRAND"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "14ceacb0-c7fe-41e3-9559-774bc71d6d71",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 7X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "14da369d-c372-45b6-9eb6-75e9dfa009fe",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 250"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "KING AIR 250"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "14e80e65-2cfe-425f-8a6d-685e3736f2f5",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "182P SKYLANE"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "182P SKYLANE"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "14ef36cb-5a1c-45f9-b7df-d9599609ced9",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "350"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 350"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "14ff325f-14c9-46ec-b3e2-811dbc46c512",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ2+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation CJ2+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "14ff9b68-9cf6-40f1-aa93-ec8668dcf464",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "604"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 604"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "150e23f2-aad6-4b45-a22e-abfb482e6092",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "152cc9ba-613a-4f0e-8eea-4055219b35d2",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation XLS"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "15a03072-0919-4f55-ade8-f033aff2c801",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Excel"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Excel"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "15eff6e0-6bc1-4729-ae5a-163385f49a65",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 6000"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "16495dbe-4a6a-4cb7-b513-e1bfd42317c5",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "152"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "152"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "16709b0c-a5c8-4524-948a-358393f6c2c3",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "40XR"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 40XR"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "16f6df91-53b2-4d74-ae1a-ef4048a6b02b",
+        "source": "aso",
+        "before": {
+          "make": "Beech",
+          "model": "King Air B200"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "King Air B200"
+        },
+        "rule": "alias:BEECH",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "173c4add-0083-4169-8313-ecb906ea6fdc",
+        "source": "controller",
+        "before": {
+          "make": "PIPER",
+          "model": "NAVAJO CR"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "NAVAJO CR"
+        },
+        "rule": "alias:PIPER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1753a1f0-99e7-4404-8ed0-4cf925f9cc8a",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "G58 BARON"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "G58 BARON"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1757c9fa-90e5-49a2-8789-42d6ad6b240b",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ4"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation CJ4"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "175a9e36-919d-452c-ac91-3f5d60d5fa2f",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "A36 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "A36 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "17689d7e-6aa0-465d-97ea-e0898260f7fa",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 6000"
+        },
+        "rule": "bombardier_global_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1768aaa6-134e-4bef-969a-2715302088c8",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 350B 2"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 350B 2"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "178ac468-eb0a-4ebf-bc5e-07b04f957a70",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 7X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1791ffbc-584b-4b81-a041-3ae3c485d89f",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "17c738e5-176d-4d72-97a6-cea7d033a509",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "75"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 75"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "17d286be-f7d1-4b0b-937b-20067b4ad230",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 120B"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "Ec 120B"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "18082dd7-f55d-48ea-8ef0-a73760a32f51",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "V35B BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "V35B BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "184a6d33-283b-4b59-aaa4-2793d8bfa0b5",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "36"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza 36"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "18ae8e39-61a6-4ee0-a760-1e6b2a8f2fe8",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "X+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation X+"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "18fe8bca-42e7-4eb9-b1de-172731f27820",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR E90"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "KING AIR E90"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "19df54ef-09f2-4240-87cc-1dae320a4b8c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1a0ea684-0a8b-4d4c-a32f-ea96e8f7a8bc",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1a42d343-c8f2-42c6-bd87-5f29fb59432d",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 355F 2"
+        },
+        "after": {
+          "make": "Airbus",
+          "model": "As 355F 2"
+        },
+        "rule": "alias:AIRBUS EUROCOPTER",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1a4c0603-165c-4b00-a021-e407ff50e00f",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "414A"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "414A"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1a513c40-973f-44cd-9138-2a8e82f44c2c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "206B Iii"
+        },
+        "after": {
+          "make": "Bell",
+          "model": "206B Iii"
+        },
+        "rule": "alias:BELL HELICOPTERS",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1a6e0f8a-a077-4f86-a78a-6ef4a565c38e",
+        "source": "globalair",
+        "before": {
+          "make": "Bonanza",
+          "model": "A36 TC"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza A36 TC"
+        },
+        "rule": "beech_bonanza",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1ad9ec8d-a775-413f-9d21-eff1efb548ed",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1b0cf25f-d2ef-499c-ae97-b84535a23619",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1b19d89f-0074-48f2-8c5f-5b0f0b892dd3",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Challenger 300"
+        },
+        "rule": "bombardier_challenger_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1b3023f1-9b2f-4fde-bc26-1f9cb8b4f209",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1bee3ae2-fd4f-40c9-86c9-97d8592c4a64",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50-40"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 50-40"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1bfc7093-b69b-4a4e-8324-d51cd12549b6",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "25B"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 25B"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1c2f202b-ad76-4a5a-90bf-2cb362000e75",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 8X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1c874512-fc3f-47d8-8830-45036795c577",
+        "source": "aso",
+        "before": {
+          "make": "Beech",
+          "model": "Bonanza G36"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "Bonanza G36"
+        },
+        "rule": "alias:BEECH",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1ca336f9-026b-4bfe-907a-6372237ed7a2",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ3"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation CJ3"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1cb106d4-af2b-4a21-aa74-2abd65454e19",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Cj4"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Cj4"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1cb3586d-d5a2-4aac-8107-3cfd5b109e73",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "2000"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1cbe3e30-5b88-45e5-b9ca-96806e9ea9df",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION II"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION II"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1cbfba22-d163-4872-ad3e-18020369ba9b",
+        "source": "globalair",
+        "before": {
+          "make": "Comanche",
+          "model": "PA-24-180"
+        },
+        "after": {
+          "make": "Piper",
+          "model": "Comanche PA-24-180"
+        },
+        "rule": "piper_comanche",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1cf151ea-e818-49a4-af13-525a1c01a11d",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION XLS+"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION XLS+"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1d0f5f86-b1d7-4b52-9a71-29fa3006084a",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION XLS GEN 2"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION XLS GEN 2"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1d2b4918-1896-478a-8231-bc0a85b32a44",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "206B Iii"
+        },
+        "after": {
+          "make": "Bell",
+          "model": "206B Iii"
+        },
+        "rule": "alias:BELL HELICOPTERS",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1d6da29d-1e3a-4194-bcc4-e7899c2df3c9",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ3"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation CJ3"
+        },
+        "rule": "cessna_citation_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1d8cafe0-4a88-4a09-a903-4be953db8bb8",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "900EX"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 900EX"
+        },
+        "rule": "dassault_falcon_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1da41612-6633-43ad-9fcc-c114e892d9e8",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Cj2 Plus"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Cj2 Plus"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1db8a894-ec11-4e0c-8b07-089d8472c36d",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "A36 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "A36 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1dceafce-4f53-4d9b-a1d4-42d61dcae781",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "300"
+        },
+        "after": {
+          "make": "Embraer",
+          "model": "Phenom 300"
+        },
+        "rule": "embraer_phenom_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1e009997-fd72-4e69-9443-e5f8a1fe5490",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "A36 BONANZA"
+        },
+        "after": {
+          "make": "Beechcraft",
+          "model": "A36 BONANZA"
+        },
+        "rule": "alias:BEECHCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1e4133fd-1985-48d3-b379-69ab7faadcba",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Xls"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "Citation Xls"
+        },
+        "rule": "cessna_citation",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1e81bff3-bd94-4edd-9fa2-38e36c29148a",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 210N"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "TURBO 210N"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1e867e0d-eaa1-4226-9b1b-4ba95f65be0d",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1ec07bfd-bc75-47ed-b1d1-b15e35efb383",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lx"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 2000Lx"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1ef0c939-da85-431e-8d60-99d39b0021f4",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "1f67fae5-c2ce-46f4-a038-6fba36d5f879",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "100E"
+        },
+        "after": {
+          "make": "Embraer",
+          "model": "Phenom 100E"
+        },
+        "rule": "embraer_phenom_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "1f8b6fb9-883a-47c7-a705-28497003b09b",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 7X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "1fd378a5-9b43-4a57-a6e2-05ecb52699b6",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "45Xr"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45Xr"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "203c238a-c15a-42f6-b734-37c1244e7d3a",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "5000"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Global 5000"
+        },
+        "rule": "bombardier_family",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "204879f0-e72b-4765-9353-9f719b8f1481",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "Bombardier",
+          "model": "Learjet 45"
+        },
+        "rule": "bombardier_learjet_word",
+        "kind": "model_as_make"
+      },
+      {
+        "id": "206fbf9f-51cd-4de4-aeb1-a2fb465e88c2",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION II"
+        },
+        "after": {
+          "make": "Cessna",
+          "model": "CITATION II"
+        },
+        "rule": "alias:CESSNA",
+        "kind": "make_display_alias"
+      },
+      {
+        "id": "20c02710-baef-4f56-b9d8-feb85527be99",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "Dassault",
+          "model": "Falcon 8X"
+        },
+        "rule": "dassault_falcon",
+        "kind": "make_prefix_merge"
+      },
+      {
+        "id": "20d0c577-5d0b-4090-b21e-823d380d2e12",
+        "source": "globalair",
+        "before": {
+          "make": "Cirrus Aircraft",
+          "model": ""
+        },
+        "after": {
+          "make": "Cirrus",
+          "model": null
+        },
+        "rule": "alias:CIRRUS AIRCRAFT",
+        "kind": "make_display_alias"
+      }
+    ],
+    "faa_would_fix": [
+      {
+        "id": "003034e8-b598-45e8-a29e-361ed117c725",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Piper",
+          "model": "M700 FURY"
+        },
+        "after": {
+          "make": "PIPER AIRCRAFT INC",
+          "model": "PA-46-701TP"
+        }
+      },
+      {
+        "id": "003ea8bf-365d-4d4d-b9c9-6f6a3de7aaf0",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "500"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "500"
+        }
+      },
+      {
+        "id": "0047c237-2c47-42ba-801a-aa0cbc8ea5bd",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "40XR"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "0047ec46-67e8-49f7-a973-d6effedb15d9",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Gulfstream",
+          "model": "III"
+        },
+        "after": {
+          "make": "GULFSTREAM AMERICAN Corp.",
+          "model": "G-1159a"
+        }
+      },
+      {
+        "id": "00572902-29ab-4309-8f6f-514cd4571c23",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "FALCON 7X"
+        }
+      },
+      {
+        "id": "008dcd3a-4046-431e-bcdc-5b73f528f98f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Grumman/American",
+          "model": "GENERAL AA5A CHEETAH"
+        },
+        "after": {
+          "make": "GULFSTREAM AMERICAN CORP",
+          "model": "AA-5A"
+        }
+      },
+      {
+        "id": "00cb8c94-3692-4f88-9a54-353e74d38507",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "60"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "60"
+        }
+      },
+      {
+        "id": "00f521e8-55b4-4fff-83da-d8c56a95518a",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Diamond",
+          "model": "DA50 RG"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND GMBH",
+          "model": "DA 50 C"
+        }
+      },
+      {
+        "id": "00fc2782-f11d-4673-9cdd-575afc6441af",
+        "source": "controller",
+        "before": {
+          "make": "Beechcraft",
+          "model": "KING AIR 350ER"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "B300"
+        }
+      },
+      {
+        "id": "012da173-a9f1-4201-a624-680a9630d3ec",
+        "source": "controller",
+        "before": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT INDUSTRIES GM",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "021019de-9c9d-4499-bc88-f37eb2dc2e6e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "after": {
+          "make": "FOUND AIRCRAFT CANADA INC",
+          "model": "FBA-2C3"
+        }
+      },
+      {
+        "id": "022af729-d8b6-4a0a-bbae-1c70b1b901cd",
+        "source": "aso",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22T-G6 GTS"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "140"
+        }
+      },
+      {
+        "id": "02408329-7ad3-4e08-849c-e0ee30abda62",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Vans",
+          "model": "RV-14A"
+        },
+        "after": {
+          "make": "KREH KENNETH C",
+          "model": "RV14A"
+        }
+      },
+      {
+        "id": "025e46fb-9866-4495-872c-ce805c84b082",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TURBO 182T SKYLANE"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "T182T"
+        }
+      },
+      {
+        "id": "02adf9cd-7c5d-4299-b474-7ec8e4e21617",
+        "source": "globalair",
+        "before": {
+          "make": "Hondajet",
+          "model": "Elite S"
+        },
+        "after": {
+          "make": "HONDA AIRCRAFT CO LLC",
+          "model": "HA-420"
+        }
+      },
+      {
+        "id": "02d611f0-615b-4bad-bc37-0da2cbcbf70f",
+        "source": "controller",
+        "before": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND INC",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "0362123f-022e-4d52-95d1-796e28ec8882",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS+"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560XL"
+        }
+      },
+      {
+        "id": "03a1be4e-62e3-4d8c-ba86-239d007d967f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Columbia",
+          "model": "400"
+        },
+        "after": {
+          "make": "LANCAIR COMPANY",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "03c9c76c-20f0-489b-8427-57f9a0177f5f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Grumman/American",
+          "model": "GENERAL AA5A CHEETAH"
+        },
+        "after": {
+          "make": "GULFSTREAM AMERICAN CORP",
+          "model": "AA-5A"
+        }
+      },
+      {
+        "id": "03d358e3-ce24-48d9-b203-11685a369558",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "M2"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "G58"
+        }
+      },
+      {
+        "id": "03f07fb2-a904-4576-936a-caf46cc1823f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Columbia",
+          "model": "400"
+        },
+        "after": {
+          "make": "COLUMBIA AIRCRAFT MFG",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "03faeb2a-c095-48e6-ba1c-1eca415b7251",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "B58 BARON"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "58"
+        }
+      },
+      {
+        "id": "042c7bfb-8637-4e58-8986-fea742b40cf6",
+        "source": "aso",
+        "before": {
+          "make": "Lancair",
+          "model": "Columbia 400"
+        },
+        "after": {
+          "make": "COLUMBIA AIRCRAFT MFG",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "044078a4-71d9-428e-b946-978acfe5825d",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Iisp"
+        },
+        "after": {
+          "make": "MEYERS",
+          "model": "MAC-145"
+        }
+      },
+      {
+        "id": "04789c38-2191-45fb-bb0f-9bfcc8448be2",
+        "source": "aso",
+        "before": {
+          "make": "Bombardier",
+          "model": "Challenger 601..."
+        },
+        "after": {
+          "make": "CANADAIR LTD",
+          "model": "CL-600-2B16"
+        }
+      },
+      {
+        "id": "04db377f-b23f-49fb-8c21-f667a8e5e5a0",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lxs"
+        },
+        "after": {
+          "make": "CHAMPION",
+          "model": "7GCA"
+        }
+      },
+      {
+        "id": "04dbc0be-5ac5-4682-8ad7-6826635295b5",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 350"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "300LW"
+        }
+      },
+      {
+        "id": "051b26c6-432d-43c4-8d78-9ea3de3796e1",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50EX"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "MYSTERE-FALCON 50"
+        }
+      },
+      {
+        "id": "052b06f8-9a3d-4e5d-b287-cc9d8319b4d7",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Diamond",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND INC",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "0557dc06-dd9c-41c6-a7a8-8f558cc6f6c4",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Encore+"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560"
+        }
+      },
+      {
+        "id": "05795a66-dfb0-42c5-8326-4c9be2ff891f",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "GRUMMAN",
+          "model": "G-164a"
+        }
+      },
+      {
+        "id": "0579b950-8037-450f-a34e-4bbead6ef0b8",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "55 BARON"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "D55"
+        }
+      },
+      {
+        "id": "05cdc1ee-799b-4806-abeb-2f249465a7c6",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "350"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-100-1A10"
+        }
+      },
+      {
+        "id": "05d7ec2c-839b-4a4b-a5f6-3cc484af94ec",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "B60 DUKE"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "B-60"
+        }
+      },
+      {
+        "id": "06a7a50f-1467-44c6-94db-aae979c6c05f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Piper",
+          "model": "PA-46 MALIBU"
+        },
+        "after": {
+          "make": "PIPER AIRCRAFT INC",
+          "model": "PA46R-350T"
+        }
+      },
+      {
+        "id": "06c96fa3-bb66-4cdd-9b8a-6bd0922209d4",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G550"
+        },
+        "after": {
+          "make": "BARNARD S/stancil D L",
+          "model": "GLASTAR"
+        }
+      },
+      {
+        "id": "073bf4af-01f3-476a-8df6-9c3c508aae19",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "V"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "U206B"
+        }
+      },
+      {
+        "id": "07c37798-28dc-4fb6-9979-51300e4ea3fd",
+        "source": "globalair",
+        "before": {
+          "make": "Premier",
+          "model": "1"
+        },
+        "after": {
+          "make": "RAYTHEON AIRCRAFT COMPANY",
+          "model": "390"
+        }
+      },
+      {
+        "id": "07f16f72-10b6-42d1-9731-0ee5b3c31786",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "900Ex Easy"
+        },
+        "after": {
+          "make": "AIRBUS HELICOPTERS",
+          "model": "EC 130 T2"
+        }
+      },
+      {
+        "id": "082f3872-4ca1-4b40-8a67-2b40cc11dddc",
+        "source": "avbuyer",
+        "before": {
+          "make": "Agusta",
+          "model": "A109A"
+        },
+        "after": {
+          "make": "AMERICAN EUROCOPTER CORP",
+          "model": "AS350B3"
+        }
+      },
+      {
+        "id": "0850d88b-c800-42a9-8cc6-a56f816826e2",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "2000"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "FALCON 2000"
+        }
+      },
+      {
+        "id": "087cb7c9-8305-4ac0-877e-05813ff47095",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "900B"
+        },
+        "after": {
+          "make": "DASSAULT-BREGUET",
+          "model": "MYSTERE FALCON 900"
+        }
+      },
+      {
+        "id": "08d04cc6-f29b-415f-8913-a821a9021b92",
+        "source": "controller",
+        "before": {
+          "make": "DIAMOND",
+          "model": "DA42 VI"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND GMBH",
+          "model": "DA 42 NG"
+        }
+      },
+      {
+        "id": "08e62471-86fa-4a1e-8110-9cca49c6e11c",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22-G6 TURBO"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SR22T"
+        }
+      },
+      {
+        "id": "0905dff3-0243-4d0c-862f-585d92d3c3b3",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Diamond",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND GMBH",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "091ab8d8-934c-432c-af0b-0290a8065517",
+        "source": "aerotrader",
+        "before": {
+          "make": "Cessna",
+          "model": "400"
+        },
+        "after": {
+          "make": "CESSNA AIRCRAFT CO",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "09465c83-f4ec-4aff-a4f2-ecf268680426",
+        "source": "avbuyer",
+        "before": {
+          "make": "Pilatus",
+          "model": "Pc 12 Ng"
+        },
+        "after": {
+          "make": "COMMONWEALTH",
+          "model": "185"
+        }
+      },
+      {
+        "id": "096efe9f-f5e2-40f4-9c2c-3724d14f92b4",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "35 BONANZA"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "N35"
+        }
+      },
+      {
+        "id": "09bf5ac2-86d8-4e4a-bb13-8156ec54e2ee",
+        "source": "controller",
+        "before": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND GMBH",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "09ec0e74-bc26-40bb-9aca-82ae18586415",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Thrush",
+          "model": "510P2"
+        },
+        "after": {
+          "make": "THRUSH AIRCRAFT LLC",
+          "model": "S2R-510"
+        }
+      },
+      {
+        "id": "0a344c82-3df0-4cca-9648-d76fccadd09c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "CL-600-2B16"
+        }
+      },
+      {
+        "id": "0a373a89-618d-46ed-b1c4-849415c82899",
+        "source": "aso",
+        "before": {
+          "make": "CubCrafters",
+          "model": "Carbon Cub FX-3"
+        },
+        "after": {
+          "make": "AAA AIRCRAFT LLC",
+          "model": "CCX-2000"
+        }
+      },
+      {
+        "id": "0a64590f-3d3f-4d0d-a32b-c8c32145f1ea",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "0ab4d527-4acd-4da7-80d0-3d96c966cf41",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "50"
+        },
+        "after": {
+          "make": "CHAMPION",
+          "model": "7KCAB"
+        }
+      },
+      {
+        "id": "0af12890-f68d-4a7e-a8b2-646f971168f0",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "900B"
+        },
+        "after": {
+          "make": "DASSAULT-BREGUET",
+          "model": "MYSTERE FALCON 900"
+        }
+      },
+      {
+        "id": "0b9d395e-bef3-4b23-8e6c-356a9ac8d8db",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 355N"
+        },
+        "after": {
+          "make": "WACO",
+          "model": "UPF-7"
+        }
+      },
+      {
+        "id": "0be288f8-c5ec-4361-a40b-a4f134b66e40",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "V"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560"
+        }
+      },
+      {
+        "id": "0bf40677-2983-4307-876e-a6e533becc30",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "VII"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "650"
+        }
+      },
+      {
+        "id": "0c10bf13-3c6e-4095-8eb0-d0b74dab47cf",
+        "source": "controller",
+        "before": {
+          "make": "AEROSPOOL",
+          "model": "WT-9 DYNAMIC"
+        },
+        "after": {
+          "make": "CUB CRAFTERS INC",
+          "model": "CC19-215"
+        }
+      },
+      {
+        "id": "0c319979-0caf-4e86-81b8-2b6bf7c819e6",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Aurora",
+          "model": "BUTTERFLY"
+        },
+        "after": {
+          "make": "CLARK WILLIAM H",
+          "model": "CLARK AURORA"
+        }
+      },
+      {
+        "id": "0c751d1d-ae01-41b1-b6fb-b043c831cf86",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "Express Xrs"
+        },
+        "after": {
+          "make": "INGRAM",
+          "model": "FLY BABY I"
+        }
+      },
+      {
+        "id": "0ca58ca8-57c0-4900-a463-85953effb98e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "Ec 135T1"
+        },
+        "after": {
+          "make": "SIKORSKY",
+          "model": "HH-60L"
+        }
+      },
+      {
+        "id": "0d068278-1ae3-44d8-8a43-2f2fe2cc7c39",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-100-1A10"
+        }
+      },
+      {
+        "id": "0d8272a4-6e94-4567-9b2b-6a5ded0c590d",
+        "source": "aso",
+        "before": {
+          "make": "Commander",
+          "model": "114B"
+        },
+        "after": {
+          "make": "COMMANDER AIRCRAFT CO",
+          "model": "114-B"
+        }
+      },
+      {
+        "id": "0dcb9474-64c3-428c-b305-0c0678b6ec63",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "American",
+          "model": "CHAMPION 8-GCBC SCOUT"
+        },
+        "after": {
+          "make": "AMERICAN CHAMPION AIRCRAFT",
+          "model": "8GCBC"
+        }
+      },
+      {
+        "id": "0e2490dd-8ae6-4fc1-9994-8214d57ef7cb",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Cj4"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "525C"
+        }
+      },
+      {
+        "id": "0e4ddd68-696a-4608-b27f-e3307b59bc6d",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G200"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "60"
+        }
+      },
+      {
+        "id": "0e9dccd7-9f61-4712-95ea-eb8ed2f93beb",
+        "source": "avbuyer",
+        "before": {
+          "make": "Agusta",
+          "model": "Aw109 Sp Grandnew"
+        },
+        "after": {
+          "make": "TAYLORCRAFT",
+          "model": "BC"
+        }
+      },
+      {
+        "id": "0eeb4783-43c8-4745-b979-4a62f717a837",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "V"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560"
+        }
+      },
+      {
+        "id": "0f1d9b4c-e7a5-4670-80f0-fca750c0e43b",
+        "source": "avbuyer",
+        "before": {
+          "make": "Leonardo",
+          "model": "Aw139"
+        },
+        "after": {
+          "make": "BELLANCA",
+          "model": "7ACA"
+        }
+      },
+      {
+        "id": "0f28b70c-0360-4b1d-bb9d-3b3bce0cf097",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS+"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560XL"
+        }
+      },
+      {
+        "id": "0f40387a-6659-436b-9034-23862d6eb724",
+        "source": "avbuyer",
+        "before": {
+          "make": "Robinson",
+          "model": "R66 Nxg"
+        },
+        "after": {
+          "make": "DJI",
+          "model": "AGRAS T50"
+        }
+      },
+      {
+        "id": "0f9f1bd5-97e2-4e68-9a02-b42e26cfb9e4",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "0fa09f58-8563-46b3-9842-db4af1da8d0f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Schweizer",
+          "model": "300C"
+        },
+        "after": {
+          "make": "SCHWEIZER RSG LLC",
+          "model": "269C"
+        }
+      },
+      {
+        "id": "0fe4c123-611e-408e-99d9-528a631a0d13",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-100-1A10"
+        }
+      },
+      {
+        "id": "10564951-5e1d-44f0-bee7-423d47cfa58e",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Sovereign"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "680"
+        }
+      },
+      {
+        "id": "107aa5db-4696-4e17-b336-7d0c395be27c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "605"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "CL-600-2B16"
+        }
+      },
+      {
+        "id": "115585ab-b99a-4f60-a549-f0d7f10f8a1c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "T182T"
+        }
+      },
+      {
+        "id": "11879c06-25b4-4a7d-95d8-3659ef768ca1",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "60XR"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "60"
+        }
+      },
+      {
+        "id": "1197b8b6-a76c-4a83-a9d4-a763f04d9b2e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cirrus",
+          "model": "Sr20 G6"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SR22"
+        }
+      },
+      {
+        "id": "119c0fbb-880f-456f-bdf7-f8b40d0ddbae",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cubcrafters",
+          "model": "CARBON CUB FX3"
+        },
+        "after": {
+          "make": "SCOTT AND LAURA HOISINGTON",
+          "model": "CCX-2000"
+        }
+      },
+      {
+        "id": "11abf9a2-aeea-4391-87f5-6ab444166d2a",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "31A"
+        }
+      },
+      {
+        "id": "11c93a32-c481-4daa-b1c4-44d8d042d188",
+        "source": "globalair",
+        "before": {
+          "make": "Premier",
+          "model": "1A"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "390"
+        }
+      },
+      {
+        "id": "124cfaf3-54dd-4938-9314-aa6d45b4fbdf",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "300E"
+        },
+        "after": {
+          "make": "EMBRAER EXECUTIVE AIRCRAFT INC",
+          "model": "EMB-505"
+        }
+      },
+      {
+        "id": "124f4f6d-022a-4356-a1bc-aca2682d26b8",
+        "source": "aerotrader",
+        "before": {
+          "make": "Beechcraft",
+          "model": "36 BONANZA 36"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "A36"
+        }
+      },
+      {
+        "id": "12cee61e-a4ac-4b73-a9c1-eac05dffdcfa",
+        "source": "controller",
+        "before": {
+          "make": "Mooney",
+          "model": "ACCLAIM TYPE S"
+        },
+        "after": {
+          "make": "MOONEY AIRPLANE CO INC",
+          "model": "M20TN"
+        }
+      },
+      {
+        "id": "139da206-9158-466c-bc1c-2496c84b79f8",
+        "source": "controller",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22-G5 TURBO"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SR22T"
+        }
+      },
+      {
+        "id": "13ac62f8-7c65-4755-8414-7a93531a054e",
+        "source": "aso",
+        "before": {
+          "make": "CubCrafters",
+          "model": "Cub SS Sport"
+        },
+        "after": {
+          "make": "CUB CRAFTERS INC",
+          "model": "CC11-100"
+        }
+      },
+      {
+        "id": "13d331d2-5c37-4e9d-8c5f-6782ad00a1b3",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR 250"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "B200GT"
+        }
+      },
+      {
+        "id": "13e05e5d-38d7-4268-abd6-6619e1952436",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Columbia",
+          "model": "400SL"
+        },
+        "after": {
+          "make": "COLUMBIA AIRCRAFT MFG",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "14cd7c79-ca51-4e94-b489-25af561b5be9",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "55 BARON"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "95-B55"
+        }
+      },
+      {
+        "id": "14ceacb0-c7fe-41e3-9559-774bc71d6d71",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "B300"
+        }
+      },
+      {
+        "id": "14ff325f-14c9-46ec-b3e2-811dbc46c512",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ2+"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "525A"
+        }
+      },
+      {
+        "id": "14ff9b68-9cf6-40f1-aa93-ec8668dcf464",
+        "source": "globalair",
+        "before": {
+          "make": "Challenger",
+          "model": "604"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "CL-600-2B16"
+        }
+      },
+      {
+        "id": "154f0501-bcb7-40a9-b345-4fff712eaab1",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Columbia",
+          "model": "350"
+        },
+        "after": {
+          "make": "LANCAIR COMPANY",
+          "model": "LC42-550FG"
+        }
+      },
+      {
+        "id": "15a08498-c886-424d-8d79-cf5e0e4b272b",
+        "source": "controller",
+        "before": {
+          "make": "Cubcrafters",
+          "model": "CARBON CUB FX-3"
+        },
+        "after": {
+          "make": "L-Bird LLC",
+          "model": "CCX-2000"
+        }
+      },
+      {
+        "id": "15a2d4a0-df74-4aa3-b135-6d23a28f8622",
+        "source": "aso",
+        "before": {
+          "make": "IAI",
+          "model": "Westwind II"
+        },
+        "after": {
+          "make": "ISRAEL AIRCRAFT INDUSTRIES",
+          "model": "1124A"
+        }
+      },
+      {
+        "id": "15a6c76b-9729-4fe3-a0f3-a3381dbae6e6",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "35 BONANZA"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "A35"
+        }
+      },
+      {
+        "id": "15c761ad-2741-4248-b6ea-e972bd3cf531",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G200"
+        },
+        "after": {
+          "make": "DASSAULT-BREGUET",
+          "model": "FALCON 50"
+        }
+      },
+      {
+        "id": "15eff6e0-6bc1-4729-ae5a-163385f49a65",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-700-1A10"
+        }
+      },
+      {
+        "id": "16131728-5283-4278-b357-fed1beb161c7",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Mooney",
+          "model": "ACCLAIM TYPE S"
+        },
+        "after": {
+          "make": "MOONEY AIRPLANE CO INC",
+          "model": "M20TN"
+        }
+      },
+      {
+        "id": "163ad5ee-733a-493a-a5d2-ae2db9740535",
+        "source": "globalair",
+        "before": {
+          "make": "Hawker",
+          "model": "400XPR"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "400A"
+        }
+      },
+      {
+        "id": "1643ed98-bb6b-417d-b517-27e04691683c",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "DUCHESS"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "76"
+        }
+      },
+      {
+        "id": "16709b0c-a5c8-4524-948a-358393f6c2c3",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "40XR"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "16de94ef-c3a7-458d-8c60-4db5a87086af",
+        "source": "globalair",
+        "before": {
+          "make": "Premier",
+          "model": "1"
+        },
+        "after": {
+          "make": "RAYTHEON AIRCRAFT COMPANY",
+          "model": "390"
+        }
+      },
+      {
+        "id": "176a8ac6-e196-4474-a5c2-c60988c83f17",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "American",
+          "model": "CHAMPION 8-KCAB SUPER DECATHLON"
+        },
+        "after": {
+          "make": "AMERICAN CHAMPION AIRCRAFT",
+          "model": "8KCAB"
+        }
+      },
+      {
+        "id": "17c738e5-176d-4d72-97a6-cea7d033a509",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "75"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "18247eb5-1073-45f5-9dec-9126627c4899",
+        "source": "avbuyer",
+        "before": {
+          "make": "Robinson",
+          "model": "R66"
+        },
+        "after": {
+          "make": "BARKER F SLADE",
+          "model": "VANS RV-8"
+        }
+      },
+      {
+        "id": "18ae8e39-61a6-4ee0-a760-1e6b2a8f2fe8",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "X+"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "750"
+        }
+      },
+      {
+        "id": "18fe8bca-42e7-4eb9-b1de-172731f27820",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "KING AIR E90"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "E-90"
+        }
+      },
+      {
+        "id": "191e56ae-5e7a-44dc-a7f9-37d50016b2bc",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Tecnam",
+          "model": "P2008T"
+        },
+        "after": {
+          "make": "COSTRUZIONI AERONAUTICHE TECNA",
+          "model": "P2008"
+        }
+      },
+      {
+        "id": "191fdce4-f932-4c00-a2f9-9f1f01f5c110",
+        "source": "globalair",
+        "before": {
+          "make": "Vision",
+          "model": "G2+"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SF50"
+        }
+      },
+      {
+        "id": "1923e31b-5862-480b-85b9-dd00fd5d28f9",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "V"
+        },
+        "after": {
+          "make": "AVIAT AIRCRAFT INC",
+          "model": "A-1b"
+        }
+      },
+      {
+        "id": "1924f0dc-26a8-4e67-90e1-97411c0a3b90",
+        "source": "globalair",
+        "before": {
+          "make": "Tbm",
+          "model": "960"
+        },
+        "after": {
+          "make": "COMPAGNIE DAHER",
+          "model": "TBM 700"
+        }
+      },
+      {
+        "id": "1931fba4-7075-41e1-aff0-d09297216c8b",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Stolp",
+          "model": "ACRODUSTER I SA-700"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "G36"
+        }
+      },
+      {
+        "id": "195e570e-2182-42cf-be3d-86b658ca3820",
+        "source": "controller",
+        "before": {
+          "make": "Cessna",
+          "model": "SKYCOURIER"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "408"
+        }
+      },
+      {
+        "id": "19b18c60-c620-426a-b102-05556fbf7033",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "V"
+        },
+        "after": {
+          "make": "SCHWEIZER",
+          "model": "SGS 1-26e"
+        }
+      },
+      {
+        "id": "19df54ef-09f2-4240-87cc-1dae320a4b8c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "300"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-100-1A10"
+        }
+      },
+      {
+        "id": "19e78814-2a70-4c90-b799-1eac4673958e",
+        "source": "avbuyer",
+        "before": {
+          "make": "Leonardo",
+          "model": "Aw119Kx"
+        },
+        "after": {
+          "make": "RYAN AERONAUTICAL",
+          "model": "ST-A"
+        }
+      },
+      {
+        "id": "19f0edde-c9d3-43be-869e-c2becd61cce8",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Columbia",
+          "model": "400SL"
+        },
+        "after": {
+          "make": "LANCAIR COMPANY",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "1ad9ec8d-a775-413f-9d21-eff1efb548ed",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "1b4e2001-e366-4cde-83a8-e469b5c17518",
+        "source": "controller",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22-G6 TURBO"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SR22T"
+        }
+      },
+      {
+        "id": "1bee3ae2-fd4f-40c9-86c9-97d8592c4a64",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50-40"
+        },
+        "after": {
+          "make": "DASSAULT-BREGUET",
+          "model": "FALCON 50"
+        }
+      },
+      {
+        "id": "1bfc7093-b69b-4a4e-8324-d51cd12549b6",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "25B"
+        },
+        "after": {
+          "make": "GATES LEAR JET",
+          "model": "25B"
+        }
+      },
+      {
+        "id": "1ca336f9-026b-4bfe-907a-6372237ed7a2",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "CJ3"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "525B"
+        }
+      },
+      {
+        "id": "1cb3586d-d5a2-4aac-8107-3cfd5b109e73",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "2000"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "FALCON 2000"
+        }
+      },
+      {
+        "id": "1d0f5f86-b1d7-4b52-9a71-29fa3006084a",
+        "source": "aerotrader",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION XLS GEN 2"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "560XL"
+        }
+      },
+      {
+        "id": "1d2b4918-1896-478a-8231-bc0a85b32a44",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bell Helicopters",
+          "model": "206B Iii"
+        },
+        "after": {
+          "make": "DJI",
+          "model": "AGRAS T50"
+        }
+      },
+      {
+        "id": "1d8cafe0-4a88-4a09-a903-4be953db8bb8",
+        "source": "aso",
+        "before": {
+          "make": "Falcon",
+          "model": "900EX"
+        },
+        "after": {
+          "make": "DASSAULT",
+          "model": "FALCON 900 EX"
+        }
+      },
+      {
+        "id": "1d9dd5b3-b945-4438-8387-6abac81428df",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cessna",
+          "model": "400"
+        },
+        "after": {
+          "make": "CESSNA AIRCRAFT CO",
+          "model": "LC41-550FG"
+        }
+      },
+      {
+        "id": "1dceafce-4f53-4d9b-a1d4-42d61dcae781",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "300"
+        },
+        "after": {
+          "make": "EMBRAER EXECUTIVE AIRCRAFT INC",
+          "model": "EMB-505"
+        }
+      },
+      {
+        "id": "1e2bff74-bf8e-402d-a061-299b31c7bad2",
+        "source": "aso",
+        "before": {
+          "make": "Cessna",
+          "model": "Citation XLS Gen2"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "560XL"
+        }
+      },
+      {
+        "id": "1e867e0d-eaa1-4226-9b1b-4ba95f65be0d",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "1ec07bfd-bc75-47ed-b1d1-b15e35efb383",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "2000Lx"
+        },
+        "after": {
+          "make": "DOUGLAS",
+          "model": "DC-6B"
+        }
+      },
+      {
+        "id": "1ef3e89c-525e-46c4-902c-0707e5bbf3e3",
+        "source": "aso",
+        "before": {
+          "make": "Cessna",
+          "model": "206H"
+        },
+        "after": {
+          "make": "BELL",
+          "model": "407"
+        }
+      },
+      {
+        "id": "1f4b84e1-d952-46f3-aecc-81f6cf016d3d",
+        "source": "controller",
+        "before": {
+          "make": "Cubcrafters",
+          "model": "CARBON CUB FX-3"
+        },
+        "after": {
+          "make": "ROBERT HESSE",
+          "model": "CCX-2000"
+        }
+      },
+      {
+        "id": "1f67fae5-c2ce-46f4-a038-6fba36d5f879",
+        "source": "globalair",
+        "before": {
+          "make": "Phenom",
+          "model": "100E"
+        },
+        "after": {
+          "make": "EMBRAER SA",
+          "model": "EMB-500"
+        }
+      },
+      {
+        "id": "1f8b6fb9-883a-47c7-a705-28497003b09b",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "7X"
+        },
+        "after": {
+          "make": "BARKS DAVID E",
+          "model": "RV 4"
+        }
+      },
+      {
+        "id": "1f9fb823-ad14-42a7-ab04-2353e6e309fa",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cubcrafters",
+          "model": "NXCUB"
+        },
+        "after": {
+          "make": "CHARLES HARRIS SWARTZ JR",
+          "model": "CCX-2300"
+        }
+      },
+      {
+        "id": "1fc91161-ccaa-4e5c-a04c-e997aec12b83",
+        "source": "globalair",
+        "before": {
+          "make": "Cessna",
+          "model": ""
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "172S"
+        }
+      },
+      {
+        "id": "200af5eb-348f-4067-aa4c-38f01f669619",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "B60 DUKE"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "B-60"
+        }
+      },
+      {
+        "id": "201ad3c5-5074-48f6-a83f-31b035ecf8c4",
+        "source": "avbuyer",
+        "before": {
+          "make": "Pilatus",
+          "model": "Pc 12 Ng"
+        },
+        "after": {
+          "make": "MCMANUS EDWIN S",
+          "model": "KITFOX 4"
+        }
+      },
+      {
+        "id": "203c238a-c15a-42f6-b734-37c1244e7d3a",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "5000"
+        },
+        "after": {
+          "make": "JURCA SIROCCO",
+          "model": "MJ5H2"
+        }
+      },
+      {
+        "id": "208b23d8-720f-432e-972c-a3c45682b241",
+        "source": "controller",
+        "before": {
+          "make": "DIAMOND",
+          "model": "DA62"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND INC",
+          "model": "DA 62"
+        }
+      },
+      {
+        "id": "20c02710-baef-4f56-b9d8-feb85527be99",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "8X"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "A185F"
+        }
+      },
+      {
+        "id": "21134879-2310-48ad-ae92-5517f17c15d8",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50"
+        },
+        "after": {
+          "make": "DASSAULT-BREGUET",
+          "model": "FALCON 50"
+        }
+      },
+      {
+        "id": "211720eb-f692-4579-a24e-86cf998bb1dc",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Challenger",
+          "model": "604"
+        },
+        "after": {
+          "make": "LINDSTRAND BALLOONS",
+          "model": "90A"
+        }
+      },
+      {
+        "id": "2117bda9-9808-45c3-b9b2-dec4e448d474",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G200"
+        },
+        "after": {
+          "make": "PILATUS",
+          "model": "Pc-12/45"
+        }
+      },
+      {
+        "id": "2138a507-c3ab-485b-a402-1e1b03abfb73",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "American",
+          "model": "CHAMPION 8-GCBC SCOUT"
+        },
+        "after": {
+          "make": "AMERICAN CHAMPION AIRCRAFT",
+          "model": "8GCBC"
+        }
+      },
+      {
+        "id": "214a248a-f73d-4376-b6b4-7293f8df77b4",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cessna",
+          "model": "210 CENTURION"
+        },
+        "after": {
+          "make": "MOONEY",
+          "model": "M20C"
+        }
+      },
+      {
+        "id": "216bd68d-0e43-477b-b211-82381a522b41",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "PIPER",
+          "model": "J3C-65"
+        }
+      },
+      {
+        "id": "218badb6-5a10-4b78-87aa-e5893c9dff7b",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "American",
+          "model": "CHAMPION 8-GCBC DENALI SCOUT"
+        },
+        "after": {
+          "make": "AMERICAN CHAMPION AIRCRAFT",
+          "model": "8GCBC"
+        }
+      },
+      {
+        "id": "21e047dc-a144-4d0a-bbcf-c42a8468d6c2",
+        "source": "controller",
+        "before": {
+          "make": "Aerocomp Inc.",
+          "model": "COMP AIR 9 TURBINE"
+        },
+        "after": {
+          "make": "X EIGHT LLC",
+          "model": "CA-8"
+        }
+      },
+      {
+        "id": "22781f72-1dac-4dbc-9a9a-980b486cba42",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cessna",
+          "model": "TTX 240"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "T240"
+        }
+      },
+      {
+        "id": "23686337-4c14-4aa3-8bce-d6bd16c16405",
+        "source": "aso",
+        "before": {
+          "make": "Piper",
+          "model": "Malibu"
+        },
+        "after": {
+          "make": "PIPER AIRCRAFT INC",
+          "model": "PA 46-350P"
+        }
+      },
+      {
+        "id": "2374e210-fc8a-46c8-bd35-589827920fe9",
+        "source": "globalair",
+        "before": {
+          "make": "Westwind",
+          "model": "II"
+        },
+        "after": {
+          "make": "ISRAEL AIRCRAFT INDUSTRIES",
+          "model": "1124A"
+        }
+      },
+      {
+        "id": "23c46e5e-eed8-437d-bb31-a35afd3924b0",
+        "source": "controller",
+        "before": {
+          "make": "Beechcraft",
+          "model": "KING AIR 350ER"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "B300"
+        }
+      },
+      {
+        "id": "23ca551f-e3e2-42c1-9523-3ba0f28c4e90",
+        "source": "avbuyer",
+        "before": {
+          "make": "Dassault Falcon",
+          "model": "900Ex"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "60"
+        }
+      },
+      {
+        "id": "24b7ecb3-b5f8-4173-a027-068438f992a1",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "45"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "45"
+        }
+      },
+      {
+        "id": "250e977e-7678-4da7-baf3-233c8a6158be",
+        "source": "aso",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22T - G3 GTS"
+        },
+        "after": {
+          "make": "CIRRUS DESIGN CORP",
+          "model": "SR22"
+        }
+      },
+      {
+        "id": "255e1433-8a68-44fe-bb40-aa56b292b72f",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "B95A TRAVEL AIR"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "E95"
+        }
+      },
+      {
+        "id": "2589eac2-67be-4f12-aacf-b0ac8a97fd45",
+        "source": "aso",
+        "before": {
+          "make": "Diamond",
+          "model": "DA50 RG"
+        },
+        "after": {
+          "make": "DIAMOND AIRCRAFT IND GMBH",
+          "model": "DA 50 C"
+        }
+      },
+      {
+        "id": "25efb87f-144d-4119-89ad-84c1f8a45cb9",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Cessna",
+          "model": "175"
+        },
+        "after": {
+          "make": "ROBINSON HELICOPTER",
+          "model": "R22 BETA"
+        }
+      },
+      {
+        "id": "2604cecf-9ee8-4e0f-9f31-7993403a8fcb",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "TTX"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "T240"
+        }
+      },
+      {
+        "id": "260e8e8b-47c0-443c-9871-748178627e08",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 355F 1"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "MYSTERE-FALCON 50"
+        }
+      },
+      {
+        "id": "2617c3e5-9680-4f11-b42d-98e532b6511d",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION LATITUDE"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "680A"
+        }
+      },
+      {
+        "id": "2632ee8e-8ab1-43d6-9d91-f656efc600ba",
+        "source": "controller",
+        "before": {
+          "make": "CESSNA",
+          "model": "CITATION CJ3+"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "525B"
+        }
+      },
+      {
+        "id": "265bd1cc-ec46-47cb-a68c-a4f61ac0d40c",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "35 BONANZA"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "C35"
+        }
+      },
+      {
+        "id": "2682b687-50ee-48a7-9878-688f1a4db9d8",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "Cj1 Plus"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "G58"
+        }
+      },
+      {
+        "id": "2741859d-4451-4b2e-8056-4dcc0d48c522",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "M2"
+        },
+        "after": {
+          "make": "HAWKER BEECHCRAFT CORP",
+          "model": "G58"
+        }
+      },
+      {
+        "id": "2758cca5-ec9e-4bb8-8230-086aead222bc",
+        "source": "avbuyer",
+        "before": {
+          "make": "Tecnam",
+          "model": "P2012 Traveller"
+        },
+        "after": {
+          "make": "TEXTRON AVIATION INC",
+          "model": "B300"
+        }
+      },
+      {
+        "id": "27d5b63f-79a6-40d9-9f95-a3f901083727",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "VII"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "650"
+        }
+      },
+      {
+        "id": "27e58cb3-b131-4843-ad54-d2f941cb3003",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "XLS"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560XL"
+        }
+      },
+      {
+        "id": "27f95e70-890e-4d24-ba54-c273807d9cd8",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "D50 TWIN BONANZA"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "D50C"
+        }
+      },
+      {
+        "id": "281c12b8-6289-49b0-b14a-140015e57582",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "31A"
+        }
+      },
+      {
+        "id": "284ccd3d-8b7a-4db9-899b-e5989dc6f7a0",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G280"
+        },
+        "after": {
+          "make": "AIRBUS",
+          "model": "A319-114"
+        }
+      },
+      {
+        "id": "285fe9bb-4de1-4bea-aaff-41e0663fe697",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "CUB CRAFTERS INC",
+          "model": "CC19-215"
+        }
+      },
+      {
+        "id": "28667b60-7775-48cc-bd95-382d2eeef19d",
+        "source": "controller",
+        "before": {
+          "make": "Cubcrafters",
+          "model": "NXCUB"
+        },
+        "after": {
+          "make": "MC AVIATION HOLDINGS LLC",
+          "model": "CCX-2300"
+        }
+      },
+      {
+        "id": "28aefec0-68b8-4354-ae9e-2b4dae945b8b",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "North",
+          "model": "AMERICAN TF51D"
+        },
+        "after": {
+          "make": "NORTH American/aero CLASSICS",
+          "model": "P-51d"
+        }
+      },
+      {
+        "id": "28f3931e-43b3-4908-af21-99480a80bc1c",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "E55 BARON"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "E-55"
+        }
+      },
+      {
+        "id": "29178d33-98c0-4ae2-93d5-9a98e8a6dc54",
+        "source": "avbuyer",
+        "before": {
+          "make": "Airbus Eurocopter",
+          "model": "As 350Ba"
+        },
+        "after": {
+          "make": "BOWERS R J/boardman D A III",
+          "model": "MURPHY MOOSE"
+        }
+      },
+      {
+        "id": "29495a2f-3e09-44ad-8458-66906322ecb1",
+        "source": "avbuyer",
+        "before": {
+          "make": "Bombardier Global",
+          "model": "Express"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-700-1A10"
+        }
+      },
+      {
+        "id": "294d1051-ff56-4b94-b6d8-7bad1b30e4cb",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "V35TC BONANZA"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "V35"
+        }
+      },
+      {
+        "id": "2964db52-dbe2-4380-993a-1b5bfeb9b2c3",
+        "source": "controller",
+        "before": {
+          "make": "BEECHCRAFT",
+          "model": "B60 DUKE"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "B-60"
+        }
+      },
+      {
+        "id": "296dc34f-c7c4-40ce-ae37-26fe42b57db8",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "35A"
+        },
+        "after": {
+          "make": "GATES LEARJET Corp.",
+          "model": "35A"
+        }
+      },
+      {
+        "id": "2986cf42-c4b3-465c-aa6c-a77884865bb0",
+        "source": "avbuyer",
+        "before": {
+          "make": "Agusta",
+          "model": "A109C"
+        },
+        "after": {
+          "make": "SCHWEIZER",
+          "model": "SGS 1-34"
+        }
+      },
+      {
+        "id": "29e3a874-952f-4b6d-ada9-6b31bde381f2",
+        "source": "avbuyer",
+        "before": {
+          "make": "Cessna Citation",
+          "model": "X"
+        },
+        "after": {
+          "make": "SCHLEICHER",
+          "model": "RHONLERCHE II"
+        }
+      },
+      {
+        "id": "29ecc09e-4bc9-41c7-921a-e42ed617dc39",
+        "source": "globalair",
+        "before": {
+          "make": "Beechcraft",
+          "model": ""
+        },
+        "after": {
+          "make": "RAYTHEON AIRCRAFT COMPANY",
+          "model": "A36"
+        }
+      },
+      {
+        "id": "29ee5f5d-b8d1-4e23-b4f8-a076b2b32aad",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Beechcraft",
+          "model": "55 BARON"
+        },
+        "after": {
+          "make": "BEECH",
+          "model": "95-B55 (t42a)"
+        }
+      },
+      {
+        "id": "29fb0c87-e3ac-4665-8081-791d04f38f6c",
+        "source": "avbuyer",
+        "before": {
+          "make": "Gulfstream",
+          "model": "G200"
+        },
+        "after": {
+          "make": "CHAMPION",
+          "model": "7ECA"
+        }
+      },
+      {
+        "id": "2a4c34bb-e0df-4a41-94bb-ed797664e2ed",
+        "source": "aso",
+        "before": {
+          "make": "Cirrus",
+          "model": "SR22-G6 GTS"
+        },
+        "after": {
+          "make": "AERO COMMANDER",
+          "model": "100-180"
+        }
+      },
+      {
+        "id": "2a7c6cbf-3469-49a0-aee5-fb5497cdcf8f",
+        "source": "globalair",
+        "before": {
+          "make": "Learjet",
+          "model": "31A"
+        },
+        "after": {
+          "make": "LEARJET INC",
+          "model": "31A"
+        }
+      },
+      {
+        "id": "2ad3ca7c-8edc-4298-9200-ad8079d8b332",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "XRS"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-700-1A10"
+        }
+      },
+      {
+        "id": "2b4beb0f-00f9-4682-a7de-f8a68750f066",
+        "source": "avbuyer",
+        "before": {
+          "make": "Boeing",
+          "model": "767"
+        },
+        "after": {
+          "make": "TAYLORCRAFT",
+          "model": "BC-65"
+        }
+      },
+      {
+        "id": "2b4bf235-189a-4b69-a46f-c2a31da7a112",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "Honda",
+          "model": "HONDAJET ELITE S"
+        },
+        "after": {
+          "make": "HONDA AIRCRAFT CO LLC",
+          "model": "HA-420"
+        }
+      },
+      {
+        "id": "2b7d65b3-8772-44a5-90fc-f9cadabe3519",
+        "source": "globalair",
+        "before": {
+          "make": "Citation",
+          "model": "Encore"
+        },
+        "after": {
+          "make": "CESSNA",
+          "model": "560"
+        }
+      },
+      {
+        "id": "2bdae8b3-17c1-4daa-b90c-eb79aa344ba3",
+        "source": "globalair",
+        "before": {
+          "make": "Falcon",
+          "model": "50EX"
+        },
+        "after": {
+          "make": "DASSAULT AVIATION",
+          "model": "MYSTERE-FALCON 50"
+        }
+      },
+      {
+        "id": "2c08fa1a-779b-4fbd-b8d1-da2ecc6c9232",
+        "source": "controller",
+        "before": {
+          "make": "Piper",
+          "model": "MERIDIAN"
+        },
+        "after": {
+          "make": "PIPER AIRCRAFT INC",
+          "model": "PA46-500TP"
+        }
+      },
+      {
+        "id": "2c0f15c6-23e8-4826-8df2-b47a62554027",
+        "source": "trade_a_plane",
+        "before": {
+          "make": "American",
+          "model": "CHAMPION 7-GCBC"
+        },
+        "after": {
+          "make": "CHAMPION",
+          "model": "7GCBC"
+        }
+      },
+      {
+        "id": "2c4b7ab0-4b55-4519-bcdc-9db140090186",
+        "source": "globalair",
+        "before": {
+          "make": "Global",
+          "model": "6000"
+        },
+        "after": {
+          "make": "BOMBARDIER INC",
+          "model": "BD-700-1A10"
+        }
+      }
+    ]
+  },
+  "source_attribution_numeric_makes": {
+    "505": {
+      "globalair": 3
+    }
+  }
+}

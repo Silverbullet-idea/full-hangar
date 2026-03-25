@@ -10,7 +10,7 @@ const LISTINGS_PAGE_PATHS = [
   "/listings?category=helicopter",
   "/listings?category=lsp",
   "/listings?category=sea",
-  "/listings?dealTier=TOP_DEALS&sortBy=deal_desc",
+  "/listings?dealTier=TOP_DEALS&sortBy=flip_desc",
   "/listings?dealTier=OVERPRICED",
   "/listings?q=Cessna%20152",
   "/listings?q=Cessna&category=single",
@@ -27,6 +27,7 @@ const LISTINGS_API_PATHS = [
   "/api/listings?page=1&pageSize=5&category=se_turboprop",
   "/api/listings?page=1&pageSize=5&q=Cessna&category=single",
   "/api/listings?page=1&pageSize=5&q=Cessna%20172&category=single&make=Cessna",
+  "/api/listings?page=1&pageSize=5&minEngine=50",
 ];
 
 test.describe("listings category + search smoke", () => {

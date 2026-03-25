@@ -29,7 +29,7 @@ type Payload = {
       model: string;
       year: number;
       price: number;
-      value_score: number;
+      flip_score: number;
       days_on_market: number;
       source_url: string;
     }>;
@@ -41,7 +41,7 @@ type Payload = {
       original_price: number;
       current_price: number;
       reduction_pct: number;
-      value_score: number;
+      flip_score: number;
       days_on_market: number;
     }>;
     below_comp_listings: Array<{
@@ -52,7 +52,7 @@ type Payload = {
       price: number;
       estimated_market_value: number;
       discount_pct: number;
-      value_score: number;
+      flip_score: number;
     }>;
   };
   avoidance_signals: {
@@ -173,7 +173,7 @@ export default function BuyerIntelligenceClient({ data }: { data: Payload }) {
               <p className="font-semibold">{row.year} {row.make} {row.model}</p>
               {"price" in row ? <p>Price: ${Math.round(row.price).toLocaleString()}</p> : null}
               {"current_price" in row ? <p>Now: ${Math.round(row.current_price).toLocaleString()}</p> : null}
-              <p>Score: {Math.round(row.value_score ?? 0)}</p>
+              <p>Flip score: {Math.round(row.flip_score ?? 0)}</p>
               <p>Days on Market: {Math.round(row.days_on_market ?? 0)}</p>
             </article>
           ))}

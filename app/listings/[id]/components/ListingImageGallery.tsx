@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getDealTierMeta } from "../../../../lib/listings/dealTier";
+import { FLIP_TIER_CONFIG } from "../../../../lib/scoring/flipTierConfig";
 
 type ListingImageGalleryProps = {
   title: string;
   imageUrls: string[];
-  dealTier?: string | null;
-  /** When true, show PRICE UNDISCLOSED on hero (belt-and-suspenders vs stale deal_tier). */
+  flipTier?: string | null;
+  /** When true, show PRICE UNDISCLOSED on hero (belt-and-suspenders vs stale tier). */
   priceUndisclosed?: boolean;
   fallbackImageUrl?: string | null;
   /** Taller hero, synced main/thumb selection, compact thumbs (listing detail overhaul). */
@@ -25,7 +25,7 @@ function toProxySrc(url: string): string {
 export default function ListingImageGallery({
   title,
   imageUrls,
-  dealTier = null,
+  flipTier = null,
   priceUndisclosed = false,
   fallbackImageUrl = null,
   layoutVariant = "default",
@@ -50,15 +50,10 @@ export default function ListingImageGallery({
   const isDetailHero = layoutVariant === "detailHero";
   const mainIndex = isDetailHero ? activeIndex : 0;
   const heroUrl = effectiveImageUrls[mainIndex] ?? effectiveImageUrls[0] ?? "";
-  const dealTierMeta = getDealTierMeta(dealTier);
-  const dealTierBadgeClass = dealTierMeta
-    ? dealTierMeta.tone === "green"
-      ? "border-[#16a34a] bg-[#16a34a1f] text-[#16a34a]"
-      : dealTierMeta.tone === "blue"
-        ? "border-[#2563eb] bg-[#2563eb1f] text-[#2563eb]"
-        : dealTierMeta.tone === "amber"
-          ? "border-[#d97706] bg-[#d977061f] text-[#d97706]"
-          : "border-[#dc2626] bg-[#dc26261f] text-[#dc2626]"
+  const flipKey = String(flipTier ?? "").trim().toUpperCase();
+  const flipCfg = FLIP_TIER_CONFIG[flipKey];
+  const flipTierBadgeClass = flipCfg
+    ? `border-transparent ${flipCfg.bg} ${flipCfg.text} ring-1 ${flipCfg.ring}`
     : "";
   const controlButtonStyle = {
     border: "1px solid var(--brand-dark)",
@@ -188,9 +183,9 @@ export default function ListingImageGallery({
               onError={() => markFailed(heroUrl)}
             />
           )}
-          {dealTierMeta ? (
-            <span className={`absolute right-3 top-3 inline-flex rounded border px-2 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur-sm ${dealTierBadgeClass}`}>
-              {dealTierMeta.label}
+          {flipCfg ? (
+            <span className={`absolute right-3 top-3 inline-flex rounded px-2 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur-sm ${flipTierBadgeClass}`}>
+              {flipCfg.label}
             </span>
           ) : priceUndisclosed ? (
             <span className="absolute right-3 top-3 inline-flex rounded border border-[rgba(122,138,158,0.45)] bg-[rgba(0,0,0,0.65)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#d1d5db] backdrop-blur-sm">

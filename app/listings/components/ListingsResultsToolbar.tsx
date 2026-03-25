@@ -2,6 +2,8 @@ type LayoutMode = 'tiles' | 'rows' | 'compact'
 type SortOption =
   | 'price_low'
   | 'price_high'
+  | 'flip_desc'
+  | 'flip_asc'
   | 'deal_desc'
   | 'market_best'
   | 'market_worst'
@@ -79,12 +81,13 @@ export default function ListingsResultsToolbar({
             <label htmlFor="sort-by" className="text-xs font-semibold text-[#B2B2B2]">Sort By</label>
             <select
               id="sort-by"
-              value={sortBy}
+              value={sortBy === 'deal_desc' ? 'flip_desc' : sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
             >
               <option value="market_best">Best Market Delta (most below)</option>
-              <option value="deal_desc">Deal Tier (best first)</option>
+              <option value="flip_desc">Best flip opportunity</option>
+              <option value="flip_asc">Flip score (low first)</option>
               <option value="price_low">Price (low to high)</option>
               <option value="price_high">Price (high to low)</option>
               <option value="risk_low">Risk (low to critical)</option>

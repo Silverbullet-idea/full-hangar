@@ -8,6 +8,10 @@ Usage:
     python enrich_faa.py
     python enrich_faa.py --limit 100
     python enrich_faa.py --dry-run --verbose
+
+Environment:
+    FULL_HANGAR_FAA_PROMOTE_MAKE_MODEL=1 — when ACFTREF names disagree with listing make/model and
+    `identity_correction` is empty, overwrite make/model/title (see make_model_identity_lib).
 """
 
 from __future__ import annotations
@@ -17,6 +21,8 @@ import json
 import logging
 import os
 import re
+import time
+from datetime import datetime, timezone
 from typing import Any
 
 from dotenv import load_dotenv
@@ -28,6 +34,25 @@ load_dotenv()
 log = logging.getLogger(__name__)
 DEREGISTRATION_ALERT = "DEREGISTERED - VERIFY BEFORE PURCHASE"
 _UNSUPPORTED_REGISTRY_FIELDS: set[str] = set()
+
+
+def _transient_supabase_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return any(
+        token in msg
+        for token in (
+            "502",
+            "503",
+            "504",
+            "522",
+            "bad gateway",
+            "cloudflare",
+            "timeout",
+            "timed out",
+            "connection terminated",
+            "temporarily unavailable",
+        )
+    )
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -44,7 +69,10 @@ def get_supabase() -> Client:
 
 
 def fetch_pending_listings(supabase: Client, limit: int | None = None) -> list[dict[str, Any]]:
-    columns = "id, n_number, serial_number, engine_model, registration_scheme"
+    columns = (
+        "id, n_number, serial_number, engine_model, registration_scheme, make, model, year, title, "
+        "identity_correction, make_original, model_original"
+    )
     try:
         page_limit = limit if limit is not None else 10000
         # Prefer queueing by faa_matched state so we do not repeatedly reprocess
@@ -125,20 +153,27 @@ def _registry_lookup_by_field(
 ) -> dict[str, Any] | None:
     if field in _UNSUPPORTED_REGISTRY_FIELDS:
         return None
-    try:
-        response = (
-            supabase.table("faa_registry")
-            .select("*")
-            .eq(field, value)
-            .limit(1)
-            .execute()
-        )
-    except Exception as exc:
-        message = str(exc).lower()
-        if "could not find the" in message or "does not exist" in message:
-            _UNSUPPORTED_REGISTRY_FIELDS.add(field)
-        return None
-    return (response.data or [None])[0]
+    for attempt in range(5):
+        try:
+            response = (
+                supabase.table("faa_registry")
+                .select("*")
+                .eq(field, value)
+                .limit(1)
+                .execute()
+            )
+            return (response.data or [None])[0]
+        except Exception as exc:
+            message = str(exc).lower()
+            if "could not find the" in message or "does not exist" in message:
+                _UNSUPPORTED_REGISTRY_FIELDS.add(field)
+                return None
+            if attempt < 4 and _transient_supabase_error(exc):
+                time.sleep(0.5 * (2**attempt))
+                continue
+            log.warning("faa_registry lookup failed field=%s value=%r: %s", field, value, exc)
+            return None
+    return None
 
 
 def fetch_faa_match(supabase: Client, n_number: str, serial_number: Any = None) -> dict[str, Any] | None:
@@ -161,14 +196,23 @@ def fetch_faa_match(supabase: Client, n_number: str, serial_number: Any = None) 
 
 
 def fetch_aircraft_ref_match(supabase: Client, mfr_mdl_code: str) -> dict[str, Any] | None:
-    response = (
-        supabase.table("faa_aircraft_ref")
-        .select("num_seats, num_engines, aircraft_weight, cruising_speed, type_aircraft")
-        .eq("mfr_mdl_code", mfr_mdl_code)
-        .limit(1)
-        .execute()
-    )
-    return (response.data or [None])[0]
+    for attempt in range(5):
+        try:
+            response = (
+                supabase.table("faa_aircraft_ref")
+                .select("mfr_name,model_name,num_seats,num_engines,aircraft_weight,cruising_speed,type_aircraft")
+                .eq("mfr_mdl_code", mfr_mdl_code)
+                .limit(1)
+                .execute()
+            )
+            return (response.data or [None])[0]
+        except Exception as exc:
+            if attempt < 4 and _transient_supabase_error(exc):
+                time.sleep(0.5 * (2**attempt))
+                continue
+            log.warning("faa_aircraft_ref lookup failed code=%r: %s", mfr_mdl_code, exc)
+            return None
+    return None
 
 
 def fetch_engine_ref_match(supabase: Client, eng_mfr_mdl_code: str) -> dict[str, Any] | None:
@@ -382,7 +426,68 @@ def build_update_payload(
     if faa_engine_model and _should_backfill_engine_model(existing_engine_model):
         payload["engine_model"] = faa_engine_model
 
+    if aircraft_ref_record:
+        faa_ac_mfr = _clean_text(aircraft_ref_record.get("mfr_name"))
+        faa_ac_mdl = _clean_text(aircraft_ref_record.get("model_name"))
+        if faa_ac_mfr:
+            payload["faa_ref_make"] = faa_ac_mfr
+        if faa_ac_mdl:
+            payload["faa_ref_model"] = faa_ac_mdl
+
     return payload
+
+
+def _maybe_promote_make_model_from_faa(
+    payload: dict[str, Any],
+    listing: dict[str, Any],
+    aircraft_ref_record: dict[str, Any] | None,
+) -> None:
+    """Optional: copy FAA ACFTREF identity into make/model/title (gated by env)."""
+    flag = os.environ.get("FULL_HANGAR_FAA_PROMOTE_MAKE_MODEL", "").strip().lower()
+    if flag not in ("1", "true", "yes"):
+        return
+    if not aircraft_ref_record:
+        return
+    if listing.get("identity_correction"):
+        return
+
+    from make_model_identity_lib import build_listing_title, load_rules, should_promote_faa_make_model
+
+    fm = _clean_text(aircraft_ref_record.get("mfr_name"))
+    fmd = _clean_text(aircraft_ref_record.get("model_name"))
+    rules = load_rules()
+    sug = should_promote_faa_make_model(
+        listing.get("make"),
+        listing.get("model"),
+        fm,
+        fmd,
+        listing.get("identity_correction"),
+        rules,
+    )
+    if not sug:
+        return
+
+    year = listing.get("year")
+    try:
+        y_int = int(year) if year is not None and str(year).strip().isdigit() else None
+    except Exception:
+        y_int = None
+
+    payload["make"] = sug[0]
+    payload["model"] = sug[1]
+    payload["title"] = build_listing_title(y_int, sug[0], sug[1])
+    if not _clean_text(listing.get("make_original")):
+        payload["make_original"] = _clean_text(listing.get("make"))
+    if not _clean_text(listing.get("model_original")):
+        payload["model_original"] = _clean_text(listing.get("model"))
+    payload["identity_correction"] = {
+        "version": 1,
+        "source": "faa_ref_auto",
+        "rule_id": "enrich_faa_promote",
+        "before": {"make": listing.get("make"), "model": listing.get("model")},
+        "corrected_at": datetime.now(timezone.utc).isoformat(),
+    }
+    payload["identity_corrected_at"] = datetime.now(timezone.utc).isoformat()
 
 
 def run_enrichment(supabase: Client, limit: int | None = None, dry_run: bool = False) -> None:
@@ -439,6 +544,7 @@ def run_enrichment(supabase: Client, limit: int | None = None, dry_run: bool = F
                 engine_ref_record,
                 existing_engine_model=listing.get("engine_model"),
             )
+            _maybe_promote_make_model_from_faa(faa_payload, listing, aircraft_ref_record)
             payload = {**faa_payload, **payload}
             matched += 1
         else:

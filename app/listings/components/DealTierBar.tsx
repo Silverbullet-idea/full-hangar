@@ -2,10 +2,11 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-type DealScore = 'all' | 'exceptional' | 'strong' | 'good'
+type FlipTierToken = 'all' | 'top' | 'hot' | 'good' | 'fair' | 'pass'
 
 type SortOption =
-  | 'deal_desc'
+  | 'flip_desc'
+  | 'flip_asc'
   | 'price_low'
   | 'price_high'
   | 'engine_life'
@@ -33,19 +34,31 @@ type DealTierBarProps = {
   onSortByChange?: (value: string) => void
 }
 
-const TIERS: Array<{ id: DealScore; label: string; sub: string }> = [
-  { id: 'exceptional', label: 'EXCEPTIONAL', sub: 'score 78+' },
-  { id: 'strong', label: 'STRONG', sub: '65–77' },
-  { id: 'good', label: 'GOOD', sub: '50–64' },
-  { id: 'all', label: 'FAIR / ALL', sub: '' },
+const TIERS: Array<{ id: FlipTierToken; dealTier: string | null; label: string; sub: string }> = [
+  { id: 'top', dealTier: 'TOP_DEALS', label: 'TOP', sub: 'HOT+GOOD' },
+  { id: 'hot', dealTier: 'HOT', label: 'HOT', sub: 'top flips' },
+  { id: 'good', dealTier: 'GOOD', label: 'GOOD', sub: 'solid' },
+  { id: 'fair', dealTier: 'FAIR', label: 'FAIR', sub: 'worth a look' },
+  { id: 'pass', dealTier: 'PASS', label: 'PASS', sub: 'not competitive' },
+  { id: 'all', dealTier: null, label: 'ALL', sub: '' },
 ]
 
 export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortByChange }: DealTierBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const rawScore = (searchParams.get('dealScore') ?? 'all').toLowerCase()
-  const activeScore: DealScore =
-    rawScore === 'exceptional' || rawScore === 'strong' || rawScore === 'good' ? rawScore : 'all'
+  const rawTier = (searchParams.get('dealTier') ?? '').trim().toUpperCase()
+  const activeTier: FlipTierToken =
+    rawTier === 'TOP_DEALS'
+      ? 'top'
+      : rawTier === 'HOT'
+        ? 'hot'
+        : rawTier === 'GOOD'
+          ? 'good'
+          : rawTier === 'FAIR'
+            ? 'fair'
+            : rawTier === 'PASS'
+              ? 'pass'
+              : 'all'
   const hideUndisclosed = searchParams.get('hidePriceUndisclosed') === 'true'
 
   function push(updates: Record<string, string | null>) {
@@ -53,16 +66,22 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortB
     router.push(`/listings${next.toString() ? `?${next.toString()}` : ''}`)
   }
 
-  function tierStyle(id: DealScore, active: boolean): string {
+  function tierStyle(id: FlipTierToken, active: boolean): string {
     const base = 'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors'
-    if (id === 'exceptional') {
-      return `${base} ${active ? 'border-[#22c55e] bg-[rgba(34,197,94,0.2)] text-[#22c55e]' : 'border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.1)] text-[#22c55e]'}`
-    }
-    if (id === 'strong') {
-      return `${base} ${active ? 'border-[#FF9900] bg-[rgba(255,153,0,0.2)] text-[#FF9900]' : 'border-[rgba(255,153,0,0.3)] bg-[rgba(255,153,0,0.1)] text-[#FF9900]'}`
+    if (id === 'hot') {
+      return `${base} ${active ? 'border-[#f97316] bg-[rgba(249,115,22,0.2)] text-[#f97316]' : 'border-[rgba(249,115,22,0.35)] bg-[rgba(249,115,22,0.08)] text-[#f97316]'}`
     }
     if (id === 'good') {
-      return `${base} ${active ? 'border-[#3b82f6] bg-[rgba(59,130,246,0.2)] text-[#3b82f6]' : 'border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.1)] text-[#3b82f6]'}`
+      return `${base} ${active ? 'border-[#10b981] bg-[rgba(16,185,129,0.2)] text-[#10b981]' : 'border-[rgba(16,185,129,0.35)] bg-[rgba(16,185,129,0.08)] text-[#10b981]'}`
+    }
+    if (id === 'fair') {
+      return `${base} ${active ? 'border-[#fbbf24] bg-[rgba(251,191,36,0.2)] text-[#fbbf24]' : 'border-[rgba(251,191,36,0.35)] bg-[rgba(251,191,36,0.08)] text-[#fbbf24]'}`
+    }
+    if (id === 'pass') {
+      return `${base} ${active ? 'border-[#94a3b8] bg-[rgba(148,163,184,0.2)] text-[#94a3b8]' : 'border-[rgba(148,163,184,0.35)] bg-[rgba(148,163,184,0.08)] text-[#94a3b8]'}`
+    }
+    if (id === 'top') {
+      return `${base} ${active ? 'border-[#FF9900] bg-[rgba(255,153,0,0.2)] text-[#FF9900]' : 'border-[rgba(255,153,0,0.35)] bg-[rgba(255,153,0,0.1)] text-[#FF9900]'}`
     }
     return `${base} ${active ? 'border-[var(--fh-text-dim)] bg-[rgba(122,138,158,0.15)] text-[var(--fh-text)]' : 'border-[rgba(122,138,158,0.3)] bg-[rgba(122,138,158,0.1)] text-[var(--fh-text-dim)]'}`
   }
@@ -73,24 +92,29 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortB
         className="mr-1 shrink-0 font-bold uppercase tracking-[1.5px] text-[var(--fh-text-muted)]"
         style={{ fontFamily: 'var(--font-barlow-condensed), system-ui', fontSize: '10px' }}
       >
-        Deal score
+        Flip tier
       </span>
       <div className="flex flex-wrap items-center gap-2">
         {TIERS.map((t) => {
-          const active = activeScore === t.id
+          const active = activeTier === t.id
           return (
             <button
               key={t.id}
               type="button"
               onClick={() => {
-                if (t.id === 'all') {
-                  push({ dealScore: null, minValueScore: null, maxValueScore: null })
-                } else {
+                if (t.dealTier == null) {
                   push({
-                    dealScore: t.id,
+                    dealTier: null,
+                    dealScore: null,
                     minValueScore: null,
                     maxValueScore: null,
-                    dealTier: null,
+                  })
+                } else {
+                  push({
+                    dealTier: t.dealTier,
+                    dealScore: null,
+                    minValueScore: null,
+                    maxValueScore: null,
                   })
                 }
               }}
@@ -120,7 +144,7 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortB
           Hide &quot;Call for Price&quot;
         </label>
         <select
-          value={sortBy}
+          value={sortBy === 'deal_desc' ? 'flip_desc' : sortBy}
           onChange={(e) => {
             const v = e.target.value as SortOption
             if (onSortByChange) {
@@ -132,7 +156,8 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortB
           className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-xs text-[var(--fh-text)]"
           style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
         >
-          <option value="deal_desc">Best Deal</option>
+          <option value="flip_desc">Best flip opportunity</option>
+          <option value="flip_asc">Flip score (low first)</option>
           <option value="price_low">Price ↑</option>
           <option value="price_high">Price ↓</option>
           <option value="engine_life">Engine Life ↓</option>
@@ -158,6 +183,16 @@ export default function DealTierBar({ layoutMode, setLayoutMode, sortBy, onSortB
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
               <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label="Compact layout"
+            onClick={() => setLayoutMode('compact')}
+            className={`rounded-md border p-1.5 ${layoutMode === 'compact' ? 'bg-[var(--fh-bg4)] border-[var(--fh-border)]' : 'border-[var(--fh-border)] text-[var(--fh-text-dim)]'}`}
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+              <path d="M4 5h16v3H4V5zm0 6h10v3H4v-3zm0 6h16v3H4v-3z" />
             </svg>
           </button>
         </div>

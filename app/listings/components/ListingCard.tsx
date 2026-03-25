@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { getDealTierMeta } from '../../../lib/listings/dealTier'
+import { FLIP_TIER_CONFIG } from '../../../lib/scoring/flipTierConfig'
 import { formatMoney } from '../../../lib/listings/format'
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
@@ -19,7 +19,7 @@ type ListingCardProps = {
   engineBadgeText?: string
   engineBadgeTitle?: string
   engineBadgeClass?: string
-  dealTier?: string | null
+  flipTier?: string | null
   specRows: Array<[string, string]>
   onImageError: () => void
   /** Next/Image LCP hint for first screen of results (parent sets by index + layout). */
@@ -34,7 +34,7 @@ type ListingCardProps = {
     priceReductionAmount: number | null
     trueCost: number | null
     askingPrice: number | null
-    valueScore: number | null
+    flipScore: number | null
     engineScore: number | null
     avionicsScore: number | null
     qualityScore: number | null
@@ -257,7 +257,7 @@ export default function ListingCard({
   engineBadgeText,
   engineBadgeTitle,
   engineBadgeClass,
-  dealTier,
+  flipTier,
   specRows,
   onImageError,
   imagePriority = false,
@@ -265,16 +265,18 @@ export default function ListingCard({
   tileMeta,
 }: ListingCardProps) {
   const suppressTierForNoPrice = tileMeta != null && !tileMeta.hasDisclosedPrice
-  const dealTierMeta = suppressTierForNoPrice ? null : getDealTierMeta(dealTier)
-  const dealTierBadgeClass = dealTierMeta
-    ? dealTierMeta.tone === 'green'
-      ? 'border-[#16a34a] bg-[#16a34a1f] text-[#16a34a]'
-      : dealTierMeta.tone === 'blue'
-        ? 'border-[#2563eb] bg-[#2563eb1f] text-[#2563eb]'
-        : dealTierMeta.tone === 'amber'
-          ? 'border-[#d97706] bg-[#d977061f] text-[#d97706]'
-          : 'border-[#dc2626] bg-[#dc26261f] text-[#dc2626]'
-    : ''
+  const flipKey = String(flipTier ?? '').trim().toUpperCase()
+  const flipCfg = FLIP_TIER_CONFIG[flipKey]
+  const showFlipScore =
+    tileMeta != null &&
+    tileMeta.hasDisclosedPrice &&
+    typeof tileMeta.flipScore === 'number' &&
+    Number.isFinite(tileMeta.flipScore) &&
+    flipCfg != null
+  const rowCompactFlipChip =
+    showFlipScore &&
+    flipCfg &&
+    `shrink-0 rounded border px-1.5 py-0.5 font-semibold uppercase tracking-wide ${flipCfg.bg} ${flipCfg.text} ring-1 ${flipCfg.ring}`
 
   const [pillarBarsRevealed, setPillarBarsRevealed] = useState(false)
   useEffect(() => {
@@ -292,38 +294,33 @@ export default function ListingCard({
       m.priceReduced && typeof m.priceReductionAmount === 'number' && m.priceReductionAmount > 0
         ? m.priceReductionAmount
         : null
-    const exceptional =
-      m.hasDisclosedPrice && dealTierMeta?.key === 'EXCEPTIONAL_DEAL'
+    const exceptional = showFlipScore && flipKey === 'HOT'
     const ribbonUndisclosed = !m.hasDisclosedPrice
-    const tk = dealTierMeta?.key
     let ribbonClass =
       'border border-[rgba(122,138,158,0.35)] text-[var(--fh-text-dim)]'
     let scoreBadgeColor = 'var(--fh-text-muted)'
     if (ribbonUndisclosed) {
       ribbonClass = 'border border-[rgba(122,138,158,0.4)] text-[var(--fh-text-dim)]'
       scoreBadgeColor = 'var(--fh-text-muted)'
-    } else if (tk === 'EXCEPTIONAL_DEAL') {
-      ribbonClass = 'border border-[rgba(34,197,94,0.5)] text-[#22c55e]'
-      scoreBadgeColor = '#22c55e'
-    } else if (tk === 'GOOD_DEAL') {
-      ribbonClass = 'border border-[rgba(59,130,246,0.5)] text-[#3b82f6]'
-      scoreBadgeColor = '#3b82f6'
-    } else if (tk === 'FAIR_MARKET') {
-      ribbonClass = 'border border-[rgba(122,138,158,0.5)] text-[var(--fh-text-dim)]'
-      scoreBadgeColor = 'var(--fh-text-dim)'
-    } else if (tk === 'ABOVE_MARKET') {
-      ribbonClass = 'border border-[rgba(255,153,0,0.5)] text-[var(--fh-orange)]'
-      scoreBadgeColor = 'var(--fh-orange)'
-    } else if (tk === 'OVERPRICED') {
-      ribbonClass = 'border border-[rgba(239,68,68,0.5)] text-[#ef4444]'
-      scoreBadgeColor = '#ef4444'
+    } else if (showFlipScore && flipKey === 'HOT') {
+      ribbonClass = 'border border-[rgba(249,115,22,0.55)] text-[#f97316]'
+      scoreBadgeColor = '#f97316'
+    } else if (showFlipScore && flipKey === 'GOOD') {
+      ribbonClass = 'border border-[rgba(16,185,129,0.55)] text-[#10b981]'
+      scoreBadgeColor = '#10b981'
+    } else if (showFlipScore && flipKey === 'FAIR') {
+      ribbonClass = 'border border-[rgba(251,191,36,0.55)] text-[#fbbf24]'
+      scoreBadgeColor = '#fbbf24'
+    } else if (showFlipScore && flipKey === 'PASS') {
+      ribbonClass = 'border border-[rgba(148,163,184,0.55)] text-[#94a3b8]'
+      scoreBadgeColor = '#94a3b8'
     }
 
     const ribbonText = ribbonUndisclosed
       ? 'PRICE UNDISCLOSED'
-      : dealTierMeta
-        ? dealTierMeta.label.toUpperCase()
-        : 'DEAL'
+      : showFlipScore && flipCfg
+        ? flipCfg.label.toUpperCase()
+        : ''
 
     const locLine = `${locationText} — ${formatSourceLabel(m.sourceKey)}`
     const delayMs = Math.min(tileStaggerIndex, 6) * 50
@@ -331,7 +328,7 @@ export default function ListingCard({
 
     return (
       <article
-        className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[2px] hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(34,197,94,0.25)] hover:border-[rgba(34,197,94,0.5)]' : 'border-[var(--fh-border)]'}`}
+        className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[2px] hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(249,115,22,0.35)] hover:border-[rgba(249,115,22,0.55)]' : 'border-[var(--fh-border)]'}`}
         style={{ animationDelay: `${delayMs}ms` }}
       >
         <Link href={detailHref} className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]">
@@ -350,46 +347,60 @@ export default function ListingCard({
                 ✈
               </div>
             )}
-            <div
-              className={`absolute left-2.5 top-2.5 z-[2] flex max-w-[calc(100%-56px)] items-center gap-1.5 rounded-[20px] px-2.5 py-1 backdrop-blur-md ${ribbonClass}`}
-              style={{
-                fontFamily: 'var(--font-dm-sans), system-ui',
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-                backdropFilter: 'blur(8px)',
-                background: 'rgba(0,0,0,0.7)',
-              }}
-            >
-              <span className="inline-block h-[5px] w-[5px] shrink-0 rounded-full bg-current" />
-              <span className="truncate">{ribbonText}</span>
-            </div>
-            <div
-              className="absolute right-2.5 top-2.5 z-[2] flex h-10 w-10 items-center justify-center rounded-full border-2 border-current backdrop-blur-md"
-              style={{
-                color: scoreBadgeColor,
-                background: 'rgba(0,0,0,0.7)',
-                backdropFilter: 'blur(8px)',
-                fontFamily: 'var(--font-barlow-condensed), system-ui',
-                fontSize: ribbonUndisclosed ? 10 : 16,
-                fontWeight: 800,
-              }}
-              aria-label={
-                m.hasDisclosedPrice && typeof m.valueScore === 'number'
-                  ? `Deal score: ${Math.round(m.valueScore)} out of 100`
-                  : 'Deal score not available — price undisclosed'
-              }
-            >
-              {m.hasDisclosedPrice && typeof m.valueScore === 'number'
-                ? Math.round(m.valueScore)
-                : 'N/A'}
-            </div>
-            <span
-              className="absolute right-2.5 top-[54px] z-[2] text-[8px] text-[var(--fh-text-muted)]"
-              style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
-            >
-              OVERALL
-            </span>
+            {ribbonText ? (
+              <div
+                className={`absolute left-2.5 top-2.5 z-[2] flex max-w-[calc(100%-56px)] items-center gap-1.5 rounded-[20px] px-2.5 py-1 backdrop-blur-md ${ribbonClass}`}
+                style={{
+                  fontFamily: 'var(--font-dm-sans), system-ui',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  backdropFilter: 'blur(8px)',
+                  background: 'rgba(0,0,0,0.7)',
+                }}
+              >
+                <span className="inline-block h-[5px] w-[5px] shrink-0 rounded-full bg-current" />
+                <span className="truncate">{ribbonText}</span>
+              </div>
+            ) : null}
+            {showFlipScore ? (
+              <div
+                className="absolute right-2.5 top-2.5 z-[2] flex h-10 w-10 items-center justify-center rounded-full border-2 border-current backdrop-blur-md"
+                style={{
+                  color: scoreBadgeColor,
+                  background: 'rgba(0,0,0,0.7)',
+                  backdropFilter: 'blur(8px)',
+                  fontFamily: 'var(--font-barlow-condensed), system-ui',
+                  fontSize: 16,
+                  fontWeight: 800,
+                }}
+                aria-label={`Flip opportunity score: ${Math.round(m.flipScore!)} out of 100, tier: ${flipKey}`}
+              >
+                {Math.round(m.flipScore!)}
+              </div>
+            ) : ribbonUndisclosed ? (
+              <div
+                className="absolute right-2.5 top-2.5 z-[2] flex h-10 w-10 items-center justify-center rounded-full border-2 border-current backdrop-blur-md text-[10px] font-bold"
+                style={{
+                  color: scoreBadgeColor,
+                  background: 'rgba(0,0,0,0.7)',
+                  backdropFilter: 'blur(8px)',
+                  fontFamily: 'var(--font-barlow-condensed), system-ui',
+                  fontWeight: 800,
+                }}
+                aria-label="Flip score not available — price undisclosed"
+              >
+                N/A
+              </div>
+            ) : null}
+            {showFlipScore ? (
+              <span
+                className="absolute right-2.5 top-[54px] z-[2] text-[8px] text-[var(--fh-text-muted)]"
+                style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+              >
+                FLIP
+              </span>
+            ) : null}
             {dom != null ? (
               <div
                 className="absolute bottom-2.5 left-2.5 z-[2] rounded-md px-2 py-0.5 backdrop-blur-md"
@@ -627,12 +638,12 @@ export default function ListingCard({
                 <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">
                   Price undisclosed
                 </span>
-              ) : dealTierMeta ? (
+              ) : rowCompactFlipChip ? (
                 <span
-                  className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}
-                  aria-label={`Deal tier: ${dealTierMeta.label}`}
+                  className={`text-[10px] ${rowCompactFlipChip}`}
+                  aria-label={`Flip opportunity score: ${Math.round(tileMeta!.flipScore!)} out of 100, tier: ${flipKey}`}
                 >
-                  {dealTierMeta.label}
+                  {flipCfg!.label}
                 </span>
               ) : null}
               {engineBadgeText ? (
@@ -673,12 +684,12 @@ export default function ListingCard({
                   <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#9ca3af]">
                     Undisclosed
                   </span>
-                ) : dealTierMeta ? (
+                ) : rowCompactFlipChip ? (
                   <span
-                    className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}
-                    aria-label={`Deal tier: ${dealTierMeta.label}`}
+                    className={`text-[9px] ${rowCompactFlipChip}`}
+                    aria-label={`Flip opportunity score: ${Math.round(tileMeta!.flipScore!)} out of 100, tier: ${flipKey}`}
                   >
-                    {dealTierMeta.label}
+                    {flipCfg!.label}
                   </span>
                 ) : null}
                 {engineBadgeText ? (
@@ -718,9 +729,12 @@ export default function ListingCard({
           <span className="shrink-0 rounded border border-[rgba(122,138,158,0.45)] bg-[#141922] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">
             Price undisclosed
           </span>
-        ) : dealTierMeta ? (
-          <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dealTierBadgeClass}`}>
-            {dealTierMeta.label}
+        ) : rowCompactFlipChip ? (
+          <span
+            className={`text-[10px] ${rowCompactFlipChip}`}
+            aria-label={`Flip opportunity score: ${Math.round(tileMeta!.flipScore!)} out of 100, tier: ${flipKey}`}
+          >
+            {flipCfg!.label}
           </span>
         ) : null}
         {engineBadgeText ? (

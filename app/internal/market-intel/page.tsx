@@ -114,6 +114,8 @@ type ListingsResponse = {
     model: string | null;
     asking_price: number | null;
     value_score: number | null;
+    flip_score: number | null;
+    flip_tier: string | null;
     ttaf: number | null;
     smoh: number | null;
     avionics_value: number | null;
@@ -186,7 +188,7 @@ export default function MarketIntelPage() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [sort, setSort] = useState("value_score");
+  const [sort, setSort] = useState("flip_score");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [belowMedianOnly, setBelowMedianOnly] = useState(false);
@@ -283,7 +285,7 @@ export default function MarketIntelPage() {
     const buyThreshold = Math.min(nationalMedian * 0.75, 50000);
     return listings.rows
       .filter((row) => (row.asking_price ?? Number.POSITIVE_INFINITY) <= buyThreshold)
-      .sort((a, b) => (b.value_score ?? -1) - (a.value_score ?? -1))
+      .sort((a, b) => (b.flip_score ?? -1) - (a.flip_score ?? -1))
       .slice(0, 3);
   }, [listings?.rows, nationalMedian]);
 
@@ -647,7 +649,9 @@ export default function MarketIntelPage() {
                 <ul className="mt-1 space-y-1 text-xs">
                   {bestFlipCandidates.map((row) => (
                     <li key={row.id}>
-                      {row.year ?? "—"} {row.make ?? ""} {row.model ?? ""} - {formatCurrency(row.asking_price)} (Score {formatNumber(row.value_score)})
+                      {`${row.year ?? "—"} ${row.make ?? ""} ${row.model ?? ""}`.trim()} — {formatCurrency(row.asking_price)} (Flip{" "}
+                      {formatNumber(row.flip_score)}
+                      {row.flip_tier ? ` ${row.flip_tier}` : ""})
                     </li>
                   ))}
                   {bestFlipCandidates.length === 0 ? <li className="text-brand-muted">No below-threshold listings on current page.</li> : null}
@@ -687,7 +691,7 @@ export default function MarketIntelPage() {
 
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <SortButton sortKey="price" currentSort={sort} currentDirection={direction} onClick={(nextDirection) => { setSort("price"); setDirection(nextDirection); setPage(1); }} label="Price" />
-            <SortButton sortKey="value_score" currentSort={sort} currentDirection={direction} onClick={(nextDirection) => { setSort("value_score"); setDirection(nextDirection); setPage(1); }} label="Score" />
+            <SortButton sortKey="flip_score" currentSort={sort} currentDirection={direction} onClick={(nextDirection) => { setSort("flip_score"); setDirection(nextDirection); setPage(1); }} label="Flip score" />
             <SortButton sortKey="days_on_market" currentSort={sort} currentDirection={direction} onClick={(nextDirection) => { setSort("days_on_market"); setDirection(nextDirection); setPage(1); }} label="DOM" />
             <SortButton sortKey="ttaf" currentSort={sort} currentDirection={direction} onClick={(nextDirection) => { setSort("ttaf"); setDirection(nextDirection); setPage(1); }} label="TT" />
           </div>
@@ -710,7 +714,7 @@ export default function MarketIntelPage() {
                       <th className="px-2 py-2 text-left">Photo</th>
                       <th className="px-2 py-2 text-left">Year/Model</th>
                       <th className="px-2 py-2 text-left">Price</th>
-                      <th className="px-2 py-2 text-left">Value Score</th>
+                      <th className="px-2 py-2 text-left">Flip score</th>
                       <th className="px-2 py-2 text-left">TT</th>
                       <th className="px-2 py-2 text-left">SMOH</th>
                       <th className="px-2 py-2 text-left">Avionics Value</th>
@@ -733,7 +737,10 @@ export default function MarketIntelPage() {
                         </td>
                         <td className="px-2 py-2 font-semibold">{row.year ?? "—"} {row.make ?? ""} {row.model ?? ""}</td>
                         <td className="px-2 py-2">{formatCurrency(row.asking_price)}</td>
-                        <td className="px-2 py-2">{formatNumber(row.value_score)}</td>
+                        <td className="px-2 py-2">
+                          {formatNumber(row.flip_score)}
+                          {row.flip_tier ? <span className="ml-1 text-brand-muted">{row.flip_tier}</span> : null}
+                        </td>
                         <td className="px-2 py-2">{formatNumber(row.ttaf)}</td>
                         <td className="px-2 py-2">{formatNumber(row.smoh)}</td>
                         <td className="px-2 py-2">{formatCurrency(row.avionics_value)}</td>

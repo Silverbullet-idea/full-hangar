@@ -1,4 +1,4 @@
-const DEAL_TIERS = ['EXCEPTIONAL_DEAL', 'GOOD_DEAL', 'FAIR_MARKET', 'ABOVE_MARKET', 'OVERPRICED'] as const
+const DEAL_TIERS = ['HOT', 'GOOD', 'FAIR', 'PASS'] as const
 
 type DealsFiltersPanelProps = {
   maxPrice: number
@@ -77,7 +77,7 @@ export default function DealsFiltersPanel({
       </label>
 
       <fieldset className="rounded border border-brand-dark bg-[#171717] p-2">
-        <legend className="px-1 text-xs text-brand-muted">Deal tier</legend>
+        <legend className="px-1 text-xs text-brand-muted">Flip tier</legend>
         <div className="mt-1 flex flex-wrap gap-2">
           {DEAL_TIERS.map((tier) => (
             <label key={tier} className="inline-flex items-center gap-1">

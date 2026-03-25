@@ -21,6 +21,7 @@ type CompRow = {
   total_time_hours: number | null;
   engine_smoh: number | null;
   value_score: number | null;
+  flip_score: number | null;
   risk_level: string | null;
   listing_url: string | null;
   source: string | null;
@@ -28,6 +29,7 @@ type CompRow = {
   location_label: string | null;
   primary_image_url: string | null;
   deal_tier: string | null;
+  flip_tier: string | null;
 };
 
 type CompsPayload = {
@@ -61,13 +63,15 @@ type ScatterPoint = {
   yValue: number;
   yLabel: string;
   riskLevel: string;
-  valueScore: number;
+  /** Numeric score used for dot sizing (flip_score preferred). */
+  scoreForSize: number;
   listingUrl: string | null;
   isTarget: boolean;
   pointSize: number;
   locationLabel: string;
   imageUrl: string | null;
-  dealTier: string | null;
+  /** Flip tier (HOT/GOOD/FAIR/PASS) or legacy deal tier label for tooltip. */
+  tierLabel: string | null;
   daysOnMarket: number | null;
   hasEstimatedPrice?: boolean;
   hasEstimatedY?: boolean;
@@ -106,6 +110,22 @@ function formatYValue(value: number | null, metricLabel: string): string {
   if (typeof value !== "number") return "N/A";
   if (metricLabel === "Year") return String(Math.round(value));
   return formatHours(value);
+}
+
+function scoreForPointSize(row: CompRow): number {
+  const f = row.flip_score;
+  if (typeof f === "number" && Number.isFinite(f)) return f;
+  const v = row.value_score;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  return 50;
+}
+
+function tierTooltipLabel(row: CompRow): string | null {
+  const ft = (row.flip_tier ?? "").trim();
+  if (ft) return ft;
+  const dt = (row.deal_tier ?? "").trim();
+  if (!dt || /insufficient\s*data/i.test(dt)) return null;
+  return dt.replace(/_/g, " ");
 }
 
 function getRiskColor(risk: string | null): string {
@@ -195,22 +215,25 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       typeof value === "number" && (yMetric === "year" ? value >= 1900 : value > 0);
     const compPoints = payload.comps
       .filter((row) => hasValidPrice(row.price) && hasValidY(row[yMetric]))
-      .map((row) => ({
+      .map((row) => {
+        const sz = scoreForPointSize(row);
+        return {
         id: String(row.id ?? `${row.make}-${row.model}-${row.year}-${row.price}`),
         label: `${row.year ?? "?"} ${row.make ?? ""} ${row.model ?? ""}`.trim(),
         price: row.price as number,
         yValue: row[yMetric] as number,
         yLabel: yLabel,
         riskLevel: row.risk_level ?? "UNKNOWN",
-        valueScore: row.value_score ?? 50,
+        scoreForSize: sz,
         listingUrl: row.listing_url,
         isTarget: false,
-        pointSize: Math.max(7, Math.min(16, Math.round((row.value_score ?? 50) / 8))),
+        pointSize: Math.max(7, Math.min(16, Math.round(sz / 8))),
         locationLabel: row.location_label ?? "Location unavailable",
         imageUrl: row.primary_image_url ?? null,
-        dealTier: row.deal_tier ?? null,
+        tierLabel: tierTooltipLabel(row),
         daysOnMarket: row.days_on_market ?? null,
-      }));
+      };
+      });
 
     const target = payload.target;
     const compPrices = compPoints.map((point) => point.price).filter((value) => Number.isFinite(value) && value > 0);
@@ -233,6 +256,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
     const resolvedPrice = hasValidPrice(target.price) ? (target.price as number) : fallbackPrice;
     const resolvedY = hasValidY(target[yMetric]) ? (target[yMetric] as number) : fallbackY;
 
+    const targetSz = scoreForPointSize(target);
     const targetPoint: ScatterPoint = {
       id: String(target.id ?? "target"),
       label: "This Aircraft",
@@ -240,13 +264,13 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       yValue: resolvedY,
       yLabel: yLabel,
       riskLevel: target.risk_level ?? "UNKNOWN",
-      valueScore: target.value_score ?? 50,
+      scoreForSize: targetSz,
       listingUrl: target.listing_url,
       isTarget: true,
       pointSize: 18,
       locationLabel: target.location_label ?? "Location unavailable",
       imageUrl: target.primary_image_url ?? null,
-      dealTier: target.deal_tier ?? null,
+      tierLabel: tierTooltipLabel(target),
       daysOnMarket: target.days_on_market ?? null,
       hasEstimatedPrice: !hasValidPrice(target.price),
       hasEstimatedY: !hasValidY(target[yMetric]),
@@ -607,15 +631,16 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     {typeof activePoint.daysOnMarket === "number" ? (
                       <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
                     ) : null}
+                    <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`Flip score: ${Math.round(activePoint.scoreForSize)}`}</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                   <div style={{ display: "inline-flex", border: `1px solid ${getRiskColor(activePoint.riskLevel)}`, color: getRiskColor(activePoint.riskLevel), borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
                     {activePoint.riskLevel}
                   </div>
-                  {activePoint.dealTier && !/insufficient\s*data/i.test(activePoint.dealTier) ? (
+                  {activePoint.tierLabel ? (
                     <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                      {activePoint.dealTier.replace(/_/g, " ")}
+                      {activePoint.tierLabel}
                     </div>
                   ) : null}
                 </div>
@@ -659,15 +684,16 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                     {typeof activePoint.daysOnMarket === "number" ? (
                       <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`DOM: ${Math.round(activePoint.daysOnMarket)} days`}</div>
                     ) : null}
+                    <div style={{ color: readableBodyTextColor, fontSize: 12 }}>{`Flip score: ${Math.round(activePoint.scoreForSize)}`}</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                   <div style={{ display: "inline-flex", border: `1px solid ${getRiskColor(activePoint.riskLevel)}`, color: getRiskColor(activePoint.riskLevel), borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
                     {activePoint.riskLevel}
                   </div>
-                  {activePoint.dealTier && !/insufficient\s*data/i.test(activePoint.dealTier) ? (
+                  {activePoint.tierLabel ? (
                     <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                      {activePoint.dealTier.replace(/_/g, " ")}
+                      {activePoint.tierLabel}
                     </div>
                   ) : null}
                 </div>

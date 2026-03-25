@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
     const supabase = createPrivilegedServerClient();
     const topDealsResult = await supabase
       .from("aircraft_listings")
-      .select("id,year,make,model,asking_price,value_score,days_on_market,listing_url,url")
+      .select("id,year,make,model,asking_price,flip_score,flip_tier,days_on_market,listing_url,url")
       .eq("is_active", true)
-      .not("value_score", "is", null)
-      .order("value_score", { ascending: false })
+      .not("flip_score", "is", null)
+      .order("flip_score", { ascending: false })
       .limit(10);
 
     return NextResponse.json({

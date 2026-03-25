@@ -18,6 +18,7 @@ import {
   collectImageCandidates,
   deriveModelFamily,
   inferCategoriesForMakeModel,
+  normalizeListingPillarMin,
   normalizeTopMenuMakeLabel,
   normalizeSourceKey,
   type CategoryValue,
@@ -50,6 +51,8 @@ type LayoutMode = 'tiles' | 'rows' | 'compact'
 type SortOption =
   | 'price_low'
   | 'price_high'
+  | 'flip_desc'
+  | 'flip_asc'
   | 'deal_desc'
   | 'market_best'
   | 'market_worst'
@@ -64,7 +67,7 @@ type SortOption =
   | 'engine_life'
   | 'dom_asc'
   | 'recent_add'
-type DealTierFilter = 'all' | 'TOP_DEALS' | 'EXCEPTIONAL_DEAL' | 'GOOD_DEAL' | 'FAIR_MARKET' | 'ABOVE_MARKET' | 'OVERPRICED'
+type DealTierFilter = 'all' | 'TOP_DEALS' | 'HOT' | 'GOOD' | 'FAIR' | 'PASS'
 type PriceStatusFilter = 'all' | 'priced'
 type MaintenanceBandFilter = 'any' | 'light' | 'moderate' | 'heavy' | 'severe'
 type EngineTimeFilter = 'any' | 'fresh' | 'mid' | 'approaching' | 'hasHours'
@@ -158,10 +161,6 @@ type AppliedListingsUrlSnapshot = {
   dealPattern: string[]
 }
 
-function clampPillarForUrl(n: number) {
-  return Math.min(100, Math.max(0, Math.floor(Number(n) || 0)))
-}
-
 function parseCategoryFromSearchParams(sp: ReadonlyURLSearchParams): CategoryValue {
   const value = (sp.get('category') ?? '').trim().toLowerCase()
   if (!value) return null
@@ -207,7 +206,7 @@ function buildAppliedListingsSearchParams(
 
   if (s.page > 1) params.set('page', String(s.page))
   if (s.pageSize !== 24) params.set('pageSize', String(s.pageSize))
-  if (s.sortBy !== 'deal_desc') params.set('sortBy', s.sortBy)
+  if (s.sortBy !== 'flip_desc' && s.sortBy !== 'deal_desc') params.set('sortBy', s.sortBy)
 
   const q = s.q.trim()
   if (q) params.set('q', q)
@@ -244,10 +243,10 @@ function buildAppliedListingsSearchParams(
 
   const loc = s.location.trim()
   if (loc) params.set('location', loc)
-  const pe = clampPillarForUrl(s.pillarMinEngine)
-  const pa = clampPillarForUrl(s.pillarMinAvionics)
-  const pq = clampPillarForUrl(s.pillarMinQuality)
-  const pm = clampPillarForUrl(s.pillarMinMkt)
+  const pe = normalizeListingPillarMin(s.pillarMinEngine)
+  const pa = normalizeListingPillarMin(s.pillarMinAvionics)
+  const pq = normalizeListingPillarMin(s.pillarMinQuality)
+  const pm = normalizeListingPillarMin(s.pillarMinMkt)
   if (pe > 0) params.set('minEngine', String(pe))
   if (pa > 0) params.set('minAvionics', String(pa))
   if (pq > 0) params.set('minQuality', String(pq))
@@ -292,7 +291,7 @@ export default function ListingsClient({
   initialSearchTerm = '',
   initialCategoryFilter = null,
   initialDealFilter = 'all',
-  initialSortBy = 'deal_desc',
+  initialSortBy = 'flip_desc',
   initialMakeFilter = 'all',
   initialModelFilter = '',
   initialSubModelFilter = '',
@@ -329,7 +328,8 @@ export default function ListingsClient({
   const router = useRouter()
   const searchParams = useSearchParams()
   const searchParamsKey = searchParams.toString()
-  const canApplySavedSort = initialSortBy === 'deal_desc' && initialDealFilter === 'all'
+  const canApplySavedSort =
+    (initialSortBy === 'flip_desc' || initialSortBy === 'deal_desc') && initialDealFilter === 'all'
   const [listings, setListings] = useState<any[]>(Array.isArray(initialListings) ? initialListings : [])
   const [totalFiltered, setTotalFiltered] = useState(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
@@ -376,15 +376,16 @@ export default function ListingsClient({
   const [appliedEngineTime, setAppliedEngineTime] = useState<EngineTimeFilter>(initialEngineTime)
   const [appliedTrueCostMin, setAppliedTrueCostMin] = useState(Math.max(0, initialTrueCostMin))
   const [appliedTrueCostMax, setAppliedTrueCostMax] = useState(Math.max(0, initialTrueCostMax))
-  const clampPillar = (n: number) => Math.min(100, Math.max(0, Math.floor(Number(n) || 0)))
-  const [pillarMinEngine, setPillarMinEngine] = useState(() => clampPillar(initialMinEngine))
-  const [appliedPillarMinEngine, setAppliedPillarMinEngine] = useState(() => clampPillar(initialMinEngine))
-  const [pillarMinAvionics, setPillarMinAvionics] = useState(() => clampPillar(initialMinAvionics))
-  const [appliedPillarMinAvionics, setAppliedPillarMinAvionics] = useState(() => clampPillar(initialMinAvionics))
-  const [pillarMinQuality, setPillarMinQuality] = useState(() => clampPillar(initialMinQuality))
-  const [appliedPillarMinQuality, setAppliedPillarMinQuality] = useState(() => clampPillar(initialMinQuality))
-  const [pillarMinMkt, setPillarMinMkt] = useState(() => clampPillar(initialMinMktValue))
-  const [appliedPillarMinMkt, setAppliedPillarMinMkt] = useState(() => clampPillar(initialMinMktValue))
+  const [pillarMinEngine, setPillarMinEngine] = useState(() => normalizeListingPillarMin(initialMinEngine))
+  const [appliedPillarMinEngine, setAppliedPillarMinEngine] = useState(() => normalizeListingPillarMin(initialMinEngine))
+  const [pillarMinAvionics, setPillarMinAvionics] = useState(() => normalizeListingPillarMin(initialMinAvionics))
+  const [appliedPillarMinAvionics, setAppliedPillarMinAvionics] = useState(() =>
+    normalizeListingPillarMin(initialMinAvionics)
+  )
+  const [pillarMinQuality, setPillarMinQuality] = useState(() => normalizeListingPillarMin(initialMinQuality))
+  const [appliedPillarMinQuality, setAppliedPillarMinQuality] = useState(() => normalizeListingPillarMin(initialMinQuality))
+  const [pillarMinMkt, setPillarMinMkt] = useState(() => normalizeListingPillarMin(initialMinMktValue))
+  const [appliedPillarMinMkt, setAppliedPillarMinMkt] = useState(() => normalizeListingPillarMin(initialMinMktValue))
   const [locationDraft, setLocationDraft] = useState(initialLocation)
   const [appliedLocation, setAppliedLocation] = useState(initialLocation)
   const [engineLifeDraft, setEngineLifeDraft] = useState(() =>
@@ -507,6 +508,8 @@ export default function ListingsClient({
       const valid: SortOption[] = [
         'price_low',
         'price_high',
+        'flip_desc',
+        'flip_asc',
         'deal_desc',
         'market_best',
         'market_worst',
@@ -593,7 +596,9 @@ export default function ListingsClient({
 
   useEffect(() => {
     // Keep UI state in sync when URL/search params change within /listings.
-    hasSkippedInitialFetch.current = false
+    // Do not reset `hasSkippedInitialFetch`: that ref means "SSR initial load handled" so the
+    // listings fetch effect only skips once on mount; resetting it here skipped client `/api/listings`
+    // fetches after every soft navigation and left stale/empty SSR payloads visible (filters looked broken).
     setListings(Array.isArray(initialListings) ? initialListings : [])
     setTotalFiltered(Number.isFinite(initialTotalFiltered) ? initialTotalFiltered : 0)
     setFilterOptions((prev) => {
@@ -647,14 +652,14 @@ export default function ListingsClient({
     setAppliedEngineTime(initialEngineTime)
     setAppliedTrueCostMin(Math.max(0, initialTrueCostMin))
     setAppliedTrueCostMax(Math.max(0, initialTrueCostMax))
-    setPillarMinEngine(clampPillar(initialMinEngine))
-    setAppliedPillarMinEngine(clampPillar(initialMinEngine))
-    setPillarMinAvionics(clampPillar(initialMinAvionics))
-    setAppliedPillarMinAvionics(clampPillar(initialMinAvionics))
-    setPillarMinQuality(clampPillar(initialMinQuality))
-    setAppliedPillarMinQuality(clampPillar(initialMinQuality))
-    setPillarMinMkt(clampPillar(initialMinMktValue))
-    setAppliedPillarMinMkt(clampPillar(initialMinMktValue))
+    setPillarMinEngine(normalizeListingPillarMin(initialMinEngine))
+    setAppliedPillarMinEngine(normalizeListingPillarMin(initialMinEngine))
+    setPillarMinAvionics(normalizeListingPillarMin(initialMinAvionics))
+    setAppliedPillarMinAvionics(normalizeListingPillarMin(initialMinAvionics))
+    setPillarMinQuality(normalizeListingPillarMin(initialMinQuality))
+    setAppliedPillarMinQuality(normalizeListingPillarMin(initialMinQuality))
+    setPillarMinMkt(normalizeListingPillarMin(initialMinMktValue))
+    setAppliedPillarMinMkt(normalizeListingPillarMin(initialMinMktValue))
     setLocationDraft(initialLocation)
     setAppliedLocation(initialLocation)
     const el = [...new Set(parseListingFacetTokens(initialEngineLife))].sort()
@@ -763,7 +768,7 @@ export default function ListingsClient({
       setLayoutMode(savedLayout)
     }
     const validSorts: SortOption[] = [
-      'price_low', 'price_high', 'deal_desc',
+      'price_low', 'price_high', 'flip_desc', 'flip_asc', 'deal_desc',
       'market_best', 'market_worst', 'risk_low', 'risk_high',
       'deferred_low', 'deferred_high', 'tt_low', 'tt_high', 'year_newest', 'year_oldest', 'engine_life',
       'dom_asc', 'recent_add',
@@ -903,6 +908,8 @@ export default function ListingsClient({
     const valid: SortOption[] = [
       'price_low',
       'price_high',
+      'flip_desc',
+      'flip_asc',
       'deal_desc',
       'market_best',
       'market_worst',
@@ -918,7 +925,8 @@ export default function ListingsClient({
       'dom_asc',
       'recent_add',
     ]
-    if (valid.includes(s as SortOption)) setSortBy(s as SortOption)
+    const normalized = s === 'deal_desc' ? 'flip_desc' : s
+    if (valid.includes(normalized as SortOption)) setSortBy(normalized as SortOption)
   }, [searchParamsKey, searchParams])
 
   useEffect(() => {
@@ -1031,6 +1039,43 @@ export default function ListingsClient({
         const mv = urlParams.get('maxValueScore')
         if (mv) params.set('maxValueScore', mv)
 
+        // If React state missed URL-driven filters (hydration/streaming), keep the address bar as source of truth.
+        const listingKeysFromAddressBar = [
+          'yearMin',
+          'yearMax',
+          'totalTimeMin',
+          'totalTimeMax',
+          'minEngine',
+          'minAvionics',
+          'minQuality',
+          'minValue',
+          'minValueScore',
+          'maxValueScore',
+          'engineLife',
+          'avionics',
+          'dealPattern',
+          'maintenanceBand',
+          'engineTime',
+          'trueCostMin',
+          'trueCostMax',
+          'minPrice',
+          'maxPrice',
+          'priceStatus',
+          'q',
+          'make',
+          'modelFamily',
+          'subModel',
+          'source',
+          'risk',
+          'dealTier',
+          'category',
+          'location',
+        ] as const
+        for (const key of listingKeysFromAddressBar) {
+          const v = urlParams.get(key)
+          if (v != null && v !== '' && !params.has(key)) params.set(key, v)
+        }
+
         const response = await fetch(`/api/listings?${params.toString()}`, {
           signal: controller.signal,
           cache: 'no-store',
@@ -1098,7 +1143,7 @@ export default function ListingsClient({
     if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
     if (categoryFilter) params.set('category', categoryFilter)
     if (dealFilter !== 'all') params.set('dealTier', dealFilter)
-    if (sortBy !== 'deal_desc') params.set('sortBy', sortBy)
+    if (sortBy !== 'flip_desc' && sortBy !== 'deal_desc') params.set('sortBy', sortBy)
     if (appliedMakeFilter !== 'all') params.set('make', appliedMakeFilter)
     if (appliedModelFilter.trim()) params.set('modelFamily', appliedModelFilter.trim())
     if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
@@ -1170,7 +1215,7 @@ export default function ListingsClient({
     if (appliedSearchTerm.trim()) params.set('q', appliedSearchTerm.trim())
     if (categoryFilter) params.set('category', categoryFilter)
     if (dealFilter !== 'all') params.set('dealTier', dealFilter)
-    if (sortBy !== 'deal_desc') params.set('sortBy', sortBy)
+    if (sortBy !== 'flip_desc' && sortBy !== 'deal_desc') params.set('sortBy', sortBy)
     if (appliedMakeFilter !== 'all') params.set('make', appliedMakeFilter)
     if (appliedModelFilter.trim()) params.set('modelFamily', appliedModelFilter.trim())
     if (appliedSubModelFilter.trim()) params.set('subModel', appliedSubModelFilter.trim())
@@ -1266,7 +1311,7 @@ export default function ListingsClient({
         : 'N/A'
     const ownershipBadgeText = isFractional ? 'Fractional' : undefined
     const locationText = l.location_label ?? 'Location unavailable'
-    const dealRatingText = formatScore(typeof l.deal_rating === 'number' ? l.deal_rating : null)
+    const flipScoreText = formatScore(typeof l.flip_score === 'number' ? l.flip_score : null)
     const evPctLifeRemainingRaw = typeof l.ev_pct_life_remaining === 'number' ? l.ev_pct_life_remaining : null
     const evHoursRemainingRaw = typeof l.ev_hours_remaining === 'number' ? l.ev_hours_remaining : null
     const evHoursSmohRaw =
@@ -1329,7 +1374,7 @@ export default function ListingsClient({
       ['N-Number', tailText],
       ['Price', priceText],
       ...(isFractional ? [['Share Price', sharePriceText] as [string, string]] : []),
-      ['Deal Rating', dealRatingText],
+      ['Flip score', flipScoreText],
     ]
 
     const askingNum = typeof l.asking_price === 'number' ? l.asking_price : null
@@ -1346,7 +1391,7 @@ export default function ListingsClient({
       priceReductionAmount: typeof l.price_reduction_amount === 'number' ? l.price_reduction_amount : null,
       trueCost: typeof l.true_cost === 'number' ? l.true_cost : null,
       askingPrice: hasDisclosedPrice ? askingNum : null,
-      valueScore: typeof l.value_score === 'number' ? l.value_score : null,
+      flipScore: typeof l.flip_score === 'number' ? l.flip_score : null,
       engineScore: typeof l.engine_score === 'number' ? l.engine_score : null,
       avionicsScore: typeof l.avionics_score === 'number' ? l.avionics_score : null,
       qualityScore: typeof l.condition_score === 'number' ? l.condition_score : null,
@@ -1376,7 +1421,7 @@ export default function ListingsClient({
         engineBadgeText={mode === 'compact' ? compactEngineBadgeText : fullEngineBadgeText}
         engineBadgeTitle={fullEngineBadgeText}
         engineBadgeClass={hasEngineBadgeData ? badgeBaseClass : undefined}
-        dealTier={typeof l.deal_tier === 'string' ? l.deal_tier : null}
+        flipTier={typeof l.flip_tier === 'string' ? l.flip_tier : null}
         specRows={specRows}
         tileStaggerIndex={listingIndex}
         tileMeta={tileMeta}
@@ -1404,8 +1449,8 @@ export default function ListingsClient({
         />
         <PillarLegendBar />
       </Suspense>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="hidden md:block md:sticky md:top-[120px] md:h-[calc(100vh-120px)] md:max-h-[calc(100vh-120px)] md:overflow-y-auto md:border-r md:border-[var(--fh-border)] md:bg-[var(--fh-bg2)] md:py-2.5 md:pr-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+        <div className="hidden min-w-0 overflow-x-hidden md:block md:sticky md:top-[120px] md:self-start md:border-r md:border-[var(--fh-border)] md:bg-[var(--fh-bg2)] md:py-2.5 md:pr-2">
           <ListingsFiltersSidebar
             pillarMinEngine={pillarMinEngine}
             setPillarMinEngine={setPillarMinEngine}
@@ -1415,12 +1460,8 @@ export default function ListingsClient({
             setPillarMinQuality={setPillarMinQuality}
             pillarMinMkt={pillarMinMkt}
             setPillarMinMkt={setPillarMinMkt}
-            locationDraft={locationDraft}
-            setLocationDraft={setLocationDraft}
             engineLifeTokens={engineLifeDraft}
             setEngineLifeTokens={setEngineLifeDraft}
-            avionicsTokens={avionicsDraft}
-            setAvionicsTokens={setAvionicsDraft}
             dealPatternTokens={dealPatternDraft}
             setDealPatternTokens={setDealPatternDraft}
             makeFilter={makeFilter}
@@ -1429,8 +1470,6 @@ export default function ListingsClient({
             setModelFilter={setModelFilter}
             subModelFilter={subModelFilter}
             setSubModelFilter={setSubModelFilter}
-            sourceFilter={sourceFilter}
-            setSourceFilter={setSourceFilter}
             dealFilter={dealFilter}
             setDealFilter={setDealFilter}
             priceStatus={priceStatus}
@@ -1504,10 +1543,10 @@ export default function ListingsClient({
               setAppliedEngineTime(engineTime)
               setAppliedTrueCostMin(trueCostMin)
               setAppliedTrueCostMax(trueCostMax)
-              setAppliedPillarMinEngine(clampPillar(pillarMinEngine))
-              setAppliedPillarMinAvionics(clampPillar(pillarMinAvionics))
-              setAppliedPillarMinQuality(clampPillar(pillarMinQuality))
-              setAppliedPillarMinMkt(clampPillar(pillarMinMkt))
+              setAppliedPillarMinEngine(normalizeListingPillarMin(pillarMinEngine))
+              setAppliedPillarMinAvionics(normalizeListingPillarMin(pillarMinAvionics))
+              setAppliedPillarMinQuality(normalizeListingPillarMin(pillarMinQuality))
+              setAppliedPillarMinMkt(normalizeListingPillarMin(pillarMinMkt))
               setAppliedLocation(locationDraft.trim())
               setAppliedEngineLife([...new Set(engineLifeDraft)].sort())
               setAppliedAvionics([...new Set(avionicsDraft)].sort())
@@ -1533,10 +1572,10 @@ export default function ListingsClient({
                   engineLife: [...new Set(engineLifeDraft)].sort(),
                   trueCostMin,
                   trueCostMax,
-                  pillarMinEngine: clampPillar(pillarMinEngine),
-                  pillarMinAvionics: clampPillar(pillarMinAvionics),
-                  pillarMinQuality: clampPillar(pillarMinQuality),
-                  pillarMinMkt: clampPillar(pillarMinMkt),
+                  pillarMinEngine: normalizeListingPillarMin(pillarMinEngine),
+                  pillarMinAvionics: normalizeListingPillarMin(pillarMinAvionics),
+                  pillarMinQuality: normalizeListingPillarMin(pillarMinQuality),
+                  pillarMinMkt: normalizeListingPillarMin(pillarMinMkt),
                   location: locationDraft.trim(),
                   avionics: [...new Set(avionicsDraft)].sort(),
                   dealPattern: [...new Set(dealPatternDraft)].sort(),
@@ -1571,10 +1610,10 @@ export default function ListingsClient({
             setAppliedEngineTime(engineTime)
             setAppliedTrueCostMin(trueCostMin)
             setAppliedTrueCostMax(trueCostMax)
-            setAppliedPillarMinEngine(clampPillar(pillarMinEngine))
-            setAppliedPillarMinAvionics(clampPillar(pillarMinAvionics))
-            setAppliedPillarMinQuality(clampPillar(pillarMinQuality))
-            setAppliedPillarMinMkt(clampPillar(pillarMinMkt))
+            setAppliedPillarMinEngine(normalizeListingPillarMin(pillarMinEngine))
+            setAppliedPillarMinAvionics(normalizeListingPillarMin(pillarMinAvionics))
+            setAppliedPillarMinQuality(normalizeListingPillarMin(pillarMinQuality))
+            setAppliedPillarMinMkt(normalizeListingPillarMin(pillarMinMkt))
             setAppliedLocation(locationDraft.trim())
             setAppliedEngineLife([...new Set(engineLifeDraft)].sort())
             setAppliedAvionics([...new Set(avionicsDraft)].sort())
@@ -1600,10 +1639,10 @@ export default function ListingsClient({
                 engineLife: [...new Set(engineLifeDraft)].sort(),
                 trueCostMin,
                 trueCostMax,
-                pillarMinEngine: clampPillar(pillarMinEngine),
-                pillarMinAvionics: clampPillar(pillarMinAvionics),
-                pillarMinQuality: clampPillar(pillarMinQuality),
-                pillarMinMkt: clampPillar(pillarMinMkt),
+                pillarMinEngine: normalizeListingPillarMin(pillarMinEngine),
+                pillarMinAvionics: normalizeListingPillarMin(pillarMinAvionics),
+                pillarMinQuality: normalizeListingPillarMin(pillarMinQuality),
+                pillarMinMkt: normalizeListingPillarMin(pillarMinMkt),
                 location: locationDraft.trim(),
                 avionics: [...new Set(avionicsDraft)].sort(),
                 dealPattern: [...new Set(dealPatternDraft)].sort(),
@@ -1711,12 +1750,8 @@ export default function ListingsClient({
             setPillarMinQuality={setPillarMinQuality}
             pillarMinMkt={pillarMinMkt}
             setPillarMinMkt={setPillarMinMkt}
-            locationDraft={locationDraft}
-            setLocationDraft={setLocationDraft}
             engineLifeTokens={engineLifeDraft}
             setEngineLifeTokens={setEngineLifeDraft}
-            avionicsTokens={avionicsDraft}
-            setAvionicsTokens={setAvionicsDraft}
             dealPatternTokens={dealPatternDraft}
             setDealPatternTokens={setDealPatternDraft}
             makeFilter={makeFilter}
@@ -1725,8 +1760,6 @@ export default function ListingsClient({
             setModelFilter={setModelFilter}
             subModelFilter={subModelFilter}
             setSubModelFilter={setSubModelFilter}
-            sourceFilter={sourceFilter}
-            setSourceFilter={setSourceFilter}
             dealFilter={dealFilter}
             setDealFilter={setDealFilter}
             priceStatus={priceStatus}
@@ -1800,10 +1833,10 @@ export default function ListingsClient({
               setAppliedEngineTime(engineTime)
               setAppliedTrueCostMin(trueCostMin)
               setAppliedTrueCostMax(trueCostMax)
-              setAppliedPillarMinEngine(clampPillar(pillarMinEngine))
-              setAppliedPillarMinAvionics(clampPillar(pillarMinAvionics))
-              setAppliedPillarMinQuality(clampPillar(pillarMinQuality))
-              setAppliedPillarMinMkt(clampPillar(pillarMinMkt))
+              setAppliedPillarMinEngine(normalizeListingPillarMin(pillarMinEngine))
+              setAppliedPillarMinAvionics(normalizeListingPillarMin(pillarMinAvionics))
+              setAppliedPillarMinQuality(normalizeListingPillarMin(pillarMinQuality))
+              setAppliedPillarMinMkt(normalizeListingPillarMin(pillarMinMkt))
               setAppliedLocation(locationDraft.trim())
               setAppliedEngineLife([...new Set(engineLifeDraft)].sort())
               setAppliedAvionics([...new Set(avionicsDraft)].sort())
@@ -1829,10 +1862,10 @@ export default function ListingsClient({
                   engineLife: [...new Set(engineLifeDraft)].sort(),
                   trueCostMin,
                   trueCostMax,
-                  pillarMinEngine: clampPillar(pillarMinEngine),
-                  pillarMinAvionics: clampPillar(pillarMinAvionics),
-                  pillarMinQuality: clampPillar(pillarMinQuality),
-                  pillarMinMkt: clampPillar(pillarMinMkt),
+                  pillarMinEngine: normalizeListingPillarMin(pillarMinEngine),
+                  pillarMinAvionics: normalizeListingPillarMin(pillarMinAvionics),
+                  pillarMinQuality: normalizeListingPillarMin(pillarMinQuality),
+                  pillarMinMkt: normalizeListingPillarMin(pillarMinMkt),
                   location: locationDraft.trim(),
                   avionics: [...new Set(avionicsDraft)].sort(),
                   dealPattern: [...new Set(dealPatternDraft)].sort(),
