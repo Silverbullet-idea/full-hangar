@@ -6,7 +6,6 @@ import HomeHeroSection from "./components/home/HomeHeroSection"
 import HomeScoreBreakdown from "./components/home/HomeScoreBreakdown"
 import HomeSocialProofFaq from "./components/home/HomeSocialProofFaq"
 import HomeStatsBar from "./components/home/HomeStatsBar"
-import HowItWorks from "./components/home/HowItWorks"
 import MarketInfographics from "./components/home/MarketInfographics"
 import TickerBar from "./components/home/TickerBar"
 import { CATEGORIES } from "./listings/components/listingsClientUtils"
@@ -54,18 +53,15 @@ export default function HomePage() {
         <MarketInfographics />
       </div>
       <div className="home-reveal home-r5">
-        <HowItWorks />
-      </div>
-      <div className="home-reveal home-r6">
         <DealPatterns />
       </div>
-      <div className="home-reveal home-r7">
+      <div className="home-reveal home-r6">
         <HomeScoreBreakdown />
       </div>
-      <div className="home-reveal home-r8">
+      <div className="home-reveal home-r7">
         <HomeSocialProofFaq />
       </div>
-      <div className="home-reveal home-r9">
+      <div className="home-reveal home-r8">
         <HomeFinalCta />
       </div>
 
@@ -85,7 +81,6 @@ export default function HomePage() {
         .home-r6 { animation-delay: 370ms; }
         .home-r7 { animation-delay: 440ms; }
         .home-r8 { animation-delay: 510ms; }
-        .home-r9 { animation-delay: 580ms; }
         @keyframes homeFadeUp {
           to {
             opacity: 1;

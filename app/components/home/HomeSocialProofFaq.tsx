@@ -18,19 +18,49 @@ const TESTIMONIALS = [
 
 const FAQ_ITEMS = [
   {
-    question: "Where do listing scores come from?",
+    question: "Where do Flip Scores come from?",
     answer:
-      "Scores combine market opportunity, condition, and execution readiness using listing data, comp data, and aircraft detail signals.",
+      "Flip Score blends four pillars — pricing edge vs. comps, airworthiness, improvement headroom (avionics/condition gap), and exit liquidity (model demand + days on market) — using listing data, comp bands, and enrichment signals.",
   },
   {
-    question: "Can I see why a score was high or low?",
+    question: "Can I see why a Flip Score was high or low?",
     answer:
-      "Yes. Each detail page includes a clear factor breakdown so you can inspect the strongest positive and negative drivers.",
+      "Yes. Each listing detail page shows pillar points (out of 35 / 20 / 30 / 15) so you can see exactly what helped or hurt the total.",
   },
   {
     question: "Do you account for missing or noisy data?",
     answer:
       "Yes. Data Confidence and Pricing Confidence are surfaced so you can judge signal quality before making decisions.",
+  },
+  {
+    question: "What should I verify before I buy a flip candidate?",
+    answer:
+      "Treat Flip Score as a triage layer, not a pre-buy report. Plan on logbook review, AD compliance, title/lien checks, compression and corrosion hotspots, and a qualified pre-purchase inspection (PPI) — especially when airworthiness or pricing confidence is only moderate.",
+  },
+  {
+    question: "Does a high Flip Score mean I will profit?",
+    answer:
+      "No. Scores highlight relative opportunity and risk from listing-side data; your actual outcome depends on purchase price, surprise maintenance, how long you hold the asset, financing cost, and exit timing. Use scores to prioritize leads, then model the deal explicitly (for example in Deal Desk) before you commit.",
+  },
+  {
+    question: "Which upgrades usually matter most for resale?",
+    answer:
+      "Buyers often discount dated panels and tired interiors, so avionics and cosmetics can move resale — but not dollar-for-dollar. The improvement-room pillar is a guide to headroom: already-modern glass may mean less upgrade upside than a steam-gauge airplane priced like glass. Match upgrades to what that model’s buyers expect, not your personal dream panel.",
+  },
+  {
+    question: "How should I think about holding costs on a flip?",
+    answer:
+      "Hangar or tiedown, insurance, any debt service, and opportunity cost of capital all eat margin on a short hold. Narrow pricing edge gets risky if the airplane sits; pair liquidity signals with a realistic carrying-cost budget and a target exit window before you offer.",
+  },
+  {
+    question: "Is it better to chase cheap airframes or strong engines?",
+    answer:
+      "Both paths work if the math works. Cheap airframes with heavy mechanical risk need margin for the unknown; strong engines at full retail need a clear resale story. Watch pricing edge vs. airworthiness together — a great price on paper is less attractive if overhaul or calendar items are lurking.",
+  },
+  {
+    question: "How long does a typical flip take?",
+    answer:
+      "There is no single timeline: annuals, squawks, paint or avionics shop queues, buyer financing, and seasonality all move the clock. Use exit liquidity and days-on-market context as a sanity check, then underwrite a conservative hold period in your own model rather than assuming a 30-day turn.",
   },
 ]
 
@@ -51,7 +81,9 @@ export default function HomeSocialProofFaq() {
       </div>
       <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-7">
         <h2 className="text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">Frequently asked questions</h2>
-        <p className="mt-3 text-sm text-brand-muted">Quick answers on scoring, confidence, and decision support.</p>
+        <p className="mt-3 text-sm text-brand-muted">
+          Quick answers on scoring, flipping workflow, confidence, and decision support.
+        </p>
         <div className="mt-5 space-y-3">
           {FAQ_ITEMS.map((item) => (
             <details key={item.question} className="home-faq-item group rounded-xl border border-brand-dark p-4 transition hover:border-[#55657f]">

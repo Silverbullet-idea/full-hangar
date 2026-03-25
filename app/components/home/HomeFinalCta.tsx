@@ -9,7 +9,7 @@ export default function HomeFinalCta() {
             Find your next aircraft deal.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-white/70">
-            Start with live listings scored and ranked by deal quality. Every factor is transparent. Every signal is explained. No guessing.
+            Start with live listings scored and ranked by Flip Score. Every factor is transparent. Every signal is explained. No guessing.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
