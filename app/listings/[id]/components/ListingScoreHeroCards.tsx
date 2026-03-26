@@ -1,81 +1,100 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FLIP_TIER_CONFIG } from "../../../../lib/scoring/flipTierConfig"
-import { formatMoney, formatScore } from "../../../../lib/listings/format"
-import { safeDisplay } from "./detailUtils"
+
+import { getFlipPillarNarrative, type FlipPillarId } from "@/lib/listings/flipPillarNarrative"
 
 type FlipExplanation = {
-  p1_pricing_edge?: { pts?: number; max?: number }
-  p2_airworthiness?: { pts?: number; max?: number }
-  p3_improvement_room?: { pts?: number; max?: number }
-  p4_exit_liquidity?: { pts?: number; max?: number }
+  p1_pricing_edge?: { pts?: number; max?: number; basis?: string }
+  p2_airworthiness?: { pts?: number; max?: number; basis?: string }
+  p3_improvement_room?: { pts?: number; max?: number; basis?: string }
+  p4_exit_liquidity?: { pts?: number; max?: number; basis?: string }
+  raw_total?: number
+  risk_cap_applied?: boolean
+  suppressed?: string
+  error?: string
 } | null
 
 type ListingScoreHeroCardsProps = {
-  flipTier: string | null
-  flipScore: number | null
   flipExplanation: FlipExplanation
-  intelligenceVersion: string | null
-  askingPrice: number | null
-  priceReduced: boolean
-  priceReductionAmount: number | null
-  daysOnMarket: number | null
-  marketMedianLabel: string | null
-  trueCostEstimate: number | null
-  deferredMaintenanceTotal: number
 }
 
 function FlipPillarRow({
+  pillarId,
   dotClass,
   barClass,
   label,
   pts,
   max,
+  basis,
   animate,
 }: {
+  pillarId: FlipPillarId
   dotClass: string
   barClass: string
   label: string
   pts: number | null
   max: number
+  basis?: string
   animate: boolean
 }) {
   const safePts = typeof pts === "number" && Number.isFinite(pts) ? pts : 0
   const pct = max > 0 ? Math.max(0, Math.min(100, (safePts / max) * 100)) : 0
   const width = animate ? pct : 0
   const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
+  const narrative = getFlipPillarNarrative(pillarId, pts, max, basis)
 
   return (
-    <div className="rounded-lg border border-[var(--fh-border,var(--brand-dark))] bg-[var(--surface-muted)] px-3 py-2 [data-theme=light]:border-slate-200 [data-theme=light]:bg-slate-100">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
-          <span
-            className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--fh-text-muted)]"
-            style={barlow}
-          >
-            {label}
-          </span>
+    <details className="flip-pillar-details group rounded-lg border border-[var(--fh-border,var(--brand-dark))] bg-[var(--surface-muted)] [data-theme=light]:border-slate-200 [data-theme=light]:bg-slate-100">
+      <summary className="block cursor-pointer list-none rounded-lg px-3 py-2 outline-none [&::-webkit-details-marker]:hidden">
+        <div className="flex min-h-[44px] items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
+            <span
+              className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--fh-text-muted)]"
+              style={barlow}
+            >
+              {label}
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span
+              className="text-base font-bold text-[var(--fh-text,var(--brand-white))] [data-theme=light]:text-slate-900"
+              style={barlow}
+            >
+              {typeof pts === "number" && Number.isFinite(pts) ? `${Math.round(pts)} / ${max}` : `— / ${max}`}
+            </span>
+            <span
+              className="flip-pillar-chevron mt-0.5 shrink-0 text-[var(--fh-text-muted)] opacity-80"
+              aria-hidden
+            />
+          </div>
         </div>
-        <span
-          className="shrink-0 text-base font-bold text-[var(--fh-text,var(--brand-white))] [data-theme=light]:text-slate-900"
-          style={barlow}
-        >
-          {typeof pts === "number" && Number.isFinite(pts) ? `${Math.round(pts)} / ${max}` : `— / ${max}`}
-        </span>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--brand-dark)] [data-theme=light]:bg-slate-200">
+          <div
+            className={`h-full rounded-full ${barClass}`}
+            style={{
+              width: `${width}%`,
+              transition: "width 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+        </div>
+      </summary>
+      <div className="border-t border-[var(--fh-border,var(--brand-dark))] px-3 pb-3 pt-2 text-xs leading-relaxed text-[var(--fh-text-dim)] [data-theme=light]:border-slate-200 [data-theme=light]:text-slate-600">
+        {narrative}
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--brand-dark)] [data-theme=light]:bg-slate-200">
-        <div
-          className={`h-full rounded-full ${barClass}`}
-          style={{
-            width: `${width}%`,
-            transition: "width 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        />
-      </div>
-    </div>
+    </details>
   )
+}
+
+function flipSuppressedMessage(ex: NonNullable<FlipExplanation>): string {
+  if (typeof ex.error === "string" && ex.error.trim()) {
+    return "Flip pillars couldn’t be computed for this listing (scoring error). Try again later or refresh after the listing is re-scored."
+  }
+  if (ex.suppressed === "no_disclosed_price") {
+    return "Flip pillars need a disclosed asking price. Without a price, pricing edge and the full flip breakdown aren’t shown."
+  }
+  return "Flip pillars aren’t available for this listing right now."
 }
 
 export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps) {
@@ -85,34 +104,53 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
     return () => window.clearTimeout(t)
   }, [])
 
-  const priceDisclosed = typeof props.askingPrice === "number" && props.askingPrice > 0
-  const effectiveFlipScore = priceDisclosed ? props.flipScore : null
-  const fk = String(props.flipTier ?? "")
-    .trim()
-    .toUpperCase()
-  const flipCfg = FLIP_TIER_CONFIG[fk]
-  const wmText = !priceDisclosed ? "UNDISCLOSED" : flipCfg?.label ?? "FLIP"
-  const tierPill = !priceDisclosed
-    ? "Price undisclosed — flip score unavailable"
-    : flipCfg
-      ? `${flipCfg.label} tier`
-      : "Flip opportunity"
-  const scoreClass = flipCfg
-    ? `${flipCfg.text} [data-theme=light]:opacity-90`
-    : "text-[var(--fh-text-muted)]"
-  const scoreColor = flipCfg ? "var(--fh-orange,#f97316)" : "var(--fh-text-muted)"
-
   const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
 
-  const showTrueCost =
-    typeof props.trueCostEstimate === "number" && props.trueCostEstimate > 0 && props.deferredMaintenanceTotal > 0
-
   const ex = props.flipExplanation
-  const pillars = [
-    { label: "Pricing edge", pts: ex?.p1_pricing_edge?.pts ?? null, max: 35, color: "orange" as const },
-    { label: "Airworthiness", pts: ex?.p2_airworthiness?.pts ?? null, max: 20, color: "blue" as const },
-    { label: "Improvement room", pts: ex?.p3_improvement_room?.pts ?? null, max: 30, color: "teal" as const },
-    { label: "Exit liquidity", pts: ex?.p4_exit_liquidity?.pts ?? null, max: 15, color: "purple" as const },
+  const errMsg = ex && typeof ex.error === "string" && ex.error.trim() ? ex.error.trim() : ""
+  const supMsg = ex && typeof ex.suppressed === "string" && ex.suppressed.trim() ? ex.suppressed.trim() : ""
+  const blocked = Boolean(errMsg || supMsg)
+
+  const pillars: {
+    id: FlipPillarId
+    label: string
+    pts: number | null
+    max: number
+    basis?: string
+    color: "orange" | "blue" | "teal" | "purple"
+  }[] = [
+    {
+      id: "p1",
+      label: "Pricing edge",
+      pts: ex?.p1_pricing_edge?.pts ?? null,
+      max: ex?.p1_pricing_edge?.max ?? 35,
+      basis: ex?.p1_pricing_edge?.basis,
+      color: "orange",
+    },
+    {
+      id: "p2",
+      label: "Airworthiness",
+      pts: ex?.p2_airworthiness?.pts ?? null,
+      max: ex?.p2_airworthiness?.max ?? 20,
+      basis: ex?.p2_airworthiness?.basis,
+      color: "blue",
+    },
+    {
+      id: "p3",
+      label: "Improvement room",
+      pts: ex?.p3_improvement_room?.pts ?? null,
+      max: ex?.p3_improvement_room?.max ?? 30,
+      basis: ex?.p3_improvement_room?.basis,
+      color: "teal",
+    },
+    {
+      id: "p4",
+      label: "Exit liquidity",
+      pts: ex?.p4_exit_liquidity?.pts ?? null,
+      max: ex?.p4_exit_liquidity?.max ?? 15,
+      basis: ex?.p4_exit_liquidity?.basis,
+      color: "purple",
+    },
   ]
 
   const dotBar = (c: (typeof pillars)[0]["color"]) => {
@@ -123,115 +161,44 @@ export default function ListingScoreHeroCards(props: ListingScoreHeroCardsProps)
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative overflow-hidden rounded-xl border border-[var(--fh-border,var(--brand-dark))] bg-[var(--card-bg)] px-4 py-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-        <div
-          className="pointer-events-none absolute -right-1 -top-2 select-none text-[clamp(3rem,12vw,4.5rem)] font-extrabold leading-none opacity-[0.06]"
-          style={{ ...barlow, color: scoreColor }}
-          aria-hidden
-        >
-          {wmText}
-        </div>
-        <div className="relative flex flex-wrap items-start justify-between gap-2">
-          <span
-            className="inline-flex rounded-full border border-[var(--fh-border)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--fh-text-muted)]"
-            style={barlow}
-          >
-            {tierPill}
-          </span>
-        </div>
-        <div
-          className="relative mt-2 flex items-baseline gap-1"
-          style={barlow}
-          aria-label={
-            typeof effectiveFlipScore === "number"
-              ? `Flip opportunity score: ${Math.round(effectiveFlipScore)} out of 100, tier: ${fk || "unknown"}`
-              : undefined
-          }
-        >
-          <span className={`text-[clamp(3rem,10vw,4.25rem)] font-extrabold leading-none ${scoreClass}`}>
-            {typeof effectiveFlipScore === "number" ? safeDisplay(formatScore(effectiveFlipScore)) : "N/A"}
-          </span>
-          <span className="text-lg font-semibold text-[var(--fh-text-muted)]">/100</span>
-        </div>
-        <p className="relative mb-0 mt-1 text-xs text-[var(--fh-text-muted)]">Flip score</p>
-        <p className="relative mb-0 mt-1 text-[11px] leading-snug text-[var(--fh-text-muted)]">
-          Flip score measures how well-positioned this aircraft is for a profitable resale.
+    <div className="rounded-xl border border-[var(--fh-border,var(--brand-dark))] bg-[var(--card-bg)] px-4 py-3 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
+      <h2
+        className="m-0 mb-3 text-[13px] font-bold uppercase tracking-[0.12em] text-[var(--fh-text-dim)] [data-theme=light]:text-slate-600"
+        style={barlow}
+      >
+        Flip pillars
+      </h2>
+      {blocked ? (
+        <p className="m-0 text-sm leading-relaxed text-[var(--fh-text-dim)] [data-theme=light]:text-slate-600">
+          {flipSuppressedMessage(ex)}
         </p>
-        {props.intelligenceVersion ? (
-          <p className="relative mb-0 mt-2 font-mono text-[10px] text-[var(--fh-text-muted)]">
-            Intelligence v{props.intelligenceVersion}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="rounded-xl border border-[var(--fh-border,var(--brand-dark))] bg-[var(--card-bg)] px-4 py-4 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--fh-text-muted)]" style={barlow}>
-          Asking
-        </div>
-        {typeof props.askingPrice === "number" && props.askingPrice > 0 ? (
-          <div
-            className="mt-1 text-[clamp(1.75rem,6vw,2.75rem)] font-extrabold text-[var(--fh-orange,#f97316)]"
-            style={barlow}
-          >
-            {formatMoney(props.askingPrice)}
-          </div>
-        ) : (
-          <div className="mt-1 text-base font-semibold text-[var(--fh-text-muted)]">Call for price</div>
-        )}
-        <div className="mt-3 space-y-1 text-xs text-[var(--fh-text-muted)]">
-          {props.priceReduced ? (
-            <div className="font-semibold text-[#22c55e]">
-              Price reduced
-              {typeof props.priceReductionAmount === "number" && props.priceReductionAmount > 0
-                ? ` (−${formatMoney(props.priceReductionAmount)})`
-                : ""}
-            </div>
+      ) : (
+        <>
+          {ex?.risk_cap_applied ? (
+            <p className="mb-2.5 mt-0 text-xs leading-relaxed text-[var(--fh-text-dim)] [data-theme=light]:text-slate-600">
+              Overall risk is CRITICAL, so the total flip score is capped at 35 even if pillar points sum higher.
+            </p>
           ) : null}
-          {typeof props.daysOnMarket === "number" ? (
-            <div>{`${Math.round(props.daysOnMarket).toLocaleString("en-US")} days on market`}</div>
-          ) : null}
-          {props.marketMedianLabel ? <div>{props.marketMedianLabel}</div> : null}
-        </div>
-        {showTrueCost ? (
-          <div
-            className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/25 px-3 py-2.5"
-            style={{ background: "rgba(245, 158, 11, 0.08)" }}
-          >
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-wide text-[var(--fh-text-muted)]" style={barlow}>
-                Estimated true cost
-              </div>
-              <div className="text-[11px] text-[var(--fh-text-muted)]">Includes deferred maintenance</div>
-            </div>
-            <div className="text-xl font-bold text-amber-500" style={barlow}>
-              {formatMoney(props.trueCostEstimate)}
-            </div>
+          <div className="flex flex-col gap-2.5">
+            {pillars.map((p) => {
+              const { dot, bar } = dotBar(p.color)
+              return (
+                <FlipPillarRow
+                  key={p.id}
+                  pillarId={p.id}
+                  dotClass={dot}
+                  barClass={bar}
+                  label={p.label}
+                  pts={p.pts}
+                  max={p.max}
+                  basis={p.basis}
+                  animate={animateBars}
+                />
+              )
+            })}
           </div>
-        ) : null}
-      </div>
-
-      <div className="rounded-xl border border-[var(--fh-border,var(--brand-dark))] bg-[var(--card-bg)] px-4 py-3 [data-theme=light]:border-slate-200 [data-theme=light]:bg-white">
-        <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--fh-text-muted)]" style={barlow}>
-          Flip pillars
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {pillars.map((p) => {
-            const { dot, bar } = dotBar(p.color)
-            return (
-              <FlipPillarRow
-                key={p.label}
-                dotClass={dot}
-                barClass={bar}
-                label={p.label}
-                pts={p.pts}
-                max={p.max}
-                animate={animateBars}
-              />
-            )
-          })}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   )
 }

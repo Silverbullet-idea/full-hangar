@@ -1,4 +1,3 @@
-import Link from "next/link"
 import type { ReactNode } from "react"
 import DetailSectionCard, { DetailBadge } from "./DetailSectionCard"
 
@@ -8,8 +7,6 @@ type VerificationFlag = {
 }
 
 type ListingDetailSidebarSectionsProps = {
-  dealDeskHref: string
-  aircraftLabel: string
   faaVerified: boolean
   faaCompactRows: Array<[string, ReactNode]>
   faaLookupUrl: string | null
@@ -22,12 +19,6 @@ type ListingDetailSidebarSectionsProps = {
   sourceLinkLabel: string
   scoreExplanation: string[]
   renderScoreExplanationItem: (value: string) => string
-  footnote: {
-    sourceLabel: string
-    intelligenceVersion: string | null
-    parserVersion: string | null
-    lastUpdated: string | null
-  }
 }
 
 const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
@@ -51,28 +42,6 @@ function signalTone(text: string): "ok" | "warn" {
 export default function ListingDetailSidebarSections(props: ListingDetailSidebarSectionsProps) {
   return (
     <div className="flex flex-col gap-4">
-      <div
-        className="rounded-xl border border-[var(--fh-border-orange)] p-[18px]"
-        style={{
-          background: "linear-gradient(135deg, rgba(175, 77, 39, 0.2), rgba(255, 153, 0, 0.1))",
-        }}
-      >
-        <h3 className="m-0 text-base font-bold text-[var(--fh-text)] [data-theme=light]:text-slate-900" style={barlow}>
-          Deal Desk
-        </h3>
-        <p className="mb-3 mt-2 text-xs leading-relaxed text-[var(--fh-text-dim)]">
-          Model flip economics, carrying costs, and exit sensitivity for{" "}
-          <span className="font-semibold text-[var(--fh-text)] [data-theme=light]:text-slate-800">{props.aircraftLabel}</span>.
-        </p>
-        <Link
-          href={props.dealDeskHref}
-          className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-[var(--fh-orange)] px-4 py-2.5 text-sm font-extrabold text-black transition hover:bg-[var(--fh-orange-burn)] hover:text-white"
-          style={barlow}
-        >
-          Open Deal Desk
-        </Link>
-      </div>
-
       <DetailSectionCard
         title="FAA Registry"
         badges={<DetailBadge tone={props.faaVerified ? "green" : "amber"}>{props.faaVerified ? "VERIFIED" : "UNVERIFIED"}</DetailBadge>}
@@ -138,7 +107,7 @@ export default function ListingDetailSidebarSections(props: ListingDetailSidebar
             href={props.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-[var(--fh-border-orange)] bg-[var(--fh-orange-dim)] px-3 py-2 text-sm font-bold text-[var(--fh-orange)] transition hover:bg-[var(--fh-orange)] hover:text-black"
+            className="mt-4 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-[var(--fh-border-orange)] bg-[var(--fh-orange-dim)] px-3 py-2 text-sm font-bold text-[var(--fh-orange)] transition hover:bg-[var(--fh-orange)] hover:!text-white"
             style={barlow}
           >
             {props.sourceLinkLabel} →
@@ -146,9 +115,9 @@ export default function ListingDetailSidebarSections(props: ListingDetailSidebar
         ) : null}
       </DetailSectionCard>
 
-      <DetailSectionCard title="Deal Signals">
+      <DetailSectionCard title="Flip score drivers">
         {props.scoreExplanation.length === 0 ? (
-          <p className="m-0 text-xs text-[var(--fh-text-muted)]">No narrative signals attached to this score yet.</p>
+          <p className="m-0 text-xs text-[var(--fh-text-muted)]">No narrative drivers for this flip score yet.</p>
         ) : (
           <ul className="m-0 list-none space-y-2 p-0">
             {props.scoreExplanation.slice(0, 12).map((item) => {
@@ -171,21 +140,6 @@ export default function ListingDetailSidebarSections(props: ListingDetailSidebar
           </ul>
         )}
       </DetailSectionCard>
-
-      <footer className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3 py-3 text-center text-[11px] leading-relaxed text-[var(--fh-text-muted)] [data-theme=light]:border-slate-200 [data-theme=light]:bg-slate-50">
-        <p className="m-0 mb-2">
-          Data sourced from {props.footnote.sourceLabel} · FAA Registry
-          {props.footnote.parserVersion ? ` · Parser v${props.footnote.parserVersion}` : ""}.
-        </p>
-        <p className="m-0 mb-2">
-          Intelligence score computed by Full Hangar
-          {props.footnote.intelligenceVersion ? ` v${props.footnote.intelligenceVersion}` : ""}
-          {props.footnote.lastUpdated ? ` · Last updated ${props.footnote.lastUpdated}` : ""}.
-        </p>
-        <p className="m-0">
-          Full-Hangar.com is not a broker or dealer. Always conduct a pre-buy inspection.
-        </p>
-      </footer>
     </div>
   )
 }

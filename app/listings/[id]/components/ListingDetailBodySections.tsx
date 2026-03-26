@@ -22,12 +22,28 @@ type EngineValueInput = {
   showCalendarWarning?: boolean
 } | null
 
+function formatEngineTboSourceLabel(source: string | null | undefined): string | null {
+  const s = String(source ?? "").trim().toLowerCase()
+  if (!s || s === "unknown") return null
+  if (s === "listing") return "Source: value stored on listing record."
+  if (s === "engine_model_lookup") return "Source: manufacturer TBO reference matched to listing engine model."
+  if (s === "faa_engine_model_lookup") return "Source: manufacturer TBO reference matched to FAA engine model."
+  if (s === "resolved_engine_model_lookup") return "Source: manufacturer TBO reference matched to resolved engine model."
+  return `Source: ${s.replace(/_/g, " ")}.`
+}
+
 type ListingDetailBodySectionsProps = {
   listingId: string
   faaMatched: boolean
   airframeRows: Array<[string, ReactNode]>
   engineLifePercent: number | null
+  engineManufacturerText: string
   engineModelText: string
+  /** MFR TBO hours for specifications band (may differ from EV panel when only reference is available). */
+  engineSpecTboHours: number | null
+  engineSpecCalendarYears: number | null
+  engineSpecTboSource: string | null
+  engineSpecLookupModel: string | null
   engineValuePanel: EngineValueInput
   formatMoney: (value: number | null | undefined) => string
   formatHours: (value: number | null | undefined) => string
@@ -138,6 +154,30 @@ export default function ListingDetailBodySections(props: ListingDetailBodySectio
       (typeof ev.remainingValue === "number" && ev.remainingValue > 0) ||
       (typeof ev.overrunLiability === "number" && ev.overrunLiability > 0))
 
+  const mfrLabel = String(props.engineManufacturerText ?? "").trim()
+  const mdlLabel = String(props.engineModelText ?? "").trim()
+  const hasEngineSpecs =
+    (mfrLabel && mfrLabel !== "—") ||
+    (mdlLabel && mdlLabel !== "—") ||
+    (typeof props.engineSpecTboHours === "number" && Number.isFinite(props.engineSpecTboHours)) ||
+    (typeof props.engineSpecCalendarYears === "number" && Number.isFinite(props.engineSpecCalendarYears))
+
+  const specRows: Array<[string, ReactNode]> = []
+  if (mfrLabel && mfrLabel !== "—") specRows.push(["Manufacturer", mfrLabel])
+  if (mdlLabel && mdlLabel !== "—") specRows.push(["Engine model", mdlLabel])
+  if (typeof props.engineSpecTboHours === "number" && Number.isFinite(props.engineSpecTboHours)) {
+    specRows.push(["MFR TBO (hours)", props.formatHours(props.engineSpecTboHours)])
+  }
+  if (typeof props.engineSpecCalendarYears === "number" && Number.isFinite(props.engineSpecCalendarYears)) {
+    specRows.push(["MFR calendar limit", `${Math.round(props.engineSpecCalendarYears)} yr`])
+  }
+
+  const tboSourceNote = formatEngineTboSourceLabel(props.engineSpecTboSource)
+  const lookupNote =
+    typeof props.engineSpecLookupModel === "string" && props.engineSpecLookupModel.trim()
+      ? `Reference pattern: ${props.engineSpecLookupModel.trim()}`
+      : null
+
   const lifePct = props.engineLifePercent
   const smohColor =
     lifePct === null
@@ -217,15 +257,36 @@ export default function ListingDetailBodySections(props: ListingDetailBodySectio
                 {`${Math.round(lifePct)}% LIFE`}
               </DetailBadge>
             ) : null}
-            <DetailBadge tone={evScored ? "blue" : "neutral"}>{evScored ? "EV SCORED" : "EV UNAVAILABLE"}</DetailBadge>
+            <DetailBadge tone={evScored ? "blue" : "neutral"}>
+              {evScored ? "EV SCORED" : hasEngineSpecs ? "VALUE N/A" : "EV UNAVAILABLE"}
+            </DetailBadge>
           </>
         }
       >
-        {!evScored ? (
+        {specRows.length > 0 ? (
+          <div className="mb-3 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--fh-text-muted)]">Specifications</p>
+            <SpecTable rows={specRows} />
+            {tboSourceNote ? <p className="mt-2 text-xs text-[var(--fh-text-muted)]">{tboSourceNote}</p> : null}
+            {lookupNote ? <p className="text-xs text-[var(--fh-text-muted)]">{lookupNote}</p> : null}
+          </div>
+        ) : null}
+        {!evScored && hasEngineSpecs && (mdlLabel || mfrLabel) && !(typeof props.engineSpecTboHours === "number") ? (
+          <div className="mb-3 rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3 py-2 text-sm text-[var(--fh-text-muted)] [data-theme=light]:bg-slate-50">
+            Manufacturer TBO is not on file for this engine identity. Values above may still come from the listing or FAA record.
+          </div>
+        ) : null}
+        {!evScored && !hasEngineSpecs ? (
           <div className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3 py-3 text-sm text-[var(--fh-text-muted)] [data-theme=light]:bg-slate-50">
             Engine data not available for this listing.
           </div>
-        ) : (
+        ) : null}
+        {!evScored && hasEngineSpecs ? (
+          <div className="mb-3 rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-3 py-2 text-sm text-[var(--fh-text-muted)] [data-theme=light]:bg-slate-50">
+            Dollar-based engine valuation (remaining value / reserve) is not available for this listing. Specifications above may still be useful for logbook review.
+          </div>
+        ) : null}
+        {evScored ? (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <EngineDonut lifePct={lifePct} />
             <div className="min-w-0 flex-1 space-y-0">
@@ -254,7 +315,7 @@ export default function ListingDetailBodySections(props: ListingDetailBodySectio
               ))}
             </div>
           </div>
-        )}
+        ) : null}
         {ev?.tboReferenceLine ? (
           <p className="mb-0 mt-3 text-xs text-[var(--fh-text-muted)]">
             <span className="font-semibold text-[var(--fh-text)]">TBO reference:</span> {ev.tboReferenceLine}
@@ -431,7 +492,7 @@ export default function ListingDetailBodySections(props: ListingDetailBodySectio
         {props.sourceUrl ? (
           <p className="mt-4 mb-0">
             <a
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[var(--fh-border-orange)] bg-[var(--fh-orange-dim)] px-4 py-2 text-sm font-bold text-[var(--fh-orange)] hover:bg-[var(--fh-orange)] hover:text-black"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[var(--fh-border-orange)] bg-[var(--fh-orange-dim)] px-4 py-2 text-sm font-bold text-[var(--fh-orange)] hover:bg-[var(--fh-orange)] hover:!text-white"
               href={props.sourceUrl}
               target="_blank"
               rel="noreferrer"

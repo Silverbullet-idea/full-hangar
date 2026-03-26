@@ -279,7 +279,7 @@ export default function DealsTable({
                         href={row.listing_url || row.url || '#'}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded bg-brand-orange px-2 py-1 text-center text-[10px] font-bold !text-black hover:bg-brand-burn hover:!text-black"
+                        className="fh-cta-on-orange-fill rounded bg-brand-orange px-2 py-1 text-center text-[10px] font-bold hover:bg-brand-burn"
                         onClick={(event) => event.stopPropagation()}
                       >
                         View Listing

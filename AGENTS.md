@@ -1,3 +1,8 @@
+---
+description: 
+alwaysApply: true
+---
+
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
@@ -104,10 +109,13 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listings filters regression fixed: `ListingsClient` no longer resets `hasSkippedInitialFetch` when RSC props sync, so soft navigations run `/api/listings` instead of skipping fetch and showing empty/stale grids (non–make/model filters work again after Apply).
 - Listings pillar filters (engine/avionics/quality/mkt): migration `20260324180074` adds indexed `pillar_*` columns on `public_listings` + `getListingsPage` filters those (pushdown to `aircraft_listings.*_score`); removes full-view scans/timeouts that returned empty 200s; transient browse failures no longer fake `{ total: 0 }` without a text `q` search.
 - Listing detail hero: `ListingImageGallery` main hero `next/image` uses `priority` + **`fetchPriority="high"`** (detailHero + default layouts) for LCP.
+- Listing detail identity shell: `ListingIdentityBar` shows **year/make/model — green asking** + **right-aligned flip score** (tier color via `getScoreColor`), **larger registration** chip, **location** on the line that previously showed source·id; duplicate flip + asking **hero cards removed** (`ListingScoreHeroCards` = flip pillars only).
+- **Engine identity display (Mar 25, 2026):** `lib/listings/engineManufacturerCanon.ts` + `engineIdentityModel.ts` mirror Python (`core/intelligence/engine_manufacturer_canon.py`, `engine_identity_model.py`); `/listings/[id]` prefers plausible `faa_engine_model` / detail over junk listing/parser text; `enrich_faa` normalizes `faa_engine_manufacturer` on write; `aircraft_intelligence._build_engine_reference_payload` uses plausibility + compact-token extraction for `model_display`; `backfill_scores` extends `is_unusable_engine_model`, promotes `engine_model` from FAA when listing is unusable (`FULL_HANGAR_PROMOTE_ENGINE_MODEL_FROM_FAA`, default on; set `0` to disable).
 - Playwright **`npm run test:smoke:listings-all`**: 24 tests (incl. listing-detail not-found shell + conditional API matrix); latest local run **24 passed** with healthy Supabase.
 
 ### Backend, Pipeline, and Data Sources
 
+- **FAA + score backfill (Mar 25, 2026):** `enrich_faa.py` on pending queue (`matched=619`, `unmatched=96`); `backfill_scores.py --all --quiet-http` (`attempted=10574`, `updated=10574`, `failed=0`). **Verify in Supabase:** that run logged PostgREST “column not found” for `score_data`, `engine_manufacturer`, and `engine_make` on `aircraft_listings`—the script retried without them, so confirm those columns exist and reload schema if `score_data` must persist, then re-run a targeted backfill if needed. Optional follow-up: `backfill_scores.py --compute-comps` (or `--all --compute-comps`) if market comps should be refreshed.
 - Shared scraper foundations landed (`env_check`, `schema`, `scraper_base`, config/tier normalization, retry/upsert safety).
 - Trade-A-Plane and Controller pipelines hardened with adaptive controls, retries, and safer fallbacks.
 - Trade-A-Plane detail-capture expansion shipped: scraper now defaults to all-aircraft make sweeps (not single-piston only), parses listing-detail labeled specs + section blocks into structured fields (including twin engine/prop timing where present), and stores unmapped detail fields under `raw_data.tap_unmapped` for schema-safe maximum capture.

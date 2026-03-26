@@ -375,7 +375,7 @@ export default function MarketIntelPage() {
             type="button"
             onClick={onResearch}
             disabled={!make.trim() || !model.trim()}
-            className="self-end rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-black hover:bg-brand-burn hover:!text-black disabled:cursor-not-allowed disabled:opacity-60"
+            className="fh-cta-on-orange-fill self-end rounded bg-brand-orange px-3 py-2 text-sm font-semibold hover:bg-brand-burn disabled:cursor-not-allowed disabled:opacity-60"
           >
             Research
           </button>
@@ -672,7 +672,7 @@ export default function MarketIntelPage() {
                 </p>
                 <Link
                   href="/internal/deal-desk"
-                  className="mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-xs font-semibold !text-black hover:bg-brand-burn hover:!text-black"
+                  className="fh-cta-on-orange-fill mt-3 inline-block rounded bg-brand-orange px-3 py-2 text-xs font-semibold hover:bg-brand-burn"
                 >
                   Open in Deal Desk for detailed analysis →
                 </Link>

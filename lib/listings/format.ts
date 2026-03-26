@@ -21,6 +21,41 @@ export function getRiskClass(riskLevel: string | null | undefined): string {
   return "score-none"
 }
 
+/** Title-case word for a known DB risk_level (LOW / MODERATE / …). */
+export function formatRiskLevelShort(riskLevel: string | null | undefined): string {
+  const raw = (riskLevel || "").trim()
+  const normalized = raw.toUpperCase()
+  if (!normalized || normalized === "UNKNOWN") return "Unknown"
+  const map: Record<string, string> = {
+    LOW: "Low",
+    MODERATE: "Moderate",
+    HIGH: "High",
+    CRITICAL: "Critical",
+  }
+  if (map[normalized]) return map[normalized]
+  return raw.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+}
+
+/** Human phrase for tooltips / secondary copy, e.g. "Moderate risk". */
+export function formatRiskLevelLabel(riskLevel: string | null | undefined): string {
+  const short = formatRiskLevelShort(riskLevel)
+  if (short === "Unknown") return "Not rated"
+  return `${short} risk`
+}
+
+/** Primary badge text on listing detail — always names "Risk" explicitly. */
+export function formatRiskBadgeDisplay(riskLevel: string | null | undefined): string {
+  const short = formatRiskLevelShort(riskLevel)
+  if (short === "Unknown") return "Risk: Not rated"
+  return `Risk: ${short}`
+}
+
+/** Screen reader context: risk is not flip tier or data confidence. */
+export function formatRiskBadgeAriaLabel(riskLevel: string | null | undefined): string {
+  const label = formatRiskLevelLabel(riskLevel)
+  return `Downside risk from maintenance burden, registration alerts, and condition signals (separate from flip score and score reliability). Current level: ${label}.`
+}
+
 export function formatPriceOrCall(value: number | null | undefined): string {
   if (typeof value !== "number") return "Call for Price"
   return formatMoney(value)

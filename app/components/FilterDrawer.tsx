@@ -91,7 +91,7 @@ export default function FilterDrawer({ open, onClose, onApply, onClearAll, child
                   onApply()
                   onClose()
                 }}
-                className="min-h-[44px] flex-1 rounded-md border border-brand-orange bg-brand-orange px-3 text-sm font-bold text-black hover:bg-brand-burn hover:text-white"
+                className="fh-cta-on-orange-fill min-h-[44px] flex-1 rounded-md border border-brand-orange bg-brand-orange px-3 text-sm font-bold hover:bg-brand-burn"
               >
                 Apply
               </button>

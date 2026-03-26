@@ -394,6 +394,7 @@ def build_update_payload(
     engine_ref_record: dict[str, Any] | None,
     existing_engine_model: Any,
 ) -> dict[str, Any]:
+    from core.intelligence.engine_manufacturer_canon import normalize_engine_manufacturer_display
     faa_engine_model = _clean_text(_pick_first(engine_ref_record, ["eng_model_name", "engine_model", "model_name"])) or _clean_text(
         _pick_first(faa_record, ["engine_model", "eng_model_name", "eng_model"])
     )
@@ -402,6 +403,8 @@ def build_update_payload(
     ) or _clean_text(
         _pick_first(faa_record, ["engine_manufacturer", "eng_mfr_name", "engine_make", "eng_manufacturer"])
     )
+    if faa_engine_manufacturer:
+        faa_engine_manufacturer = normalize_engine_manufacturer_display(faa_engine_manufacturer) or faa_engine_manufacturer
 
     payload: dict[str, Any] = {
         "faa_owner": _pick_first(faa_record, ["owner_name", "name", "registrant_name"]),

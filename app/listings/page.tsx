@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { connection } from "next/server"
-import ListingsClient from './ListingsClient'
+import ListingsBrowseDataFootnote from "./components/ListingsBrowseDataFootnote"
+import ListingsClient from "./ListingsClient"
 import { aggregateListingFilterOptionsFromRows } from '../../lib/listings/filterOptionsAggregate'
 import type { ListingsPageQuery } from '../../lib/db/listingsRepository'
 import {
@@ -322,6 +323,7 @@ export default async function ListingsPage({
         initialAvionics={listingsQuery.avionics ?? ""}
         initialDealPattern={listingsQuery.dealPattern ?? ""}
       />
+      <ListingsBrowseDataFootnote />
     </>
   )
 }

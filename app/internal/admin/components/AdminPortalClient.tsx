@@ -284,7 +284,7 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
             </Link>
             <Link
               href="/internal/deal-desk"
-              className="rounded bg-brand-orange px-3 py-2 text-sm font-semibold !text-zinc-950 whitespace-nowrap hover:bg-brand-burn hover:!text-zinc-950"
+              className="fh-cta-on-orange-fill rounded bg-brand-orange px-3 py-2 text-sm font-semibold whitespace-nowrap hover:bg-brand-burn"
             >
               🧮 Open Deal Desk
             </Link>
@@ -1343,7 +1343,7 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   href="/internal/admin/invites"
-                  className="inline-block rounded bg-[var(--fh-orange)] px-3 py-2 text-sm font-semibold !text-zinc-950 hover:opacity-95"
+                  className="fh-cta-on-orange-fill inline-block rounded bg-[var(--fh-orange)] px-3 py-2 text-sm font-semibold hover:opacity-95"
                 >
                   Create invite link
                 </Link>

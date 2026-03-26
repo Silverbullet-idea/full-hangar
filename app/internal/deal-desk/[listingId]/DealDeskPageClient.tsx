@@ -1043,7 +1043,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
               <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-[1fr,180px,100px]">
                 <input value={newAcquisitionDraft[category].label} onChange={(event) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], label: event.target.value } }))} placeholder="Add item label" className="deal-desk-inp py-2 text-sm" />
                 <CurrencyInputInline value={newAcquisitionDraft[category].amount} onChange={(value) => setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { ...previous[category], amount: value } }))} />
-                <button type="button" onClick={() => { if (!newAcquisitionDraft[category].label.trim()) return; setForm((previous) => ({ ...previous, acquisition_items: [...previous.acquisition_items, { id: crypto.randomUUID(), label: newAcquisitionDraft[category].label.trim(), amount: newAcquisitionDraft[category].amount, category }] })); setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { label: "", amount: 0 } })); }} className="rounded bg-brand-orange px-2 py-1 text-sm font-semibold !text-black hover:bg-brand-burn">Add item</button>
+                <button type="button" onClick={() => { if (!newAcquisitionDraft[category].label.trim()) return; setForm((previous) => ({ ...previous, acquisition_items: [...previous.acquisition_items, { id: crypto.randomUUID(), label: newAcquisitionDraft[category].label.trim(), amount: newAcquisitionDraft[category].amount, category }] })); setNewAcquisitionDraft((previous) => ({ ...previous, [category]: { label: "", amount: 0 } })); }} className="fh-cta-on-orange-fill rounded bg-brand-orange px-2 py-1 text-sm font-semibold hover:bg-brand-burn">Add item</button>
               </div>
             </div>
           ))}
@@ -1104,7 +1104,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
               <select value={newUpgradeDraft.type} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, type: event.target.value as UpgradeItem["type"] }))} className="deal-desk-inp py-2 text-sm"><option value="must_do">Must Do</option><option value="value_add">Value Add</option></select>
               <select value={newUpgradeDraft.category} onChange={(event) => setNewUpgradeDraft((previous) => ({ ...previous, category: event.target.value as UpgradeItem["category"] }))} className="deal-desk-inp py-2 text-sm"><option value="avionics">Avionics</option><option value="interior">Interior</option><option value="paint">Paint</option><option value="engine">Engine</option><option value="prop">Prop</option><option value="mod">Mod/STC</option></select>
             </div>
-            <button type="button" onClick={() => { if (!newUpgradeDraft.label.trim()) return; setForm((previous) => ({ ...previous, upgrade_items: [...previous.upgrade_items, { ...newUpgradeDraft, id: crypto.randomUUID(), label: newUpgradeDraft.label.trim() }] })); setNewUpgradeDraft({ label: "", amount: 0, type: "must_do", category: "avionics" }); }} className="mt-2 rounded bg-brand-orange px-3 py-1 text-sm font-semibold !text-black hover:bg-brand-burn">Add item</button>
+            <button type="button" onClick={() => { if (!newUpgradeDraft.label.trim()) return; setForm((previous) => ({ ...previous, upgrade_items: [...previous.upgrade_items, { ...newUpgradeDraft, id: crypto.randomUUID(), label: newUpgradeDraft.label.trim() }] })); setNewUpgradeDraft({ label: "", amount: 0, type: "must_do", category: "avionics" }); }} className="fh-cta-on-orange-fill mt-2 rounded bg-brand-orange px-3 py-1 text-sm font-semibold hover:bg-brand-burn">Add item</button>
           </div>
           <div className="rounded border border-brand-dark overflow-x-auto">
             <table className="min-w-full text-xs">
@@ -1371,7 +1371,7 @@ export default function DealDeskPageClient({ seed }: { seed: DealDeskSeed }) {
             <button
               type="button"
               onClick={() => setWizardStepUrl(wizardStep + 1, { advanceMax: true })}
-              className="rounded bg-brand-orange px-5 py-2 text-sm font-semibold !text-black hover:bg-brand-burn"
+              className="fh-cta-on-orange-fill rounded bg-brand-orange px-5 py-2 text-sm font-semibold hover:bg-brand-burn"
             >
               Next
             </button>
@@ -1573,7 +1573,7 @@ function DealDeskWizardStep({
                 <button
                   type="button"
                   onClick={wizardFooter.onNext}
-                  className="min-h-[44px] rounded-lg bg-brand-orange px-7 py-2 text-[15px] font-extrabold tracking-tight !text-black transition-transform hover:bg-brand-burn hover:!text-white"
+                  className="fh-cta-on-orange-fill min-h-[44px] rounded-lg bg-brand-orange px-7 py-2 text-[15px] font-extrabold tracking-tight transition-transform hover:bg-brand-burn"
                   style={{ fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" }}
                 >
                   Next

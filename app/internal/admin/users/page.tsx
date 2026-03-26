@@ -126,7 +126,7 @@ export default function AdminUsersPage() {
             <option value="beta">Beta</option>
             <option value="admin">Admin</option>
           </select>
-          <button className="rounded bg-brand-orange px-3 py-2 font-semibold text-black" type="submit">
+          <button className="fh-cta-on-orange-fill rounded bg-brand-orange px-3 py-2 font-semibold" type="submit">
             Create User
           </button>
         </form>

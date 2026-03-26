@@ -575,7 +575,7 @@ export default function ListingCard({
               </div>
             ) : (
               <p className="text-center text-[11px] text-[var(--fh-text-muted)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                📊 Aircraft intelligence available — deal score unlocks when price is disclosed.
+                📊 Aircraft intelligence available — flip score unlocks when price is disclosed.
               </p>
             )}
           </div>

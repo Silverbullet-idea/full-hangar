@@ -103,6 +103,28 @@ html[data-theme="light"] {
   outline-offset: 2px;
 }
 
+/* Listing detail — Flip Pillars accordions */
+.flip-pillar-details > summary {
+  list-style: none;
+}
+
+.flip-pillar-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.flip-pillar-chevron {
+  display: inline-block;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  padding: 3px;
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+
+.flip-pillar-details[open] .flip-pillar-chevron {
+  transform: rotate(45deg);
+}
+
 /* Light-theme bridge for legacy hardcoded dark utility classes. */
 html[data-theme="light"] [class*="bg-[#1A1A1A]"],
 html[data-theme="light"] [class*="bg-[#1a1a1a]"],
@@ -501,6 +523,34 @@ a {
 
 a:hover {
   color: var(--brand-burn);
+}
+
+/**
+ * Solid orange primary actions: global `a { color: var(--brand-orange) }` wins over utilities,
+ * and light-theme token swaps can make `text-black` / `!text-black` unusable on `bg-brand-orange`.
+ */
+a.fh-cta-on-orange-fill,
+button.fh-cta-on-orange-fill {
+  color: #101010 !important;
+}
+
+a.fh-cta-on-orange-fill:hover,
+button.fh-cta-on-orange-fill:hover,
+a.fh-cta-on-orange-fill:focus-visible,
+button.fh-cta-on-orange-fill:focus-visible {
+  color: #fafafa !important;
+}
+
+html[data-theme="light"] a.fh-cta-on-orange-fill,
+html[data-theme="light"] button.fh-cta-on-orange-fill {
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] a.fh-cta-on-orange-fill:hover,
+html[data-theme="light"] button.fh-cta-on-orange-fill:hover,
+html[data-theme="light"] a.fh-cta-on-orange-fill:focus-visible,
+html[data-theme="light"] button.fh-cta-on-orange-fill:focus-visible {
+  color: #ffffff !important;
 }
 
 @media print {

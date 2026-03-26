@@ -639,7 +639,7 @@ export default function ListingsFiltersSidebar({
             <button
               type="button"
               onClick={onApplyFilters}
-              className="rounded border border-[var(--fh-orange)] bg-[var(--fh-orange)] px-3 py-2 text-sm font-bold text-black hover:bg-[var(--fh-orange-burn)] hover:text-white"
+              className="fh-cta-on-orange-fill rounded border border-[var(--fh-orange)] bg-[var(--fh-orange)] px-3 py-2 text-sm font-bold hover:bg-[var(--fh-orange-burn)]"
             >
               Apply filters
             </button>

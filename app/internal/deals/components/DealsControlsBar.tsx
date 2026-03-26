@@ -28,21 +28,21 @@ export default function DealsControlsBar({
       <button
         type="button"
         onClick={() => setActiveTab('all')}
-        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'all' ? 'bg-brand-orange text-black' : 'bg-[#222] text-brand-muted'}`}
+        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'all' ? 'bg-brand-orange fh-cta-on-orange-fill' : 'bg-[#222] text-brand-muted'}`}
       >
         All Deals ({filteredCount})
       </button>
       <button
         type="button"
         onClick={() => setActiveTab('priority')}
-        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'priority' ? 'bg-brand-orange text-black' : 'bg-[#222] text-brand-muted'}`}
+        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'priority' ? 'bg-brand-orange fh-cta-on-orange-fill' : 'bg-[#222] text-brand-muted'}`}
       >
         Priority ({priorityCount})
       </button>
       <button
         type="button"
         onClick={() => setActiveTab('watchlist')}
-        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'watchlist' ? 'bg-brand-orange text-black' : 'bg-[#222] text-brand-muted'}`}
+        className={`rounded px-2 py-1 text-xs font-bold ${activeTab === 'watchlist' ? 'bg-brand-orange fh-cta-on-orange-fill' : 'bg-[#222] text-brand-muted'}`}
       >
         Watchlist ({watchlistCount})
       </button>

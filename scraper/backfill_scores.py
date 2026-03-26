@@ -43,6 +43,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.intelligence.aircraft_intelligence import INTELLIGENCE_VERSION, aircraft_intelligence_score
+from core.intelligence.engine_identity_model import is_plausible_engine_identity_model
 from backfill_log import log_backfill_run, log_scoring_error
 from compute_market_comps import (
     build_comps_payload,
@@ -254,6 +255,8 @@ OPTIONAL_SCHEMA_COLUMNS = {
     "comp_p75_price",
     "pricing_mad",
     "mispricing_zscore",
+    "engine_tbo_hours",
+    "score_data",
 }
 
 DB_UPDATE_COLUMNS = sorted(set(INTELLIGENCE_COLUMNS + ["location_state"]))
@@ -531,6 +534,12 @@ def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
         "flip_candidate_triggered": intel.get("flip_candidate_triggered"),
         "flip_candidate_threshold": intel.get("flip_candidate_threshold"),
     }
+    eng_block = intel.get("engine") or {}
+    if eng_block.get("tbo_known") and eng_block.get("tbo_hours") is not None:
+        try:
+            row["engine_tbo_hours"] = int(eng_block["tbo_hours"])
+        except (TypeError, ValueError):
+            pass
     raw_state = (listing or {}).get("location_state")
     if isinstance(raw_state, str) and raw_state.strip():
         # Convert full state names (e.g. Texas) to abbreviations before upsert.
@@ -539,9 +548,26 @@ def intelligence_to_row(intel: dict, listing: dict | None = None) -> dict:
     return row
 
 
+def merge_score_data_engine_reference(row: dict, engine_reference: dict | None) -> dict | None:
+    """Merge engine_reference into existing score_data JSON; returns new dict or None if nothing to merge."""
+    if not engine_reference:
+        return None
+    sd = row.get("score_data")
+    if isinstance(sd, str):
+        try:
+            sd = json.loads(sd)
+        except Exception:
+            sd = {}
+    if not isinstance(sd, dict):
+        sd = {}
+    return {**sd, "engine_reference": engine_reference}
+
+
 def listing_for_intelligence(row: dict) -> dict:
     """Build a listing dict suitable for aircraft_intelligence_score from a DB row."""
     resolved_engine_model = resolve_engine_model_for_scoring(row)
+    listing_raw_em = sanitize_engine_model(row.get("engine_model"))
+    faa_em = sanitize_engine_model(row.get("faa_engine_model"))
 
     # DB may use different keys; normalize to what intelligence expects
     return {
@@ -560,6 +586,12 @@ def listing_for_intelligence(row: dict) -> dict:
         "time_since_prop_overhaul": row.get("time_since_prop_overhaul"),
         "aircraft_type": row.get("aircraft_type"),
         "engine_model": resolved_engine_model,
+        "engine_model_listing_raw": listing_raw_em or None,
+        "faa_engine_model": faa_em or None,
+        "faa_engine_manufacturer": (str(row.get("faa_engine_manufacturer") or "").strip() or None),
+        "engine_manufacturer": (str(row.get("engine_manufacturer") or "").strip() or None),
+        "engine_make": (str(row.get("engine_make") or "").strip() or None),
+        "engine_tbo_hours": row.get("engine_tbo_hours"),
         "days_on_market": row.get("days_on_market"),
         "price_reduced": row.get("price_reduced"),
         "accident_count": row.get("accident_count"),
@@ -607,7 +639,19 @@ def is_unusable_engine_model(value: str | None) -> bool:
     # Reject long narrative strings that have no model-like numeric token.
     if len(token) > 36 and not re.search(r"\d", token):
         return True
+    if not is_plausible_engine_identity_model(cleaned):
+        return True
     return False
+
+
+def promote_engine_model_from_faa_if_listing_junk(row: dict, update_payload: dict) -> None:
+    """When listing engine_model is maintenance prose but FAA model is clean, persist FAA model."""
+    primary = sanitize_engine_model(row.get("engine_model"))
+    faa_m = sanitize_engine_model(row.get("faa_engine_model"))
+    if not faa_m:
+        return
+    if is_unusable_engine_model(primary) and not is_unusable_engine_model(faa_m):
+        update_payload["engine_model"] = faa_m
 
 
 def resolve_engine_model_for_scoring(row: dict) -> str | None:
@@ -802,7 +846,8 @@ def run_backfill_from_db(
         "description", "description_full", "description_intelligence", "avionics_description", "avionics_notes", "title", "source", "total_time_airframe",
         "value_score", "avionics_score",
         "time_since_overhaul", "time_since_new_engine", "time_since_prop_overhaul", "engine_time_since_overhaul",
-        "aircraft_type", "engine_model", "faa_engine_model", "prop_model", "days_on_market", "price_reduced",
+        "aircraft_type", "engine_model", "faa_engine_model", "faa_engine_manufacturer", "engine_manufacturer", "engine_make",
+        "engine_tbo_hours", "score_data", "prop_model", "days_on_market", "price_reduced",
         "accident_count", "most_recent_accident_date", "most_severe_damage", "has_accident_history",
     ]
     active_select_cols = list(select_cols)
@@ -1008,8 +1053,17 @@ def run_backfill_from_db(
                             COMP_CIRCUIT_BREAKER_SECONDS,
                         )
                 update_payload = intelligence_to_row(intel)
+                merged_sd = merge_score_data_engine_reference(row, intel.get("engine_reference"))
+                if merged_sd is not None:
+                    update_payload["score_data"] = merged_sd
                 if parser_updates:
                     update_payload.update(parser_updates)
+                if os.environ.get("FULL_HANGAR_PROMOTE_ENGINE_MODEL_FROM_FAA", "1").lower() not in (
+                    "0",
+                    "false",
+                    "no",
+                ):
+                    promote_engine_model_from_faa_if_listing_junk(row, update_payload)
                 if dropped_update_columns:
                     update_payload = {k: v for k, v in update_payload.items() if k not in dropped_update_columns}
                 if dry_run:

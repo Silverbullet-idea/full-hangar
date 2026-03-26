@@ -16,6 +16,8 @@ import statistics
 from .avionics_intelligence import avionics_score
 from .flip_score import compute_flip_score
 from .model_normalizer import extract_engine_canonical_from_listing, extract_prop_canonical_from_listing
+from .engine_identity_model import extract_compact_engine_model, is_plausible_engine_identity_model
+from .engine_manufacturer_canon import normalize_engine_manufacturer_display
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
 
 # v1.9.3 - Score distribution fix: age-differentiated imputed defaults,
@@ -25,6 +27,36 @@ INTELLIGENCE_VERSION = "2.0.0"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
+def _ordered_engine_tbo_candidate_pairs(listing: dict) -> list[tuple[str, str]]:
+    """
+    Ordered unique engine model strings for TBO reference lookup.
+    Prefer seller listing text, then FAA model, then resolved scoring model.
+    """
+    ordered: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def _extend(field_val: object, role: str) -> None:
+        for candidate in _build_engine_lookup_candidates(field_val):
+            if candidate not in seen:
+                seen.add(candidate)
+                ordered.append((candidate, role))
+
+    _extend(listing.get("engine_model_listing_raw"), "listing")
+    _extend(listing.get("faa_engine_model"), "faa")
+    _extend(listing.get("engine_model"), "resolved")
+    return ordered
+
+
+def _tbo_role_to_source(role: str) -> str:
+    if role == "listing":
+        return "engine_model_lookup"
+    if role == "faa":
+        return "faa_engine_model_lookup"
+    if role == "resolved":
+        return "resolved_engine_model_lookup"
+    return "engine_model_lookup"
+
+
 def engine_life_remaining(listing: dict) -> dict:
     """
     remaining_percent = (TBO - SMOH) / TBO.
@@ -44,12 +76,19 @@ def engine_life_remaining(listing: dict) -> dict:
 
     tbo_hours = _as_positive_number(listing.get("engine_tbo_hours"))
     tbo_source = "listing" if tbo_hours is not None else None
-    model_lookup = lookup_engine_tbo_from_model(listing.get("engine_model"))
+    tbo_lookup_model = None
     calendar_years = None
-    if tbo_hours is None and model_lookup.get("found"):
-        tbo_hours = model_lookup.get("tbo_hours")
-        calendar_years = model_lookup.get("calendar_years")
-        tbo_source = "engine_model_lookup"
+    model_lookup: dict = {"found": False}
+
+    if tbo_hours is None:
+        for candidate, role in _ordered_engine_tbo_candidate_pairs(listing):
+            model_lookup = lookup_engine_tbo_from_model(candidate)
+            if model_lookup.get("found"):
+                tbo_hours = model_lookup.get("tbo_hours")
+                calendar_years = model_lookup.get("calendar_years")
+                tbo_source = _tbo_role_to_source(role)
+                tbo_lookup_model = candidate
+                break
     if tbo_hours is not None:
         tbo_hours = int(tbo_hours)
     tbo_known = tbo_hours is not None
@@ -107,6 +146,7 @@ def engine_life_remaining(listing: dict) -> dict:
         "tbo_hours": tbo_hours,
         "tbo_known": tbo_known,
         "tbo_source": tbo_source,
+        "tbo_lookup_model": tbo_lookup_model,
         "engine_time_known": engine_time_known,
         "calendar_years": calendar_years,
         "hours_remaining": hours_remaining,
@@ -2008,6 +2048,47 @@ def _accident_history_adjustment(listing: dict) -> dict:
     }
 
 
+def _build_engine_reference_payload(listing: dict, engine: dict) -> dict:
+    """Stable JSON for UI: manufacturer/model sources + MFR TBO metadata from engine_life_remaining."""
+
+    def _s(value: object) -> str | None:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    mfr_raw = _s(listing.get("faa_engine_manufacturer")) or _s(listing.get("engine_manufacturer")) or _s(listing.get("engine_make"))
+    mfr = normalize_engine_manufacturer_display(mfr_raw) or mfr_raw
+    raw_listing = _s(listing.get("engine_model_listing_raw"))
+    m_faa = _s(listing.get("faa_engine_model"))
+    resolved = _s(listing.get("engine_model"))
+
+    def _first_plausible(*vals: str | None) -> str | None:
+        for v in vals:
+            if v and is_plausible_engine_identity_model(v):
+                return v
+        return None
+
+    model_display = _first_plausible(resolved, m_faa, raw_listing)
+    if not model_display:
+        for candidate in (m_faa, raw_listing, resolved):
+            extracted = extract_compact_engine_model(candidate)
+            if extracted:
+                model_display = extracted
+                break
+
+    return {
+        "manufacturer": mfr,
+        "model_listing": raw_listing,
+        "model_faa": m_faa,
+        "model_display": model_display,
+        "tbo_hours": engine.get("tbo_hours"),
+        "calendar_years": engine.get("calendar_years"),
+        "tbo_source": engine.get("tbo_source"),
+        "tbo_lookup_model": engine.get("tbo_lookup_model"),
+    }
+
+
 def aircraft_intelligence_score(listing: dict) -> dict:
     """
     Layer 2: Full-Hangar Value Score (0–100).
@@ -2303,6 +2384,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "engine_remaining_value": engine_value_result.get("engine_remaining_value"),
         "engine_overrun_liability": engine_value_result.get("engine_overrun_liability"),
         "engine_reserve_per_hour": engine_value_result.get("engine_reserve_per_hour"),
+        "engine_reference": _build_engine_reference_payload(listing, engine),
     }
     _flip = compute_flip_score(listing, score_result)
     score_result["flip_score"] = _flip["flip_score"]

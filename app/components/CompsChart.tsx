@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatRiskBadgeDisplay } from "../../lib/listings/format";
 import {
   CartesianGrid,
   ReferenceLine,
@@ -636,11 +637,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                   <div style={{ display: "inline-flex", border: `1px solid ${getRiskColor(activePoint.riskLevel)}`, color: getRiskColor(activePoint.riskLevel), borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                    {activePoint.riskLevel}
+                    {formatRiskBadgeDisplay(activePoint.riskLevel === "UNKNOWN" ? null : activePoint.riskLevel)}
                   </div>
                   {activePoint.tierLabel ? (
                     <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                      {activePoint.tierLabel}
+                      {`Flip tier: ${activePoint.tierLabel}`}
                     </div>
                   ) : null}
                 </div>
@@ -689,11 +690,11 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                   <div style={{ display: "inline-flex", border: `1px solid ${getRiskColor(activePoint.riskLevel)}`, color: getRiskColor(activePoint.riskLevel), borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                    {activePoint.riskLevel}
+                    {formatRiskBadgeDisplay(activePoint.riskLevel === "UNKNOWN" ? null : activePoint.riskLevel)}
                   </div>
                   {activePoint.tierLabel ? (
                     <div style={{ display: "inline-flex", border: `1px solid ${tooltipBorderColor}`, color: readableBodyTextColor, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>
-                      {activePoint.tierLabel}
+                      {`Flip tier: ${activePoint.tierLabel}`}
                     </div>
                   ) : null}
                 </div>

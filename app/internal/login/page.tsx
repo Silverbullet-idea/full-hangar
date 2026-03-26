@@ -93,7 +93,7 @@ export default function InternalLoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-4 w-full rounded-md bg-brand-orange px-4 py-2.5 font-semibold text-black transition hover:bg-brand-burn disabled:cursor-not-allowed disabled:opacity-70"
+          className="fh-cta-on-orange-fill mt-4 w-full rounded-md bg-brand-orange px-4 py-2.5 font-semibold transition hover:bg-brand-burn disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

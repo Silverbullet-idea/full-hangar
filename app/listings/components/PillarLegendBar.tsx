@@ -33,7 +33,7 @@ export default function PillarLegendBar() {
         className="max-w-xl text-right text-[10px] italic text-[var(--fh-text-muted)]"
         style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
       >
-        ⚠ Listings without a disclosed price are not scored for deal tier.
+        ⚠ Listings without a disclosed price are not scored for flip tier.
       </p>
     </div>
   )

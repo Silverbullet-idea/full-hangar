@@ -152,7 +152,7 @@ export default function BetaJoinPage() {
             value={token}
             onChange={(event) => setToken(event.target.value)}
           />
-          <button className="w-full rounded bg-brand-orange px-3 py-2 font-semibold text-black" type="submit" disabled={loading}>
+          <button className="fh-cta-on-orange-fill w-full rounded bg-brand-orange px-3 py-2 font-semibold" type="submit" disabled={loading}>
             {loading ? "Checking access..." : "Access Beta Dashboard"}
           </button>
           {error ? <p className="text-sm text-red-400">{error}</p> : null}

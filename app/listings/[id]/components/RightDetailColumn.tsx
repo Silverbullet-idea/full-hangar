@@ -45,11 +45,11 @@ type RightDetailColumnProps = {
   compFamilyCount: number | null
   compMakeCount: number | null
   riskBadgeClass: string
-  riskLabel: string
+  riskBadgeText: string
+  riskBadgeAriaLabel: string
+  /** e.g. "GOOD tier (65–79 band)." when price disclosed */
+  flipTierBandLine: string | null
   scoreInputRows: Array<[string, ReactNode]>
-  pricingConfidence: string | null
-  compSelectionTier: string | null
-  formatCompTier: (value: string) => string
   scoreExplanation: string[]
   renderScoreExplanationItem: (value: string) => string
   showAvionicsPanel: boolean
@@ -128,6 +128,35 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
 
       <section className={`panel ${phase3 ? "order-1" : "order-1 md:order-2"}`}>
         <h3>Score Summary</h3>
+        <p
+          style={{
+            fontSize: "0.82rem",
+            color: "var(--brand-muted)",
+            marginTop: "0.35rem",
+            marginBottom: "0.75rem",
+            lineHeight: 1.45,
+          }}
+        >
+          Flip score ranks resale and flip attractiveness. A strong score can coexist with only medium data or pricing reliability; downside risk is measured separately.
+        </p>
+
+        <h4
+          style={{
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--brand-muted)",
+            margin: "0 0 0.45rem",
+          }}
+        >
+          Flip opportunity
+        </h4>
+        {props.flipTierBandLine ? (
+          <p style={{ fontSize: "0.86rem", color: "var(--brand-white)", fontWeight: 600, margin: "0 0 0.55rem" }}>
+            {props.flipTierBandLine}
+          </p>
+        ) : null}
         {!props.suppressDuplicateHeroScores ? (
           <>
             <div
@@ -144,19 +173,25 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
                 <span className="score-max">/ 100</span>
               </div>
             </div>
-            <details className="score-notes" style={{ marginTop: '0.6rem' }}>
-              <summary>
-                {props.primaryLabel}
-              </summary>
-              <ul className="score-band-list" style={{ marginTop: '0.45rem' }}>
-                <li><strong>80–100</strong>: HOT — top flip candidates</li>
-                <li><strong>65–79</strong>: GOOD — solid resale profile</li>
-                <li><strong>50–64</strong>: FAIR — selective / needs work</li>
-                <li><strong>0–49</strong>: PASS — weak flip edge</li>
+            <details className="score-notes" style={{ marginTop: "0.6rem" }}>
+              <summary>{props.primaryLabel}</summary>
+              <ul className="score-band-list" style={{ marginTop: "0.45rem" }}>
+                <li>
+                  <strong>80–100</strong>: HOT — top flip candidates
+                </li>
+                <li>
+                  <strong>65–79</strong>: GOOD — solid resale profile
+                </li>
+                <li>
+                  <strong>50–64</strong>: FAIR — selective / needs work
+                </li>
+                <li>
+                  <strong>0–49</strong>: PASS — weak flip edge
+                </li>
               </ul>
-              <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
+              <ul className="score-method-list" style={{ marginTop: "0.45rem" }}>
                 {props.scoreMethodSummary
-                  .split('\n')
+                  .split("\n")
                   .map((line) => line.trim())
                   .filter(Boolean)
                   .map((line) => (
@@ -166,11 +201,11 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </details>
           </>
         ) : (
-          <details className="score-notes" style={{ marginTop: '0.2rem' }}>
+          <details className="score-notes" style={{ marginTop: "0.2rem" }}>
             <summary>How scoring works</summary>
-            <ul className="score-method-list" style={{ marginTop: '0.45rem' }}>
+            <ul className="score-method-list" style={{ marginTop: "0.45rem" }}>
               {props.scoreMethodSummary
-                .split('\n')
+                .split("\n")
                 .map((line) => line.trim())
                 .filter(Boolean)
                 .map((line) => (
@@ -179,22 +214,6 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </ul>
           </details>
         )}
-        <div className="score-notes">
-          <div style={{ fontWeight: 600, color: 'var(--brand-white)' }}>
-            Confidence breakdown{props.effectiveDataConfidence ? `: ${props.effectiveDataConfidence}` : ''}
-          </div>
-          {props.confidenceSignals.length > 0 ? (
-            <ul>
-              {props.confidenceSignals.map((signal) => (
-                <li key={signal}>{signal}</li>
-              ))}
-            </ul>
-          ) : (
-            <ul>
-              <li>No confidence signals available.</li>
-            </ul>
-          )}
-        </div>
         {(() => {
           const ex = props.flipExplanation
           if (props.suppressDuplicateHeroScores || !flipExplanationShowsPillars(ex ?? null)) return null
@@ -207,12 +226,18 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
           return (
             <div
               className="max-md:[&>div]:flex max-md:[&>div]:min-h-[44px] max-md:[&>div]:items-center"
-              style={{ marginTop: '0.65rem', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.45rem' }}
+              style={{ marginTop: "0.65rem", display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.45rem" }}
             >
               {pillarRows.map(([label, pts, max]) => (
                 <div
                   key={label}
-                  style={{ border: '1px solid var(--brand-dark)', borderRadius: '10px', padding: '0.38rem 0.45rem', fontSize: '0.8rem', color: 'var(--brand-muted)' }}
+                  style={{
+                    border: "1px solid var(--brand-dark)",
+                    borderRadius: "10px",
+                    padding: "0.38rem 0.45rem",
+                    fontSize: "0.8rem",
+                    color: "var(--brand-muted)",
+                  }}
                 >
                   {`${label} ${typeof pts === "number" && Number.isFinite(pts) ? `${Math.round(pts)}/${max}` : props.safeDisplay(null)}`}
                 </div>
@@ -220,14 +245,69 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </div>
           )
         })()}
-        {(typeof props.compExactCount === 'number' || typeof props.compFamilyCount === 'number' || typeof props.compMakeCount === 'number') ? (
-          <div style={{ marginTop: '0.55rem', fontSize: '0.78rem', color: 'var(--brand-muted)' }}>
-            {`Comp universe - exact: ${props.safeDisplay(props.compExactCount)} | family: ${props.safeDisplay(props.compFamilyCount)} | make: ${props.safeDisplay(props.compMakeCount)}`}
+        {typeof props.compExactCount === "number" ||
+        typeof props.compFamilyCount === "number" ||
+        typeof props.compMakeCount === "number" ? (
+          <div style={{ marginTop: "0.55rem", fontSize: "0.78rem", color: "var(--brand-muted)" }}>
+            {`Comp universe — exact: ${props.safeDisplay(props.compExactCount)} | family: ${props.safeDisplay(props.compFamilyCount)} | make: ${props.safeDisplay(props.compMakeCount)}`}
           </div>
         ) : null}
-        <p style={{ marginTop: '0.85rem' }}>
-          <span className={`badge ${props.riskBadgeClass}`}>{props.riskLabel}</span>
+
+        <h4
+          style={{
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--brand-muted)",
+            margin: "0.85rem 0 0.45rem",
+          }}
+        >
+          Score reliability
+        </h4>
+        <p style={{ fontSize: "0.8rem", color: "var(--brand-muted)", margin: "0 0 0.5rem", lineHeight: 1.45 }}>
+          Higher reliability means more listing fields checked and stronger comp coverage—not a second opinion on flip tier.
         </p>
+        {props.effectiveDataConfidence ? (
+          <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--brand-white)", margin: "0 0 0.45rem" }}>
+            {`Summary: ${props.effectiveDataConfidence}`}
+          </p>
+        ) : null}
+        <div className="score-notes" style={{ marginTop: props.effectiveDataConfidence ? "0.15rem" : 0 }}>
+          {props.confidenceSignals.length > 0 ? (
+            <ul style={{ marginTop: 0 }}>
+              {props.confidenceSignals.map((signal) => (
+                <li key={signal}>{signal}</li>
+              ))}
+            </ul>
+          ) : (
+            <ul style={{ marginTop: 0 }}>
+              <li>No reliability signals available yet.</li>
+            </ul>
+          )}
+        </div>
+
+        <h4
+          style={{
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--brand-muted)",
+            margin: "0.85rem 0 0.45rem",
+          }}
+        >
+          Downside risk
+        </h4>
+        <p style={{ fontSize: "0.8rem", color: "var(--brand-muted)", margin: "0 0 0.5rem", lineHeight: 1.45 }}>
+          Separate from flip score: maintenance burden, registration or safety alerts, and condition signals.
+        </p>
+        <p style={{ marginTop: 0, marginBottom: "0.85rem" }}>
+          <span className={`badge ${props.riskBadgeClass}`} aria-label={props.riskBadgeAriaLabel}>
+            {props.riskBadgeText}
+          </span>
+        </p>
+
         <div className="score-inputs-wrap">
           <h4 className="score-inputs-title">Actual Numbers for This Aircraft</h4>
           <table className="score-inputs-table">
@@ -241,19 +321,8 @@ export default function RightDetailColumn(props: RightDetailColumnProps) {
             </tbody>
           </table>
         </div>
-        <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {props.effectiveDataConfidence ? (
-            <span className="badge score-none">{`Data Confidence: ${props.effectiveDataConfidence}`}</span>
-          ) : null}
-          {props.pricingConfidence ? (
-            <span className="badge score-none">{`Pricing Confidence: ${props.pricingConfidence}`}</span>
-          ) : null}
-          {props.compSelectionTier ? (
-            <span className="badge risk-moderate">{`Comp Tier: ${props.formatCompTier(props.compSelectionTier)}`}</span>
-          ) : null}
-        </div>
         {props.scoreExplanation.length > 0 ? (
-          <div style={{ marginTop: '1rem' }}>
+          <div style={{ marginTop: "1rem" }}>
             <h3>How We Scored This</h3>
             <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
               {props.scoreExplanation.map((item) => (

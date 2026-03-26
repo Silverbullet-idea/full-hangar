@@ -102,7 +102,7 @@ export default function AdminInvitesPage() {
             <option value="90">90 days</option>
             <option value="never">Never</option>
           </select>
-          <button className="rounded bg-brand-orange px-3 py-2 font-semibold text-black" type="submit">
+          <button className="fh-cta-on-orange-fill rounded bg-brand-orange px-3 py-2 font-semibold" type="submit">
             Create Invite
           </button>
         </form>

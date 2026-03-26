@@ -2,6 +2,8 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { cache, type ReactNode } from "react"
 import ListingDetailBodySections, { type LlpRow } from "./components/ListingDetailBodySections"
+import ListingDealDeskCallout from "./components/ListingDealDeskCallout"
+import ListingDetailDataFootnote from "./components/ListingDetailDataFootnote"
 import ListingDetailSidebarSections from "./components/ListingDetailSidebarSections"
 import ListingIdentityBar from "./components/ListingIdentityBar"
 import ListingImageGallery from "./components/ListingImageGallery"
@@ -42,10 +44,14 @@ import {
   formatHours,
   formatIsoDate,
   formatMoney,
+  formatRiskBadgeAriaLabel,
+  formatRiskBadgeDisplay,
   formatScore,
   formatSeatsEngines,
   getRiskClass,
 } from "../../../lib/listings/format"
+import { isPlausibleEngineModelIdentity } from "../../../lib/listings/engineIdentityModel"
+import { normalizeEngineManufacturerDisplay } from "../../../lib/listings/engineManufacturerCanon"
 import { getListingById, getListingPriceHistory, getListingRawById, getSimilarMarketPricing } from "../../../lib/listings/queries"
 import type { AircraftListing } from "../../../lib/types"
 import { DEFAULT_OG_IMAGE_PATH, toAbsoluteUrl, titleFromParts } from "../../../lib/seo/site"
@@ -195,14 +201,20 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const engineSmohHours = typeof listingRow.engine_time_since_overhaul === "number"
     ? listingRow.engine_time_since_overhaul
     : parsedEngineSmoh ?? parsedDescription.engineSmoh
-  const engineTboHours =
-    pickNumber(raw, ["ev_tbo_hours"]) ??
-    listingRow.engine_tbo_hours ??
-    pickNumber(raw, ["engine_tbo_hours", "engine_tbo"]) ??
-    parsedEngineTbo ??
-    parsedDescription.engineTbo
   const scoreData = parseUnknownRecord(raw, ["score_data"]) ?? parseUnknownRecord(listingRow as UnknownRow, ["score_data"])
   const engineValueData = scoreData && typeof scoreData.engine_value === "object" ? (scoreData.engine_value as Record<string, unknown>) : null
+  const engineRef = parseUnknownRecord(scoreData as UnknownRow, ["engine_reference"])
+  const engineTboHours =
+    pickNumber(engineValueData, ["tbo_hours"]) ??
+    pickNumber(engineRef as UnknownRow, ["tbo_hours"]) ??
+    pickNumber(raw, ["ev_tbo_hours"]) ??
+    pickNumber(raw, ["engine_tbo_hours", "engine_tbo"]) ??
+    (typeof listingRow.engine_tbo_hours === "number" ? listingRow.engine_tbo_hours : null) ??
+    parsedEngineTbo ??
+    parsedDescription.engineTbo
+  const engineTboCalendarYears = pickNumber(engineRef as UnknownRow, ["calendar_years"])
+  const engineTboSourceRaw = pickText(engineRef as UnknownRow, ["tbo_source"])
+  const engineTboLookupModel = pickText(engineRef as UnknownRow, ["tbo_lookup_model"])
   const engineRemainingValue =
     pickNumber(engineValueData, ["engine_remaining_value"]) ??
     pickNumber(raw, ["ev_engine_remaining_value"]) ??
@@ -252,20 +264,43 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     Number.isFinite(listingRow.year) &&
     currentYear - listingRow.year >= 10 &&
     !possibleEngineOverhaulDate
-  const engineModelText =
-    cleanEngineModelText(
-      pickText(raw, ["engine_model", "faa_engine_model_detail"]) ||
-        descriptionIntelligence.engineModel ||
-        parsedDescription.engineModel
-    )
+  const listingEngineModelCandidate = cleanEngineModelText(
+    pickText(raw, ["engine_model"]) ||
+      descriptionIntelligence.engineModel ||
+      parsedDescription.engineModel
+  )
+  const faaEngineModelCandidate = cleanEngineModelText(
+    pickText(raw, ["faa_engine_model", "faa_engine_model_detail"])
+  )
+  const engineRefModelFallback = cleanEngineModelText(
+    pickText(engineRef as UnknownRow, ["model_display", "model_faa", "model_listing"])
+  )
+  let engineModelFromFields: string | null = null
+  if (
+    isPlausibleEngineModelIdentity(faaEngineModelCandidate) &&
+    !isPlausibleEngineModelIdentity(listingEngineModelCandidate)
+  ) {
+    engineModelFromFields = faaEngineModelCandidate
+  } else if (isPlausibleEngineModelIdentity(listingEngineModelCandidate)) {
+    engineModelFromFields = listingEngineModelCandidate
+  } else if (isPlausibleEngineModelIdentity(faaEngineModelCandidate)) {
+    engineModelFromFields = faaEngineModelCandidate
+  } else {
+    engineModelFromFields =
+      engineRefModelFallback || listingEngineModelCandidate || faaEngineModelCandidate || null
+  }
+  const engineModelText = engineModelFromFields
   const serialNumberText =
     pickText(raw, ["serial_number", "faa_serial_number_detail", "serial_no", "serial"]) ||
     cleanParsedText(listingRow.serial_number)
   const faaEngineManufacturer = pickText(raw, ["faa_engine_manufacturer_detail"])
-  const engineManufacturerText =
+  const engineManufacturerMerged =
+    pickText(engineRef as UnknownRow, ["manufacturer"]) ||
     faaEngineManufacturer ||
-    pickText(raw, ["engine_manufacturer", "engine_make"]) ||
+    pickText(raw, ["engine_manufacturer", "engine_make", "faa_engine_manufacturer"]) ||
     inferEngineManufacturerFromModel(engineModelText)
+  const engineManufacturerText =
+    normalizeEngineManufacturerDisplay(engineManufacturerMerged) || engineManufacturerMerged
   const faaTypeEngine = pickText(raw, ["faa_type_engine_detail"])
   const normalizedEngineType = normalizeEngineTypeLabel(faaTypeEngine, engineModelText, engineManufacturerText)
   const faaAirworthinessCategory = pickText(raw, ["faa_airworthiness_category_detail"])
@@ -351,7 +386,14 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     effectiveCompSource,
     scoreExplanation.length
   )
-  const confidenceSignals = buildConfidenceSignals(listingRow, resolvedAskingPrice, marketPricing?.sampleSize ?? null, dataConfidence)
+  const confidenceSignals = buildConfidenceSignals(
+    listingRow,
+    resolvedAskingPrice,
+    marketPricing?.sampleSize ?? null,
+    dataConfidence,
+    effectiveDataConfidence
+  )
+  const flipTierBandLine = buildFlipTierBandLine(displayFlipTier, hasDisclosedListPrice)
   let priceHistoryRaw: Awaited<ReturnType<typeof getListingPriceHistory>> = []
   try {
     priceHistoryRaw = await getListingPriceHistory(listingRow.source, listingRow.source_id, 730)
@@ -569,20 +611,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         ? "good"
         : "default"
   const intelligenceVersion = pickText(raw, ["intelligence_version"]) || listingRow.intelligence_version || null
-  const marketMedianLabel =
-    marketPricing && typeof marketPricing.median === "number"
-      ? `Similar listings median ${formatMoney(marketPricing.median)} (n=${marketPricing.sampleSize})`
-      : typeof compMedianPrice === "number"
-        ? `Comp set median ${formatMoney(compMedianPrice)}`
-        : null
   const heroImageUrls = [
     ...new Set(
       [String(primaryImageUrl || "").trim(), ...galleryUrls.map((value) => String(value || "").trim())].filter(Boolean)
     ),
   ]
-  const sourceMetaLine = [listingRow.source, listingRow.source_id ? `#${listingRow.source_id}` : null]
-    .filter(Boolean)
-    .join(" · ")
   const identityQuickStats = [
     {
       label: "TTAF",
@@ -747,7 +780,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             title={titleText}
             nNumber={nNumber}
             location={listingRow.location_label || null}
-            metaLine={sourceMetaLine || null}
+            askingPrice={resolvedAskingPrice}
+            flipScore={displayFlipScore}
+            flipScoreColor={getScoreColor(displayFlipScore)}
             fractionalRow={
               fractionalBreakdown.isFractional ? (
                 <div className="fractional-chip-row mb-1">
@@ -762,20 +797,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
           />
         </div>
 
-        <div className="mb-6 min-w-0 lg:mb-0">
-          <ListingScoreHeroCards
-            flipTier={displayFlipTier}
-            flipScore={displayFlipScore}
-            flipExplanation={flipExplanationParsed}
-            intelligenceVersion={intelligenceVersion}
-            askingPrice={resolvedAskingPrice}
-            priceReduced={listingRow.price_reduced === true}
-            priceReductionAmount={listingRow.price_reduction_amount ?? null}
-            daysOnMarket={listingRow.days_on_market ?? null}
-            marketMedianLabel={marketMedianLabel}
-            trueCostEstimate={trueCostEstimate}
-            deferredMaintenanceTotal={deferredMaintenanceTotal}
-          />
+        <div className="mb-6 flex min-w-0 flex-col gap-4 lg:mb-0">
+          <ListingDealDeskCallout dealDeskHref={`/internal/deal-desk/${id}`} aircraftLabel={dealDeskAircraftLabel} />
+          <ListingScoreHeroCards flipExplanation={flipExplanationParsed} />
         </div>
 
         <div className="detail-grid-left min-w-0 lg:col-start-1">
@@ -784,7 +808,12 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             faaMatched={faaMatched}
             airframeRows={airframeSpecRows}
             engineLifePercent={engineLifePct}
+            engineManufacturerText={engineManufacturerText || "—"}
             engineModelText={engineModelText || "—"}
+            engineSpecTboHours={typeof engineTboHours === "number" ? engineTboHours : null}
+            engineSpecCalendarYears={engineTboCalendarYears}
+            engineSpecTboSource={engineTboSourceRaw}
+            engineSpecLookupModel={engineTboLookupModel}
             engineValuePanel={{
               remainingValue: engineRemainingValue,
               overrunLiability: engineOverrunLiabilityAmount > 0 ? engineOverrunLiabilityAmount : null,
@@ -820,8 +849,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         </div>
         <div className="detail-grid-right flex min-w-0 flex-col gap-4 lg:col-start-2">
           <ListingDetailSidebarSections
-            dealDeskHref={`/internal/deal-desk/${id}`}
-            aircraftLabel={dealDeskAircraftLabel}
             faaVerified={faaSidebarVerified}
             faaCompactRows={faaCompactRows}
             faaLookupUrl={faaLookupUrl}
@@ -837,12 +864,6 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             sourceLinkLabel={sourceLinkLabel}
             scoreExplanation={scoreExplanation}
             renderScoreExplanationItem={renderScoreExplanationItem}
-            footnote={{
-              sourceLabel: sourceFootnoteLabel,
-              intelligenceVersion,
-              parserVersion: parserVersionFootnote,
-              lastUpdated: lastUpdatedFootnote,
-            }}
           />
           <RightDetailColumn
             listingId={id}
@@ -861,11 +882,10 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
             compFamilyCount={compFamilyCount}
             compMakeCount={compMakeCount}
             riskBadgeClass={getRiskClass(listingRow.risk_level)}
-            riskLabel={listingRow.risk_level || "UNKNOWN"}
+            riskBadgeText={formatRiskBadgeDisplay(listingRow.risk_level)}
+            riskBadgeAriaLabel={formatRiskBadgeAriaLabel(listingRow.risk_level)}
+            flipTierBandLine={flipTierBandLine}
             scoreInputRows={scoreInputRows}
-            pricingConfidence={pricingConfidence}
-            compSelectionTier={compSelectionTier}
-            formatCompTier={formatCompTier}
             scoreExplanation={scoreExplanation}
             renderScoreExplanationItem={renderScoreExplanationItem}
             showAvionicsPanel={avionicsMatchedItems.length > 0 || detectedStcs.length > 0 || typeof installedAvionicsValue === "number"}
@@ -895,6 +915,15 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
       {fractionalPricingNote ? (
         <p className="fractional-pricing-note mx-auto max-w-[1280px] px-4 sm:px-5 lg:px-6">{fractionalPricingNote}</p>
       ) : null}
+
+      <ListingDetailDataFootnote
+        footnote={{
+          sourceLabel: sourceFootnoteLabel,
+          intelligenceVersion,
+          parserVersion: parserVersionFootnote,
+          lastUpdated: lastUpdatedFootnote,
+        }}
+      />
 
       <style>{`
         .fractional-pricing-note {
@@ -1359,10 +1388,12 @@ function annualStatusDisplay(lastAnnualText: string | null): { label: string; ok
 }
 
 type FlipExplanationPayload = {
-  p1_pricing_edge?: { pts?: number; max?: number }
-  p2_airworthiness?: { pts?: number; max?: number }
-  p3_improvement_room?: { pts?: number; max?: number }
-  p4_exit_liquidity?: { pts?: number; max?: number }
+  p1_pricing_edge?: { pts?: number; max?: number; basis?: string }
+  p2_airworthiness?: { pts?: number; max?: number; basis?: string }
+  p3_improvement_room?: { pts?: number; max?: number; basis?: string }
+  p4_exit_liquidity?: { pts?: number; max?: number; basis?: string }
+  raw_total?: number
+  risk_cap_applied?: boolean
   suppressed?: string
   error?: string
 } | null
@@ -1680,10 +1711,10 @@ function buildScoreInputRows(args: {
     rows.push(["STC premium value", safeDisplay(formatMoney(stcPremiumTotal))])
   }
   if (dataConfidence) {
-    rows.push(["Data confidence", safeDisplay(dataConfidence)])
+    rows.push(["Listing data completeness", safeDisplay(dataConfidence)])
   }
   if (pricingConfidence) {
-    rows.push(["Pricing confidence", safeDisplay(pricingConfidence)])
+    rows.push(["Comparable-pricing confidence", safeDisplay(pricingConfidence)])
   }
   if (compSource) {
     rows.push(["Comp source", safeDisplay(compSource)])
@@ -1696,11 +1727,17 @@ function buildConfidenceSignals(
   listing: AircraftListing,
   askingPrice: number | null,
   marketSampleSize: number | null,
-  originalConfidence: string | null
+  originalConfidence: string | null,
+  effectiveDataConfidence: string | null
 ): string[] {
   const signals: string[] = []
   if (originalConfidence) {
-    signals.push(`Model-provided confidence: ${originalConfidence}.`)
+    const oc = originalConfidence.trim()
+    const edc = (effectiveDataConfidence || "").trim()
+    const duplicate = edc.length > 0 && oc.toLowerCase() === edc.toLowerCase()
+    if (!duplicate) {
+      signals.push(`Scoring model listing-data tier: ${originalConfidence}.`)
+    }
   }
   if (typeof askingPrice === "number" && askingPrice > 0) {
     signals.push(`Asking price available (${formatMoney(askingPrice)}).`)
@@ -1781,14 +1818,27 @@ function buildScoreMethodSummary(
     lines.push(`Market pricing source: ${dealComparisonSource} (exact-first comps waterfall, then broader fallback tiers).`)
   }
   if (dataConfidence) {
-    lines.push(`Data confidence: ${dataConfidence}.`)
+    lines.push(`Listing data completeness: ${dataConfidence}.`)
   }
   if (pricingConfidence) {
-    lines.push(`Pricing confidence: ${pricingConfidence}.`)
+    lines.push(`Comparable-pricing confidence: ${pricingConfidence}.`)
   }
   if (scoreExplanationCount > 0) {
     lines.push("See the factor list below for supporting signals.")
   }
+  lines.push(
+    "Downside risk (maintenance, registration, condition) is separate from flip tier—a GOOD flip tier does not imply low risk."
+  )
   return lines.join("\n")
+}
+
+function buildFlipTierBandLine(flipTier: string | null, hasDisclosedPrice: boolean): string | null {
+  if (!hasDisclosedPrice) return null
+  const fk = String(flipTier ?? "").trim().toUpperCase()
+  if (!fk) return null
+  const band =
+    fk === "HOT" ? "80–100" : fk === "GOOD" ? "65–79" : fk === "FAIR" ? "50–64" : fk === "PASS" ? "0–49" : null
+  if (band) return `${fk} tier (${band} band).`
+  return `${fk} tier.`
 }
 
