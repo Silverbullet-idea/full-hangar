@@ -4,6 +4,12 @@ Generated from latest `scraper/FIELD_COVERAGE_REPORT.md` and current scraper beh
 
 Use this as the execution checklist for Phase 2/3 parser and selector improvements.
 
+## Execution / verification
+
+- Work the list **top to bottom** (Controller → … → Barnstormers). After each source change, run a **bounded smoke** scrape (`--limit` / preview scripts) and spot-check Supabase field fill rates for the fields touched.
+- After browser-extension or bridge changes, run `npm run pipeline:ops:bridge-unmapped-audit` and promote high-frequency `raw_data.bridge_unmapped` keys via migrations when stable.
+- Ingest-time **make/model** normalization now runs in `scraper/schema.py` via `listing_identity_ingest.normalize_scraped_make_model` (same rules as `make_model_rules.json`); per-source selectors in this queue remain the lever for raw field coverage.
+
 ---
 
 ## Priority Order

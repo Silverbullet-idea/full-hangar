@@ -1,8 +1,8 @@
 {
   "generated_at": "2026-03-12T14:55:53Z",
-  "queue_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_candidates.json",
-  "review_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_reviewed.json",
-  "catalog_path": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\avionics_master_catalog.json",
+  "queue_path": "D:\\Documents\\FullHangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_candidates.json",
+  "review_path": "D:\\Documents\\FullHangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\top_medium_confidence_reviewed.json",
+  "catalog_path": "D:\\Documents\\FullHangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\avionics\\avionics_master_catalog.json",
   "auto_approved": 0,
   "stats": {
     "applied": 0,

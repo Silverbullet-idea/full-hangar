@@ -7,7 +7,7 @@
 - low: 59
 - none: 2142
 
-Medium-confidence alias review queue: `D:/Documents/$$Full Hangar/2.0/CursorReposity/full-hangar/scraper/data/avionics/top_medium_confidence_candidates.json` (4 candidates)
+Medium-confidence alias review queue: `D:/Documents/FullHangar/2.0/CursorReposity/full-hangar/scraper/data/avionics/top_medium_confidence_candidates.json` (4 candidates)
 
 ### BendixKing AeroCruze 100
 - Observations: 41 (pacific_coast_avionics: 41)

@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-03-24T16:44:04.651416+00:00",
-  "rules_file": "D:\\Documents\\$$Full Hangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\identity\\make_model_rules.json",
+  "rules_file": "D:\\Documents\\FullHangar\\2.0\\CursorReposity\\full-hangar\\scraper\\data\\identity\\make_model_rules.json",
   "listing_sample_limit": null,
   "active_listings_scanned": 10536,
   "distinct_make_strings": 283,

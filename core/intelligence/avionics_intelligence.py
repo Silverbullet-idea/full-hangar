@@ -229,6 +229,7 @@ def _safe_float(value) -> float | None:
 
 
 def _infer_segment(listing: dict) -> str:
+    """Map listing to avionics segment; per-segment valuation thresholds live in DB (`avionics_market_values`), not here."""
     aircraft_type = str(listing.get("aircraft_type") or "").lower()
     model = str(listing.get("model") or "").lower()
     if any(token in aircraft_type for token in ("multi", "twin")) or any(token in model for token in ("twin", "seneca", "baron")):

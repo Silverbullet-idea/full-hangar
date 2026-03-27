@@ -66,62 +66,126 @@ function formatSourceLabel(raw: string): string {
   return m[k] ?? raw
 }
 
-function pillarBarHeight(score: number | null | undefined): number | null {
+/** Match legacy bar fill: numeric scores clamp to [2,100] so tiny values stay visible. */
+function pillarGaugePercent(score: number | null | undefined): number | null {
   if (typeof score !== 'number' || !Number.isFinite(score)) return null
   return Math.max(2, Math.min(100, score))
 }
 
-function PillarColumn({
+const PILLAR_DONUT_R = 14
+const PILLAR_DONUT_STROKE = 3.5
+const PILLAR_DONUT_C = 2 * Math.PI * PILLAR_DONUT_R
+
+type PillarDensity = 'tiles' | 'rows'
+
+function PillarScoreGauge({
   instanceId,
   letter,
   label,
   score,
-  gradient,
+  gradientFrom,
+  gradientTo,
   tooltipHint,
-  barsRevealed,
+  gaugesRevealed,
+  density,
+  trackStroke,
 }: {
   instanceId: string
   letter: string
   label: string
   score: number | null
-  gradient: string
+  gradientFrom: string
+  gradientTo: string
   tooltipHint: string
-  barsRevealed: boolean
+  gaugesRevealed: boolean
+  density: PillarDensity
+  trackStroke: string
 }) {
-  const h = pillarBarHeight(score)
-  const targetPct = h != null ? h : 0
-  const showFill = h != null
+  const pct = pillarGaugePercent(score)
+  const showProgress = pct != null
+  const revealedPct = gaugesRevealed && showProgress ? pct : 0
+  const dashOffset = PILLAR_DONUT_C * (1 - revealedPct / 100)
+  const gradId = `${instanceId}-stroke-grad`
   const tooltipBody = `${label}${score != null ? `, ${Math.round(score)} out of 100` : ', no score'}. ${tooltipHint}`
   const tooltipSrId = `${instanceId}-tip`
+  const sizePx = density === 'tiles' ? 36 : 40
+  const centerFont = density === 'tiles' ? '11px' : '12px'
+  const letterSize = '10px'
+  const labelSize = density === 'tiles' ? '8px' : '9px'
+  const letterColorClass = density === 'tiles' ? 'text-[var(--fh-text-dim)]' : 'text-[#9ca3af]'
+  const centerColorClass = density === 'tiles' ? 'text-[var(--fh-text)]' : 'text-white'
+  const labelColorClass = density === 'tiles' ? 'text-[var(--fh-text-muted)]' : 'text-[#94a3b8]'
+
   return (
     <div
-      className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1"
+      className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-0.5"
       role="group"
       aria-describedby={tooltipSrId}
     >
       <span
-        className="text-[11px] font-bold text-[var(--fh-text-dim)]"
-        style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+        className={`font-bold leading-none ${letterColorClass}`}
+        style={{
+          fontFamily: 'var(--font-barlow-condensed), system-ui',
+          fontSize: letterSize,
+        }}
       >
-        {letter}:{score != null ? Math.round(score) : '—'}
+        {letter}
       </span>
-      <div className="flex h-8 w-full items-end overflow-hidden rounded-[3px] bg-[var(--fh-bg3)] px-px">
-        {showFill ? (
-          <div
-            className="w-full min-h-[2px] rounded-sm"
-            style={{
-              height: `${barsRevealed ? targetPct : 0}%`,
-              background: gradient,
-              transition: 'height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          />
-        ) : (
-          <div className="h-0.5 w-full rounded-sm bg-[var(--fh-border)] opacity-50" />
-        )}
+      <div className="relative shrink-0" style={{ width: sizePx, height: sizePx }}>
+        <svg
+          width={sizePx}
+          height={sizePx}
+          viewBox="0 0 40 40"
+          className="block"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={gradientFrom} />
+              <stop offset="100%" stopColor={gradientTo} />
+            </linearGradient>
+          </defs>
+          <g transform="rotate(-90 20 20)">
+            <circle
+              cx="20"
+              cy="20"
+              r={PILLAR_DONUT_R}
+              fill="none"
+              stroke={trackStroke}
+              strokeWidth={PILLAR_DONUT_STROKE}
+            />
+            {showProgress ? (
+              <circle
+                cx="20"
+                cy="20"
+                r={PILLAR_DONUT_R}
+                fill="none"
+                stroke={`url(#${gradId})`}
+                strokeWidth={PILLAR_DONUT_STROKE}
+                strokeLinecap="round"
+                strokeDasharray={PILLAR_DONUT_C}
+                strokeDashoffset={dashOffset}
+                style={{
+                  transition: 'stroke-dashoffset 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              />
+            ) : null}
+          </g>
+        </svg>
+        <span
+          className={`pointer-events-none absolute inset-0 flex items-center justify-center font-extrabold ${centerColorClass}`}
+          style={{
+            fontFamily: 'var(--font-barlow-condensed), system-ui',
+            fontSize: centerFont,
+            lineHeight: 1,
+          }}
+        >
+          {score != null ? Math.round(score) : '—'}
+        </span>
       </div>
       <span
-        className="text-center text-[8px] text-[var(--fh-text-muted)]"
-        style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+        className={`max-w-[56px] text-center leading-tight ${labelColorClass}`}
+        style={{ fontFamily: 'var(--font-dm-sans), system-ui', fontSize: labelSize }}
       >
         {label}
       </span>
@@ -137,6 +201,91 @@ function PillarColumn({
         {score != null ? ` · ${Math.round(score)}` : ''}
         <span className="mt-0.5 block text-[9px] text-[var(--fh-text-muted)]">{tooltipHint}</span>
       </div>
+    </div>
+  )
+}
+
+const LISTING_PILLAR_DEFS: Array<{
+  suffix: string
+  letter: string
+  label: string
+  pick: (m: NonNullable<ListingCardProps['tileMeta']>) => number | null
+  from: string
+  to: string
+  hint: string
+}> = [
+  {
+    suffix: 'E',
+    letter: 'E',
+    label: 'Engine',
+    pick: (m) => m.engineScore,
+    from: '#22c55e',
+    to: '#059669',
+    hint: 'Overhaul timing, hours, and model fit vs. market.',
+  },
+  {
+    suffix: 'A',
+    letter: 'A',
+    label: 'Avionics',
+    pick: (m) => m.avionicsScore,
+    from: '#3b82f6',
+    to: '#7c3aed',
+    hint: 'Panel depth, ADS-B, autopilot, and installed value.',
+  },
+  {
+    suffix: 'Q',
+    letter: 'Q',
+    label: 'Quality',
+    pick: (m) => m.qualityScore,
+    from: '#FF9900',
+    to: '#AF4D27',
+    hint: 'Listing completeness, photos, and description signal.',
+  },
+  {
+    suffix: 'V',
+    letter: 'V',
+    label: 'Value',
+    pick: (m) => m.marketValueScore,
+    from: '#f59e0b',
+    to: '#d97706',
+    hint: 'Price vs. comps and market opportunity.',
+  },
+  {
+    suffix: 'S',
+    letter: 'S',
+    label: 'STC / Mods',
+    pick: (m) => m.executionScore,
+    from: '#ec4899',
+    to: '#be185d',
+    hint: 'STC and modification value contribution.',
+  },
+]
+
+function renderListingPillarGauges(
+  pillarIdBase: string,
+  m: NonNullable<ListingCardProps['tileMeta']>,
+  gaugesRevealed: boolean,
+  density: PillarDensity,
+  rowClassName: string,
+  trackStroke: string,
+) {
+  return (
+    <div className={rowClassName}>
+      {LISTING_PILLAR_DEFS.map((def) => (
+        <PillarScoreGauge
+          key={def.suffix}
+          instanceId={`${pillarIdBase}-p-${def.suffix}`}
+          letter={def.letter}
+          label={def.label}
+          score={def.pick(m)}
+          gradientFrom={def.from}
+          gradientTo={def.to}
+          tooltipHint={def.hint}
+          gaugesRevealed={gaugesRevealed}
+          density={density}
+          trackStroke={trackStroke}
+        />
+      ))}
     </div>
   )
 }
@@ -526,53 +675,14 @@ export default function ListingCard({
 
           <div className="border-t border-[var(--fh-border)] px-3.5 py-2.5">
             {m.hasDisclosedPrice ? (
-              <div className="flex items-end gap-1">
-                <PillarColumn
-                  instanceId={`${pillarIdBase}-p-E`}
-                  letter="E"
-                  label="Engine"
-                  score={m.engineScore}
-                  gradient="linear-gradient(180deg, #22c55e, #059669)"
-                  tooltipHint="Overhaul timing, hours, and model fit vs. market."
-                  barsRevealed={pillarBarsRevealed}
-                />
-                <PillarColumn
-                  instanceId={`${pillarIdBase}-p-A`}
-                  letter="A"
-                  label="Avionics"
-                  score={m.avionicsScore}
-                  gradient="linear-gradient(180deg, #3b82f6, #7c3aed)"
-                  tooltipHint="Panel depth, ADS-B, autopilot, and installed value."
-                  barsRevealed={pillarBarsRevealed}
-                />
-                <PillarColumn
-                  instanceId={`${pillarIdBase}-p-Q`}
-                  letter="Q"
-                  label="Quality"
-                  score={m.qualityScore}
-                  gradient="linear-gradient(180deg, #FF9900, #AF4D27)"
-                  tooltipHint="Listing completeness, photos, and description signal."
-                  barsRevealed={pillarBarsRevealed}
-                />
-                <PillarColumn
-                  instanceId={`${pillarIdBase}-p-V`}
-                  letter="V"
-                  label="Value"
-                  score={m.marketValueScore}
-                  gradient="linear-gradient(180deg, #f59e0b, #d97706)"
-                  tooltipHint="Price vs. comps and market opportunity."
-                  barsRevealed={pillarBarsRevealed}
-                />
-                <PillarColumn
-                  instanceId={`${pillarIdBase}-p-S`}
-                  letter="S"
-                  label="STC / Mods"
-                  score={m.executionScore}
-                  gradient="linear-gradient(180deg, #ec4899, #be185d)"
-                  tooltipHint="STC and modification value contribution."
-                  barsRevealed={pillarBarsRevealed}
-                />
-              </div>
+              renderListingPillarGauges(
+                pillarIdBase,
+                m,
+                pillarBarsRevealed,
+                'tiles',
+                'flex items-start justify-between gap-0.5 sm:gap-1',
+                'var(--fh-border)',
+              )
             ) : (
               <p className="text-center text-[11px] text-[var(--fh-text-muted)]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
                 📊 Aircraft intelligence available — flip score unlocks when price is disclosed.
@@ -617,6 +727,7 @@ export default function ListingCard({
   }
 
   const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError, priority: imagePriority })
+  const pillarIdBaseRows = listingKey.replace(/[^a-zA-Z0-9_-]/g, '_')
 
   if (mode === 'rows') {
     return (
@@ -657,6 +768,23 @@ export default function ListingCard({
             </div>
             <div className="mt-1 text-sm text-brand-muted" suppressHydrationWarning>{locationText}</div>
             {renderSpecTable(listingKey, specRows)}
+            {tileMeta != null && tileMeta.hasDisclosedPrice
+              ? renderListingPillarGauges(
+                  pillarIdBaseRows,
+                  tileMeta,
+                  pillarBarsRevealed,
+                  'rows',
+                  'mt-3 flex flex-wrap items-start justify-between gap-x-1 gap-y-2 border-t border-[#2d394a] pt-3',
+                  '#4b5563',
+                )
+              : tileMeta != null ? (
+                  <p
+                    className="mt-3 border-t border-[#2d394a] pt-3 text-center text-[11px] text-[#94a3b8]"
+                    style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+                  >
+                    Aircraft intelligence available — flip score unlocks when price is disclosed.
+                  </p>
+                ) : null}
           </div>
         </div>
       </a>

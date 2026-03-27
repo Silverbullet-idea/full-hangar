@@ -780,5 +780,5 @@ When you have completed all phases (or need to stop mid-session):
 ---
 
 *End of agent prompt. All files go under the project root:*
-*`D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`*
+*`D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`*
 *Python runtime: `.venv312\Scripts\python.exe`*

@@ -86,7 +86,12 @@
     "pipeline:score-dist:audit": ".venv312\\Scripts\\python.exe scraper\\audit_score_distribution.py",
     "pipeline:score-dist:post-backfill": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-post-full-backfill-verification.ps1",
     "pipeline:score-dist:full-v193-and-commit": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-v193-full-backfill-then-audit-commit.ps1",
-    "pipeline:backfill:all-chunked": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-backfill-all-chunked.ps1"
+    "pipeline:backfill:all-chunked": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-backfill-all-chunked.ps1",
+    "pipeline:ops:bridge-unmapped-audit": ".venv312\\Scripts\\python.exe scraper\\audit_bridge_unmapped_fields.py",
+    "pipeline:ops:flip-tier-sql": "powershell -Command \"Get-Content -Raw scraper/sql/flip_tier_distribution.sql\"",
+    "pipeline:ops:flip-tier-snapshot": ".venv312\\Scripts\\python.exe scraper\\run_flip_tier_snapshot.py",
+    "pipeline:compute-market-comps": ".venv312\\Scripts\\python.exe scraper\\compute_market_comps.py",
+    "pipeline:compute-market-comps:dry": ".venv312\\Scripts\\python.exe scraper\\compute_market_comps.py --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",

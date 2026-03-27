@@ -822,6 +822,18 @@ def parser_backfill_updates(row: dict) -> dict:
     elif existing_engine_unusable and faa_engine_usable and cleaned_faa_engine_model:
         updates["engine_model"] = cleaned_faa_engine_model
 
+    parsed_stoh = _to_hour_int(parsed.get("stoh"))
+    parsed_sfoh = _to_hour_int(parsed.get("sfoh"))
+    if parsed_stoh is not None:
+        updates["stoh"] = parsed_stoh
+    if parsed_sfoh is not None:
+        updates["sfoh"] = parsed_sfoh
+    ndh = parsed.get("no_damage_history")
+    if ndh is True:
+        updates["no_damage_history"] = True
+    elif ndh is False:
+        updates["no_damage_history"] = False
+
     return updates
 
 
@@ -848,6 +860,7 @@ def run_backfill_from_db(
         "time_since_overhaul", "time_since_new_engine", "time_since_prop_overhaul", "engine_time_since_overhaul",
         "aircraft_type", "engine_model", "faa_engine_model", "faa_engine_manufacturer", "engine_manufacturer", "engine_make",
         "engine_tbo_hours", "score_data", "prop_model", "days_on_market", "price_reduced",
+        "stoh", "sfoh", "no_damage_history",
         "accident_count", "most_recent_accident_date", "most_severe_damage", "has_accident_history",
     ]
     active_select_cols = list(select_cols)

@@ -15,7 +15,7 @@ before doing anything else. This file is your source of truth for current projec
 conventions, and guardrails.
 
 **Your Python runtime is always:** `.venv312\Scripts\python.exe`
-**Project root:** `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`
+**Project root:** `D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`
 **Dev server runs on:** `localhost:3001`
 
 ### Your Task
@@ -210,7 +210,7 @@ You are a FRONTEND agent on the Full Hangar project. Read `AGENTS.md` in the pro
 before doing anything else.
 
 **Dev server:** `localhost:3001`  
-**Project root:** `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`  
+**Project root:** `D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`  
 **Framework:** Next.js 16 with Turbopack, TypeScript, Tailwind CSS  
 **DO NOT change any user-facing behavior, layout, or styling.**  
 **DO NOT change any API calls, data fetching logic, or Supabase queries.**  
@@ -362,7 +362,7 @@ and add new utilities there. Existing callers of the `.js` file are untouched.
 You are a MISC agent on the Full Hangar project. Read `AGENTS.md` in the project root
 before doing anything else.
 
-**Project root:** `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`  
+**Project root:** `D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`  
 **You own:** `*.md` docs, reference files, one-off scripts that don't touch active code.  
 **Do not modify** any scraper, API route, or frontend file.  
 **Do not run migrations** — document only, no DB changes.

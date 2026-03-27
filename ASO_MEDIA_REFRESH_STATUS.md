@@ -1,10 +1,10 @@
-﻿# ASO Media Refresh Status
+# ASO Media Refresh Status
 
 - Last run start: 2026-03-05 19:20:00
 - Last run end: 2026-03-05 19:20:28
 - Status: SUCCESS
 - Batch size: 25
-- Log file: D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\logs\pipelines\aso_media_refresh_20260305_192000.log
+- Log file: D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\logs\pipelines\aso_media_refresh_20260305_192000.log
 
 ## Result
 - Candidates: 3

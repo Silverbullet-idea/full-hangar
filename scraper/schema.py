@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from listing_identity_ingest import normalize_scraped_make_model
+
 
 _INT_FIELDS = {
     "year",
@@ -104,6 +106,12 @@ def validate_listing(raw: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         warnings.append("missing_identity:source_id_or_url")
     if not cleaned.get("source_site"):
         warnings.append("missing_source_site")
+
+    nm, nmdl = normalize_scraped_make_model(cleaned.get("make"), cleaned.get("model"))
+    if nm is not None and nm != cleaned.get("make"):
+        cleaned["make"] = nm
+    if nmdl is not None and nmdl != cleaned.get("model"):
+        cleaned["model"] = nmdl
 
     return cleaned, warnings
 

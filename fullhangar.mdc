@@ -1,0 +1,419 @@
+---
+alwaysApply: true
+---
+# Full Hangar — Cursor Rules (`.cursor/rules/fullhangar.mdc`)
+
+> Last synced: March 25, 2026
+> Read this first. Then read `AGENTS.md` for the current operational board.
+
+---
+
+## 1. Project Identity
+
+Full Hangar (`full-hangar.com`) is an aircraft marketplace intelligence platform — "Carfax for airplanes."
+It serves two parallel purposes:
+1. A personal deal-finding tool to identify undervalued sub-$50K aircraft to flip for profit.
+2. A commercial paid-intelligence product for buyers, brokers, and lenders.
+
+The owner (Ryan) is a licensed pilot with deep aviation domain expertise. He does not write code.
+Every agent is responsible for producing working, copy-paste-ready outputs that run on the first try.
+
+---
+
+## 2. Absolute Non-Negotiables
+
+These rules are never overridden by any task instruction.
+
+### Python
+- Always use `.venv312\Scripts\python.exe` — NEVER bare `python` or `python3`
+- Never install packages globally; always within the venv
+- Use `--break-system-packages` only when instructed for a specific pip edge case
+
+### Supabase / Database
+- All server-side Supabase access goes through `lib/supabase/server.ts` ONLY
+  - `createServerClient()` for standard reads
+  - `createPrivilegedServerClient()` for internal/admin/service-role operations
+- Never expose service-role keys to client/browser code — ever
+- Migrations are additive and sequential under `supabase/migrations/`
+- Use `npx supabase` for CLI commands, never a globally installed supabase binary
+- Service key resolution order: `SUPABASE_SERVICE_KEY` → `SUPABASE_SERVICE_ROLE_KEY` → `NEXT_SUPABASE_SERVICE_ROLE_KEY` → scraper `.env` fallback
+
+### Intelligence Versioning
+- Bump `INTELLIGENCE_VERSION` in `core/intelligence/aircraft_intelligence.py` whenever scoring logic changes
+- Never mix intelligence versions in the database — always run a full backfill after version bumps
+- Current version as of rules update: **v2.0.0** (flip score)
+
+### Destructive Operations
+- All destructive or write operations must be gated behind a `--dry-run` step first
+- Show Ryan the dry-run output and wait for explicit confirmation before `--apply`
+- Never run `backfill_scores.py --all` without confirming there is no active agent already running it
+
+---
+
+## 3. Project Structure
+
+```
+D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\
+├── app/                        # Next.js 16 App Router (frontend + API routes)
+│   ├── api/                    # API routes (BACKEND lane)
+│   ├── listings/               # Public listing browse + detail pages
+│   ├── internal/               # Internal tools (deals, deal-desk, market-intel, admin)
+│   └── beta/                   # Beta-access dashboard and join flow
+├── components/                 # Shared UI components
+├── core/
+│   └── intelligence/           # Python scoring engine
+│       ├── aircraft_intelligence.py   # Main scoring orchestrator
+│       ├── avionics_intelligence.py   # Avionics value scoring
+│       ├── listing_quality.py
+│       ├── model_normalizer.py
+│       ├── reference_service.py
+│       ├── stc_intelligence.py
+│       ├── engine_manufacturer_canon.py
+│       └── engine_identity_model.py
+├── lib/
+│   ├── db/
+│   │   └── listingsRepository.ts  # Primary repository layer — use this, not ad-hoc queries
+│   ├── supabase/
+│   │   └── server.ts              # ONLY Supabase factory — always use this
+│   ├── listings/                  # Normalization, format, category helpers
+│   ├── admin/
+│   └── geo/
+│       └── us-states-albers.ts    # Static Albers USA SVG paths for choropleth map
+├── scraper/                    # Python scraper pipeline (BACKEND lane)
+│   ├── scraper_base.py         # Shared utilities — import before adding custom helpers
+│   ├── schema.py               # Canonical listing schema — all scrapers must conform
+│   ├── config.py               # Centralized manufacturer tiers, aliases, site config
+│   ├── env_check.py            # Startup env validation
+│   ├── adaptive_rate.py        # History-driven delay/batch tuning
+│   ├── backfill_scores.py      # Full-DB scoring backfill — use with care
+│   ├── enrich_faa.py           # FAA registry enrichment
+│   ├── compute_market_comps.py # Market comparables computation
+│   ├── description_parser.py   # Listing text intelligence extraction (v2.1.6)
+│   ├── [source]_scraper.py     # Per-source scrapers (controller, tradaplane, aso, etc.)
+│   ├── avionics_*.py           # Avionics catalog/ingest/audit scripts
+│   ├── data/                   # Seed data, state files, audit outputs
+│   │   ├── avionics/
+│   │   └── identity/
+│   ├── logs/                   # Pipeline execution logs
+│   └── state/                  # Checkpoint / resume state files
+├── supabase/
+│   └── migrations/             # Sequential additive migrations only
+├── scripts/                    # PowerShell pipeline wrappers
+├── browser-extension/          # Chrome Manifest V3 extension (unified multi-source scraper)
+├── tests/
+│   └── smoke/                  # Playwright smoke tests
+├── docs/                       # Operational docs (PRODUCTION_VERIFY.md, etc.)
+├── AGENTS.md                   # Live operational board — read before every session
+├── REFACTOR_PLAN.md            # File-by-file refactor tracker
+├── AVIONICS_EXPANSION_PLAN.md  # Avionics intelligence roadmap
+├── AGENTS_DATA_SOURCES.md      # Data source expansion task specs (DS-1 through DS-9)
+└── PUBLIC_LISTINGS_VIEW.md     # Canonical public_listings view SQL reference
+```
+
+---
+
+## 4. Agent Lane Discipline
+
+**Max 3 parallel agents: FRONTEND, BACKEND, MISC**
+
+| Lane | Owns | Must NOT Touch |
+|------|------|----------------|
+| `FRONTEND` | `app/` (non-API routes), UI components, styles, page UX | `scraper/`, `core/intelligence/`, `supabase/migrations/` |
+| `BACKEND` | `scraper/`, `app/api/`, `lib/db/`, `core/intelligence/`, `supabase/migrations/` | `app/` page-level UX, component styling |
+| `MISC` | Docs, research, one-off scripts that do not touch active frontend/scraper internals | Production code, active pipelines |
+
+**Rules:**
+- One task per agent session. Close and start fresh rather than chaining unrelated tasks.
+- If a task crosses lanes, note the coordination explicitly in `AGENTS.md` before starting.
+- Do not modify another active lane without coordination noted in `AGENTS.md`.
+- Git commits are the real archive. Commit working states often with descriptive messages.
+
+---
+
+## 5. Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend framework | Next.js 16 with Turbopack |
+| Language | TypeScript (frontend), Python 3.12 (backend) |
+| Database | Supabase PostgreSQL (project ref: `pbbqdlcmgtruhssudwek`) |
+| Hosting | Vercel (auto-deploy on every GitHub push to `main`) |
+| Repository | `github.com/Silverbullet-idea/full-hangar` (private) |
+| Dev server | `http://localhost:3001` |
+| Python env | `.venv312\Scripts\python.exe` |
+| Scraping | Playwright + requests/BeautifulSoup |
+| Browser extension | Chrome Manifest V3 (unified Controller/GlobalAir/TAP scraper) |
+| CI smoke tests | Playwright (`npm run test:smoke:listings-all`) |
+
+### Key Environment Files
+- **Frontend:** `.env.local` — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `INTERNAL_PASSWORD`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+- **Python:** `scraper/.env` — `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+
+---
+
+## 6. Design System & Brand
+
+### Fonts (via `next/font`)
+- **Barlow Condensed** — site header wordmark, section titles
+- **DM Sans** — body copy, search, UI text
+- **DM Mono** — data values, scores, price figures
+
+### Brand Colors (CSS variables: `--fh-*`)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| Burn Orange | `#AF4D27` | Primary brand accent |
+| Light Orange | `#FF9900` | Score highlights, CTAs |
+| 100% Black | `#000000` | Dark backgrounds |
+| 80% Black | `#333333` | Secondary dark surfaces |
+| 30% Black | `#B2B2B2` | Muted text, disabled states |
+
+### Theme System
+- Persistent dark/light mode via `data-theme` attribute on `<html>`
+- Dual logo variants: dark-bg and light-bg versions (see style guide)
+- All components must maintain full parity across both themes
+- Use `suppressHydrationWarning` on `html/body` and theme-sensitive elements to prevent SSR mismatch
+- ThemeToggle uses mounted guard pattern (`ready` state) to prevent hydration drift
+
+### UI Conventions
+- Score colors: use `getScoreColor()` utility for tier-consistent color
+- `next/image` with `priority` + `fetchPriority="high"` on LCP images (hero, first 12 listing tiles)
+- Lazy-load heavy client components: `next/dynamic` with `{ ssr: false }` for `GeoIntelMap`, `CompsChartPanel`
+- Geographic map: static Albers USA SVG paths in `lib/geo/us-states-albers.ts` — no D3, no SSR complications
+- Mobile: bottom-sheet filter drawer (<768px), 44px minimum touch targets, `env(safe-area-inset-*)` for notch
+
+---
+
+## 7. Database Architecture
+
+### Primary Tables
+| Table | Rows (approx) | Purpose |
+|-------|--------------|---------|
+| `aircraft_listings` | ~10,574 | All scraped listings — the source of truth |
+| `faa_registry` | 310,196 | FAA aircraft ownership registry |
+| `faa_aircraft_ref` | — | FAA aircraft reference (make/model canonical) |
+| `engine_tbo_reference` | 249+ | Engine TBO intervals (Lycoming, Continental, etc.) |
+| `propeller_tbo_reference` | 41 | Propeller TBO intervals |
+| `life_limited_parts` | 35+ | Mandatory replacement items |
+| `aircraft_sold_transactions` | — | Real sale prices (eBay + FAA transfer signals) |
+| `detected_ownership_changes` | — | FAA ownership transfer signals |
+| `deal_desk_scenarios` | — | Saved Deal Desk P&L scenarios |
+| `avionics_units` | 165+ | Canonical avionics unit catalog |
+| `avionics_aliases` | — | Parser alias dictionary |
+| `avionics_market_values` | — | Valuation snapshots by segment |
+| `avionics_listing_observations` | — | Per-listing extracted avionics evidence |
+| `engine_overhaul_pricing` | — | Engine overhaul cost reference |
+
+### Primary View
+- `public_listings` — the canonical view used by all frontend queries
+  - Includes: `flip_score`, `flip_tier`, `ev_*` engine-value fields, `pillar_*` filter columns, `aircraft_type`, `aircraft_category`
+  - Reference: `PUBLIC_LISTINGS_VIEW.md`
+  - **Never query `aircraft_listings` directly from frontend routes** — use `public_listings` or the repository layer
+
+### Repository Pattern
+- `lib/db/listingsRepository.ts` is the primary abstraction — use it, don't write ad-hoc queries in route files
+- For service-role operations, use `createPrivilegedServerClient()` with explicit fallback to `createServerClient()`
+
+---
+
+## 8. Scoring Engine
+
+### Intelligence Version: v2.0.0 (flip score)
+Four scoring pillars fed into a composite flip score:
+1. **Listing Quality** — data completeness, image presence, description richness
+2. **Aircraft Intelligence** — engine TBO status, prop status, LLP flags, deferred maintenance
+3. **Avionics Intelligence** — keyword/catalog-based avionics market value (parser v2.1.6)
+4. **STC/Modification Intelligence** — STC modification detection
+
+### Key Scoring Rules
+- `INTELLIGENCE_VERSION` MUST be bumped before any scoring logic change
+- No-price listings: suppress `value_score` / `deal_tier` / `flip_score` / `flip_tier` — show "Price undisclosed" UI
+- `flip_score` / `flip_tier` are the primary scores; `value_score` / `deal_tier` are legacy API fallbacks only
+- Engine value fields: `ev_pct_life_remaining`, `ev_engine_overrun_liability`, `ev_remaining_value`, `ev_reserve_per_hour`
+- Market comps: `compute_market_comps.py` weights: eBay sold 40%, listing data 60%; FAA transfer signals at 50%
+
+### Avionics Valuation Policy (Conservative)
+1. If trustworthy OEM/MSRP exists → use as primary basis
+2. Else if `sample_count >= 3` → use market P25
+3. Else → use conservative fallback default table
+- `installed_value = base_value × quantity × install_factor × confidence_discount × obsolescence_haircut`
+- Bundle multipliers applied only after conservative unit values
+
+### Description Parser: v2.1.6
+- 99.57% matched-row rate, 0.43% unresolved-row rate, 76.29% scoped extraction coverage
+- Avionics catalog: 165 units, Waves 1–3 complete (piston_single, piston_multi, turboprop, rotorcraft, jet)
+
+---
+
+## 9. Scraper Architecture
+
+### Active Sources
+| Source | Method | Notes |
+|--------|--------|-------|
+| Controller.com | Playwright + Chrome extension (Distil bypass) | Challenge-gated; use extension |
+| Trade-A-Plane | DataDome cookie session + adaptive rate | `adaptive_rate.py` |
+| AvBuyer | requests + Playwright fallback | `--new-only` monitor mode |
+| AeroTrader | requests + BeautifulSoup | |
+| AircraftForSale (AFS) | requests | |
+| ASO | Playwright (ASP.NET paging) | Deep scrape with slow pacing |
+| GlobalAir | requests + Playwright | Category-scoped, Searchanise avionics |
+| Barnstormers | requests + BeautifulSoup | No significant bot protection |
+
+### Scraper Rules
+- Always import from `scraper_base.py` for rate limiting and upsert — don't reinvent
+- All output must conform to the canonical schema in `scraper/schema.py`
+- `source` + `source_id` is the upsert conflict key for all scrapers
+- Unknown payload keys → fold into `raw_data.bridge_unmapped`, never block upserts
+- Rate limiting: `random.uniform(N, M)` seconds between requests — be respectful
+- Fingerprinting: hash title+price+description[:200] to skip unchanged detail re-fetches
+- Checkpoint files in `scraper/state/` — all long-running scrapers must support `--resume`
+- FAA non-US registrations: guard enrichment for non-US N-numbers (don't attempt FAA lookup on foreign tails)
+
+### Pipeline Commands (canonical npm scripts)
+```bash
+npm run pipeline:post-scrape          # Standard post-scrape flow
+npm run pipeline:post-scrape:with-ntsb
+npm run pipeline:daily                # Full daily pipeline
+npm run pipeline:summary              # KPI log summary
+npm run pipeline:barnstormers
+npm run pipeline:afs
+npm run pipeline:aso
+npm run pipeline:globalair
+npm run pipeline:avbuyer
+npm run pipeline:faa-monitor
+npm run pipeline:avionics:audit
+npm run pipeline:avionics:price-ingest
+npm run pipeline:backfill:all-chunked  # Chunked full re-score (resume-safe)
+npm run pipeline:score-dist:post-backfill
+npm run pipeline:identity:audit
+npm run pipeline:identity:backfill:dry
+npm run pipeline:identity:backfill:apply
+```
+
+---
+
+## 10. Internal Tools
+
+| Route | Purpose |
+|-------|---------|
+| `/internal/deals` | Deal-finder dashboard: watchlist, DOM tracking, price reduction detection, deal signals, recent sales |
+| `/internal/deal-desk/[listingId]` | Flip P&L calculator: 6-step guided wizard, 9-section full tool, 3×3 sensitivity grid, Save as PDF |
+| `/internal/market-intel` | Market Intel Room: 8 sections including GeoIntelMap choropleth, submodel comparison, price drivers |
+| `/internal/admin` | Admin portal: data quality, scoring distribution, avionics KPIs, engine intelligence, audience metrics |
+| `/beta/join` | Beta access (Google Sign-In for authorized users) |
+| `/beta/dashboard` | Beta intelligence preview |
+
+---
+
+## 11. Target Aircraft (Deal-Finding Focus)
+
+Ryan's primary flip targets — highest-liquidity sub-$50K market:
+- Cessna 150 / 152
+- Pre-1980 Cessna 172
+- Piper Cherokee 180
+- Piper Warrior
+- Beechcraft Musketeer / Sundowner
+
+### Three Deal Patterns to Hunt
+1. **Deferred annual discount** — mechanically sound, priced low due to upcoming annual
+2. **Steam gauge discount** — analog panel, buy cheap, install modern avionics, capture premium
+3. **Geographic arbitrage** — rural/cold-climate pricing vs. high-demand metro resale
+
+---
+
+## 12. Code Quality Standards
+
+### TypeScript / Next.js
+- No ad-hoc Supabase queries in route files — use `listingsRepository.ts`
+- Dynamic imports with `{ ssr: false }` for any component using D3, Three.js, or browser APIs
+- ISR: `export const revalidate = 120` on public listing pages; `unstable_cache` 90s for filter options
+- Error handling: never let a single API failure crash a page — fail soft with graceful degradation
+- `count: planned` (planner estimate) instead of `count: exact` for filtered listing counts
+- Parallel data fetching with `Promise.all` for independent queries
+
+### Python
+- Schema validation on all scraper write paths
+- Sanitize `engine_model`/`faa_engine_model` before any scoring write
+- Use `_build_engine_lookup_candidates()` for engine token extraction — don't write new regex
+- Parser-derived values must be coerced to integer-safe types before DB writes (no float engine hours)
+- Always emit `extractor_version` / `intelligence_version` fields on write
+
+### Migrations
+- Sequential naming: `YYYYMMDDHHMMSS_description.sql`
+- Always additive — never drop or rename columns in a single migration (add new, deprecate old)
+- Update `public_listings` view in the same migration that adds new scoring columns
+- After any migration touching `public_listings`, update `PUBLIC_LISTINGS_VIEW.md`
+
+---
+
+## 13. Known Gotchas & Hard-Won Lessons
+
+| Issue | Resolution |
+|-------|-----------|
+| Old project folder name included `$` (PowerShell expansion) | Use `FullHangar` under `Documents`; Next.js 16 — do not downgrade |
+| Cursor SSRF blocks localhost API calls | Use Open WebUI or terminal for local Ollama — not Cursor directly |
+| `createServerClient` vs `createPrivilegedServerClient` | Always prefer privileged for internal routes; anon fallback only as last resort |
+| ThemeToggle hydration mismatch | Mounted guard pattern (`ready` state) — never read `localStorage` in SSR |
+| GeoIntelMap D3/SSR conflict | Static pre-baked Albers SVG paths — no runtime D3 projection |
+| `statement_timeout` on listings browse | Service-role fallback to `aircraft_listings` with indexed columns |
+| PostgREST `42P10` upsert conflicts | Fold unknown keys into `raw_data`; fallback to `source_site/source_id` update-or-insert |
+| Mixed `intelligence_version` in DB after backfill | Always run `--all` backfill after version bump before shipping |
+| Engine model noise (narrative text leaking in) | `sanitize_engine_model()` + `_build_engine_lookup_candidates()` guards — add new tokens there |
+| Non-US state codes in geographic data | Backend normalization pass needed — filter/normalize before GeoIntelMap render |
+| Controller/GlobalAir challenge gates | Manual CAPTCHA session required per run; use unified browser extension |
+
+---
+
+## 14. Checkpoint / Resumability Pattern
+
+All long-running scripts must:
+1. Write progress to a state file in `scraper/state/` after each batch
+2. Accept `--resume` or `--resume-from-checkpoint` flag
+3. Accept `--limit N` for bounded test runs
+4. Accept `--dry-run` for non-destructive previews
+5. Log KPIs at completion: `attempted`, `updated`, `failed`, `skipped`
+
+---
+
+## 15. Session Close Checklist
+
+Before ending any agent session:
+1. Update `AGENTS.md` — move completed items to the completed log, remove from open backlog
+2. Note any new migrations applied (with their filename)
+3. Note any `INTELLIGENCE_VERSION` changes and whether backfill was run
+4. Note any new unresolved avionics tokens discovered
+5. Commit all changes with a descriptive message before closing
+
+---
+
+## 16. Quick Reference — Common Commands
+
+```bash
+# Dev server
+npm run dev
+npm run dev:restart
+
+# Smoke tests
+npm run test:smoke:listings-all
+npm run test:smoke:listings-options
+
+# Python pipeline (always use full path)
+.venv312\Scripts\python.exe scraper\backfill_scores.py --dry-run
+.venv312\Scripts\python.exe scraper\backfill_scores.py --all --quiet-http
+.venv312\Scripts\python.exe scraper\backfill_scores.py --all --compute-comps
+.venv312\Scripts\python.exe scraper\enrich_faa.py --limit 1000
+.venv312\Scripts\python.exe scraper\validate_scores.py
+
+# Avionics audit
+.venv312\Scripts\python.exe scraper\audit_avionics_coverage.py
+.venv312\Scripts\python.exe scraper\backfill_description_intelligence.py --limit 5000 --apply
+.venv312\Scripts\python.exe scraper\avionics_observation_backfill.py --limit 5000
+
+# Supabase
+npx supabase db push
+npx supabase db pull
+```
+
+---
+
+*This file is auto-injected into every Cursor session via `.cursor/rules/fullhangar.mdc`.*
+*For the live operational board (current tasks, completed log, open backlog), always read `AGENTS.md` first.*

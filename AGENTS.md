@@ -6,7 +6,7 @@ alwaysApply: true
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 25, 2026
+> Last updated: March 26, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -22,7 +22,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Do not modify another active lane without coordination noted here.
 - Python runtime: always `.venv312\Scripts\python.exe`.
 - Dev server target: `http://localhost:3001`.
-- Project root: `D:\Documents\$$Full Hangar\2.0\CursorReposity\full-hangar\`.
+- Project root: `D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`
 
 ---
 
@@ -36,7 +36,9 @@ This is the short, operational board for current work. Permanent standards stay 
 - Continue data-source expansion where still incomplete (research-heavy tracks).
 - Keep scraper + scoring reliability stable (timeouts, fallback behavior, resumability).
 - **Listings browse DB load:** `getListingsPage` non-curated browse uses a **plain** `.select` + `.range` (no count) on `public_listings`. On transient failure (e.g. `statement_timeout`), **service-role** paths retry the same filters on **`aircraft_listings`** with `publicBrowseOnAircraft` (indexed score columns + `value_score` NOT NULL ≈ view WHERE) and `LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK` so the UI shape stays aligned without per-row JSON view work.
-- **Flip score (intelligence v2.0.0):** migrations `20260324200075`–`76` applied; full **`backfill_scores.py --all`** + **`--all --compute-comps`** completed (Mar 25, 2026). **Admin** overview + scoring tab + buyer-intel proxy tables use flip metrics; **beta dashboard** top deals + **comps chart** tooltips use **`flip_score` / `flip_tier`** (legacy `value_score`/`deal_tier` only as API fallbacks). `PUBLIC_LISTINGS_VIEW.md` documents `flip_*` columns. Optional next: SQL tier distribution sanity check + tighten P1 thresholds if HOT share drifts.
+- **Flip score (intelligence v2.0.0):** migrations `20260324200075`–`76` applied; prior full **`backfill_scores.py --all`** completed Mar 25, 2026. **Admin** / **beta** surfaces use **`flip_score` / `flip_tier`**. **Tier review (Mar 26 PM):** `npm run pipeline:ops:flip-tier-snapshot` → `scraper/logs/flip_tier_distribution_latest.md` (also raw SQL: `npm run pipeline:ops:flip-tier-sql`). Latest snapshot on priced rows: **0 HOT**, ~93% **PASS**, ~4% **FAIR**, ~3% **GOOD** — if product needs more “HOT” air cover, tune `core/intelligence/flip_score.py` / pillar weights after another full backfill, not SQL alone.
+- **Schema hardening (Mar 26, 2026):** migrations `20260326120000`–`20260326120002` **applied** on production Supabase (`db push`). **Full re-score in flight (Mar 26 PM):** `backfill_scores.py --all --quiet-http --pricing-snapshot-mode precomputed` — log `scraper/logs/backfill_all_20260326.log`. **When it finishes:** `npm run pipeline:ops:flip-tier-snapshot`, `npm run pipeline:compute-market-comps`, `.venv312\Scripts\python.exe scraper\validate_scores.py`.
+- **Market comps table:** `scraper/compute_market_comps.py` restored (listing-derived medians by make/model, `min_sample=5`). **Mar 26 PM:** `computed_groups=301`, `upserted=301`. Entry point: `npm run pipeline:compute-market-comps`.
 
 ---
 
@@ -115,7 +117,7 @@ This is the short, operational board for current work. Permanent standards stay 
 
 ### Backend, Pipeline, and Data Sources
 
-- **FAA + score backfill (Mar 25, 2026):** `enrich_faa.py` on pending queue (`matched=619`, `unmatched=96`); `backfill_scores.py --all --quiet-http` (`attempted=10574`, `updated=10574`, `failed=0`). **Verify in Supabase:** that run logged PostgREST “column not found” for `score_data`, `engine_manufacturer`, and `engine_make` on `aircraft_listings`—the script retried without them, so confirm those columns exist and reload schema if `score_data` must persist, then re-run a targeted backfill if needed. Optional follow-up: `backfill_scores.py --compute-comps` (or `--all --compute-comps`) if market comps should be refreshed.
+- **FAA + score backfill (Mar 25, 2026):** `enrich_faa.py` on pending queue (`matched=619`, `unmatched=96`); `backfill_scores.py --all --quiet-http` (`attempted=10574`, `updated=10574`, `failed=0`). **Resolved (Mar 26, 2026):** `aircraft_listings` now has first-class `score_data`, `engine_manufacturer`, and `engine_make` (migration `20260326120000` applied remotely). **Market comps (Mar 26 PM):** `compute_market_comps.py` recomputes `market_comps` from active listings (`npm run pipeline:compute-market-comps`); wire into large backfills with `backfill_scores.py --all --compute-comps` if desired after validating row timing.
 - Shared scraper foundations landed (`env_check`, `schema`, `scraper_base`, config/tier normalization, retry/upsert safety).
 - Trade-A-Plane and Controller pipelines hardened with adaptive controls, retries, and safer fallbacks.
 - Trade-A-Plane detail-capture expansion shipped: scraper now defaults to all-aircraft make sweeps (not single-piston only), parses listing-detail labeled specs + section blocks into structured fields (including twin engine/prop timing where present), and stores unmapped detail fields under `raw_data.tap_unmapped` for schema-safe maximum capture.
@@ -214,7 +216,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing detail cleanup pass shipped for all active listings: added `scraper/reparse_listing_details_sections.py`, reparsed `description_full` sections (`processed=8319`, `updated=1253` + `engine-model cleanup updates=238`), and now prefer cleaned `avionics_notes` over raw `avionics_description` on listing detail pages for clearer Aircraft Details rendering.
 - Wave 3 targeted uplift pass completed with parser `v2.1.5` + jet/rotor alias expansion (Collins Pro Line/FMS, Honeywell Primus/DU/RCZ/RNZ/DM/DF, Universal UNS, Garmin G3000/G5000, HeliSAS): full backfill + observation refresh raised jet extraction coverage to `72.98%` (from prior `55.65%`) while keeping quality within gates (`97.77%` matched, `2.23%` unresolved); rotorcraft remains stable at `34.15%` coverage with `100%` matched and `0%` unresolved.
 - Wave 3 micro-pass `v2.1.6` completed on residual jet unresolved tokens (`RCZ833F`, `Primus 880`, `DM855`, `DU875/885`) with another full refresh cycle: jet now reports `73.46%` extraction coverage, `98.31%` matched-row rate, and `1.69%` unresolved-rate (`8` unresolved rows), maintaining gate compliance while preserving coverage gains.
-- Description parser time/hours acronym expansion shipped: added broader `SMOH`/`TSMOH`/`TSOH`/`TTSO`/`TSLOVH`/`TSLO`/`TMOH`/`TSO` (with `TSO-C*` exclusion), `SPOH`/`TSPOH`/`s/POH`/`s/PO`, `STOH`/`TSTOH`, `SFOH`, `TSN`/`TTSN`/`SNEW`, and `NDH` phrase variants plus phrase-first patterns. New `description_intelligence` fields now emitted: `stoh`, `sfoh`, `time_since_new`, `no_damage_history` (JSONB-only pending column migration decision). Full rerun completed (`backfill_description_intelligence --limit 50000 --apply`: `processed=10038`, `updated=3663`, `skipped_current=4155`; `backfill_scores --limit 12000`: `attempted=1054`, `updated=1054`, `failed=0`), and latest 90-day audit now reports `Engine SMOH 38.54%` baseline / `39.63%` combined (`+1.09pp`) and `Prop SPOH 21.10%` baseline / `21.46%` combined (`+0.36pp`) with `Prop Model 9.03%` baseline / `15.61%` combined (`+6.58pp`).
+- Description parser time/hours acronym expansion shipped: added broader `SMOH`/`TSMOH`/`TSOH`/`TTSO`/`TSLOVH`/`TSLO`/`TMOH`/`TSO` (with `TSO-C*` exclusion), `SPOH`/`TSPOH`/`s/POH`/`s/PO`, `STOH`/`TSTOH`, `SFOH`, `TSN`/`TTSN`/`SNEW`, and `NDH` phrase variants plus phrase-first patterns. New `description_intelligence` fields now emitted: `stoh`, `sfoh`, `time_since_new`, `no_damage_history`. **Table columns** `stoh` / `sfoh` / `no_damage_history` added in migration `20260326120001` and populated from the parser during `backfill_scores.py` (`parser_backfill_updates`). Full rerun completed (`backfill_description_intelligence --limit 50000 --apply`: `processed=10038`, `updated=3663`, `skipped_current=4155`; `backfill_scores --limit 12000`: `attempted=1054`, `updated=1054`, `failed=0`), and latest 90-day audit now reports `Engine SMOH 38.54%` baseline / `39.63%` combined (`+1.09pp`) and `Prop SPOH 21.10%` baseline / `21.46%` combined (`+0.36pp`) with `Prop Model 9.03%` baseline / `15.61%` combined (`+6.58pp`).
 - Engine-value scoring prep landed in `core/intelligence/aircraft_intelligence.py`: added overhaul pricing lookup helpers + `score_engine_value()` output fields (`engine_hours_smoh`, `engine_remaining_value`, `engine_overrun_liability`, `engine_reserve_per_hour`) and bumped intelligence version to `1.9.0`, while keeping pricing lookup gated behind `FULL_HANGAR_ENABLE_ENGINE_VALUE_SCORING`.
 - Engine-value lookup hardening follow-up shipped in `core/intelligence/aircraft_intelligence.py` (`v1.9.1`): pricing lookups now sanitize/validate engine-model candidates before querying (`_build_engine_lookup_candidates`), extract canonical tokens from noisy description-style strings (e.g., `... IO-540-AB1A5 ...`), and skip non-engine/noisy values (e.g., avionics-program text) to reduce pathological query stalls during broad backfills.
 - Engine-value activation + coverage uplift follow-up shipped (`v1.9.2`): feature flag enabled in local envs, `public_listings` view migration `20260322000065_public_listings_engine_value_fields.sql` applied (`ev_*` columns), `score_engine_value()` now falls back to `engine_hours_smoh`, pricing lookup now retries with FAA engine model and supports family-estimated pricing when exact exchange rows are missing, and targeted backfill passes completed (`attempted=132`, `updated=132`, `failed=0`) with no null-score regression in `validate_scores.py`.
@@ -240,37 +242,26 @@ Each item should stay one-line actionable with clear completion criteria.
 ### High Priority
 
 - **Board hygiene:** keep this file concise and current after each substantial session.
-- **BAS maintenance (biweekly):** stop continuous BAS crawling; run `npm run pipeline:avionics:bas:biweekly` once every other week and review only net-new candidates before catalog promotion.
-- **Global collection focus (active):** prioritize `search-results-page?collection=avionics` via `npm run pipeline:avionics:global:collection` and keep matching/ingest stable as primary avionics-source workflow.
-- **Source field fix queue execution (active):** run through `scraper/SOURCE_FIELD_FIX_QUEUE.md` source-by-source (Controller → ASO → TAP → AvBuyer → AeroTrader → GlobalAir → Barnstormers), with controlled smoke runs and DB delta checks after each source.
-- **ASO deep crawl completion (active):** full-site ASO deep scrape is running with slow pacing (`scraper/aso_scraper.py --detail`); keep monitoring run health and finalize post-run coverage deltas + stale-row reconciliation.
-- **TAP avionics access gate (active):** Trade-A-Plane avionics endpoints are challenge-gated (`geo.captcha-delivery`) in current environment; complete a human-solved browser session/cookie strategy before expecting automated avionics inventory extraction at scale.
-- **Bridge unmapped-key promotion loop (active):** run `scraper/audit_bridge_unmapped_fields.py` after extension/scraper changes, promote high-frequency `raw_data.bridge_unmapped` keys into first-class columns, then clear the top queue on next migration pass.
-- **Wave 2/3 rollout activation (active):** baseline coverage now exists for `piston_multi`, `turboprop`, `rotorcraft`, and `jet`; next step is segment-level threshold tuning and coverage uplift (especially low extraction coverage in rotorcraft/jet) before any score-impacting cutover.
-- **Engine-value coverage follow-up (active):** remaining SMOH rows missing `engine_remaining_value` are now concentrated in unresolved turbine families (`PT6A-*`, `PW54x/PW61x`, `FJ44-*`) plus residual junk engine tokens (`Out/One/Our`); prioritize pricing-source expansion for turbine families and parser cleanup to suppress narrative-token leakage.
-- **Engine-value coverage follow-up (active):** post-turbine seeding, remaining misses are now split between model-resolution gaps (`~83` rows resolving to `<none>`) and residual pricing gaps (`~86` rows with TBO but no pricing); next pass should promote FAA/parser canonical engine tokens for `<none>` rows and expand deterministic pricing coverage for high-frequency unresolved models.
-- **Engine-value coverage follow-up (active):** latest split is model-resolution gaps (`~83` rows resolving to `<none>`) vs residual pricing gaps (`~61` rows with TBO but no pricing); next pass should prioritize parser/FAA promotion for `<none>` rows plus targeted pricing expansion for `JT15D`, `AS907`, `HTF7700`, and remaining `0-*/SERIES` variants.
-- **Engine-value coverage follow-up (active):** latest split is still dominated by model-resolution gaps (`~83` rows resolving to `<none>`) with residual pricing gaps now down to `~56`; prioritize FAA/parser backfill for `<none>` rows and targeted pricing expansions for remaining turbine families (`JT15D`, `AS907`, `HTF7700`, `PT6A-42/52`).
-- **Engine-value coverage follow-up (active):** piston lane now has strong model resolution (remaining misses are pricing-only); next pricing expansion should prioritize high-frequency piston families (`TSIO-360`, `O-540`, `O-320`, `O-200`, `IO-240`) while turbine expansion remains optional/deferred.
-- **Engine-value coverage follow-up (active):** piston lane now sits at `90.16%` SMOH coverage and remaining misses are largely non-specific or noisy identities (`LYCOMING`, `CONTINENTAL`, `factory/diesel` strings, sparse AEIO/IO edge variants); next step is identity canonicalization/promotion (FAA + parser enrichment) for these residual generic tokens before additional pricing seeding.
-- **Engine-value coverage follow-up (active):** piston lane now sits at `~90.8%` SMOH coverage; residual misses are mostly long-tail pricing gaps and sparse edge identities (e.g., AEIO/IO niche variants), so next pass should focus on targeted long-tail pricing rows rather than broad parser/model cleanup.
-- **Avionics quality loop:** reduce top unresolved tokens from latest audit (`KX155`, `GFC500`, `GFC600`, `IFD440`, `GNX375`) and raise scoped extraction coverage for low-coverage sources (notably `aso` and `trade_a_plane`).
-- **Avionics quality loop:** continue unresolved-token reduction on remaining leaderboard (`KX170B`, `KX165`, `STEC30`, `KFC200`, plus lingering Garmin peripheral IDs) and migrate more inventory to parser v`2.0.5` via rolling intelligence backfill.
-- **Avionics quality loop:** finish micro-tail unresolved tokens (`KX170B`, `KX175B`, `GDU25`, `PMA150`) and review typo-like singles (`GTX650XI`, `GTX345RW`, `GTN335`, `GIA275`) before optional parser `v2.1.4` closeout.
-- **Pending migration decision:** add `stoh`, `sfoh`, and `no_damage_history` columns to `aircraft_listings` and wire into `backfill_scores.py` write path (currently stored in `description_intelligence` JSONB only).
-- **Make/model canonicalization — scraper alignment (TODO):** after DB rows are corrected using FAA `faa_registry` → `faa_aircraft_ref` (`mfr_name` / `model_name`) plus curated make-alias rules (case folds, Bell/Bell Helicopter, Bombardier family merges, model-as-make repairs), update ingestion per source using the make-quality audit’s `source` × bad-pattern counts (Controller, ASO, TAP, AvBuyer, GlobalAir, Barnstormers, etc.); do not rely on corrected DB alone or the next scrape will reintroduce bad splits.
+- **Verify DB parity:** `20260326120000`–`20260326120002` should already be on production; re-check with `npx supabase migration list` + `docs/SUPABASE_MIGRATION_RECONCILE.md` after pulls.
+- **Ops cadence (weekly):** `npm run pipeline:ops:flip-tier-snapshot` + `npm run pipeline:compute-market-comps` after any full-table score backfill; `npm run pipeline:ops:bridge-unmapped-audit` after extension/bridge changes; `npm run pipeline:avionics:global:collection` + biweekly BAS per existing scripts.
+- **BAS maintenance (biweekly):** `npm run pipeline:avionics:bas:biweekly`; review net-new catalog candidates only.
+- **Global avionics collection (active):** `npm run pipeline:avionics:global:collection` as primary inventory path.
+- **Source field fix queue (active):** execute `scraper/SOURCE_FIELD_FIX_QUEUE.md` top-down with smoke limits + DB deltas; ingest now normalizes make/model via `scraper/listing_identity_ingest.py` inside `validate_listing`.
+- **ASO deep crawl (active):** monitor `aso_scraper.py --detail`; reconcile coverage + stale rows when the run completes.
+- **TAP avionics (blocked):** needs human-solved session / cookies (`geo.captcha-delivery`) before automated avionics inventory at scale.
+- **Bridge unmapped-key loop (active):** `npm run pipeline:ops:bridge-unmapped-audit`; promote hot keys from `raw_data.bridge_unmapped` into columns + migrations.
+- **Engine-value (single track):** piston lane ~90%+ SMOH — prioritize long-tail pricing + generic engine-token cleanup via FAA/parser promotion; turbine lane — use new `coverage_seed_turbine_wave` rows plus `<none>` model resolution; re-run targeted `backfill_scores` after migration push (no `INTELLIGENCE_VERSION` bump unless Python scoring logic changes).
+- **Avionics quality loop (parser v2.1.6):** drive `npm run pipeline:avionics:audit`; reduce leaderboard tokens and raise `aso` / `trade_a_plane` scoped extraction via aliases + source scrapers.
+- **Wave 2/3 segments:** tune `avionics_market_values` / segment thresholds and raise rotorcraft + jet extraction before any score-impacting cutover (logic in `core/intelligence/avionics_intelligence.py` + DB).
 
 ### Medium Priority
 
-- **DS-4 Type Clubs:** complete research matrix + scrapeability report and wire any allowed scrapers.
-- **DS-6 Bluebook Eval:** deliver integration plan with ROI recommendation.
-- **DS-7 VREF Eval:** deliver integration plan and Bluebook-vs-VREF recommendation matrix.
-- **DS-8 State Tax Data:** complete research and determine viable portals for normalized ingest.
+- **DS-4 / DS-6 / DS-7 / DS-8:** see checklist table in `docs/DS_RESEARCH_BACKLOG.md`.
 
 ### Low Priority / Future
 
-- **DS-9 YouTube Prototype:** transcript-mining proof of concept and confidence-labeled report.
-- **User-facing roadmap:** auth/saved searches, marketing home page, pre-buy export. Mobile polish: ✅ core pass complete — next: performance (ISR + image optimization).
+- **DS-9 YouTube Prototype:** transcript-mining POC + confidence-labeled report (`docs/DS_RESEARCH_BACKLOG.md`).
+- **User-facing roadmap:** auth/saved searches, marketing home page, pre-buy export. Mobile: next focus ISR + image optimization.
 
 ---
 
@@ -279,23 +270,22 @@ Each item should stay one-line actionable with clear completion criteria.
 - `DS-1 Barnstormers`: Implemented and integrated; keep iterative quality passes as needed.
 - `DS-2 eBay sold/component feeds`: Implemented and feeding comps/deal signals.
 - `DS-3 FAA ownership monitor`: Implemented and internally surfaced.
-- `DS-4` to `DS-9`: Still open (see Open Work).
+- `DS-4` to `DS-9`: Still open — research tracker: `docs/DS_RESEARCH_BACKLOG.md`.
 
 ---
 
 ## Pending Migrations (Needs Verification)
 
-Historical notes in prior versions listed a long migration queue (`20260301000018` through `20260307000051`) while other notes stated many were already live. Reconcile against the target Supabase project before running any replay.
+Reconcile local `supabase/migrations/` against the linked Supabase project before replay. Full flow: **`docs/SUPABASE_MIGRATION_RECONCILE.md`**.
 
-Recommended verification flow:
+**New (Mar 26, 2026):** `20260326120000_aircraft_listings_score_data_engine_identity.sql`, `20260326120001_aircraft_listings_parser_time_flags.sql`, `20260326120002_engine_overhaul_pricing_turbine_wave_seed.sql`.
 
-1. Compare local `supabase/migrations/` files against applied remote migration history.
-2. Apply only missing migrations in chronological order.
-3. **Engine value / `public_listings` `ev_*`:** apply order and verification notes are in `docs/ENGINE_VALUE_MIGRATIONS.md` (migrations `20260321000062`, `20260321000061`, `20260322000065` — skip any already on the remote).
-4. Run:
+**Engine value / `public_listings` `ev_*`:** `docs/ENGINE_VALUE_MIGRATIONS.md` (migrations `20260321000062`, `20260321000061`, `20260322000065` — skip any already on the remote).
+
+After push:
 
 ```bash
-.venv312\Scripts\python.exe scraper\backfill_scores.py
+.venv312\Scripts\python.exe scraper\backfill_scores.py --limit 25
 ```
 
 ---
@@ -343,6 +333,11 @@ npm run pipeline:faa-monitor
 # Intelligence / audits
 npm run pipeline:avionics:audit
 npm run pipeline:avionics:price-ingest
+npm run pipeline:ops:bridge-unmapped-audit
+npm run pipeline:ops:flip-tier-sql
+npm run pipeline:ops:flip-tier-snapshot
+npm run pipeline:compute-market-comps
+npm run pipeline:compute-market-comps:dry
 npm run pipeline:media:coverage:active
 npm run pipeline:media:integrity
 .venv312\Scripts\python.exe scraper\validate_scores.py
