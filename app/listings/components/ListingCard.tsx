@@ -72,15 +72,14 @@ function pillarGaugePercent(score: number | null | undefined): number | null {
   return Math.max(2, Math.min(100, score))
 }
 
-const PILLAR_DONUT_R = 14
-const PILLAR_DONUT_STROKE = 3.5
+const PILLAR_DONUT_R = 16
+const PILLAR_DONUT_STROKE = 4
 const PILLAR_DONUT_C = 2 * Math.PI * PILLAR_DONUT_R
 
 type PillarDensity = 'tiles' | 'rows'
 
 function PillarScoreGauge({
   instanceId,
-  letter,
   label,
   score,
   gradientFrom,
@@ -91,7 +90,6 @@ function PillarScoreGauge({
   trackStroke,
 }: {
   instanceId: string
-  letter: string
   label: string
   score: number | null
   gradientFrom: string
@@ -108,29 +106,19 @@ function PillarScoreGauge({
   const gradId = `${instanceId}-stroke-grad`
   const tooltipBody = `${label}${score != null ? `, ${Math.round(score)} out of 100` : ', no score'}. ${tooltipHint}`
   const tooltipSrId = `${instanceId}-tip`
-  const sizePx = density === 'tiles' ? 36 : 40
-  const centerFont = density === 'tiles' ? '11px' : '12px'
-  const letterSize = '10px'
-  const labelSize = density === 'tiles' ? '8px' : '9px'
-  const letterColorClass = density === 'tiles' ? 'text-[var(--fh-text-dim)]' : 'text-[#9ca3af]'
+  const sizePx = density === 'tiles' ? 48 : 54
+  const centerFont = density === 'tiles' ? '14px' : '15px'
+  const labelSize = density === 'tiles' ? '11px' : '12px'
   const centerColorClass = density === 'tiles' ? 'text-[var(--fh-text)]' : 'text-white'
-  const labelColorClass = density === 'tiles' ? 'text-[var(--fh-text-muted)]' : 'text-[#94a3b8]'
+  const labelColorClass =
+    density === 'tiles' ? 'text-[var(--fh-text-dim)]' : 'text-[#e2e8f0]'
 
   return (
     <div
-      className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-0.5"
+      className="group/pillar relative flex min-w-0 flex-1 flex-col items-center gap-1"
       role="group"
       aria-describedby={tooltipSrId}
     >
-      <span
-        className={`font-bold leading-none ${letterColorClass}`}
-        style={{
-          fontFamily: 'var(--font-barlow-condensed), system-ui',
-          fontSize: letterSize,
-        }}
-      >
-        {letter}
-      </span>
       <div className="relative shrink-0" style={{ width: sizePx, height: sizePx }}>
         <svg
           width={sizePx}
@@ -184,7 +172,7 @@ function PillarScoreGauge({
         </span>
       </div>
       <span
-        className={`max-w-[56px] text-center leading-tight ${labelColorClass}`}
+        className={`max-w-[78px] text-center font-semibold leading-snug ${labelColorClass}`}
         style={{ fontFamily: 'var(--font-dm-sans), system-ui', fontSize: labelSize }}
       >
         {label}
@@ -207,7 +195,6 @@ function PillarScoreGauge({
 
 const LISTING_PILLAR_DEFS: Array<{
   suffix: string
-  letter: string
   label: string
   pick: (m: NonNullable<ListingCardProps['tileMeta']>) => number | null
   from: string
@@ -216,7 +203,6 @@ const LISTING_PILLAR_DEFS: Array<{
 }> = [
   {
     suffix: 'E',
-    letter: 'E',
     label: 'Engine',
     pick: (m) => m.engineScore,
     from: '#22c55e',
@@ -225,7 +211,6 @@ const LISTING_PILLAR_DEFS: Array<{
   },
   {
     suffix: 'A',
-    letter: 'A',
     label: 'Avionics',
     pick: (m) => m.avionicsScore,
     from: '#3b82f6',
@@ -234,7 +219,6 @@ const LISTING_PILLAR_DEFS: Array<{
   },
   {
     suffix: 'Q',
-    letter: 'Q',
     label: 'Quality',
     pick: (m) => m.qualityScore,
     from: '#FF9900',
@@ -243,7 +227,6 @@ const LISTING_PILLAR_DEFS: Array<{
   },
   {
     suffix: 'V',
-    letter: 'V',
     label: 'Value',
     pick: (m) => m.marketValueScore,
     from: '#f59e0b',
@@ -252,7 +235,6 @@ const LISTING_PILLAR_DEFS: Array<{
   },
   {
     suffix: 'S',
-    letter: 'S',
     label: 'STC / Mods',
     pick: (m) => m.executionScore,
     from: '#ec4899',
@@ -275,7 +257,6 @@ function renderListingPillarGauges(
         <PillarScoreGauge
           key={def.suffix}
           instanceId={`${pillarIdBase}-p-${def.suffix}`}
-          letter={def.letter}
           label={def.label}
           score={def.pick(m)}
           gradientFrom={def.from}
