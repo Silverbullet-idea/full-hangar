@@ -57,7 +57,7 @@ export default function HomeHeroSection() {
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link
-              href="/listings"
+              href="/listings?dealTier=TOP_DEALS"
               className="rounded-md bg-[#FF9900] px-4 py-2 text-sm font-bold !text-black transition hover:bg-[#AF4D27] hover:!text-white"
             >
               Browse Live Deals →

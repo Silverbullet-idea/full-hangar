@@ -14,7 +14,7 @@ export default function HomeFinalCta() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/listings"
+            href="/listings?dealTier=TOP_DEALS"
             className="rounded-md bg-[#FF9900] px-5 py-2.5 text-sm font-extrabold !text-black shadow-[0_8px_18px_rgba(255,153,0,0.35)] transition hover:-translate-y-0.5 hover:bg-[#AF4D27] hover:!text-white"
           >
             Browse Live Deals →
