@@ -6,7 +6,7 @@ alwaysApply: true
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 26, 2026
+> Last updated: March 27, 2026
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -22,7 +22,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Do not modify another active lane without coordination noted here.
 - Python runtime: always `.venv312\Scripts\python.exe`.
 - Dev server target: `http://localhost:3001`.
-- Project root: `D:\Documents\FullHangar\2.0\CursorReposity\full-hangar\`
+- Project root: `D:\Documents\Full Hangar\2.0\CursorReposity\full-hangar\`
 
 ---
 
@@ -106,7 +106,7 @@ This is the short, operational board for current work. Permanent standards stay 
 - Score card visibility fixed: removed duplicate `both` fill-mode from animation shorthand (was: `ease_both_0.2s_forwards` → invalid CSS; now: `ease_0.2s_forwards` → correct). Card now animates in correctly at `lg:` breakpoint in both themes (`HeroScoreCard` outer div).
 - Homepage light mode theming: deal pattern cards, hero score card, FAQ items, Carfax banner, score-breakdown panel, pillar tracks, and confidence box now adapt in light theme via `[data-theme="light"]` rules in `app/page.tsx` (slate-100/200/300 palette). Hero section and stats bar stay hardcoded dark. Dark mode matches prior styling.
 - UI overhaul Phase 7 (7C/7D): `app/listings/[id]/CompsChartPanelLazy.tsx` defers comps client bundle on listing detail; `/internal/market-intel` loads `GeoIntelMap` with `dynamic(..., { ssr: false })` + loading shell; `globals.css` adds low-specificity `:focus-visible` outline using `var(--fh-orange)`; `RightDetailColumn` score badge + `ListingCard` (tiles overall ring, rows/compact tier chips) gain screen-reader labels.
-- Listing tile pillar row: each `PillarColumn` exposes `role="tooltip"` copy in `.sr-only` with `aria-describedby` on `role="group"`; hover popover marked `aria-hidden` to avoid duplicate announcements.
+- Listing tile/row pillar row: `PillarScoreGauge` in `ListingCard.tsx` renders each flip pillar (Engine, Avionics, Quality, Value, STC / Mods) as a **colored SVG ring** (gradient stroke, score centered); compact layout omits the pillar row. Each pillar exposes `role="tooltip"` copy in `.sr-only` with `aria-describedby` on `role="group"`; hover popover marked `aria-hidden` to avoid duplicate announcements.
 - Listings LCP: `ListingCard` accepts `imagePriority`; `ListingsClient` sets it for the first 12 tile cards, first 4 row cards, and first 10 compact cards (`next/image` `priority` replaces `loading="lazy"` for those slots only).
 - Listings filters regression fixed: `ListingsClient` no longer resets `hasSkippedInitialFetch` when RSC props sync, so soft navigations run `/api/listings` instead of skipping fetch and showing empty/stale grids (non–make/model filters work again after Apply).
 - Listings pillar filters (engine/avionics/quality/mkt): migration `20260324180074` adds indexed `pillar_*` columns on `public_listings` + `getListingsPage` filters those (pushdown to `aircraft_listings.*_score`); removes full-view scans/timeouts that returned empty 200s; transient browse failures no longer fake `{ total: 0 }` without a text `q` search.
