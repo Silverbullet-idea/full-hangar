@@ -5,9 +5,14 @@ const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-seri
 type ListingDealDeskCalloutProps = {
   dealDeskHref: string
   aircraftLabel: string
+  dealCoachHref?: string
 }
 
-export default function ListingDealDeskCallout({ dealDeskHref, aircraftLabel }: ListingDealDeskCalloutProps) {
+export default function ListingDealDeskCallout({
+  dealDeskHref,
+  aircraftLabel,
+  dealCoachHref,
+}: ListingDealDeskCalloutProps) {
   return (
     <div
       className="rounded-xl border border-[var(--fh-border-orange)] p-[18px]"
@@ -29,6 +34,15 @@ export default function ListingDealDeskCallout({ dealDeskHref, aircraftLabel }: 
       >
         Open Deal Desk
       </Link>
+      {dealCoachHref ? (
+        <Link
+          href={dealCoachHref}
+          className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border-2 border-[var(--fh-orange)] px-4 py-2.5 text-sm font-extrabold text-[var(--fh-orange)] transition hover:bg-[var(--fh-orange)]/10"
+          style={barlow}
+        >
+          ✈ Analyze in Deal Coach
+        </Link>
+      ) : null}
     </div>
   )
 }

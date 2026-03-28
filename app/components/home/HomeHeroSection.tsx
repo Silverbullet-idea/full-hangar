@@ -55,12 +55,18 @@ export default function HomeHeroSection() {
               ✓ Avionics valued
             </span>
           </div>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex flex-col flex-wrap items-stretch gap-3 sm:flex-row sm:items-center">
             <Link
               href="/listings?dealTier=TOP_DEALS"
-              className="rounded-md bg-[#FF9900] px-4 py-2 text-sm font-bold !text-black transition hover:bg-[#AF4D27] hover:!text-white"
+              className="rounded-md bg-[#FF9900] px-4 py-2 text-center text-sm font-bold !text-black transition hover:bg-[#AF4D27] hover:!text-white"
             >
               Browse Live Deals →
+            </Link>
+            <Link
+              href="/deal-coach"
+              className="rounded-md border-2 border-[#FF9900] bg-transparent px-4 py-2 text-center text-sm font-bold text-[#FF9900] transition hover:bg-[#FF9900]/10"
+            >
+              ✈ Try Deal Coach
             </Link>
             <SmoothScrollAnchor
               href="#how-it-works"

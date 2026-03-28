@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 const DEALS = [
   {
     icon: "🔧",
@@ -27,6 +29,11 @@ export default function DealPatterns() {
         <h2 className="mt-2 text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">Three deal patterns worth knowing</h2>
         <p className="mt-3 text-sm text-brand-muted md:text-base">
           Full Hangar is built to surface all three simultaneously — across every listing, every day.
+        </p>
+        <p className="mt-2">
+          <Link href="/deal-coach" className="text-sm font-semibold text-brand-orange hover:underline">
+            Analyze any deal → Deal Coach
+          </Link>
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">

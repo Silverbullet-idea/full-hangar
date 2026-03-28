@@ -6,7 +6,7 @@ alwaysApply: true
 # Full Hangar — Agent Workflow Helper
 
 > Every agent reads this first and updates it when done.
-> Last updated: March 27, 2026
+> Last updated: March 28, 2026 (Deal Coach N-number lookup: submit-only + FAA lookup API + migration `20260329000077`)
 
 This is the short, operational board for current work. Permanent standards stay in `.cursor/rules/fullhangar.mdc`.
 
@@ -36,13 +36,15 @@ This is the short, operational board for current work. Permanent standards stay 
 - Continue data-source expansion where still incomplete (research-heavy tracks).
 - Keep scraper + scoring reliability stable (timeouts, fallback behavior, resumability).
 - **Listings browse DB load:** `getListingsPage` non-curated browse uses a **plain** `.select` + `.range` (no count) on `public_listings`. On transient failure (e.g. `statement_timeout`), **service-role** paths retry the same filters on **`aircraft_listings`** with `publicBrowseOnAircraft` (indexed score columns + `value_score` NOT NULL ≈ view WHERE) and `LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK` so the UI shape stays aligned without per-row JSON view work.
-- **Flip score (intelligence v2.0.0):** migrations `20260324200075`–`76` applied; prior full **`backfill_scores.py --all`** completed Mar 25, 2026. **Admin** / **beta** surfaces use **`flip_score` / `flip_tier`**. **Tier review (Mar 26 PM):** `npm run pipeline:ops:flip-tier-snapshot` → `scraper/logs/flip_tier_distribution_latest.md` (also raw SQL: `npm run pipeline:ops:flip-tier-sql`). Latest snapshot on priced rows: **0 HOT**, ~93% **PASS**, ~4% **FAIR**, ~3% **GOOD** — if product needs more “HOT” air cover, tune `core/intelligence/flip_score.py` / pillar weights after another full backfill, not SQL alone.
-- **Schema hardening (Mar 26, 2026):** migrations `20260326120000`–`20260326120002` **applied** on production Supabase (`db push`). **Full re-score in flight (Mar 26 PM):** `backfill_scores.py --all --quiet-http --pricing-snapshot-mode precomputed` — log `scraper/logs/backfill_all_20260326.log`. **When it finishes:** `npm run pipeline:ops:flip-tier-snapshot`, `npm run pipeline:compute-market-comps`, `.venv312\Scripts\python.exe scraper\validate_scores.py`.
-- **Market comps table:** `scraper/compute_market_comps.py` restored (listing-derived medians by make/model, `min_sample=5`). **Mar 26 PM:** `computed_groups=301`, `upserted=301`. Entry point: `npm run pipeline:compute-market-comps`.
+- **Flip score (intelligence v2.0.0):** migrations `20260324200075`–`76` applied; full-table backfills completed Mar 25–26, 2026. **Admin** / **beta** surfaces use **`flip_score` / `flip_tier`**. **Tier snapshot** `npm run pipeline:ops:flip-tier-snapshot` → `scraper/logs/flip_tier_distribution_latest.md` (raw SQL: `npm run pipeline:ops:flip-tier-sql`); **refreshed Mar 27, 2026** after schema-hardening re-score. Priced-row mix remains **0 HOT**, ~93% **PASS**, ~4% **FAIR**, ~3% **GOOD** — if product needs more “HOT” air cover, tune `core/intelligence/flip_score.py` / pillar weights after another full backfill, not SQL alone.
+- **Schema hardening (Mar 26, 2026):** migrations `20260326120000`–`20260326120002` **applied** on production Supabase (`db push`). **Full re-score completed Mar 26, 2026** (`backfill_scores.py --all --quiet-http --pricing-snapshot-mode precomputed`): log `scraper/logs/backfill_all_20260326.log` ends `attempted=10574`, `updated=10574`, `failed=0`. **Post-run (Mar 27, 2026):** `npm run pipeline:ops:flip-tier-snapshot` → `scraper/logs/flip_tier_distribution_latest.md`; `npm run pipeline:compute-market-comps` (`computed_groups=301`, `upserted=301`); `.venv312\Scripts\python.exe scraper\validate_scores.py` green (`intelligence_version=2.0.0`, `Total listings scored: 10574`).
+- **Market comps table:** `scraper/compute_market_comps.py` restored (listing-derived medians by make/model, `min_sample=5`). **Latest:** `computed_groups=301`, `upserted=301` (Mar 27, 2026). Entry point: `npm run pipeline:compute-market-comps`.
 
 ---
 
 ## Completed Recently (Condensed)
+
+> Archival log (newest bullets within each subsection). Day-to-day priorities: **Current Focus** and **Open Work** above.
 
 ### Platform and Infra
 
@@ -113,11 +115,14 @@ This is the short, operational board for current work. Permanent standards stay 
 - Listing detail hero: `ListingImageGallery` main hero `next/image` uses `priority` + **`fetchPriority="high"`** (detailHero + default layouts) for LCP.
 - Listing detail identity shell: `ListingIdentityBar` shows **year/make/model — green asking** + **right-aligned flip score** (tier color via `getScoreColor`), **larger registration** chip, **location** on the line that previously showed source·id; duplicate flip + asking **hero cards removed** (`ListingScoreHeroCards` = flip pillars only).
 - **Engine identity display (Mar 25, 2026):** `lib/listings/engineManufacturerCanon.ts` + `engineIdentityModel.ts` mirror Python (`core/intelligence/engine_manufacturer_canon.py`, `engine_identity_model.py`); `/listings/[id]` prefers plausible `faa_engine_model` / detail over junk listing/parser text; `enrich_faa` normalizes `faa_engine_manufacturer` on write; `aircraft_intelligence._build_engine_reference_payload` uses plausibility + compact-token extraction for `model_display`; `backfill_scores` extends `is_unusable_engine_model`, promotes `engine_model` from FAA when listing is unusable (`FULL_HANGAR_PROMOTE_ENGINE_MODEL_FROM_FAA`, default on; set `0` to disable).
+- Deal Coach shipped at `/deal-coach` (public, no auth): 4-step conversational wizard (entry → aircraft ID → intent → parameters) feeding a pre-filled 6-section Deep Desk P&L with live sidebar. Aircraft identification supports: listing pre-pop (via `?listing_id=` + server `getListingById`), inventory search on the change screen (`GET /api/listings?q=`), N-number FAA registry lookup on submit (`GET /api/faa-registry/lookup`), and a 5-step manual entry form (identity → airframe/hours → engine → avionics → maintenance). Drum wheels on mobile, text inputs on desktop. Homepage CTA added: "✈ Try Deal Coach" ghost button next to "Browse Live Deals". Listing detail gets "Analyze in Deal Coach" link. Helper constants in `lib/dealCoach/` (modelMap, engineModelMap, tboReference, avionicsOptions, prefill).
+- N-number lookup in Deal Coach StepAircraftId replaced: removed debounced type-ahead (was firing ILIKE prefix scans on every keystroke). Replaced with single equality lookup on Enter/submit. UX: type full N-number → press Enter → instant prefill from FAA registry with PrepopCard + "Use this aircraft" / "Edit profile" options. Not-found state links directly to manual entry. API response cached 1hr (s-maxage=3600).
 - Playwright **`npm run test:smoke:listings-all`**: 24 tests (incl. listing-detail not-found shell + conditional API matrix); latest local run **24 passed** with healthy Supabase.
 
 ### Backend, Pipeline, and Data Sources
 
 - **FAA + score backfill (Mar 25, 2026):** `enrich_faa.py` on pending queue (`matched=619`, `unmatched=96`); `backfill_scores.py --all --quiet-http` (`attempted=10574`, `updated=10574`, `failed=0`). **Resolved (Mar 26, 2026):** `aircraft_listings` now has first-class `score_data`, `engine_manufacturer`, and `engine_make` (migration `20260326120000` applied remotely). **Market comps (Mar 26 PM):** `compute_market_comps.py` recomputes `market_comps` from active listings (`npm run pipeline:compute-market-comps`); wire into large backfills with `backfill_scores.py --all --compute-comps` if desired after validating row timing.
+- `GET /api/faa-registry/lookup` hardened: removed suggestions/prefix-scan path, equality-only lookup with input normalization and length validation. Added 1-hour CDN cache header. Migration `20260329000077` adds btree index on `faa_registry.n_number` with `text_pattern_ops` (if not already present).
 - Shared scraper foundations landed (`env_check`, `schema`, `scraper_base`, config/tier normalization, retry/upsert safety).
 - Trade-A-Plane and Controller pipelines hardened with adaptive controls, retries, and safer fallbacks.
 - Trade-A-Plane detail-capture expansion shipped: scraper now defaults to all-aircraft make sweeps (not single-piston only), parses listing-detail labeled specs + section blocks into structured fields (including twin engine/prop timing where present), and stores unmapped detail fields under `raw_data.tap_unmapped` for schema-safe maximum capture.
@@ -242,20 +247,23 @@ Each item should stay one-line actionable with clear completion criteria.
 ### High Priority
 
 - **Board hygiene:** keep this file concise and current after each substantial session.
-- **Verify DB parity:** `20260326120000`–`20260326120002` should already be on production; re-check with `npx supabase migration list` + `docs/SUPABASE_MIGRATION_RECONCILE.md` after pulls.
+- **Verify DB parity:** `npx supabase migration list` + `docs/SUPABASE_MIGRATION_RECONCILE.md` after pulls that touch `supabase/migrations/` — **last verified Mar 27, 2026:** local and remote aligned through `20260326120002` (no drift).
 - **Ops cadence (weekly):** `npm run pipeline:ops:flip-tier-snapshot` + `npm run pipeline:compute-market-comps` after any full-table score backfill; `npm run pipeline:ops:bridge-unmapped-audit` after extension/bridge changes; `npm run pipeline:avionics:global:collection` + biweekly BAS per existing scripts.
 - **BAS maintenance (biweekly):** `npm run pipeline:avionics:bas:biweekly`; review net-new catalog candidates only.
 - **Global avionics collection (active):** `npm run pipeline:avionics:global:collection` as primary inventory path.
 - **Source field fix queue (active):** execute `scraper/SOURCE_FIELD_FIX_QUEUE.md` top-down with smoke limits + DB deltas; ingest now normalizes make/model via `scraper/listing_identity_ingest.py` inside `validate_listing`.
-- **ASO deep crawl (active):** monitor `aso_scraper.py --detail`; reconcile coverage + stale rows when the run completes.
+- **ASO deep crawl (active):** monitor `aso_scraper.py --detail`; reconcile coverage + stale rows when the run completes. Coverage exports (when runs finish): `scraper/state/aso_make_model_coverage_latest.{json,csv}`.
 - **TAP avionics (blocked):** needs human-solved session / cookies (`geo.captcha-delivery`) before automated avionics inventory at scale.
-- **Bridge unmapped-key loop (active):** `npm run pipeline:ops:bridge-unmapped-audit`; promote hot keys from `raw_data.bridge_unmapped` into columns + migrations.
+- **Bridge unmapped-key loop (active):** `npm run pipeline:ops:bridge-unmapped-audit`; promote hot keys from `raw_data.bridge_unmapped` into columns + migrations. **Mar 27, 2026 audit:** 652 Controller rows, single key `specs_text` — see `scraper/bridge_unmapped_fields_latest.md`.
 - **Engine-value (single track):** piston lane ~90%+ SMOH — prioritize long-tail pricing + generic engine-token cleanup via FAA/parser promotion; turbine lane — use new `coverage_seed_turbine_wave` rows plus `<none>` model resolution; re-run targeted `backfill_scores` after migration push (no `INTELLIGENCE_VERSION` bump unless Python scoring logic changes).
-- **Avionics quality loop (parser v2.1.6):** drive `npm run pipeline:avionics:audit`; reduce leaderboard tokens and raise `aso` / `trade_a_plane` scoped extraction via aliases + source scrapers.
-- **Wave 2/3 segments:** tune `avionics_market_values` / segment thresholds and raise rotorcraft + jet extraction before any score-impacting cutover (logic in `core/intelligence/avionics_intelligence.py` + DB).
+- **Avionics quality loop:** drive `npm run pipeline:avionics:audit`; reduce leaderboard tokens and raise `aso` / `trade_a_plane` scoped extraction via aliases + source scrapers. **Mar 27, 2026 90-day audit** (`scraper/avionics_coverage_audit_latest.md`): matched `98.63%`, extraction coverage `78.99%`, dominant parser `2.1.8`; top unresolved tokens include `fms6100`, `primus660`, `primus870`; weakest scoped extraction lanes: `avbuyer` `60.62%`, `aso` `65.75%`, `trade_a_plane` `72.89%`.
+- **Wave 2/3 segments:** tune `avionics_market_values` / segment thresholds and raise rotorcraft + jet extraction before any score-impacting cutover (logic in `core/intelligence/avionics_intelligence.py` + DB). **Mar 27 audit:** rotorcraft scoped extraction `35.63%` (primary gating segment); jet `84.62%`.
 
 ### Medium Priority
 
+- **Deal Coach seller path:** `StepSellStub` is a placeholder — full market positioning report, upgrade ROI for sellers, and listing strategy screen to be built as a follow-on FRONTEND task.
+- **Deal Coach scenario persistence:** "Save scenario" currently shows a toast. Wire to `deal_desk_scenarios` table via `POST /api/deal-desk/scenarios` with a prompt to create an account if not logged in.
+- **Deal Coach listing detail pre-pop:** validate that `getListingById` / `public_listings` fields map cleanly to `AircraftProfile` — patch any missing fields (e.g. `flip_score` when added to detail select).
 - **DS-4 / DS-6 / DS-7 / DS-8:** see checklist table in `docs/DS_RESEARCH_BACKLOG.md`.
 
 ### Low Priority / Future
@@ -274,15 +282,15 @@ Each item should stay one-line actionable with clear completion criteria.
 
 ---
 
-## Pending Migrations (Needs Verification)
+## Migration parity (verified)
 
-Reconcile local `supabase/migrations/` against the linked Supabase project before replay. Full flow: **`docs/SUPABASE_MIGRATION_RECONCILE.md`**.
+Reconcile after pulls or before risky deploys: **`docs/SUPABASE_MIGRATION_RECONCILE.md`**. **`npx supabase migration list`** — **Mar 27, 2026:** local and remote both include `20260326120000`–`20260326120002` (score_data/engine identity, parser time flags, turbine wave seed); no pending replay for that trio.
 
-**New (Mar 26, 2026):** `20260326120000_aircraft_listings_score_data_engine_identity.sql`, `20260326120001_aircraft_listings_parser_time_flags.sql`, `20260326120002_engine_overhaul_pricing_turbine_wave_seed.sql`.
+**Reference (already on remote):** `20260326120000_aircraft_listings_score_data_engine_identity.sql`, `20260326120001_aircraft_listings_parser_time_flags.sql`, `20260326120002_engine_overhaul_pricing_turbine_wave_seed.sql`.
 
 **Engine value / `public_listings` `ev_*`:** `docs/ENGINE_VALUE_MIGRATIONS.md` (migrations `20260321000062`, `20260321000061`, `20260322000065` — skip any already on the remote).
 
-After push:
+After **new** migration push:
 
 ```bash
 .venv312\Scripts\python.exe scraper\backfill_scores.py --limit 25
@@ -292,10 +300,10 @@ After push:
 
 ## Known Verification Gaps
 
-- **Script path mismatch:** multiple commands reference root or `scripts/` PowerShell files that may not exist in this workspace snapshot.
-- **Legacy ownership references:** old `src/pages/api` and `src/components` ownership text conflicted with current `app/` + `app/api/` structure.
-- **Performance docs:** references to `PERFORMANCE_BASELINE.md` and `PERFORMANCE_BUDGET.md` exist in historical notes but should be rechecked in-repo.
-- **Task block drift:** prior long-form Task 1-11 and DS blocks had completion-state contradictions with the completed log.
+- **Script path parity (restored Mar 27, 2026):** Root orchestration scripts `restart-dev.ps1`, `start-dev-and-scrape.ps1`, `run-post-scrape-pipeline.ps1`, `run-daily-pipeline.ps1`, `summarize-pipeline-log.ps1` are in-repo and wired from `package.json`. Source pipeline wrappers live under `scripts/` (`run-barnstormers-pipeline.ps1`, `run-afs-pipeline.ps1`, `run-aso-pipeline.ps1`, `run-globalair-pipeline.ps1`, `run-avbuyer-pipeline.ps1`, `run-faa-monitor.ps1`, `run-aso-weekly.ps1`, `run-aso-media-refresh.ps1`, `register-aso-media-refresh-task.ps1`). **`pipeline:faa-monitor`** invokes `enrich_faa.py` (no separate `faa_registry_monitor.py` in tree). **`scraper/aso_media_backfill.py`** restored for **`pipeline:aso:media`**. Post-scrape **`LoadNtsb`** switches are accepted but log a skip until an NTSB loader exists. **`pipeline:barnstormers:smoke`** uses category key `single_engine` (matches `BARNSTORMERS_CATEGORIES`).
+- **Legacy ownership references:** historical docs may still mention `src/pages/api` / `src/components`; the app lives under `app/` + `app/api/` (no `src/pages` tree in this snapshot).
+- **Performance docs:** `PERFORMANCE_BASELINE.md` / `PERFORMANCE_BUDGET.md` are not in-repo; treat any references as stale unless files are reintroduced.
+- **Task block drift:** keep **Current Focus** + **Open Work** authoritative; **Completed Recently** is archival detail.
 
 Use `Needs verification` labels instead of assuming deletion for uncertain historical references.
 
@@ -329,6 +337,7 @@ npm run pipeline:aso
 npm run pipeline:globalair
 npm run pipeline:avbuyer
 npm run pipeline:faa-monitor
+npm run pipeline:faa-monitor:dry
 
 # Intelligence / audits
 npm run pipeline:avionics:audit

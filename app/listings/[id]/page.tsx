@@ -798,7 +798,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
         </div>
 
         <div className="mb-6 flex min-w-0 flex-col gap-4 lg:mb-0">
-          <ListingDealDeskCallout dealDeskHref={`/internal/deal-desk/${id}`} aircraftLabel={dealDeskAircraftLabel} />
+          <ListingDealDeskCallout
+            dealDeskHref={`/internal/deal-desk/${id}`}
+            aircraftLabel={dealDeskAircraftLabel}
+            dealCoachHref={`/deal-coach?listing_id=${id}`}
+          />
           <ListingScoreHeroCards flipExplanation={flipExplanationParsed} />
         </div>
 
