@@ -1,7 +1,48 @@
+import type { HeroHomeScoreCardPayload } from "@/lib/home/heroFeaturedScoreCard"
 import { FLIP_TIER_CONFIG } from "@/lib/scoring/flipTierConfig"
+import Link from "next/link"
 
-export default function HeroScoreCard() {
-  const tier = FLIP_TIER_CONFIG.GOOD
+const DEMO_PILLARS = [
+  { label: "Pricing edge", pts: 28, max: 35, barClass: "bg-brand-orange" },
+  { label: "Airworthiness", pts: 16, max: 20, barClass: "bg-sky-400" },
+  { label: "Improvement room", pts: 22, max: 30, barClass: "bg-teal-400" },
+  { label: "Exit liquidity", pts: 12, max: 15, barClass: "bg-violet-400" },
+] as const
+
+const BADGE_TONE: Record<
+  "green" | "orange" | "red" | "slate",
+  string
+> = {
+  green: "border-[#4ade80]/25 bg-[#4ade80]/12 text-[#4ade80]",
+  orange: "border-[#FF9900]/25 bg-[#FF9900]/12 text-[#FF9900]",
+  red: "border-red-500/25 bg-red-500/12 text-red-400",
+  slate: "border-[#3A4454]/60 bg-[#1a2332] text-[#9AA4B2]",
+}
+
+export default function HeroScoreCard({ score }: { score: HeroHomeScoreCardPayload }) {
+  const live = score.kind === "live"
+
+  const title = live ? score.title : "1979 Cessna 172N Skyhawk"
+  const subtitle = live ? score.subtitle : "N12345 · 4,210 TTAF · IO-360 · Van Nuys, CA"
+  const flipScore = live ? score.flipScore : 78
+  const tierKey = live ? score.flipTierKey : "GOOD"
+  const tier = FLIP_TIER_CONFIG[tierKey] ?? FLIP_TIER_CONFIG.GOOD
+  const pillars = live ? score.pillars : DEMO_PILLARS
+  const ringPct = Math.max(0, Math.min(100, flipScore))
+
+  const badges = live
+    ? score.badges
+    : ([
+        { text: "12% Below Market", tone: "green" as const },
+        { text: "Engine 78% Life", tone: "green" as const },
+        { text: "GTN 750 Detected", tone: "orange" as const },
+        { text: "Annual Due 45 Days", tone: "red" as const },
+      ] as const)
+
+  const askingText = live ? score.askingText : "$38,500"
+  const marketText = live ? score.marketText : "$42K – $48K"
+  const discountText = live ? score.discountText : "↓ $3,500 discount signal"
+
   return (
     <div
       className="home-score-card home-hero-score-card relative overflow-hidden rounded-2xl border p-6 opacity-0 [animation:homeScoreCardFade_0.7s_ease_0.2s_forwards]"
@@ -9,20 +50,28 @@ export default function HeroScoreCard() {
       <p className="home-score-card-text-muted text-[10px] font-bold uppercase tracking-[0.2em]">
         Full Hangar Score Report
       </p>
-      <h3 className="home-score-card-text-primary mt-3 text-lg font-extrabold">1979 Cessna 172N Skyhawk</h3>
-      <p className="home-score-card-text-muted mt-1 text-xs">N12345 · 4,210 TTAF · IO-360 · Van Nuys, CA</p>
+      <h3 className="home-score-card-text-primary mt-3 text-lg font-extrabold">{title}</h3>
+      <p className="home-score-card-text-muted mt-1 text-xs">{subtitle}</p>
+      {live ? (
+        <Link
+          href={score.listingHref}
+          className="mt-2 inline-block text-xs font-semibold text-[#FF9900] underline-offset-2 hover:underline"
+        >
+          View full listing
+        </Link>
+      ) : null}
 
       <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
           <div
             className="home-score-card-ring relative grid h-[104px] w-[104px] place-items-center rounded-full p-[5px]"
             style={{
-              background: "conic-gradient(#FF9900 0% 78%, var(--ring-track) 78% 100%)",
+              background: `conic-gradient(#FF9900 0% ${ringPct}%, var(--ring-track) ${ringPct}% 100%)`,
             }}
           >
             <div className="home-score-card-ring-bg grid h-full w-full place-items-center rounded-full">
               <div className="text-center leading-none">
-                <span className="text-3xl font-extrabold text-brand-orange">78</span>
+                <span className="text-3xl font-extrabold text-brand-orange">{flipScore}</span>
                 <div className="home-score-card-text-muted mt-0.5 text-[9px] font-bold uppercase tracking-wider">
                   Flip score
                 </div>
@@ -37,46 +86,37 @@ export default function HeroScoreCard() {
         </div>
 
         <div className="min-w-0 flex-1 space-y-2.5">
-          <FlipPillarRow label="Pricing edge" pts={28} max={35} barClass="bg-brand-orange" />
-          <FlipPillarRow label="Airworthiness" pts={16} max={20} barClass="bg-sky-400" />
-          <FlipPillarRow label="Improvement room" pts={22} max={30} barClass="bg-teal-400" />
-          <FlipPillarRow label="Exit liquidity" pts={12} max={15} barClass="bg-violet-400" />
+          {pillars.map((p) => (
+            <FlipPillarRow key={p.label} label={p.label} pts={p.pts} max={p.max} barClass={p.barClass} />
+          ))}
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <span className="rounded-md border border-[#4ade80]/25 bg-[#4ade80]/12 px-2.5 py-1 text-[11px] font-semibold text-[#4ade80]">
-          12% Below Market
-        </span>
-        <span className="rounded-md border border-[#4ade80]/25 bg-[#4ade80]/12 px-2.5 py-1 text-[11px] font-semibold text-[#4ade80]">
-          Engine 78% Life
-        </span>
-        <span className="rounded-md border border-[#FF9900]/25 bg-[#FF9900]/12 px-2.5 py-1 text-[11px] font-semibold text-[#FF9900]">
-          GTN 750 Detected
-        </span>
-        <span className="rounded-md border border-red-500/25 bg-red-500/12 px-2.5 py-1 text-[11px] font-semibold text-red-400">
-          Annual Due 45 Days
-        </span>
+        {badges.map((b) => (
+          <span
+            key={b.text}
+            className={`rounded-md border px-2.5 py-1 text-[11px] font-semibold ${BADGE_TONE[b.tone]}`}
+          >
+            {b.text}
+          </span>
+        ))}
       </div>
 
       <div className="home-score-card-section-divider mt-5 border-t pt-4 text-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="home-score-card-text-muted">
-            Asking:{" "}
-            <span className="home-score-card-text-primary font-bold">
-              {"$38,500"}
-            </span>
+            Asking: <span className="home-score-card-text-primary font-bold">{askingText}</span>
           </span>
-          <span className="home-score-card-text-muted">
-            Market:{" "}
-            <span className="home-score-card-text-primary font-bold">
-              {"$42K – $48K"}
+          {marketText ? (
+            <span className="home-score-card-text-muted">
+              Market: <span className="home-score-card-text-primary font-bold">{marketText}</span>
             </span>
-          </span>
+          ) : null}
         </div>
-        <p className="mt-1 text-xs font-semibold text-[#4ade80]">
-          ↓ {"$3,500 discount signal"}
-        </p>
+        {discountText ? (
+          <p className="mt-1 text-xs font-semibold text-[#4ade80]">{discountText}</p>
+        ) : null}
       </div>
 
       <style>{`

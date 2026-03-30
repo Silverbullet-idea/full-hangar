@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const ALLOWED_EXACT_HOSTS = new Set([
-  'dsgiipnwy1jd8.cloudfront.net',
-  'cdn-media.tilabs.io',
-  'media.sandhills.com',
-])
-
-const ALLOWED_HOST_SUFFIXES = [
-  '.controller.com',
-  '.aerotrader.com',
-  '.barnstormers.com',
-  '.globalair.com',
-  '.avbuyer.com',
-]
+import { isListingImageProxyAllowedHost } from '@/lib/media/listingImageProxyPolicy'
 
 const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="#141922"/><rect x="16" y="16" width="608" height="448" rx="12" ry="12" fill="#1a1a1a" stroke="#3A4454" stroke-width="2"/><text x="320" y="250" text-anchor="middle" fill="#B2B2B2" font-family="Arial, sans-serif" font-size="22">Image unavailable</text></svg>`
-
-function isAllowedHost(hostname: string): boolean {
-  const host = hostname.toLowerCase()
-  if (ALLOWED_EXACT_HOSTS.has(host)) return true
-  return ALLOWED_HOST_SUFFIXES.some((suffix) => host === suffix.slice(1) || host.endsWith(suffix))
-}
 
 function placeholderImageResponse(reason: string) {
   return new NextResponse(PLACEHOLDER_SVG, {
@@ -50,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   // Only proxy from known listing/image hosts (prevent open proxy abuse)
   const host = parsedUrl.hostname.toLowerCase()
-  const isAllowed = isAllowedHost(host)
+  const isAllowed = isListingImageProxyAllowedHost(host)
   if (!isAllowed) return placeholderImageResponse('forbidden_host')
 
   try {
