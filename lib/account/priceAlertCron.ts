@@ -57,6 +57,16 @@ export async function runPriceAlertCron(): Promise<PriceAlertCronResult> {
   const now = Date.now()
 
   for (const [userId, userSearches] of byUser) {
+    const { data: profileRow } = await supabase
+      .from("user_profiles")
+      .select("subscription_status")
+      .eq("id", userId)
+      .maybeSingle()
+
+    if (!profileRow?.subscription_status || profileRow.subscription_status !== "active") {
+      continue
+    }
+
     const sections: Array<{
       searchId: string
       searchName: string

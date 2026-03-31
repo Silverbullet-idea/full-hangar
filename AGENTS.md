@@ -269,7 +269,9 @@ Phase 2 requires: seller intake form + cross-posting automation + Philippine tea
   logged-out users go to `/account/signup?returnTo=…`. `useCurrentUser` + `lib/supabase/browser.ts`. Supporting
   routes: `/account/profile`, `/account/searches`, `/account/scenarios`, `/account/watchlist` (placeholder).
 
-- Account Phase 2 (March 2026): `savedSearchFiltersToListingsPageQuery` for server-side filter replay; **PATCH** `/api/account/searches/[id]` (`name`, `alert_enabled`); daily cron `GET /api/cron/price-alerts` (`vercel.json` 14:00 UTC) + `CRON_SECRET` Bearer auth; `runPriceAlertCron` + `sendPriceAlertDigest` (Resend) + `price_alert_log` rows; **NotificationBell** + `/api/account/activity` field `recentAlertRows` (14d); `/account/alerts` buyer MVP placeholder ($49/$99 copy); dashboard quick link to Deal alerts.
+- Account Phase 2 (March 2026): `savedSearchFiltersToListingsPageQuery` for server-side filter replay; **PATCH** `/api/account/searches/[id]` (`name`, `alert_enabled`); daily cron `GET /api/cron/price-alerts` (`vercel.json` 14:00 UTC) + `CRON_SECRET` Bearer auth; `runPriceAlertCron` + `sendPriceAlertDigest` (Resend) + `price_alert_log` rows; **NotificationBell** + `/api/account/activity` field `recentAlertRows` (14d); dashboard quick link to Deal alerts.
+
+- Stripe buyer subscriptions (March 2026): migration `20260401000000_add_subscription_fields.sql` — `user_profiles` columns `stripe_customer_id`, `subscription_tier` (`scout`|`pro`), `subscription_status`, `subscription_period_end`. Routes `POST /api/stripe/create-checkout`, `POST /api/stripe/portal`, `POST /api/stripe/webhook` (raw body). `/account/alerts` Checkout + Customer Portal; `runPriceAlertCron` sends digests only when `subscription_status = active`. Env: see `.env.local.example` (Stripe price IDs + secrets).
 
 - Scraper Priority 1 (partial): migration `20260329120000_scraper_errors_and_price_alert_grants.sql` — `scraper_errors` table + service_role grants + `price_alert_log` INSERT for cron; `globalair_scraper` delegates to shared `looks_like_challenge_html`; AeroTrader uses shared detector for DataDome markers.
 
@@ -277,7 +279,7 @@ Phase 2 requires: seller intake form + cross-posting automation + Philippine tea
 
 ## OPEN WORK — Medium Priority (Account)
 
-- **Account Phase 2 follow-ups:** Stripe tiers on `/account/alerts`; per-search throttle tuning; optional “alert on price drop only” vs current digest.
+- **Account Phase 2 follow-ups:** per-search throttle tuning; optional “alert on price drop only” vs current digest; enforce Scout “5 saved searches” cap in UI/API if desired.
 - **Account Phase 3 (seller features):** `/account/listings` for seller-submitted
   listings, `listing_views` analytics dashboard (views/day chart, source breakdown),
   waitlist CTA → real listing creation flow.

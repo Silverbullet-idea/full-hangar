@@ -1,16 +1,49 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import DealAlertsClient from "./DealAlertsClient"
 import { createSupabaseRscClient } from "@/lib/supabase/server"
+import type { SubscriptionTierId } from "@/lib/stripe/tiers"
 
-export default async function DealAlertsPage() {
+type PageProps = {
+  searchParams: Promise<{ subscribed?: string | string[] }>
+}
+
+function parseSubscribed(raw: string | string[] | undefined): boolean {
+  if (raw === undefined) return false
+  const v = Array.isArray(raw) ? raw[0] : raw
+  return v === "true" || v === "1"
+}
+
+function coerceTier(v: unknown): SubscriptionTierId | null {
+  return v === "scout" || v === "pro" ? v : null
+}
+
+export default async function DealAlertsPage({ searchParams }: PageProps) {
+  const sp = await searchParams
+  const showSubscribedSuccess = parseSubscribed(sp.subscribed)
+
   const supabase = await createSupabaseRscClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect("/account/login?returnTo=%2Faccount%2Falerts")
 
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("stripe_customer_id, subscription_tier, subscription_status, subscription_period_end")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  const subscription = {
+    stripe_customer_id: profile?.stripe_customer_id ?? null,
+    subscription_tier: coerceTier(profile?.subscription_tier),
+    subscription_status: typeof profile?.subscription_status === "string" ? profile.subscription_status : null,
+    subscription_period_end:
+      typeof profile?.subscription_period_end === "string" ? profile.subscription_period_end : null,
+  }
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <Link href="/account" className="text-sm text-[var(--fh-orange)] no-underline hover:underline">
         ← Account home
       </Link>
@@ -21,29 +54,17 @@ export default async function DealAlertsPage() {
         Deal alerts
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-[var(--fh-text-dim)]">
-        Saved-search digests are included with your account: enable &quot;Email me a daily digest&quot; on{" "}
+        Paid subscribers get daily digests when your alert searches have matches (top listings by flip score). Enable
+        &quot;Email me a daily digest&quot; on{" "}
         <Link href="/account/searches" className="font-semibold text-[var(--fh-orange)] no-underline hover:underline">
           Saved searches
         </Link>
-        . We email at most once per day per account when at least one alert search has current matches (top listings by
-        flip score).
+        .
       </p>
-      <section className="mt-8 rounded-xl border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-5 [data-theme=light]:bg-white">
-        <h2 className="text-lg font-bold text-[var(--fh-text)] [data-theme=light]:text-slate-900">Coming soon: paid tiers</h2>
-        <ul className="mt-3 list-inside list-disc space-y-2 text-sm text-[var(--fh-text-dim)]">
-          <li>
-            <strong className="text-[var(--fh-text)] [data-theme=light]:text-slate-800">$49/mo</strong> — expanded digest
-            limits and priority delivery
-          </li>
-          <li>
-            <strong className="text-[var(--fh-text)] [data-theme=light]:text-slate-800">$99/mo</strong> — broker-grade
-            watchlists and API-style exports (roadmap)
-          </li>
-        </ul>
-        <p className="mt-4 text-xs text-[var(--fh-text-dim)]">
-          Stripe billing is not wired yet; today&apos;s digests are free for signed-in users with alerts enabled.
-        </p>
-      </section>
+
+      <div className="mt-8">
+        <DealAlertsClient showSubscribedSuccess={showSubscribedSuccess} subscription={subscription} />
+      </div>
     </div>
   )
 }
