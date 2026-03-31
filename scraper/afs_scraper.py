@@ -30,6 +30,15 @@ try:
         setup_logging,
         should_skip_detail,
     )
+    from scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 except ImportError:  # pragma: no cover
     from .description_parser import parse_description
     from .env_check import env_check
@@ -44,6 +53,15 @@ except ImportError:  # pragma: no cover
         setup_logging,
         should_skip_detail,
     )
+    from .scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 
 load_dotenv()
 
@@ -51,8 +69,13 @@ BASE_URL = "https://aircraftforsale.com"
 SOURCE_SITE = "aircraftforsale"
 PER_PAGE = 120
 TIMEOUT_SECONDS = 30
-MAX_RETRIES = 4
 CHECKPOINT_FILE = Path(__file__).resolve().parent / "state" / "afs_checkpoint.json"
+
+AFS_DETAIL_MAIN_PRICE = SelectorConfig(
+    name="afs_detail_main_price",
+    primary="span.main-price",
+    fallbacks=[".main-price", "[data-item-price]", ".listing-price .amount", ".asking-price"],
+)
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -135,10 +158,6 @@ def _normalize_space(value: str | None) -> str:
     return re.sub(r"\s+", " ", (value or "")).strip()
 
 
-def _backoff(attempt: int) -> float:
-    return min((2.5 * (2**attempt)) + random.uniform(0.0, 1.5), 45.0)
-
-
 def _parse_price(value: str | None) -> Optional[int]:
     if not value:
         return None
@@ -176,30 +195,50 @@ def _split_location(location_raw: str | None) -> tuple[Optional[str], Optional[s
     return parts[0], None
 
 
+@retry_with_backoff(max_attempts=3, base_delay=5.0, exceptions=(requests.RequestException, requests.HTTPError))
+def _afs_http_get_body(session: requests.Session, url: str, params: dict[str, Any] | None) -> str:
+    time.sleep(random.uniform(1.5, 3.0))
+    response = session.get(url, params=params, timeout=TIMEOUT_SECONDS)
+    if response.status_code != 200:
+        if response.status_code in (403, 429, 500, 502, 503, 504):
+            response.raise_for_status()
+        raise ValueError(f"HTTP {response.status_code} for {url}")
+    html = response.text
+    if looks_like_challenge_html(html):
+        ctype = detect_challenge_type(html) or "unknown"
+        raise RuntimeError(f"challenge:{ctype} at {url}")
+    return html
+
+
 class HtmlFetcher:
-    def __init__(self) -> None:
+    def __init__(self, supabase: Any | None = None, health_result: ScraperResult | None = None) -> None:
         self._session = requests.Session()
         self._session.headers.update(REQUEST_HEADERS)
+        self._supabase = supabase
+        self._health = health_result
 
     def fetch_soup(self, url: str, params: dict[str, Any] | None = None, label: str = "") -> Optional[BeautifulSoup]:
-        for attempt in range(MAX_RETRIES):
-            try:
-                time.sleep(random.uniform(1.5, 3.0))
-                response = self._session.get(url, params=params, timeout=TIMEOUT_SECONDS)
-                if response.status_code == 200:
-                    return BeautifulSoup(response.text, "html.parser")
-                if response.status_code in (403, 429, 500, 502, 503, 504):
-                    wait = _backoff(attempt)
-                    log.warning("[%s] HTTP %s; retrying in %.1fs", label or "fetch", response.status_code, wait)
-                    time.sleep(wait)
-                    continue
-                log.warning("[%s] HTTP %s for %s", label or "fetch", response.status_code, url)
+        try:
+            html = _afs_http_get_body(self._session, url, params)
+            return BeautifulSoup(html, "html.parser")
+        except RuntimeError as exc:
+            if "challenge:" in str(exc):
+                if self._supabase:
+                    log_scraper_error(
+                        self._supabase,
+                        source_site=SOURCE_SITE,
+                        error_type=ErrorType.CHALLENGE,
+                        url=url,
+                        raw_error=str(exc),
+                    )
+                if self._health:
+                    self._health.challenge_hits += 1
+                log.warning("[%s] %s", label or "fetch", exc)
                 return None
-            except requests.RequestException as exc:
-                wait = _backoff(attempt)
-                log.warning("[%s] Request error %s; retrying in %.1fs", label or "fetch", exc, wait)
-                time.sleep(wait)
-        return None
+            raise
+        except (requests.RequestException, requests.HTTPError, ValueError) as exc:
+            log.warning("[%s] fetch failed: %s", label or "fetch", exc)
+            return None
 
 
 def _extract_listing_id(card: Any) -> Optional[str]:
@@ -348,7 +387,7 @@ def _parse_detail(fetcher: HtmlFetcher, listing: dict[str, Any]) -> dict[str, An
         return {}
 
     detail: dict[str, Any] = {}
-    price_span = soup.find("span", class_="main-price")
+    price_span = AFS_DETAIL_MAIN_PRICE.find(soup)
     if price_span:
         price_text = _normalize_space(price_span.get_text(" ", strip=True))
         detail["asking_price"] = _parse_price(price_text)
@@ -662,8 +701,9 @@ def main() -> None:
     log = setup_logging(verbose=args.verbose)
     env_check(required=[] if args.dry_run else None)
 
-    fetcher = HtmlFetcher()
     supabase = None if args.dry_run else get_supabase()
+    health = ScraperResult(source_site=SOURCE_SITE)
+    fetcher = HtmlFetcher(supabase=supabase, health_result=health)
     resume_state = _load_checkpoint() if args.resume else None
     selected = {args.category: AFS_CATEGORIES[args.category]} if args.category else AFS_CATEGORIES
 
@@ -700,7 +740,13 @@ def main() -> None:
     saved = _upsert_listings(supabase, all_rows, skip_unchanged_writes=True)
     marked = _mark_inactive_listings(supabase, args.inactive_after_missed_runs)
     _clear_checkpoint()
-    log.info("AFS scrape complete. parsed=%s saved=%s marked_inactive=%s", len(all_rows), saved, marked)
+    log.info(
+        "AFS scrape complete. parsed=%s saved=%s marked_inactive=%s %s",
+        len(all_rows),
+        saved,
+        marked,
+        health.finish().summary(),
+    )
 
 
 if __name__ == "__main__":

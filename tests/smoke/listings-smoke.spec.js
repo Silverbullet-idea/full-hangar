@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 
-/** Matches listings URL params (`parseCategory`, etc.); turboprop uses combined category in CategoryBar. */
+/** Matches listings URL params (`parseCategory`, etc.); turboprop uses combined `?category=turboprop`. */
 const LISTINGS_PAGE_PATHS = [
   "/listings?category=single",
   "/listings?category=multi",

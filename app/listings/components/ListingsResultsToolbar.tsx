@@ -1,9 +1,17 @@
 type LayoutMode = 'tiles' | 'rows' | 'compact'
-type SortOption =
-  | 'price_low'
-  | 'price_high'
+
+/** Sort options shown in the compact toolbar (aligned with former DealTierBar). */
+type CompactSortOption =
   | 'flip_desc'
   | 'flip_asc'
+  | 'price_low'
+  | 'price_high'
+  | 'engine_life'
+  | 'dom_asc'
+  | 'recent_add'
+
+type SortOption =
+  | CompactSortOption
   | 'deal_desc'
   | 'market_best'
   | 'market_worst'
@@ -15,9 +23,6 @@ type SortOption =
   | 'tt_high'
   | 'year_newest'
   | 'year_oldest'
-  | 'engine_life'
-  | 'dom_asc'
-  | 'recent_add'
 
 type ListingsResultsToolbarProps = {
   safePage: number
@@ -33,8 +38,8 @@ type ListingsResultsToolbarProps = {
   fetchError: string | null
   mobileFilterCount?: number
   onOpenMobileFilters?: () => void
-  /** When true, sort + layout toggles live in DealTierBar; per-page stays here. */
-  hideSortAndLayout?: boolean
+  hidePriceUndisclosed: boolean
+  onHidePriceUndisclosedChange: (checked: boolean) => void
 }
 
 export default function ListingsResultsToolbar({
@@ -51,7 +56,8 @@ export default function ListingsResultsToolbar({
   fetchError,
   mobileFilterCount = 0,
   onOpenMobileFilters,
-  hideSortAndLayout = false,
+  hidePriceUndisclosed,
+  onHidePriceUndisclosedChange,
 }: ListingsResultsToolbarProps) {
   const showingStart = totalFiltered > 0 && visibleCount > 0
     ? (safePage - 1) * pageSize + 1
@@ -76,36 +82,7 @@ export default function ListingsResultsToolbar({
         <div className="min-w-[82px] rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-center text-xs font-semibold text-[#B2B2B2]" title="Current page / total pages">
           Page {safePage} of {totalPages}
         </div>
-        {!hideSortAndLayout ? (
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort-by" className="text-xs font-semibold text-[#B2B2B2]">Sort By</label>
-            <select
-              id="sort-by"
-              value={sortBy === 'deal_desc' ? 'flip_desc' : sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="rounded border border-[#3A4454] bg-[#141922] px-2 py-2 text-xs text-white focus:border-brand-orange focus:outline-none"
-            >
-              <option value="market_best">Best Market Delta (most below)</option>
-              <option value="flip_desc">Best flip opportunity</option>
-              <option value="flip_asc">Flip score (low first)</option>
-              <option value="price_low">Price (low to high)</option>
-              <option value="price_high">Price (high to low)</option>
-              <option value="risk_low">Risk (low to critical)</option>
-              <option value="risk_high">Risk (critical to low)</option>
-              <option value="deferred_low">Deferred Cost (low to high)</option>
-              <option value="deferred_high">Deferred Cost (high to low)</option>
-              <option value="tt_low">Total Time (low to high)</option>
-              <option value="tt_high">Total Time (high to low)</option>
-              <option value="year_newest">Year (newest first)</option>
-              <option value="year_oldest">Year (oldest first)</option>
-              <option value="engine_life">Engine Life (most remaining first)</option>
-              <option value="dom_asc">Days on market (oldest first)</option>
-              <option value="recent_add">Recently added</option>
-              <option value="market_worst">Worst Market Delta (most above)</option>
-            </select>
-          </div>
-        ) : null}
-        <div className={`flex items-center gap-2 ${hideSortAndLayout ? 'ml-auto' : ''}`}>
+        <div className="ml-auto flex items-center gap-2">
           <label htmlFor="page-size" className="text-xs font-semibold text-[#B2B2B2]">Per Page</label>
           <select
             id="page-size"
@@ -119,57 +96,75 @@ export default function ListingsResultsToolbar({
             <option value={48}>48</option>
           </select>
         </div>
-        {!hideSortAndLayout ? (
-          <div className="ml-auto flex items-center gap-2">
+      </div>
+
+      <div className="mb-3 flex flex-col gap-3 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:items-center min-[480px]:justify-between">
+        <p className="text-[12px] font-bold text-[#D1D5DB] [data-theme='light']:text-[var(--fh-text)]">
+          Showing {showingStart.toLocaleString('en-US')}-{showingEnd.toLocaleString('en-US')} of {totalFiltered.toLocaleString('en-US')} Listings.
+        </p>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <label
+            className="flex cursor-pointer items-center gap-1.5 text-xs text-[var(--fh-text-dim)]"
+            style={{ fontFamily: 'var(--font-dm-sans)' }}
+          >
+            <input
+              type="checkbox"
+              className="fh-checkbox-orange h-3 w-3 shrink-0 rounded border-[var(--fh-border)]"
+              checked={hidePriceUndisclosed}
+              onChange={(e) => onHidePriceUndisclosedChange(e.target.checked)}
+            />
+            Hide &quot;Call for Price&quot;
+          </label>
+          <select
+            value={sortBy === 'deal_desc' ? 'flip_desc' : sortBy}
+            onChange={(e) => setSortBy(e.target.value as CompactSortOption)}
+            className="rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-1.5 text-xs text-[var(--fh-text)]"
+            style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+            aria-label="Sort listings"
+          >
+            <option value="flip_desc">Best flip opportunity</option>
+            <option value="flip_asc">Flip score (low first)</option>
+            <option value="price_low">Price ↑</option>
+            <option value="price_high">Price ↓</option>
+            <option value="engine_life">Engine Life ↓</option>
+            <option value="dom_asc">Days Listed ↑</option>
+            <option value="recent_add">Recently Added</option>
+          </select>
+          <div className="flex items-center gap-1">
             <button
               type="button"
+              aria-label="Grid layout"
               onClick={() => setLayoutMode('tiles')}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded border transition-colors ${layoutMode === 'tiles' ? 'border-[#FF9900] bg-[#FF9900] text-black' : 'border-[#3A4454] bg-[#141922] text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]'}`}
-              aria-label="Tile layout"
-              title="Tile layout"
+              className={`rounded-md border p-1.5 ${layoutMode === 'tiles' ? 'bg-[var(--fh-bg4)] border-[var(--fh-border)]' : 'border-[var(--fh-border)] text-[var(--fh-text-dim)]'}`}
             >
-              <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden="true">
-                <rect x="3" y="3" width="8" height="8" rx="1.2" />
-                <rect x="13" y="3" width="8" height="8" rx="1.2" />
-                <rect x="3" y="13" width="8" height="8" rx="1.2" />
-                <rect x="13" y="13" width="8" height="8" rx="1.2" />
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" />
               </svg>
             </button>
             <button
               type="button"
+              aria-label="List layout"
               onClick={() => setLayoutMode('rows')}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded border transition-colors ${layoutMode === 'rows' ? 'border-[#FF9900] bg-[#FF9900] text-black' : 'border-[#3A4454] bg-[#141922] text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]'}`}
-              aria-label="Row layout"
-              title="Row layout"
+              className={`rounded-md border p-1.5 ${layoutMode === 'rows' ? 'bg-[var(--fh-bg4)] border-[var(--fh-border)]' : 'border-[var(--fh-border)] text-[var(--fh-text-dim)]'}`}
             >
-              <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden="true">
-                <rect x="3" y="4" width="5" height="4" rx="1" />
-                <rect x="10" y="4" width="11" height="4" rx="1" />
-                <rect x="3" y="10" width="5" height="4" rx="1" />
-                <rect x="10" y="10" width="11" height="4" rx="1" />
-                <rect x="3" y="16" width="5" height="4" rx="1" />
-                <rect x="10" y="16" width="11" height="4" rx="1" />
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+                <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
               </svg>
             </button>
             <button
               type="button"
+              aria-label="Compact layout"
               onClick={() => setLayoutMode('compact')}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded border transition-colors ${layoutMode === 'compact' ? 'border-[#FF9900] bg-[#FF9900] text-black' : 'border-[#3A4454] bg-[#141922] text-[#B2B2B2] hover:border-[#FF9900] hover:text-[#FF9900]'}`}
-              aria-label="Compact row layout"
-              title="Compact row layout"
+              className={`rounded-md border p-1.5 ${layoutMode === 'compact' ? 'bg-[var(--fh-bg4)] border-[var(--fh-border)]' : 'border-[var(--fh-border)] text-[var(--fh-text-dim)]'}`}
             >
-              <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="4" rx="1.2" />
-                <rect x="3" y="10" width="18" height="4" rx="1.2" />
-                <rect x="3" y="16" width="18" height="4" rx="1.2" />
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+                <path d="M4 5h16v3H4V5zm0 6h10v3H4v-3zm0 6h16v3H4v-3z" />
               </svg>
             </button>
           </div>
-        ) : null}
+        </div>
       </div>
-      <p className="mb-3 text-[12px] font-bold text-[#D1D5DB]">
-        Showing {showingStart.toLocaleString('en-US')}-{showingEnd.toLocaleString('en-US')} of {totalFiltered.toLocaleString('en-US')} Listings.
-      </p>
+
       {fetchError && (
         <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
           Unable to load listings: {fetchError}

@@ -47,10 +47,12 @@ from core.intelligence.engine_identity_model import is_plausible_engine_identity
 from backfill_log import log_backfill_run, log_scoring_error
 from compute_market_comps import (
     build_comps_payload,
+    build_regional_comps_payload,
     fetch_all_rows,
     fetch_sold_rows,
     fetch_transfer_rows,
     upsert_market_comps,
+    upsert_market_comps_regional,
 )
 from registration_parser import derive_registration_fields, normalize_us_n_number
 try:
@@ -1361,10 +1363,14 @@ def run_compute_comps_stage(*, dry_run: bool) -> None:
         return
 
     upserted = upsert_market_comps(comps_supabase, comps_rows)
+    regional_rows = build_regional_comps_payload(all_rows, min_sample=3)
+    upserted_regional = upsert_market_comps_regional(comps_supabase, regional_rows)
     log.info(
-        "Market comps recomputed after backfill: groups=%s upserted=%s",
+        "Market comps recomputed after backfill: groups=%s upserted=%s regional_groups=%s regional_upserted=%s",
         len(comps_rows),
         upserted,
+        len(regional_rows),
+        upserted_regional,
     )
 
 

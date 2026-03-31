@@ -1,9 +1,10 @@
 export type DealMode = "buy" | "sell" | "research"
 export type IntentType = "flip" | "personal" | "training" | "business"
 export type FinanceType = "cash" | "finance50" | "finance80"
+export type SellGoal = "top_dollar" | "sell_30" | "balance"
 
 export interface AircraftProfile {
-  source: "listing" | "search" | "manual"
+  source: "listing" | "search" | "manual" | "faa"
   listingId?: string
   year?: number
   make?: string
@@ -54,6 +55,21 @@ export interface CoachAnswers {
   holdMonths?: number
   exitTarget?: number
   financeType?: FinanceType
+  sellGoal?: SellGoal
+  sellTargetPrice?: number
+  sellTimeline?: string
+  sellHasLoan?: boolean
+  sellLoanBalance?: number
 }
 
-export type DealCoachStep = "entry" | "aircraft" | "intent" | "parameters" | "transition" | "desk" | "sellStub"
+export type DealCoachStep =
+  | "entry"
+  | "aircraft"
+  | "sell-hours"
+  | "intent"
+  | "parameters"
+  | "transition"
+  | "desk"
+  | "sellStub"
+  | "sell-goals"
+  | "sell-report"

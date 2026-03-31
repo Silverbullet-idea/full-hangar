@@ -2,13 +2,16 @@
 
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
-import type { AircraftProfile, CoachAnswers, DealCoachStep } from "./types"
+import type { AircraftProfile, CoachAnswers, DealCoachStep, DealMode } from "./types"
 import StepAircraftId from "./steps/StepAircraftId"
 import StepDeepDesk from "./steps/StepDeepDesk"
 import StepEntry from "./steps/StepEntry"
 import StepIntent from "./steps/StepIntent"
 import StepParameters from "./steps/StepParameters"
-import StepSellStub from "./steps/StepSellStub"
+// import StepSellStub from "./steps/StepSellStub"
+import StepSellGoals from "./steps/StepSellGoals"
+import StepSellHours from "./steps/StepSellHours"
+import StepSellReport from "./steps/StepSellReport"
 import StepTransition from "./steps/StepTransition"
 
 const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
@@ -17,10 +20,13 @@ function progressFor(step: DealCoachStep, mode: CoachAnswers["mode"]): [number, 
   if (step === "sellStub") return [100, "Seller preview"]
   if (mode === "sell") {
     if (step === "entry") return [10, "Start"]
-    if (step === "aircraft") return [55, "Aircraft"]
-    return [100, "Seller preview"]
+    if (step === "aircraft") return [30, "Step 1 of 4"]
+    if (step === "sell-hours") return [50, "Step 2 of 4"]
+    if (step === "sell-goals") return [70, "Step 3 of 4"]
+    if (step === "sell-report") return [100, "Sell Strategy"]
+    return [100, "Sell Strategy"]
   }
-  const map: Record<Exclude<DealCoachStep, "sellStub">, [number, string]> = {
+  const map: Record<Exclude<DealCoachStep, "sellStub" | "sell-goals" | "sell-report" | "sell-hours">, [number, string]> = {
     entry: [4, "Start"],
     aircraft: [28, "Step 1 of 4"],
     intent: [50, "Step 2 of 4"],
@@ -28,18 +34,30 @@ function progressFor(step: DealCoachStep, mode: CoachAnswers["mode"]): [number, 
     transition: [88, "Building…"],
     desk: [100, "Deal Desk"],
   }
-  return map[step as Exclude<DealCoachStep, "sellStub">] ?? [0, ""]
+  return map[step as Exclude<DealCoachStep, "sellStub" | "sell-goals" | "sell-report" | "sell-hours">] ?? [0, ""]
 }
 
 type DealCoachClientProps = {
   initialListingProfile: AircraftProfile | null
+  /** When set (and no listing profile), skip mode picker and open aircraft step with this mode. */
+  initialIntent?: DealMode | null
 }
 
-export default function DealCoachClient({ initialListingProfile }: DealCoachClientProps) {
-  const [step, setStep] = useState<DealCoachStep>(() => (initialListingProfile ? "aircraft" : "entry"))
+export default function DealCoachClient({
+  initialListingProfile,
+  initialIntent = null,
+}: DealCoachClientProps) {
+  const [step, setStep] = useState<DealCoachStep>(() => {
+    if (initialListingProfile) return "aircraft"
+    if (initialIntent) return "aircraft"
+    return "entry"
+  })
   const [answers, setAnswers] = useState<CoachAnswers>(() => {
     if (initialListingProfile?.listingId) {
       return { mode: "buy", aircraft: initialListingProfile }
+    }
+    if (initialIntent) {
+      return { mode: initialIntent }
     }
     return { mode: "buy" }
   })
@@ -52,9 +70,11 @@ export default function DealCoachClient({ initialListingProfile }: DealCoachClie
     setStep((s) => {
       if (s === "entry") return "aircraft"
       if (s === "aircraft") {
-        if (answers.mode === "sell") return "sellStub"
+        if (answers.mode === "sell") return "sell-hours"
         return "intent"
       }
+      if (s === "sell-hours") return "sell-goals"
+      if (s === "sell-goals") return "sell-report"
       if (s === "intent") return "parameters"
       if (s === "parameters") return "transition"
       if (s === "transition") return "desk"
@@ -64,6 +84,9 @@ export default function DealCoachClient({ initialListingProfile }: DealCoachClie
 
   const onBack = useCallback(() => {
     setStep((s) => {
+      if (s === "sell-report") return "sell-goals"
+      if (s === "sell-goals") return "sell-hours"
+      if (s === "sell-hours") return "aircraft"
       if (s === "sellStub") return "aircraft"
       if (s === "aircraft") return "entry"
       if (s === "intent") return "aircraft"
@@ -85,9 +108,12 @@ export default function DealCoachClient({ initialListingProfile }: DealCoachClie
 
   const [pct, label] = progressFor(step, answers.mode)
 
+  const showGlobalBack =
+    step !== "entry" && step !== "desk" && step !== "transition" && step !== "sell-report"
+
   return (
     <div className="min-h-screen bg-[#0d1117] text-[var(--fh-text)] [data-theme=light]:bg-slate-100 [data-theme=light]:text-slate-900">
-      <header className="border-b border-[var(--fh-border)] bg-[#0d1117]/95 px-4 py-4 backdrop-blur [data-theme=light]:bg-slate-50/95">
+      <header className="deal-coach-no-print border-b border-[var(--fh-border)] bg-[#0d1117]/95 px-4 py-4 backdrop-blur [data-theme=light]:bg-slate-50/95">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link
             href="/"
@@ -109,7 +135,7 @@ export default function DealCoachClient({ initialListingProfile }: DealCoachClie
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        {step !== "entry" && step !== "desk" && step !== "transition" ? (
+        {showGlobalBack ? (
           <button
             type="button"
             onClick={onBack}
@@ -125,7 +151,10 @@ export default function DealCoachClient({ initialListingProfile }: DealCoachClie
         {step === "parameters" ? <StepParameters {...stepProps} /> : null}
         {step === "transition" ? <StepTransition {...stepProps} /> : null}
         {step === "desk" ? <StepDeepDesk answers={answers} /> : null}
-        {step === "sellStub" ? <StepSellStub {...stepProps} /> : null}
+        {step === "sell-hours" ? <StepSellHours {...stepProps} /> : null}
+        {step === "sell-goals" ? <StepSellGoals {...stepProps} /> : null}
+        {step === "sell-report" ? <StepSellReport {...stepProps} /> : null}
+        {/* {step === "sellStub" ? <StepSellStub {...stepProps} /> : null} */}
       </main>
     </div>
   )

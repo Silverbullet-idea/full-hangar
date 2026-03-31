@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FilterDrawer from '../components/FilterDrawer'
-import CategoryBar from './components/CategoryBar'
 import DealTierBar from './components/DealTierBar'
 import ListingCard from './components/ListingCard'
 import ListingsFiltersSidebar from './components/ListingsFiltersSidebar'
@@ -14,6 +13,7 @@ import ListingsResultsToolbar from './components/ListingsResultsToolbar'
 import PillarLegendBar from './components/PillarLegendBar'
 import { formatPriceOrCall, formatScore } from '../../lib/listings/format'
 import { parseListingFacetTokens } from '../../lib/listings/listingsQueryFromSearchParams'
+import { mergeListingsQueryParams } from './components/listingsCategoryNav'
 import {
   collectImageCandidates,
   deriveModelFamily,
@@ -21,6 +21,7 @@ import {
   normalizeListingPillarMin,
   normalizeTopMenuMakeLabel,
   normalizeSourceKey,
+  parseCategoryParam,
   type CategoryValue,
   type ListingSourceKey,
 } from './components/listingsClientUtils'
@@ -162,22 +163,7 @@ type AppliedListingsUrlSnapshot = {
 }
 
 function parseCategoryFromSearchParams(sp: ReadonlyURLSearchParams): CategoryValue {
-  const value = (sp.get('category') ?? '').trim().toLowerCase()
-  if (!value) return null
-  if (
-    value === 'single' ||
-    value === 'multi' ||
-    value === 'turboprop' ||
-    value === 'se_turboprop' ||
-    value === 'me_turboprop' ||
-    value === 'jet' ||
-    value === 'helicopter' ||
-    value === 'lsp' ||
-    value === 'sea'
-  ) {
-    return value as CategoryValue
-  }
-  return null
+  return parseCategoryParam(sp.get('category'))
 }
 
 function mergePreservedNavKeys(
@@ -533,6 +519,45 @@ export default function ListingsClient({
     },
     [commitListingsUrl, makeAppliedUrlSnapshot]
   )
+
+  const categoryAccordionInitiallyOpen =
+    Boolean(initialCategoryFilter) ||
+    initialMaxPrice === 50000 ||
+    initialPriceReducedOnly ||
+    initialAddedToday
+
+  const onCategoryNav = useCallback(
+    (updates: Record<string, string | null>) => {
+      const next = mergeListingsQueryParams(searchParams, updates)
+      setCurrentPage(1)
+      setCategoryFilter(parseCategoryParam(next.get('category')))
+      const mpRaw = next.get('maxPrice')
+      const mp = mpRaw ? Math.floor(Number(mpRaw)) : 0
+      const safeMax = Number.isFinite(mp) && mp > 0 ? mp : 0
+      setMaxPrice(safeMax)
+      setAppliedMaxPrice(safeMax)
+      const qs = next.toString()
+      router.replace(`/listings${qs ? `?${qs}` : ''}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
+
+  const toggleHidePriceUndisclosed = useCallback(
+    (checked: boolean) => {
+      const next = mergeListingsQueryParams(searchParams, {
+        hidePriceUndisclosed: checked ? 'true' : null,
+      })
+      setCurrentPage(1)
+      const qs = next.toString()
+      router.replace(`/listings${qs ? `?${qs}` : ''}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
+
+  const urlCategoryLower = (searchParams.get('category') ?? '').toLowerCase()
+  const urlMaxPriceParam = searchParams.get('maxPrice') ?? ''
+  const urlPriceDropOnlyParam = searchParams.get('priceDropOnly') ?? ''
+  const urlAddedTodayParam = searchParams.get('addedToday') ?? ''
 
   const mobileActiveFilterCount = useMemo(() => {
     let count = 0
@@ -1438,20 +1463,21 @@ export default function ListingsClient({
   return (
     <div>
       <Suspense
-        fallback={<div className="min-h-[120px] border-b border-[var(--fh-border)] bg-[var(--fh-bg)]" aria-hidden />}
+        fallback={<div className="min-h-[80px] border-b border-[var(--fh-border)] bg-[var(--fh-bg)]" aria-hidden />}
       >
-        <CategoryBar counts={categoryBarCounts} />
-        <DealTierBar
-          layoutMode={layoutMode}
-          setLayoutMode={setLayoutMode}
-          sortBy={sortBy}
-          onSortByChange={applySortByToUrl}
-        />
+        <DealTierBar />
         <PillarLegendBar />
       </Suspense>
       <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
-        <div className="hidden min-w-0 overflow-x-hidden md:block md:sticky md:top-[120px] md:self-start md:border-r md:border-[var(--fh-border)] md:bg-[var(--fh-bg2)] md:py-2.5 md:pr-2">
+        <div className="hidden min-w-0 overflow-x-hidden md:block md:sticky md:top-[64px] md:self-start md:border-r md:border-[var(--fh-border)] md:bg-[var(--fh-bg2)] md:py-2.5 md:pr-2">
           <ListingsFiltersSidebar
+            categoryBarCounts={categoryBarCounts}
+            urlCategory={urlCategoryLower}
+            urlMaxPrice={urlMaxPriceParam}
+            urlPriceDropOnly={urlPriceDropOnlyParam}
+            urlAddedToday={urlAddedTodayParam}
+            onCategoryNav={onCategoryNav}
+            categoryAccordionInitiallyOpen={categoryAccordionInitiallyOpen}
             pillarMinEngine={pillarMinEngine}
             setPillarMinEngine={setPillarMinEngine}
             pillarMinAvionics={pillarMinAvionics}
@@ -1742,6 +1768,13 @@ export default function ListingsClient({
         >
           <ListingsFiltersSidebar
             embedded
+            categoryBarCounts={categoryBarCounts}
+            urlCategory={urlCategoryLower}
+            urlMaxPrice={urlMaxPriceParam}
+            urlPriceDropOnly={urlPriceDropOnlyParam}
+            urlAddedToday={urlAddedTodayParam}
+            onCategoryNav={onCategoryNav}
+            categoryAccordionInitiallyOpen={categoryAccordionInitiallyOpen}
             pillarMinEngine={pillarMinEngine}
             setPillarMinEngine={setPillarMinEngine}
             pillarMinAvionics={pillarMinAvionics}
@@ -1898,7 +1931,8 @@ export default function ListingsClient({
             fetchError={fetchError}
             mobileFilterCount={mobileActiveFilterCount}
             onOpenMobileFilters={() => setFilterDrawerOpen(true)}
-            hideSortAndLayout
+            hidePriceUndisclosed={searchParams.get('hidePriceUndisclosed') === 'true'}
+            onHidePriceUndisclosedChange={toggleHidePriceUndisclosed}
           />
           <ListingsGridAndPagination
             layoutMode={layoutMode}

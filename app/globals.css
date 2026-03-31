@@ -377,15 +377,6 @@ a.fh-header-search-filter:hover {
   color: var(--fh-orange);
 }
 
-.fh-category-scroll {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.fh-category-scroll::-webkit-scrollbar {
-  display: none;
-}
-
 .fh-checkbox-orange {
   accent-color: var(--fh-orange);
 }
@@ -551,6 +542,11 @@ html[data-theme="light"] button.fh-cta-on-orange-fill:hover,
 html[data-theme="light"] a.fh-cta-on-orange-fill:focus-visible,
 html[data-theme="light"] button.fh-cta-on-orange-fill:focus-visible {
   color: #ffffff !important;
+}
+
+/* Account auth segment: hide global header for a focused sign-in/up flow */
+body:has(.account-auth-shell) .fh-site-header {
+  display: none;
 }
 
 @media print {

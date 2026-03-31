@@ -79,14 +79,15 @@ function infographicTrend(card: Infographic): string {
 export default function MarketInfographics() {
   return (
     <section className="mt-14">
-      <div className="mb-6 max-w-3xl">
+      <div className="mx-auto mb-6 max-w-3xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-muted">Market intelligence</p>
         <h2 className="mt-2 text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">The numbers behind the deals</h2>
         <p className="mt-3 text-sm text-brand-muted md:text-base">
-          Real signals from the piston-single market — where Full Hangar focuses its intelligence engine.
+          Representative signals from the piston-single and trainer market — useful for context; not a substitute for your own
+          comp work on a specific aircraft.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((card, i) => (
           <article
             key={card.label}

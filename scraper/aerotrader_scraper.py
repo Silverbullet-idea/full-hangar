@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+from scraper_health import (
+    looks_like_challenge_html,
+    detect_challenge_type,
+    log_scraper_error,
+    retry_with_backoff,
+    SelectorConfig,
+    ScraperResult,
+    ErrorType,
+)
+
 # 2026-03-04: Integrate AeroTrader v2 scraper using canonical schema/upsert conventions.
 # 2026-03-05: Add pagination loop guards for repeated pages and consecutive no-op saves.
 
@@ -158,16 +168,7 @@ def _make_discovery_urls(search_zip: str, search_radius: str) -> tuple[str, str]
 
 
 def _looks_like_challenge_html(html_text: str) -> bool:
-    low = str(html_text or "").lower()
-    challenge_markers = (
-        "geo.captcha-delivery.com",
-        "ct.captcha-delivery.com",
-        "please enable js and disable any ad blocker",
-        "var dd=",
-        "datadome",
-        "captcha-delivery",
-    )
-    return any(marker in low for marker in challenge_markers)
+    return bool(looks_like_challenge_html(html_text))
 
 
 def _fetch_page_soup(page: Page, url: str, label: str = "", max_retries: int = 5) -> Optional[BeautifulSoup]:

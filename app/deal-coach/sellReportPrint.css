@@ -1,0 +1,440 @@
+/* Seller's Intelligence Report — print / PDF (brand-aligned). */
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+    font-family: "DM Sans", "Helvetica Neue", Arial, sans-serif !important;
+    font-size: 11pt;
+    margin: 0;
+  }
+
+  .deal-coach-no-print,
+  [class*="no-print"],
+  nav,
+  header:not(.sell-report-print-header),
+  .hdr,
+  .tabs,
+  .sell-report-no-print,
+  .sell-report-screen-header,
+  button:not(.print-show),
+  .back,
+  .conf-wrap,
+  .waitlist-cta {
+    display: none !important;
+  }
+
+  .tab-panel,
+  .sell-report-tab-panel {
+    display: block !important;
+  }
+
+  @page {
+    margin: 18mm 16mm 18mm 16mm;
+    size: A4;
+  }
+
+  .print-page-break {
+    page-break-before: always;
+    display: block !important;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .print-no-break {
+    page-break-inside: avoid;
+  }
+
+  .sell-report-print-header {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-bottom: 12pt;
+    border-bottom: 2pt solid #ff9900;
+    margin-bottom: 16pt;
+  }
+
+  .sell-report-print-header .aircraft-name {
+    font-size: 22pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.5pt;
+    font-family: "Barlow Condensed", "DM Sans", sans-serif;
+  }
+
+  .sell-report-print-header .report-subtitle {
+    font-size: 10pt;
+    color: #666;
+    margin-top: 2pt;
+  }
+
+  .sell-report-print-logo {
+    text-align: right;
+  }
+
+  .sell-report-print-logo .logo-wordmark {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 18pt;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .sell-report-print-logo .logo-wordmark span {
+    color: #ff9900;
+  }
+
+  .sell-report-print-logo .logo-tagline {
+    font-size: 8pt;
+    color: #999;
+    margin-top: 2pt;
+  }
+
+  .print-section-header {
+    font-weight: 700;
+    color: #ff9900;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    font-size: 9pt;
+    border-bottom: 0.5pt solid #ff9900;
+    padding-bottom: 4pt;
+    margin: 16pt 0 10pt 0;
+  }
+
+  .market-snapshot-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8pt !important;
+    margin-bottom: 14pt;
+  }
+
+  .market-snapshot-card {
+    border: 0.5pt solid #e0e0e0 !important;
+    border-radius: 6pt !important;
+    padding: 8pt 10pt !important;
+    background: #fafafa !important;
+  }
+
+  .market-snapshot-card .card-label {
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
+    color: #999;
+    margin-bottom: 4pt;
+  }
+
+  .market-snapshot-card .card-value {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #ff9900;
+    font-family: "DM Mono", monospace;
+    letter-spacing: -0.5pt;
+  }
+
+  .market-snapshot-card .card-range {
+    font-size: 8pt;
+    color: #888;
+    font-family: "DM Mono", monospace;
+    margin-top: 2pt;
+  }
+
+  .comps-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+    margin-bottom: 14pt;
+  }
+
+  .comps-table thead tr {
+    background: #1a1a2e !important;
+    color: #ffffff !important;
+  }
+
+  .comps-table thead th {
+    padding: 5pt 8pt !important;
+    text-align: left !important;
+    font-size: 8pt !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5pt !important;
+  }
+
+  .comps-table tbody tr:nth-child(even) {
+    background: #f8f8f8 !important;
+  }
+
+  .comps-table tbody td {
+    padding: 5pt 8pt !important;
+    border-bottom: 0.3pt solid #eee !important;
+  }
+
+  .comps-table .price-highlight {
+    color: #27ae60 !important;
+    font-weight: 700 !important;
+    font-family: "DM Mono", monospace !important;
+  }
+
+  .comps-table .score-badge {
+    display: inline-block !important;
+    padding: 2pt 6pt !important;
+    border-radius: 10pt !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  .engine-life-bar-track {
+    height: 10pt !important;
+    background: #e0e0e0 !important;
+    border-radius: 5pt !important;
+    overflow: hidden !important;
+    margin: 6pt 0 !important;
+    display: flex !important;
+  }
+
+  .engine-life-bar-used {
+    height: 100% !important;
+    background: #ff9900 !important;
+  }
+
+  .engine-life-bar-remaining {
+    height: 100% !important;
+    background: #27ae60 !important;
+    flex: 1 !important;
+  }
+
+  .roi-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+    margin-bottom: 10pt;
+  }
+
+  .roi-badge-do {
+    background: #d4edda !important;
+    color: #155724 !important;
+    padding: 2pt 6pt !important;
+    border-radius: 4pt !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  .roi-badge-skip {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+    padding: 2pt 6pt !important;
+    border-radius: 4pt !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  .roi-badge-optional {
+    background: #fff3cd !important;
+    color: #856404 !important;
+    padding: 2pt 6pt !important;
+    border-radius: 4pt !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  .roi-net-pos {
+    color: #27ae60 !important;
+    font-weight: 700 !important;
+  }
+
+  .roi-net-neg {
+    color: #c0392b !important;
+    font-weight: 700 !important;
+  }
+
+  .price-band-print {
+    display: flex !important;
+    align-items: stretch !important;
+    margin: 8pt 0 !important;
+    height: 24pt !important;
+    overflow: hidden !important;
+    border-radius: 4pt !important;
+  }
+
+  .price-band-floor {
+    background: #f0f0f0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 8pt !important;
+    color: #666 !important;
+  }
+
+  .price-band-list {
+    background: #ff9900 !important;
+    flex: 1.2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    font-family: "DM Mono", monospace !important;
+  }
+
+  .price-band-top {
+    background: #27ae60 !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 8pt !important;
+    color: #fff !important;
+    border-radius: 0 4pt 4pt 0 !important;
+  }
+
+  .demand-badge-print.demand-high,
+  .demand-high {
+    background: #d4edda !important;
+    color: #155724 !important;
+  }
+
+  .demand-badge-print.demand-moderate,
+  .demand-moderate {
+    background: #fff3cd !important;
+    color: #856404 !important;
+  }
+
+  .demand-badge-print.demand-low,
+  .demand-low {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+  }
+
+  .states-bar-print {
+    margin: 6pt 0 !important;
+  }
+
+  .states-bar-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6pt !important;
+    margin-bottom: 3pt !important;
+    font-size: 8pt !important;
+  }
+
+  .states-bar-label {
+    width: 20pt !important;
+    color: #666 !important;
+  }
+
+  .states-bar-fill {
+    height: 8pt !important;
+    background: #ff9900 !important;
+    border-radius: 2pt !important;
+    min-width: 4pt !important;
+  }
+
+  .states-bar-count {
+    color: #999 !important;
+    font-size: 7.5pt !important;
+  }
+
+  .keyword-chip-print {
+    display: inline-block !important;
+    border: 0.5pt solid #ccc !important;
+    border-radius: 12pt !important;
+    padding: 2pt 8pt !important;
+    font-size: 8pt !important;
+    margin: 2pt !important;
+    color: #333 !important;
+  }
+
+  .timeline-print-row {
+    display: flex !important;
+    gap: 8pt !important;
+    align-items: flex-start !important;
+    margin-bottom: 8pt !important;
+    font-size: 9pt !important;
+  }
+
+  .timeline-day-badge {
+    background: #ff9900 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border-radius: 50% !important;
+    width: 20pt !important;
+    height: 20pt !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 8pt !important;
+    flex-shrink: 0 !important;
+    border: none !important;
+  }
+
+  .sell-report-print-footer {
+    position: fixed !important;
+    bottom: 10mm !important;
+    left: 16mm !important;
+    right: 16mm !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8pt !important;
+    border-top: 0.5pt solid #ff9900 !important;
+    padding-top: 4pt !important;
+    font-size: 8pt !important;
+    color: #999 !important;
+  }
+
+  .sell-report-print-footer .fh-brand {
+    font-family: "Barlow Condensed", sans-serif !important;
+    font-weight: 700 !important;
+    color: #1a1a2e !important;
+  }
+
+  .sell-report-print-footer .fh-brand span {
+    color: #ff9900 !important;
+  }
+
+  .price-history-chart-wrap canvas {
+    display: none !important;
+  }
+
+  .price-history-print-table {
+    display: table !important;
+    width: 100% !important;
+    margin-bottom: 12pt !important;
+    font-size: 9pt !important;
+  }
+
+  .price-history-print-table table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .nudge {
+    page-break-inside: avoid;
+  }
+}
+
+@media screen {
+  .price-history-print-table {
+    display: none;
+  }
+
+  .sell-report-print-footer {
+    display: none;
+  }
+
+  .print-page-break {
+    display: none;
+  }
+
+  .sell-report-print-header {
+    display: none;
+  }
+}

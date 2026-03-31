@@ -33,6 +33,7 @@ try:
         setup_logging,
         should_skip_detail,
     )
+    from scraper_health import looks_like_challenge_html as _shared_challenge_html
 except ImportError:  # pragma: no cover
     from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description
@@ -49,6 +50,7 @@ except ImportError:  # pragma: no cover
         setup_logging,
         should_skip_detail,
     )
+    from .scraper_health import looks_like_challenge_html as _shared_challenge_html
 
 load_dotenv()
 
@@ -206,6 +208,11 @@ def _backoff(attempt: int) -> float:
 
 
 def _looks_like_challenge(page_url: str, html: str) -> bool:
+    try:
+        if _shared_challenge_html(html):
+            return True
+    except Exception:
+        pass
     text = (html or "").lower()
     url = (page_url or "").lower()
     url_markers = (

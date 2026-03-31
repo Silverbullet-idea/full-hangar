@@ -1,18 +1,19 @@
+/** Composite feedback from early users — illustrative, not paid endorsements. */
 const TESTIMONIALS = [
   {
     quote:
-      "I found a Cherokee 180 priced $9K below market because the annual was 3 months overdue. Full Hangar flagged it in seconds. I got the annual done for $1,100 and resold it.",
-    author: "Private buyer · Coeur d'Alene, ID",
+      "I found a Cherokee 180 priced below market because the annual was overdue. The listing signals pointed me there fast — I still did my own PPI and logbook work.",
+    author: "Private buyer · Pacific Northwest",
   },
   {
     quote:
-      "The avionics scoring alone is worth it. I've stopped calling sellers who list a 'full glass panel' when it turns out to be a single Garmin aera on a RAM mount.",
-    author: "Instrument-rated buyer · Pacific Northwest",
+      "The avionics scoring alone saves phone calls. I can tell when 'full glass' in the ad doesn't match what's in the parser output.",
+    author: "Instrument-rated buyer",
   },
   {
     quote:
-      "I can run a Deal Desk P&L before I even call the seller. Acquisition cost, upgrade capex, carrying cost, exit value — in one screen. That's a dealmaker tool.",
-    author: "Beta user · Deal Desk feature",
+      "Deal Desk lets me run acquisition, upgrade capex, carrying cost, and exit before I call the seller. It's a workflow tool, not a guarantee.",
+    author: "Beta user · flip-focused",
   },
 ]
 
@@ -66,27 +67,29 @@ const FAQ_ITEMS = [
 
 export default function HomeSocialProofFaq() {
   return (
-    <section className="mt-14 grid gap-6 lg:grid-cols-2">
-      <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-7">
-        <h2 className="text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">Why people keep coming back</h2>
-        <p className="mt-3 text-sm text-brand-muted">Built for fast decision cycles, repeatable analysis, and fewer expensive misses.</p>
+    <section className="mx-auto mt-14 grid max-w-6xl gap-6 lg:grid-cols-2">
+      <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 text-center md:p-7 lg:text-left">
+        <h2 className="text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">What early users say</h2>
+        <p className="mt-3 text-sm text-brand-muted">
+          Paraphrased feedback from buyers and beta testers — not paid testimonials. Your mileage varies with every airframe.
+        </p>
         <div className="mt-5 space-y-3">
           {TESTIMONIALS.map((item) => (
-            <blockquote key={item.author} className="rounded-2xl border border-brand-dark bg-card-bg p-6">
+            <blockquote key={item.author} className="rounded-2xl border border-brand-dark bg-card-bg p-6 text-left">
               <p className="text-base leading-relaxed text-brand-muted">&ldquo;{item.quote}&rdquo;</p>
               <footer className="mt-3 text-xs font-semibold text-brand-muted">— {item.author}</footer>
             </blockquote>
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-7">
+      <div className="rounded-2xl border border-brand-dark bg-card-bg p-6 text-center md:p-7 lg:text-left">
         <h2 className="text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">Frequently asked questions</h2>
         <p className="mt-3 text-sm text-brand-muted">
           Quick answers on scoring, flipping workflow, confidence, and decision support.
         </p>
         <div className="mt-5 space-y-3">
           {FAQ_ITEMS.map((item) => (
-            <details key={item.question} className="home-faq-item group rounded-xl border border-brand-dark p-4 transition hover:border-[#55657f]">
+            <details key={item.question} className="home-faq-item group rounded-xl border border-brand-dark p-4 text-left transition hover:border-[#55657f]">
               <summary className="cursor-pointer list-none text-base font-bold text-brand-orange">{item.question}</summary>
               <p className="mt-2 text-sm leading-relaxed text-brand-muted">{item.answer}</p>
             </details>

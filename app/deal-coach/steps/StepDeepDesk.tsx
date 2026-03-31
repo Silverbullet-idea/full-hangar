@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { buildPrefill } from "../../../lib/dealCoach/prefill"
 import { calcPL, type DeskState } from "../../../lib/dealCoach/deskState"
+import { createBrowserSupabase } from "@/lib/supabase/browser"
 import type { CoachAnswers } from "../types"
 
 const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
@@ -135,10 +137,13 @@ function SensitivityGrid({ state }: { state: DeskState }) {
   )
 }
 
+type ToastState = { message: string; href?: string; error?: boolean } | null
+
 export default function StepDeepDesk({ answers }: { answers: CoachAnswers }) {
   const [desk, setDesk] = useState<DeskState>(() => buildPrefill(answers))
   const [open, setOpen] = useState<Record<number, boolean>>({ 0: true, 4: true })
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastState>(null)
+  const [saveBusy, setSaveBusy] = useState(false)
 
   const pl = useMemo(() => calcPL(desk), [desk])
 
@@ -148,11 +153,63 @@ export default function StepDeepDesk({ answers }: { answers: CoachAnswers }) {
 
   const ask = answers.aircraft?.askingPrice
 
+  const showToast = useCallback((message: string, href?: string | null, variant?: "error") => {
+    setToast({ message, href: href ?? undefined, error: variant === "error" })
+    setTimeout(() => setToast(null), 4500)
+  }, [])
+
+  const handleSaveScenario = useCallback(async () => {
+    const supabase = createBrowserSupabase()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      const returnTo = encodeURIComponent(`${window.location.pathname}${window.location.search}`)
+      window.location.href = `/account/signup?returnTo=${returnTo}`
+      return
+    }
+    setSaveBusy(true)
+    try {
+      const name =
+        `${answers.aircraft?.year ?? ""} ${answers.aircraft?.make ?? ""} ${answers.aircraft?.model ?? ""}`.trim() ||
+        "Untitled scenario"
+      const res = await fetch("/api/deal-desk/scenarios", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listing_id: answers.aircraft?.listingId ?? null,
+          name,
+          scenario_data: desk,
+        }),
+      })
+      if (res.ok) {
+        showToast("Scenario saved to your account →", "/account/scenarios")
+      } else {
+        showToast("Failed to save — please try again", null, "error")
+      }
+    } finally {
+      setSaveBusy(false)
+    }
+  }, [answers.aircraft, desk, showToast])
+
   return (
     <div className="mx-auto max-w-6xl">
       {toast ? (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-[var(--fh-border)] bg-[#161b22] px-4 py-2 text-sm shadow-lg [data-theme=light]:bg-white">
-          {toast}
+        <div
+          className={`fixed bottom-4 left-1/2 z-50 max-w-[min(100vw-2rem,420px)] -translate-x-1/2 rounded-lg border px-4 py-2 text-sm shadow-lg ${
+            toast.error
+              ? "border-red-500/40 bg-red-950/90 text-red-100 [data-theme=light]:bg-red-50 [data-theme=light]:text-red-900"
+              : "border-[var(--fh-border)] bg-[#161b22] [data-theme=light]:bg-white"
+          }`}
+        >
+          {toast.href ? (
+            <Link href={toast.href} className="font-medium text-[var(--fh-orange)] no-underline hover:underline">
+              {toast.message}
+            </Link>
+          ) : (
+            toast.message
+          )}
         </div>
       ) : null}
 
@@ -170,8 +227,18 @@ export default function StepDeepDesk({ answers }: { answers: CoachAnswers }) {
                 {fmtMoney(pl.profit)}
               </div>
             </div>
-            <div className="text-xs text-[var(--fh-text-dim)]">
-              ROI {pl.roi.toFixed(1)}% · Basis {fmtMoney(pl.basis)} · Exit {fmtMoney(desk.exitPrice)}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--fh-text-dim)]">
+              <span>
+                ROI {pl.roi.toFixed(1)}% · Basis {fmtMoney(pl.basis)} · Exit {fmtMoney(desk.exitPrice)}
+              </span>
+              <button
+                type="button"
+                disabled={saveBusy}
+                onClick={() => void handleSaveScenario()}
+                className="rounded-md border border-[var(--fh-border)] px-2 py-1 text-[11px] font-semibold text-[var(--fh-text)] disabled:opacity-50"
+              >
+                {saveBusy ? "Saving…" : "Save scenario"}
+              </button>
             </div>
           </div>
         </div>
@@ -310,20 +377,17 @@ export default function StepDeepDesk({ answers }: { answers: CoachAnswers }) {
             </ul>
             <button
               type="button"
-              className="mt-4 w-full rounded-lg border border-[var(--fh-border)] py-2 text-sm font-semibold"
-              onClick={() => {
-                setToast("Scenario saved — sign up to access it later →")
-                setTimeout(() => setToast(null), 3500)
-              }}
+              disabled={saveBusy}
+              className="mt-4 w-full rounded-lg border border-[var(--fh-border)] py-2 text-sm font-semibold disabled:opacity-50"
+              onClick={() => void handleSaveScenario()}
             >
-              Save scenario
+              {saveBusy ? "Saving…" : "Save scenario"}
             </button>
             <button
               type="button"
               className="mt-2 w-full rounded-lg border border-[#FF9900] py-2 text-sm font-semibold text-[#FF9900]"
               onClick={() => {
-                setToast("PDF export coming soon.")
-                setTimeout(() => setToast(null), 2500)
+                showToast("PDF export coming soon.")
               }}
             >
               Export PDF report →

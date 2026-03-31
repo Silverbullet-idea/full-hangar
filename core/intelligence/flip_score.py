@@ -4,11 +4,15 @@ flip_score: 0–100 flip-opportunity composite score.
 Replaces value_score as the primary displayed score site-wide.
 value_score continues to be computed internally as an input signal.
 
-Four pillars:
+Core pillars (sum 100 when regional data is absent):
   P1  Pricing Edge          0–35 pts  (true cost vs comp median)
   P2  Airworthiness Base    0–20 pts  (engine life + risk level)
   P3  Improvement Headroom  0–30 pts  (avionics gap + condition gap)
   P4  Exit Liquidity        0–15 pts  (model demand + days on market)
+
+Optional P5 Regional pricing (make/model/state median): 0–15 pts, 15% of flip score
+when `market_comps_regional` + parsed US state exist. When active: raw_total =
+round(0.85 * (P1+P2+P3+P4) + P5); otherwise raw_total = P1+P2+P3+P4.
 
 Hard caps:
   risk_level == CRITICAL  ->  flip_score capped at 35
@@ -333,7 +337,35 @@ def compute_flip_score(listing: dict, score_data: dict) -> dict:
     except Exception as exc:
         logger.warning("flip_score pillar error: %s", exc, exc_info=True)
         return {"flip_score": None, "flip_tier": None, "flip_explanation": {"error": str(exc)}}
-    raw = p1 + p2 + p3 + p4
+    subtotal = p1 + p2 + p3 + p4
+    p5_raw = score_data.get("regional_flip_pts")
+    p5_basis = str(score_data.get("regional_flip_basis") or "skipped")
+    p5i: int | None
+    if p5_raw is not None:
+        try:
+            p5i = max(0, min(15, int(p5_raw)))
+        except (TypeError, ValueError):
+            p5i = None
+    else:
+        p5i = None
+    if p5i is not None:
+        raw = round(0.85 * subtotal + p5i)
+        p5_explanation = {
+            "pts": p5i,
+            "max": 15,
+            "basis": p5_basis,
+            "blend": "0.85*(P1..P4)+P5",
+            "subtotal_p1_p4": subtotal,
+        }
+    else:
+        raw = subtotal
+        p5_explanation = {
+            "pts": None,
+            "max": 15,
+            "basis": p5_basis,
+            "blend": "P1+P2+P3+P4",
+            "subtotal_p1_p4": subtotal,
+        }
     risk = (score_data.get("risk_level") or "MODERATE").upper()
     if risk == "CRITICAL":
         raw = min(raw, 35)
@@ -355,6 +387,7 @@ def compute_flip_score(listing: dict, score_data: dict) -> dict:
             "p2_airworthiness": {"pts": p2, "max": 20, "basis": p2b},
             "p3_improvement_room": {"pts": p3, "max": 30, "basis": p3b},
             "p4_exit_liquidity": {"pts": p4, "max": 15, "basis": p4b},
+            "p5_regional_pricing": p5_explanation,
             "raw_total": raw,
             "risk_cap_applied": risk == "CRITICAL",
         },

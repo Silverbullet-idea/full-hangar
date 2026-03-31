@@ -92,8 +92,8 @@ export default function HomeScoreBreakdown() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="how-it-works" className="mt-14 scroll-mt-24">
-      <div className="mb-8 max-w-3xl">
+    <section ref={sectionRef} id="scoring-framework" className="mt-14 scroll-mt-24">
+      <div className="mx-auto mb-8 max-w-3xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-muted">Scoring framework</p>
         <h2 className="mt-2 text-3xl font-extrabold leading-tight text-brand-white md:text-4xl">One score. Every factor explained.</h2>
         <p className="mt-3 text-sm text-brand-muted md:text-base">
@@ -102,7 +102,7 @@ export default function HomeScoreBreakdown() {
         </p>
       </div>
 
-      <div className="home-score-breakdown max-w-4xl rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-8 [data-theme=light]:border-slate-200">
+      <div className="home-score-breakdown mx-auto max-w-4xl rounded-2xl border border-brand-dark bg-card-bg p-6 md:p-8 [data-theme=light]:border-slate-200">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-muted">Example: 1979 Cessna 172N Skyhawk</p>
         <p className="mt-3 text-sm leading-relaxed text-brand-muted [data-theme=light]:text-slate-600">
           Same aircraft as the score card above. Overall Flip Score is{" "}

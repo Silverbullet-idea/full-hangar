@@ -1,7 +1,18 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { LISTING_PILLAR_MIN_STEPS, normalizeListingPillarMin, toggleFacetToken } from './listingsClientUtils'
+import {
+  LISTING_PILLAR_MIN_STEPS,
+  normalizeListingPillarMin,
+  toggleFacetToken,
+} from './listingsClientUtils'
+import {
+  categoryNavPillCount,
+  categoryNavPillIsActive,
+  buildCategoryNavUpdates,
+  LISTINGS_CATEGORY_NAV_PILLS,
+  type CategoryBarCounts,
+} from './listingsCategoryNav'
 
 type DealTierFilter = 'all' | 'TOP_DEALS' | 'HOT' | 'GOOD' | 'FAIR' | 'PASS'
 type PriceStatusFilter = 'all' | 'priced'
@@ -92,6 +103,14 @@ function FilterAccordion({
 type ListingsFiltersSidebarProps = {
   className?: string
   embedded?: boolean
+  categoryBarCounts: CategoryBarCounts
+  /** Lowercase `?category=` or '' */
+  urlCategory: string
+  urlMaxPrice: string
+  urlPriceDropOnly: string
+  urlAddedToday: string
+  onCategoryNav: (updates: Record<string, string | null>) => void
+  categoryAccordionInitiallyOpen?: boolean
   /** Phase 2D — score pillar floors (0 = off) */
   pillarMinEngine: number
   setPillarMinEngine: (n: number) => void
@@ -164,6 +183,13 @@ const DEAL_PATTERN_OPTS: Array<{ token: string; label: string }> = [
 export default function ListingsFiltersSidebar({
   className = '',
   embedded = false,
+  categoryBarCounts,
+  urlCategory,
+  urlMaxPrice,
+  urlPriceDropOnly,
+  urlAddedToday,
+  onCategoryNav,
+  categoryAccordionInitiallyOpen = false,
   pillarMinEngine,
   setPillarMinEngine,
   pillarMinAvionics,
@@ -216,6 +242,7 @@ export default function ListingsFiltersSidebar({
   riskTooltip,
 }: ListingsFiltersSidebarProps) {
   const [accOpen, setAccOpen] = useState(() => ({
+    category: categoryAccordionInitiallyOpen,
     scorePillars:
       normalizeListingPillarMin(pillarMinEngine) > 0 ||
       normalizeListingPillarMin(pillarMinAvionics) > 0 ||
@@ -260,6 +287,75 @@ export default function ListingsFiltersSidebar({
         </div>
       ) : null}
       <div className="flex flex-col gap-1">
+        <FilterAccordion
+          title="Category"
+          open={accOpen.category}
+          onToggle={() => setAccOpen((p) => ({ ...p, category: !p.category }))}
+        >
+          <div className="flex flex-col gap-1.5">
+            {LISTINGS_CATEGORY_NAV_PILLS.filter((pill) => pill.kind !== 'quick').map((pill) => {
+              const active = categoryNavPillIsActive(
+                pill,
+                urlCategory,
+                urlMaxPrice,
+                urlPriceDropOnly,
+                urlAddedToday
+              )
+              const count = categoryNavPillCount(pill, categoryBarCounts)
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => onCategoryNav(buildCategoryNavUpdates(pill))}
+                  className={`w-full rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
+                    active
+                      ? 'border-[var(--fh-orange)] bg-[var(--fh-orange-dim)] font-semibold text-[var(--fh-orange)]'
+                      : 'border-[var(--fh-border)] text-[var(--fh-text-dim)] hover:border-[var(--fh-orange)]/50'
+                  }`}
+                  style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span>{pill.label}</span>
+                    <span className="tabular-nums opacity-80">({count.toLocaleString('en-US')})</span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <p
+            className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--fh-text-muted)]"
+            style={{ fontFamily: 'var(--font-barlow-condensed), system-ui' }}
+          >
+            Quick
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {LISTINGS_CATEGORY_NAV_PILLS.filter((pill) => pill.kind === 'quick').map((pill) => {
+              const active = categoryNavPillIsActive(
+                pill,
+                urlCategory,
+                urlMaxPrice,
+                urlPriceDropOnly,
+                urlAddedToday
+              )
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => onCategoryNav(buildCategoryNavUpdates(pill))}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                    active
+                      ? 'border-[var(--fh-orange)] bg-[var(--fh-orange-dim)] text-[var(--fh-orange)]'
+                      : 'border-[var(--fh-border)] text-[var(--fh-text-dim)] hover:border-[var(--fh-orange)]/50'
+                  }`}
+                  style={{ fontFamily: 'var(--font-dm-sans), system-ui' }}
+                >
+                  {pill.label}
+                </button>
+              )
+            })}
+          </div>
+        </FilterAccordion>
+
         <FilterAccordion
           title="Score pillars"
           badge="MIN"

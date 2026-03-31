@@ -19,11 +19,10 @@ from .model_normalizer import extract_engine_canonical_from_listing, extract_pro
 from .engine_identity_model import extract_compact_engine_model, is_plausible_engine_identity_model
 from .engine_manufacturer_canon import normalize_engine_manufacturer_display
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
+from .us_location import parse_us_state_from_listing_fields
 
-# v1.9.3 - Score distribution fix: age-differentiated imputed defaults,
-# widened risk tier bands (LOW threshold 78, HIGH band 25-44),
-# days_on_market tiebreaker nudge, _components_measured tracking.
-INTELLIGENCE_VERSION = "2.0.0"
+# v2.1.1 - description text damage/accident mention soft penalty when NTSB severity absent and parser did not assert clean history.
+INTELLIGENCE_VERSION = "2.1.1"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -453,6 +452,7 @@ HYBRID_SCORING_PROFILE = {
 
 _market_comps_client = None
 _market_comps_cache: dict[tuple[str, str], dict | None] = {}
+_regional_comps_cache: dict[tuple[str, str, str], dict | None] = {}
 _baseline_values_cache: dict[tuple[str, str, int | None], dict | None] = {}
 _component_sales_cache: dict[tuple[str, str], dict | None] = {}
 _exact_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
@@ -1350,6 +1350,131 @@ def _get_market_comps(make: str | None, model: str | None) -> dict | None:
     return comps_row
 
 
+def _get_regional_market_comp(make: str | None, model: str | None, state: str | None) -> dict | None:
+    """Precomputed row from market_comps_regional (sample_size, median_price)."""
+    make_name = (make or "").strip()
+    model_name = (model or "").strip()
+    st = (state or "").strip().upper()
+    if not make_name or not model_name or len(st) != 2:
+        return None
+
+    cache_key = (make_name.lower(), model_name.lower(), st)
+    if cache_key in _regional_comps_cache:
+        return _regional_comps_cache[cache_key]
+
+    client = _get_market_comps_client()
+    if client is None:
+        _regional_comps_cache[cache_key] = None
+        return None
+
+    comps_row = None
+    try:
+        response = (
+            client.table("market_comps_regional")
+            .select("sample_size,median_price")
+            .eq("make", make_name)
+            .eq("model", model_name)
+            .eq("state", st)
+            .limit(1)
+            .execute()
+        )
+        comps_row = (response.data or [None])[0]
+        if comps_row is None:
+            fallback = (
+                client.table("market_comps_regional")
+                .select("sample_size,median_price")
+                .ilike("make", make_name)
+                .ilike("model", model_name)
+                .eq("state", st)
+                .limit(1)
+                .execute()
+            )
+            comps_row = (fallback.data or [None])[0]
+    except Exception:
+        comps_row = None
+
+    _regional_comps_cache[cache_key] = comps_row
+    return comps_row
+
+
+def _ratio_to_regional_flip_points(ratio: float) -> int:
+    """Scale P1-style pricing bands to a 0–15 regional pillar."""
+    if ratio <= 0.72:
+        return 15
+    if ratio <= 0.80:
+        return 13
+    if ratio <= 0.87:
+        return 10
+    if ratio <= 0.93:
+        return 8
+    if ratio <= 0.98:
+        return 5
+    if ratio <= 1.03:
+        return 3
+    if ratio <= 1.10:
+        return 1
+    return 0
+
+
+def _build_regional_pricing_for_flip(listing: dict, deferred_total: float) -> dict:
+    """
+    Regional median (make/model/state) vs true cost → flip pillar points (0–15) and diagnostics.
+    Any missing prerequisite yields skipped=True and no flip weighting change.
+    """
+    out: dict = {
+        "regional_flip_pts": None,
+        "regional_flip_basis": "skipped:no_state",
+        "regional_price_index": None,
+        "regional_median_price": None,
+        "regional_sample_size": None,
+        "location_state_parsed": None,
+        "regional_vs_median_ratio": None,
+    }
+    try:
+        st = parse_us_state_from_listing_fields(
+            state=listing.get("state"),
+            location_raw=listing.get("location_raw"),
+        )
+        if not st:
+            out["regional_flip_basis"] = "skipped:no_us_state"
+            return out
+        out["location_state_parsed"] = st
+
+        comp = _get_regional_market_comp(listing.get("make"), listing.get("model"), st)
+        if not comp:
+            out["regional_flip_basis"] = "skipped:no_regional_comp"
+            return out
+
+        median_price = _safe_float(comp.get("median_price"))
+        sample_size = int(comp.get("sample_size") or 0)
+        if median_price is None or median_price <= 0:
+            out["regional_flip_basis"] = "skipped:invalid_median"
+            return out
+        if sample_size < 3:
+            out["regional_flip_basis"] = "skipped:small_sample"
+            return out
+
+        ask = _deal_price(listing)
+        if ask is None or ask <= 0:
+            out["regional_flip_basis"] = "skipped:no_price"
+            return out
+
+        d = float(deferred_total) if isinstance(deferred_total, (int, float)) and deferred_total > 0 else 0.0
+        true_cost = float(ask) + d
+        ratio = true_cost / median_price
+        pts = _ratio_to_regional_flip_points(ratio)
+        out["regional_median_price"] = round(median_price, 2)
+        out["regional_sample_size"] = sample_size
+        out["regional_vs_median_ratio"] = round(ratio, 4)
+        out["regional_flip_pts"] = pts
+        out["regional_flip_basis"] = f"true_cost_vs_state_median:{ratio:.3f}"
+        out["regional_price_index"] = round((pts / 15.0) * 100.0, 1)
+        return out
+    except Exception:
+        out["regional_flip_basis"] = "skipped:error"
+        return out
+
+
 def _baseline_year_score(row: dict, year: int | None) -> tuple[int, int]:
     year_from = row.get("year_from")
     year_to = row.get("year_to")
@@ -1980,6 +2105,44 @@ def _build_improvement_actions(signals: dict) -> list[str]:
     return actions[:3]
 
 
+_DAMAGE_TEXT_NEEDLES = (
+    "substantial damage",
+    "gear up landing",
+    "gear-up landing",
+    "prop strike",
+    "accident history",
+    "had an accident",
+    "damage history",
+    "repaired damage",
+    "incident involving",
+    "ntsb case",
+)
+
+
+def _description_damage_mention_adjustment(listing: dict) -> dict:
+    """
+    Small value_score haircut when prose mentions damage/accident but we have no NTSB severity row
+    and description_intelligence did not assert no_damage_history.
+    """
+    if str(listing.get("most_severe_damage") or "").strip():
+        return {"penalty": 0.0, "explanation": None}
+    di = listing.get("description_intelligence")
+    if isinstance(di, dict) and di.get("no_damage_history") is True:
+        return {"penalty": 0.0, "explanation": None}
+    text = str(listing.get("description_full") or listing.get("description") or "").lower()
+    if len(text) < 40:
+        return {"penalty": 0.0, "explanation": None}
+    if any(n in text for n in _DAMAGE_TEXT_NEEDLES):
+        return {
+            "penalty": 3.0,
+            "explanation": (
+                "Listing text references prior damage or an accident "
+                "(no NTSB severity on file; not combined with registry accident fields)"
+            ),
+        }
+    return {"penalty": 0.0, "explanation": None}
+
+
 def _accident_history_adjustment(listing: dict) -> dict:
     has_history = listing.get("has_accident_history")
     count = listing.get("accident_count")
@@ -2166,6 +2329,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     signals = _collect_data_quality_signals(listing, engine, prop)
     confidence_score, data_confidence, confidence_multiplier = _confidence_from_signals(signals)
     accident_adjustment = _accident_history_adjustment(listing)
+    desc_damage_adjustment = _description_damage_mention_adjustment(listing)
     accident_penalty = float(accident_adjustment.get("penalty") or 0.0)
     accident_explanation = accident_adjustment.get("explanation")
     accident_score_cap = accident_adjustment.get("score_cap")
@@ -2235,6 +2399,9 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     )
     if accident_penalty:
         value_score = max(0.0, value_score - accident_penalty)
+    desc_damage_penalty = float(desc_damage_adjustment.get("penalty") or 0.0)
+    if desc_damage_penalty:
+        value_score = max(0.0, value_score - desc_damage_penalty)
     if isinstance(accident_score_cap, (int, float)):
         value_score = min(value_score, float(accident_score_cap))
     faa_registration_alert = listing.get("faa_registration_alert")
@@ -2263,6 +2430,9 @@ def aircraft_intelligence_score(listing: dict) -> dict:
     )
     if accident_explanation:
         score_explanation = [accident_explanation, *score_explanation]
+    desc_damage_expl = desc_damage_adjustment.get("explanation")
+    if desc_damage_expl:
+        score_explanation = [str(desc_damage_expl), *score_explanation]
     if no_history_note:
         score_explanation = [*score_explanation, "✓ No NTSB accident history on record"]
     risk_reasons = _build_risk_reasons(engine, prop, llp, deferred, data_confidence)
@@ -2313,6 +2483,15 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         )
         if isinstance(accident_risk_override, str) and accident_risk_override:
             risk = accident_risk_override
+
+    regional_pricing = _build_regional_pricing_for_flip(listing, float(total_deferred))
+    if regional_pricing.get("regional_flip_pts") is not None:
+        score_explanation = [
+            *score_explanation,
+            f"Regional vs {regional_pricing.get('location_state_parsed')} median "
+            f"(n={regional_pricing.get('regional_sample_size')}): "
+            f"ratio {regional_pricing.get('regional_vs_median_ratio')}",
+        ]
 
     score_result = {
         "value_score": _out_value_score,
@@ -2386,6 +2565,7 @@ def aircraft_intelligence_score(listing: dict) -> dict:
         "engine_reserve_per_hour": engine_value_result.get("engine_reserve_per_hour"),
         "engine_reference": _build_engine_reference_payload(listing, engine),
     }
+    score_result.update(regional_pricing)
     _flip = compute_flip_score(listing, score_result)
     score_result["flip_score"] = _flip["flip_score"]
     score_result["flip_tier"] = _flip["flip_tier"]

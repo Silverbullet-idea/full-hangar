@@ -34,6 +34,26 @@ export function toggleFacetToken(tokens: readonly string[], token: string): stri
 
 export type CategoryValue = (typeof CATEGORIES)[number]['value'] | 'turboprop'
 
+/** Normalize `?category=` URL value to a typed filter (invalid → null). */
+export function parseCategoryParam(raw: string | null | undefined): CategoryValue {
+  const value = (raw ?? '').trim().toLowerCase()
+  if (!value) return null
+  if (
+    value === 'single' ||
+    value === 'multi' ||
+    value === 'turboprop' ||
+    value === 'se_turboprop' ||
+    value === 'me_turboprop' ||
+    value === 'jet' ||
+    value === 'helicopter' ||
+    value === 'lsp' ||
+    value === 'sea'
+  ) {
+    return value as CategoryValue
+  }
+  return null
+}
+
 export type ListingSourceKey =
   | 'trade-a-plane'
   | 'controller'

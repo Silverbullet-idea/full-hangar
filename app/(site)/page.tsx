@@ -1,67 +1,52 @@
-import Link from "next/link"
-import CarfaxBanner from "./components/home/CarfaxBanner"
-import DealPatterns from "./components/home/DealPatterns"
-import HomeFinalCta from "./components/home/HomeFinalCta"
-import HomeHeroSection from "./components/home/HomeHeroSection"
-import HomeScoreBreakdown from "./components/home/HomeScoreBreakdown"
-import HomeSocialProofFaq from "./components/home/HomeSocialProofFaq"
-import HomeStatsBar from "./components/home/HomeStatsBar"
-import MarketInfographics from "./components/home/MarketInfographics"
-import TickerBar from "./components/home/TickerBar"
-import { CATEGORIES } from "./listings/components/listingsClientUtils"
+import CarfaxBanner from "../components/home/CarfaxBanner"
+import DealPatterns from "../components/home/DealPatterns"
+import HomeAudiencePaths from "../components/home/HomeAudiencePaths"
+import HomeFinalCta from "../components/home/HomeFinalCta"
+import HomeHeroSection from "../components/home/HomeHeroSection"
+import HomeRoadmap from "../components/home/HomeRoadmap"
+import HomeScoreBreakdown from "../components/home/HomeScoreBreakdown"
+import HomeSocialProofFaq from "../components/home/HomeSocialProofFaq"
+import HomeStatsBar from "../components/home/HomeStatsBar"
+import HomeVisualStory from "../components/home/HomeVisualStory"
+import MarketInfographics from "../components/home/MarketInfographics"
+import TickerBar from "../components/home/TickerBar"
 
 export default function HomePage() {
   return (
-    <main className="space-y-2 home-page-wrap">
+    <main className="home-page-wrap space-y-2">
       <TickerBar />
-
-      <section className="mb-2">
-        <div className="w-full rounded-lg border border-brand-dark bg-card-bg p-1.5">
-          <div
-            className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3 lg:[grid-template-columns:repeat(var(--top-btn-count),minmax(0,1fr))]"
-            style={{ ["--top-btn-count" as string]: CATEGORIES.length + 1 }}
-          >
-            {CATEGORIES.map((category) => (
-              <Link
-                key={category.label}
-                href={buildHomeCategoryHref(category.value)}
-                className="h-8 rounded-md border border-brand-dark bg-[#121822] px-2 py-2 text-center text-xs font-semibold text-brand-white transition-colors hover:border-brand-orange hover:text-brand-orange"
-              >
-                {category.label}
-              </Link>
-            ))}
-            <Link
-              href="/listings?dealTier=TOP_DEALS&sortBy=flip_desc"
-              className="flex h-8 items-center justify-center rounded-md border border-[#166534] bg-[#166534] px-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#15803d]"
-            >
-              Deals
-            </Link>
-          </div>
-        </div>
-      </section>
 
       <div className="home-reveal home-r1">
         <HomeHeroSection />
       </div>
       <div className="home-reveal home-r2">
-        <CarfaxBanner />
+        <HomeVisualStory />
       </div>
       <div className="home-reveal home-r3">
-        <HomeStatsBar />
+        <HomeAudiencePaths />
       </div>
       <div className="home-reveal home-r4">
-        <MarketInfographics />
+        <HomeRoadmap />
       </div>
       <div className="home-reveal home-r5">
-        <DealPatterns />
+        <CarfaxBanner />
       </div>
       <div className="home-reveal home-r6">
-        <HomeScoreBreakdown />
+        <HomeStatsBar />
       </div>
       <div className="home-reveal home-r7">
-        <HomeSocialProofFaq />
+        <MarketInfographics />
       </div>
       <div className="home-reveal home-r8">
+        <DealPatterns />
+      </div>
+      <div className="home-reveal home-r9">
+        <HomeScoreBreakdown />
+      </div>
+      <div className="home-reveal home-r10">
+        <HomeSocialProofFaq />
+      </div>
+      <div className="home-reveal home-r11">
         <HomeFinalCta />
       </div>
 
@@ -71,16 +56,19 @@ export default function HomePage() {
         }
         .home-reveal {
           opacity: 0;
-          transform: translateY(14px);
-          animation: homeFadeUp 560ms cubic-bezier(.2,.8,.2,1) forwards;
+          transform: translateY(12px);
+          animation: homeFadeUp 480ms cubic-bezier(.2,.8,.2,1) forwards;
         }
-        .home-r2 { animation-delay: 90ms; }
-        .home-r3 { animation-delay: 160ms; }
-        .home-r4 { animation-delay: 230ms; }
-        .home-r5 { animation-delay: 300ms; }
-        .home-r6 { animation-delay: 370ms; }
-        .home-r7 { animation-delay: 440ms; }
-        .home-r8 { animation-delay: 510ms; }
+        .home-r2 { animation-delay: 70ms; }
+        .home-r3 { animation-delay: 130ms; }
+        .home-r4 { animation-delay: 190ms; }
+        .home-r5 { animation-delay: 250ms; }
+        .home-r6 { animation-delay: 310ms; }
+        .home-r7 { animation-delay: 370ms; }
+        .home-r8 { animation-delay: 430ms; }
+        .home-r9 { animation-delay: 490ms; }
+        .home-r10 { animation-delay: 550ms; }
+        .home-r11 { animation-delay: 610ms; }
         @keyframes homeFadeUp {
           to {
             opacity: 1;
@@ -221,9 +209,4 @@ export default function HomePage() {
       `}</style>
     </main>
   )
-}
-
-function buildHomeCategoryHref(category: (typeof CATEGORIES)[number]["value"]) {
-  if (!category) return "/listings"
-  return `/listings?category=${encodeURIComponent(category)}`
 }

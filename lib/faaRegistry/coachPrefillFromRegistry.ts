@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { inferEngineCount } from "../dealCoach/engineCountByModel"
 import { engineModelMap } from "../dealCoach/engineModelMap"
 import { modelMap } from "../dealCoach/modelMap"
 
@@ -172,9 +173,16 @@ export async function buildFaaCoachPrefill(
   const coachEngMake = mapEngMfrToCoach(engMfrName)
   const coachEngModel = coachEngMake ? bestEngineModel(coachEngMake, engModelName) : undefined
 
-  const numEngines = aircraftRef?.num_engines
-  const engineCount =
-    typeof numEngines === "number" && Number.isFinite(numEngines) && numEngines >= 2 ? 2 : 1
+  const rawEng =
+    aircraftRef?.num_engines ?? aircraftRef?.no_eng ?? (aircraftRef as Record<string, unknown> | null)?.num_eng
+  let engineCount: number | undefined
+  const rawNum = typeof rawEng === "number" ? rawEng : typeof rawEng === "string" ? parseInt(rawEng, 10) : NaN
+  if (Number.isFinite(rawNum) && rawNum >= 1) {
+    engineCount = rawNum >= 2 ? 2 : 1
+  } else {
+    const inferred = inferEngineCount(coachMake ?? "", `${modelName ?? ""} ${coachModel ?? ""}`.trim())
+    if (inferred != null) engineCount = inferred
+  }
 
   const city = pickStr(registry, ["city"])
   const state = pickStr(registry, ["state"])

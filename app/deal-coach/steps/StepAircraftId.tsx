@@ -6,7 +6,7 @@ import { avionicsChipGroups, panelTypeOptions } from "../../../lib/dealCoach/avi
 import { engineManufacturers, engineModelMap } from "../../../lib/dealCoach/engineModelMap"
 import { coachMakes, modelMap } from "../../../lib/dealCoach/modelMap"
 import { lookupTBO } from "../../../lib/dealCoach/tboReference"
-import type { AircraftProfile } from "../types"
+import type { AircraftProfile, DealMode } from "../types"
 import type { StepProps } from "./types"
 
 type SubView = "prepop" | "change" | "manual"
@@ -26,9 +26,9 @@ type FaaPrefillPayload = {
 
 type NLookupState = "idle" | "loading" | "found" | "not_found" | "error"
 
-function faaPrefillToProfile(faa: FaaPrefillPayload): AircraftProfile {
+function faaPrefillToAircraftProfile(faa: FaaPrefillPayload, mode: DealMode): AircraftProfile {
   return {
-    source: "manual",
+    source: mode === "sell" ? "faa" : "manual",
     registration: faa.registration,
     serialNumber: faa.serialNumber,
     year: faa.year,
@@ -36,7 +36,7 @@ function faaPrefillToProfile(faa: FaaPrefillPayload): AircraftProfile {
     model: faa.model,
     engineMake: faa.engineMake,
     engineModel: faa.engineModel,
-    engineCount: faa.engineCount ?? 1,
+    engineCount: faa.engineCount,
     location: faa.location,
     flipScore: null,
     dealTier: null,
@@ -116,7 +116,7 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
     annualStatus: ac?.annualStatus,
     engineMake: ac?.engineMake,
     engineModel: ac?.engineModel,
-    engineCount: ac?.engineCount ?? 1,
+    engineCount: ac?.engineCount,
     overhaulType: ac?.overhaulType,
     propMake: ac?.propMake,
     propType: ac?.propType,
@@ -178,7 +178,7 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
         return
       }
       if (data.found && data.faa && data.faa.registration) {
-        setFaaProfileFromLookup(faaPrefillToProfile(data.faa))
+        setFaaProfileFromLookup(faaPrefillToAircraftProfile(data.faa, answers.mode))
         setNLookupState("found")
       } else {
         setNLookupState("not_found")
@@ -186,7 +186,7 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
     } catch {
       setNLookupState("error")
     }
-  }, [nInput])
+  }, [nInput, answers.mode])
 
   const switchToManualFromFaaNotFound = useCallback(() => {
     setNLookupState("idle")
@@ -235,7 +235,7 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
     annualStatus: draft.annualStatus,
     engineMake: draft.engineMake,
     engineModel: draft.engineModel,
-    engineCount: draft.engineCount,
+    engineCount: draft.engineCount ?? undefined,
     overhaulType: draft.overhaulType,
     propMake: draft.propMake,
     propType: draft.propType,
@@ -315,6 +315,124 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
           style={barlow}
         >
           Use this aircraft →
+        </button>
+      </div>
+    )
+  }
+
+  if (answers.mode === "sell" && !(ac?.source === "listing" && ac.listingId)) {
+    const goToHoursManually = () => {
+      onUpdate({ aircraft: { source: "manual" } })
+      onNext()
+    }
+    const handleUseFAAResult = () => {
+      if (!faaProfileFromLookup) return
+      onUpdate({ aircraft: faaProfileFromLookup })
+      onNext()
+    }
+
+    return (
+      <div className="mx-auto max-w-lg space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--fh-text)] [data-theme=light]:text-slate-900" style={barlow}>
+            What&apos;s the <span className="text-[#FF9900]">N-number?</span>
+          </h2>
+          <p className="mt-2 text-sm text-[var(--fh-text-dim)]">
+            Enter your aircraft&apos;s registration number. We&apos;ll pull year, make, model, and engine from the FAA registry.
+          </p>
+        </div>
+
+        <div className="flex gap-2.5">
+          <input
+            className="min-w-0 flex-1 rounded-lg border border-[var(--fh-border)] bg-[#0d1117] px-3 py-2 text-base uppercase tracking-wide [data-theme=light]:bg-white"
+            style={{ fontFamily: "var(--font-dm-mono), ui-monospace, monospace" }}
+            value={nInput}
+            maxLength={7}
+            placeholder="e.g. N12345"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            onChange={(e) => {
+              const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7)
+              setNInput(v)
+              if (nLookupState !== "idle") {
+                setNLookupState("idle")
+                setFaaProfileFromLookup(null)
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void handleNLookup()
+            }}
+          />
+          <button
+            type="button"
+            className="shrink-0 rounded-lg bg-[#FF9900] px-5 py-2 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={nInput.trim().length < 3 || nLookupState === "loading"}
+            onClick={() => void handleNLookup()}
+          >
+            {nLookupState === "loading" ? "Looking up…" : "Look up →"}
+          </button>
+        </div>
+
+        {nLookupState === "idle" ? (
+          <p className="text-xs text-[var(--fh-text-dim)]">Enter your full N-number and press Enter or &quot;Look up →&quot;</p>
+        ) : null}
+        {nLookupState === "loading" ? (
+          <div className="flex gap-2 rounded-lg border border-sky-500/40 bg-sky-500/10 p-3 text-sm text-sky-100 [data-theme=light]:text-sky-950">
+            <span aria-hidden>⏳</span>
+            <span>Checking FAA registry for {nInput || "…"}…</span>
+          </div>
+        ) : null}
+
+        {nLookupState === "found" && faaProfileFromLookup ? (
+          <>
+            <div className="flex gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-100 [data-theme=light]:text-emerald-950">
+              <span aria-hidden>✅</span>
+              <span>
+                <strong>Found in FAA registry.</strong> Review the summary below, then continue to hours and equipment.
+              </span>
+            </div>
+            <div>{listingCard(faaProfileFromLookup)}</div>
+            <button
+              type="button"
+              className="fh-cta-on-orange-fill w-full rounded-lg bg-[#FF9900] py-3 text-sm font-extrabold text-black"
+              style={barlow}
+              onClick={handleUseFAAResult}
+            >
+              Use this aircraft →
+            </button>
+            <button
+              type="button"
+              className="w-full rounded-lg border border-transparent py-2 text-center text-[13px] font-semibold text-[var(--fh-text-dim)] hover:text-[var(--fh-text)]"
+              onClick={goToHoursManually}
+            >
+              Enter details manually instead
+            </button>
+          </>
+        ) : null}
+
+        {nLookupState === "not_found" ? (
+          <div className="flex gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-100 [data-theme=light]:text-amber-950">
+            <span aria-hidden>🔍</span>
+            <span>
+              <strong>{nInput || "That N-number"} not found in the FAA registry.</strong> You can still enter your hours and details manually.
+            </span>
+          </div>
+        ) : null}
+        {nLookupState === "error" ? (
+          <div className="flex gap-2 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-100 [data-theme=light]:text-red-950">
+            <span aria-hidden>⚠️</span>
+            <span>Lookup failed — please check your connection and try again.</span>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={goToHoursManually}
+          className="w-full text-center text-sm font-semibold text-[var(--fh-text-dim)] hover:text-[#FF9900] hover:underline"
+        >
+          Don&apos;t have an N-number / enter manually →
         </button>
       </div>
     )
@@ -765,19 +883,29 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
               </option>
             ))}
           </select>
-          <p className="text-xs text-[var(--fh-text-dim)]">Engines</p>
-          <div className="mb-2 flex gap-2">
-            {([1, 2] as const).map((n) => (
-              <button
-                key={n}
-                type="button"
-                className={`rounded-lg border px-3 py-1 text-sm ${draft.engineCount === n ? "border-[#FF9900] bg-[#FF9900]/15" : ""}`}
-                onClick={() => setDraft((d) => ({ ...d, engineCount: n }))}
-              >
-                {n === 1 ? "Single" : "Twin"}
-              </button>
-            ))}
-          </div>
+          {draft.engineCount === 1 || draft.engineCount === 2 ? (
+            <p className="mb-2 text-sm text-[var(--fh-text)] [data-theme=light]:text-slate-900">
+              Engine count:{" "}
+              <span className="font-semibold">{draft.engineCount === 1 ? "Single engine" : "Twin"}</span>{" "}
+              <span className="text-xs font-normal text-[var(--fh-text-dim)]">(from FAA registry or model reference)</span>
+            </p>
+          ) : (
+            <>
+              <p className="text-xs text-[var(--fh-text-dim)]">Engines</p>
+              <div className="mb-2 flex gap-2">
+                {([1, 2] as const).map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`rounded-lg border px-3 py-1 text-sm ${draft.engineCount === n ? "border-[#FF9900] bg-[#FF9900]/15" : ""}`}
+                    onClick={() => setDraft((d) => ({ ...d, engineCount: n }))}
+                  >
+                    {n === 1 ? "Single" : "Twin"}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <label className="text-xs text-[var(--fh-text-dim)]">Overhaul type</label>
           <select
             className="mb-2 w-full rounded-lg border border-[var(--fh-border)] bg-[#0d1117] px-3 py-2 [data-theme=light]:bg-white"
@@ -824,9 +952,20 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
 
       {manualStep === 4 ? (
         <>
-          <h3 className="text-base font-bold" style={barlow}>
-            Avionics
-          </h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-base font-bold text-[var(--fh-text)] [data-theme=light]:text-slate-900" style={barlow}>
+              Avionics <span className="text-[#FF9900]">equipment</span>
+            </h3>
+            {(draft.avionicsSelected ?? []).length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setDraft((d) => ({ ...d, avionicsSelected: [] }))}
+                className="shrink-0 rounded-full border border-[var(--fh-border)] px-3 py-1.5 text-xs text-[var(--fh-text-dim)] transition-colors hover:text-[var(--fh-text)] [data-theme=light]:border-slate-300"
+              >
+                Clear all
+              </button>
+            ) : null}
+          </div>
           <p className="text-xs text-[var(--fh-text-dim)]">Panel type (one)</p>
           <div className="mb-3 flex flex-wrap gap-2">
             {panelTypeOptions.map((p) => (
@@ -881,12 +1020,12 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
           </h3>
           <p className="text-xs text-[var(--fh-text-dim)]">Damage history</p>
           <div className="mb-2 flex flex-wrap gap-2">
-            {(["NDH", "Has damage history", "Unknown"] as const).map((opt) => (
+            {(["No Damage", "Has damage history", "Unknown"] as const).map((opt) => (
               <button
                 key={opt}
                 type="button"
                 className={`rounded-full border px-3 py-1 text-sm ${
-                  (opt === "NDH" && draft.damageHistory === false) ||
+                  (opt === "No Damage" && draft.damageHistory === false) ||
                   (opt === "Has damage history" && draft.damageHistory === true) ||
                   (opt === "Unknown" && draft.damageHistory == null)
                     ? "border-[#FF9900] bg-[#FF9900]/15"
@@ -895,7 +1034,7 @@ export default function StepAircraftId({ answers, onUpdate, onNext }: StepProps)
                 onClick={() =>
                   setDraft((d) => ({
                     ...d,
-                    damageHistory: opt === "NDH" ? false : opt === "Has damage history" ? true : undefined,
+                    damageHistory: opt === "No Damage" ? false : opt === "Has damage history" ? true : undefined,
                     damageDetail: opt === "Has damage history" ? d.damageDetail : undefined,
                   }))
                 }

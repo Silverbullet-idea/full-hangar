@@ -44,6 +44,13 @@ try:
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from controller_listing_extract import (
+        CONTROLLER_DETAIL_PRICE_SELECTOR,
+        extract_controller_listing_price_from_json,
+        maybe_log_list_detail_price_divergence,
+        parse_listing_price_text,
+    )
+    from scraper_health import SelectorConfig
 except ImportError:  # pragma: no cover
     from .adaptive_rate import AdaptiveRateLimiter
     from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
@@ -58,6 +65,13 @@ except ImportError:  # pragma: no cover
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from .controller_listing_extract import (
+        CONTROLLER_DETAIL_PRICE_SELECTOR,
+        extract_controller_listing_price_from_json,
+        maybe_log_list_detail_price_divergence,
+        parse_listing_price_text,
+    )
+    from .scraper_health import SelectorConfig
 
 load_dotenv()
 
@@ -73,6 +87,8 @@ HUMAN_PAGE_RENDER_WAIT_MS = (3500, 7000)
 HUMAN_BETWEEN_MAKES_SECONDS = (20.0, 45.0)
 HUMAN_MICRO_PAUSE_SECONDS = (0.4, 1.4)
 HUMAN_OCCASIONAL_PAUSE_SECONDS = (4.0, 9.0)
+
+_parse_price = parse_listing_price_text
 
 # Confirmed from Controller search URL patterns in DevTools and external task notes.
 CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {
@@ -154,16 +170,6 @@ def build_category_url(category_id: int, page: int = 1, manufacturer: str = "") 
     if manufacturer:
         params["Manufacturer"] = manufacturer.strip()
     return f"{BASE_URL}{SEARCH_PATH}?{urlencode(params)}"
-
-
-def _parse_price(price_text: str) -> Optional[int]:
-    numeric = re.sub(r"[^\d]", "", price_text or "")
-    if not numeric:
-        return None
-    try:
-        return int(numeric)
-    except ValueError:
-        return None
 
 
 def _extract_source_id(listing_url: str) -> str:
@@ -386,14 +392,25 @@ async def fetch_listing_detail(page, listing_url: str) -> dict:
         html = await page.content()
         soup = BeautifulSoup(html, "html.parser")
 
-        # --- Price (confirmed: strong.listing-prices_retail-price) ---
-        price_el = soup.select_one("strong.listing-prices_retail-price")
+        # --- Price: embedded JSON (authoritative) + DOM for fallback / cross-check ---
+        json_price = extract_controller_listing_price_from_json(html)
+        price_el = CONTROLLER_DETAIL_PRICE_SELECTOR.find(soup)
+        dom_price: Optional[int] = None
         if price_el:
             price_text = price_el.get_text(strip=True)
             if "call" not in price_text.lower():
-                p = _parse_price(price_text)
-                if p:
-                    extra["price_asking"] = p
+                dom_price = _parse_price(price_text)
+        if json_price is not None:
+            extra["price_asking"] = json_price
+            if dom_price is not None and dom_price != json_price:
+                log.warning(
+                    "[controller] detail JSON vs DOM price mismatch json=%s dom=%s url=%s",
+                    json_price,
+                    dom_price,
+                    listing_url,
+                )
+        elif dom_price is not None:
+            extra["price_asking"] = dom_price
 
         # --- Location (confirmed: div.detail__machine-location, double underscore) ---
         loc_el = soup.select_one("div.detail__machine-location")
@@ -1119,6 +1136,7 @@ async def scrape_make(
                 else:
                     log.info(f"[{make}] Fetching detail: {detail_url}")
                     try:
+                        card_price = listing.get("price_asking")
                         extra = await fetch_listing_detail(page, detail_url)
                         if not extra:
                             if limiter:
@@ -1126,6 +1144,12 @@ async def scrape_make(
                             await asyncio.sleep(random.uniform(1.0, 2.0))
                             extra = await fetch_listing_detail(page, detail_url)
                         listing.update(extra)
+                        maybe_log_list_detail_price_divergence(
+                            list_price=card_price if isinstance(card_price, int) else None,
+                            detail_price=listing.get("price_asking") if isinstance(listing.get("price_asking"), int) else None,
+                            source_id=str(source_id),
+                            context_label=f"make={make}",
+                        )
                     except Exception as exc:
                         if session_stats is not None:
                             if session_stats.get("first_error_at_listing") is None:
@@ -1277,7 +1301,14 @@ async def scrape_category(
                     pass
                 else:
                     try:
+                        card_price = listing.get("price_asking")
                         listing.update(await fetch_listing_detail(page, detail_url))
+                        maybe_log_list_detail_price_divergence(
+                            list_price=card_price if isinstance(card_price, int) else None,
+                            detail_price=listing.get("price_asking") if isinstance(listing.get("price_asking"), int) else None,
+                            source_id=str(source_id),
+                            context_label=f"category={category_key}",
+                        )
                     except Exception as exc:
                         if session_stats is not None:
                             if session_stats.get("first_error_at_listing") is None:
@@ -1689,6 +1720,7 @@ async def main() -> None:
         page = await context.new_page()
 
         try:
+            SelectorConfig.reset_find_counts()
             if args.media_refresh_only:
                 if supabase is None:
                     supabase = get_supabase()
@@ -1904,6 +1936,9 @@ async def main() -> None:
                             log.info(f"Waiting {between_delay:.1f}s before next make...")
                             await asyncio.sleep(between_delay)
         finally:
+            snap = SelectorConfig.snapshot_find_counts()
+            if snap:
+                log.info("[controller] selector find_counts %s", snap)
             await browser.close()
 
     if args.output:

@@ -26,7 +26,7 @@
     "pipeline:daily:preview": "powershell -ExecutionPolicy Bypass -File .\\run-daily-pipeline.ps1 -Preview",
     "pipeline:barnstormers": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-barnstormers-pipeline.ps1",
     "pipeline:barnstormers:dry": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-barnstormers-pipeline.ps1 -DryRun",
-    "pipeline:barnstormers:smoke": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-barnstormers-pipeline.ps1 -DryRun -Category \"Single Engine Piston\" -Limit 5",
+    "pipeline:barnstormers:smoke": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-barnstormers-pipeline.ps1 -DryRun -Category single_engine -Limit 5",
     "pipeline:afs": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-afs-pipeline.ps1",
     "pipeline:afs:dry": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-afs-pipeline.ps1 -DryRun",
     "pipeline:afs:preview": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-afs-pipeline.ps1 -Preview",
@@ -48,6 +48,7 @@
     "pipeline:avbuyer:preview": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-avbuyer-pipeline.ps1 -Preview",
     "pipeline:airpower": "powershell -File scripts/run-airpower-pipeline.ps1",
     "pipeline:faa-monitor": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-faa-monitor.ps1",
+    "pipeline:faa-monitor:dry": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-faa-monitor.ps1 -DryRun",
     "pipeline:audit:non-aircraft": ".venv312\\Scripts\\python.exe scraper\\audit_non_aircraft_listings.py --strict-output scraper\\non_aircraft_strict_candidates_latest.json --borderline-output scraper\\non_aircraft_borderline_review_latest.json --combined-output scraper\\non_aircraft_review_latest.json",
     "pipeline:audit:non-aircraft:hybrid": ".venv312\\Scripts\\python.exe scraper\\audit_non_aircraft_listings.py --strict-output scraper\\non_aircraft_strict_candidates_latest.json --borderline-output scraper\\non_aircraft_borderline_review_latest.json --combined-output scraper\\non_aircraft_review_latest.json",
     "pipeline:identity:audit": ".venv312\\Scripts\\python.exe scraper\\audit_make_model_quality.py",
@@ -94,6 +95,8 @@
     "pipeline:compute-market-comps:dry": ".venv312\\Scripts\\python.exe scraper\\compute_market_comps.py --dry-run"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.10",
+    "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "latest",
     "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "^10.4.27",
@@ -103,6 +106,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^3.7.0",
+    "resend": "^6.9.4",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {

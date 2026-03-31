@@ -29,6 +29,23 @@ from adaptive_rate import AdaptiveRateLimiter
 from scraper_base import get_supabase
 from schema import validate_listing
 
+try:
+    from scraper_health import (
+        ErrorType,
+        ScraperResult,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+    )
+except ImportError:  # pragma: no cover
+    from .scraper_health import (
+        ErrorType,
+        ScraperResult,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+    )
+
 
 BASE_URL = "https://www.aso.com"
 LISTINGS_URL = "https://www.aso.com/listings/AircraftListings.aspx"
@@ -109,6 +126,9 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
 
 log = logging.getLogger(__name__)
 MISSING_COLUMN_CACHE: set[str] = set()
+
+# Set in run() for challenge logging from _request_with_retry.
+_aso_scrape_health_ctx: dict[str, Any] = {"supabase": None, "health": None}
 DEFAULT_UNSUPPORTED_COLUMNS = {
     # Known absent in current Supabase schema snapshot.
     "aso_adv_id",
@@ -157,6 +177,24 @@ def _request_with_retry(
             time.sleep(wait_s)
             continue
         if response.status_code == 200:
+            body = response.text
+            if looks_like_challenge_html(body):
+                ctype = detect_challenge_type(body) or "unknown"
+                ctx = _aso_scrape_health_ctx
+                h = ctx.get("health")
+                if h is not None:
+                    h.challenge_hits += 1
+                sb = ctx.get("supabase")
+                if sb is not None:
+                    log_scraper_error(
+                        sb,
+                        source_site="aso",
+                        error_type=ErrorType.CHALLENGE,
+                        url=url,
+                        raw_error=f"challenge:{ctype} at {url}",
+                    )
+                log.warning("ASO challenge/bot page detected for %s (%s)", url, ctype)
+                return None
             return response
         if response.status_code in (403, 429, 503):
             wait_s = min(90.0, backoff_base * (2 ** attempt) + random.uniform(0.0, 2.0))
@@ -908,6 +946,9 @@ def run(args: argparse.Namespace) -> None:
         log.warning("Session warmup failed: %s", exc)
 
     supabase = None if args.dry_run else get_supabase()
+    health = ScraperResult(source_site="aso")
+    _aso_scrape_health_ctx["supabase"] = supabase
+    _aso_scrape_health_ctx["health"] = health
     limiter = AdaptiveRateLimiter(supabase, "aso", logger=log) if supabase else None
 
     cats = {args.category: CATEGORIES[args.category]} if args.category else CATEGORIES
@@ -1014,6 +1055,7 @@ def run(args: argparse.Namespace) -> None:
         log.info("Dry run complete. %s unique listings. Output=%s", len(dry_rows), out_file)
     else:
         log.info("✓ Done. Saved: %s | Skipped: %s", total_saved, total_skipped)
+    log.info("%s", health.finish().summary())
     if total_existing_skipped:
         log.info("↺ Existing rows skipped by --only-new: %s", total_existing_skipped)
     if total_detail_skipped_recent:

@@ -48,6 +48,15 @@ try:
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 except ImportError:  # pragma: no cover
     from .adaptive_rate import AdaptiveRateLimiter
     from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
@@ -66,6 +75,15 @@ except ImportError:  # pragma: no cover
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from .scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 
 load_dotenv()
 
@@ -74,6 +92,13 @@ log = logging.getLogger(__name__)
 
 BASE_URL = "https://www.trade-a-plane.com"
 SEARCH_PATH = "/search"
+TAP_SOURCE_SITE = "trade_a_plane"
+
+TAP_DETAIL_PRICE_SEL = SelectorConfig(
+    name="tap_detail_price",
+    primary=".listing-price",
+    fallbacks=[".price", ".ask-price", ".detail-price", "[data-price]"],
+)
 DEFAULT_CHECKPOINT_FILE = Path("scraper/state/tradaplane_checkpoint.json")
 FAILED_URLS_FILE = Path("scraper/failed_urls_tap.json")
 
@@ -524,22 +549,58 @@ def log_scraper_session(
 class HtmlFetcher:
     """Requests-first HTML fetcher with optional Playwright fallback."""
 
-    def __init__(self, use_playwright_fallback: bool = True) -> None:
+    def __init__(
+        self,
+        use_playwright_fallback: bool = True,
+        *,
+        supabase: Any | None = None,
+        health_result: ScraperResult | None = None,
+    ) -> None:
         self.session = requests.Session()
         self.session.headers.update(DEFAULT_HEADERS)
         self.use_playwright_fallback = use_playwright_fallback
+        self._supabase = supabase
+        self._health = health_result
+
+    @retry_with_backoff(max_attempts=3, base_delay=5.0, exceptions=(requests.RequestException, requests.HTTPError))
+    def _requests_fetch_body(self, url: str) -> str:
+        response = self.session.get(url, timeout=REQUEST_TIMEOUT)
+        if response.status_code != 200:
+            if response.status_code in (403, 429, 500, 502, 503, 504):
+                response.raise_for_status()
+            raise ValueError(f"HTTP {response.status_code} for {url}")
+        html = response.text
+        if looks_like_challenge_html(html):
+            ctype = detect_challenge_type(html) or "unknown"
+            raise RuntimeError(f"challenge:{ctype} at {url}")
+        return html
 
     def fetch(self, url: str) -> Optional[str]:
+        html_text: Optional[str] = None
         try:
-            response = self.session.get(url, timeout=REQUEST_TIMEOUT)
-            if response.status_code == 200:
-                if not _looks_like_block_page(response.text):
-                    return response.text
-                log.warning("Potential challenge/block page via requests: %s", url)
+            html_text = self._requests_fetch_body(url)
+        except RuntimeError as exc:
+            if "challenge:" in str(exc):
+                if self._supabase:
+                    log_scraper_error(
+                        self._supabase,
+                        source_site=TAP_SOURCE_SITE,
+                        error_type=ErrorType.CHALLENGE,
+                        url=url,
+                        raw_error=str(exc),
+                    )
+                if self._health:
+                    self._health.challenge_hits += 1
+                log.warning("Challenge page via requests: %s", exc)
             else:
-                log.warning("Non-200 status %s for %s", response.status_code, url)
-        except requests.RequestException as exc:
+                raise
+        except (requests.RequestException, requests.HTTPError, ValueError) as exc:
             log.warning("Requests fetch failed for %s: %s", url, exc)
+
+        if html_text is not None and not _looks_like_block_page(html_text):
+            return html_text
+        if html_text is not None:
+            log.warning("Potential challenge/block page via requests: %s", url)
 
         if not self.use_playwright_fallback:
             return None
@@ -641,7 +702,7 @@ def fetch_listing_detail(fetcher: HtmlFetcher, listing_url: str) -> dict:
 
     # Price
     price_text = None
-    price_el = soup.select_one(".price, .listing-price, .ask-price, .detail-price")
+    price_el = TAP_DETAIL_PRICE_SEL.find(soup)
     if price_el:
         price_text = price_el.get_text(" ", strip=True)
     if not price_text:
@@ -1805,8 +1866,13 @@ def main() -> None:
     else:
         clear_checkpoint(checkpoint_file)
 
-    fetcher = HtmlFetcher(use_playwright_fallback=not args.no_playwright_fallback)
     supabase = None if args.dry_run else get_supabase()
+    health = ScraperResult(source_site=TAP_SOURCE_SITE)
+    fetcher = HtmlFetcher(
+        use_playwright_fallback=not args.no_playwright_fallback,
+        supabase=supabase,
+        health_result=health,
+    )
     limiter = None if args.dry_run or supabase is None else AdaptiveRateLimiter(supabase, "trade_a_plane", logger=log)
     if limiter:
         log.info("[trade_a_plane] Adaptive settings: %s", limiter.get_recommended_settings())
@@ -1973,6 +2039,7 @@ def main() -> None:
     for make, count in per_make_counts.items():
         log.info("Final count [%s]: %s", make, count)
     log.info("Final total listings: %s", total_count)
+    log.info("%s", health.finish().summary())
     if failed_entries:
         save_failed_entries(failed_file, failed_entries)
         log.warning(

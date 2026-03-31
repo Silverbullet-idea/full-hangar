@@ -29,6 +29,15 @@ try:
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 except ImportError:  # pragma: no cover
     from .config import BARNSTORMERS_CATEGORIES, SCRAPE_ORDER, get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description
@@ -41,10 +50,25 @@ except ImportError:  # pragma: no cover
         safe_upsert_with_fallback,
         setup_logging,
     )
+    from .scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+        retry_with_backoff,
+    )
 
 BASE_URL = "https://www.barnstormers.com"
 SOURCE_SITE = "barnstormers"
 CHECKPOINT_FILE = Path(__file__).resolve().parent / "barnstormers_checkpoint.json"
+
+BARNSTORMERS_CARD_PRICE_SEL = SelectorConfig(
+    name="barnstormers_card_price",
+    primary="span.price",
+    fallbacks=[".price", "span.listing_price", "[class*='price']"],
+)
 TIMEOUT_SECONDS = 30
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -332,33 +356,67 @@ def _fingerprint_listing(title: str | None, price_asking: Optional[int], descrip
     return hashlib.sha1(material.encode("utf-8")).hexdigest()
 
 
+@retry_with_backoff(max_attempts=3, base_delay=5.0, exceptions=(requests.RequestException, requests.HTTPError))
+def _barn_requests_get_html(session: requests.Session, url: str) -> str:
+    resp = session.get(url, timeout=TIMEOUT_SECONDS)
+    if resp.status_code != 200:
+        if resp.status_code in (403, 429, 500, 502, 503, 504):
+            resp.raise_for_status()
+        raise ValueError(f"HTTP {resp.status_code} for {url}")
+    html = resp.text
+    if looks_like_challenge_html(html):
+        ctype = detect_challenge_type(html) or "unknown"
+        raise RuntimeError(f"challenge:{ctype} at {url}")
+    cf_blocked = "/cdn-cgi/" in str(resp.url).lower() or "cf-challenge" in html.lower()
+    if cf_blocked:
+        raise ValueError("cf_challenge_html")
+    return html
+
+
 class HtmlFetcher:
-    def __init__(self, no_playwright_fallback: bool = False):
+    def __init__(
+        self,
+        no_playwright_fallback: bool = False,
+        *,
+        supabase: Any | None = None,
+        health_result: ScraperResult | None = None,
+    ):
         self._session = requests.Session()
         self._session.headers.update({"User-Agent": USER_AGENT})
         self.no_playwright_fallback = no_playwright_fallback
         self._consecutive_blocked = 0
+        self._supabase = supabase
+        self._health = health_result
 
     def fetch(self, url: str) -> str | None:
         try:
-            resp = self._session.get(url, timeout=TIMEOUT_SECONDS)
-            blocked = resp.status_code == 429 or "/cdn-cgi/" in str(resp.url).lower() or "cf-challenge" in resp.text
-            if blocked:
+            html = _barn_requests_get_html(self._session, url)
+            self._consecutive_blocked = 0
+            return html
+        except RuntimeError as exc:
+            if "challenge:" in str(exc):
                 self._consecutive_blocked += 1
+                if self._supabase:
+                    log_scraper_error(
+                        self._supabase,
+                        source_site=SOURCE_SITE,
+                        error_type=ErrorType.CHALLENGE,
+                        url=url,
+                        raw_error=str(exc),
+                    )
+                if self._health:
+                    self._health.challenge_hits += 1
+                log.warning("Challenge page for %s: %s", url, exc)
             else:
-                self._consecutive_blocked = 0
+                raise
+        except (requests.RequestException, requests.HTTPError, ValueError) as exc:
+            self._consecutive_blocked += 1
+            log.warning("Request fetch failed for %s: %s", url, exc)
 
-            if self._consecutive_blocked >= 5:
-                log.warning("Blocked 5 consecutive requests; pausing 60s before retry.")
-                time.sleep(60)
-                self._consecutive_blocked = 0
-                resp = self._session.get(url, timeout=TIMEOUT_SECONDS)
-
-            if resp.status_code == 200 and not blocked:
-                return resp.text
-            log.warning("Request fetch failed (%s) for %s", resp.status_code, url)
-        except requests.RequestException as exc:
-            log.warning("Request fetch exception for %s: %s", url, exc)
+        if self._consecutive_blocked >= 5:
+            log.warning("Blocked 5 consecutive requests; pausing 60s before retry.")
+            time.sleep(60)
+            self._consecutive_blocked = 0
 
         if self.no_playwright_fallback:
             return None
@@ -400,7 +458,8 @@ def _parse_listing_card(card: Any, category_name: str) -> dict[str, Any] | None:
         return None
 
     year, make, model = _extract_year_make_model(title)
-    price_asking = _parse_price(card.select_one("span.price").get_text(" ", strip=True) if card.select_one("span.price") else "")
+    price_el = BARNSTORMERS_CARD_PRICE_SEL.find(card)
+    price_asking = _parse_price(price_el.get_text(" ", strip=True) if price_el else "")
     action_phrase = _normalize_space(card.select_one("span.action_phrase").get_text(" ", strip=True) if card.select_one("span.action_phrase") else "")
     description = _normalize_space(card.select_one("span.body").get_text(" ", strip=True) if card.select_one("span.body") else "")
     contact_text = _normalize_space(card.select_one("span.contact").get_text(" ", strip=True) if card.select_one("span.contact") else "")
@@ -851,10 +910,16 @@ def main() -> None:
         raise SystemExit(f"Unknown category name(s): {', '.join(invalid)}")
 
     resume_state = _load_checkpoint() if args.resume else None
-    fetcher = HtmlFetcher(no_playwright_fallback=args.no_playwright_fallback)
+    supabase = None if args.dry_run else get_supabase()
+    health = ScraperResult(source_site=SOURCE_SITE)
+    fetcher = HtmlFetcher(
+        no_playwright_fallback=args.no_playwright_fallback,
+        supabase=supabase,
+        health_result=health,
+    )
 
     if args.media_refresh_only:
-        supabase = get_supabase()
+        supabase = supabase or get_supabase()
         run_media_refresh_mode(
             fetcher=fetcher,
             supabase=supabase,
@@ -882,11 +947,17 @@ def main() -> None:
         log.info("Dry run complete. Parsed %s listings.", len(listings))
         return
 
-    supabase = get_supabase()
+    supabase = supabase or get_supabase()
     saved = upsert_listings(supabase, listings)
     marked_inactive = mark_inactive_listings(supabase)
     _clear_checkpoint()
-    log.info("Barnstormers scrape complete. parsed=%s saved=%s marked_inactive=%s", len(listings), saved, marked_inactive)
+    log.info(
+        "Barnstormers scrape complete. parsed=%s saved=%s marked_inactive=%s %s",
+        len(listings),
+        saved,
+        marked_inactive,
+        health.finish().summary(),
+    )
 
 
 if __name__ == "__main__":

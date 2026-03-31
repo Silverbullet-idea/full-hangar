@@ -1,6 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
+import { createServerClient as createSupabaseRouteClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
+import type { NextRequest, NextResponse } from "next/server"
 
 /** True when anon client env is present (required for `createServerClient` / browser-aligned reads). */
 export function isPublicSupabaseConfigured(): boolean {
@@ -83,4 +86,61 @@ export function createReadServerClient() {
 // Backward compatibility for older imports.
 export function getSupabaseServerClient() {
   return createServerClient()
+}
+
+/**
+ * Supabase client for App Router route handlers: reads/writes auth cookies on the request/response.
+ * After calling `getUser()` / `getSession()`, merge cookies onto your final response with
+ * `mergeSupabaseRouteCookies(cookieResponse, finalResponse)`.
+ */
+export function createRouteHandlerSupabaseClient(
+  request: NextRequest,
+  cookieResponse: NextResponse,
+) {
+  return createSupabaseRouteClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieResponse.cookies.set(name, value, options)
+        })
+      },
+    },
+  })
+}
+
+/** Copy Set-Cookie headers from the cookie-holding response onto the response you return (e.g. NextResponse.json). */
+export function mergeSupabaseRouteCookies(
+  cookieResponse: NextResponse,
+  finalResponse: NextResponse,
+): NextResponse {
+  for (const v of cookieResponse.headers.getSetCookie()) {
+    finalResponse.headers.append("Set-Cookie", v)
+  }
+  return finalResponse
+}
+
+/**
+ * Supabase client for Server Components / server actions: reads session from Next.js cookies.
+ */
+export async function createSupabaseRscClient() {
+  const cookieStore = await cookies()
+  return createSupabaseRouteClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
+        } catch {
+          // RSC cannot always mutate cookies (e.g. during render)
+        }
+      },
+    },
+  })
 }

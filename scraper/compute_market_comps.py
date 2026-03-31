@@ -15,11 +15,18 @@ from __future__ import annotations
 import argparse
 import os
 import statistics
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+
+_ROOT = Path(__file__).resolve().parent
+if _ROOT.name == "scraper":
+    sys.path.insert(0, str(_ROOT.parent))
+
+from core.intelligence.us_location import parse_us_state_from_listing_fields
 
 PAGE_DEFAULT = 1000
 
@@ -85,11 +92,14 @@ def _glass_flag(row: dict) -> bool | None:
 def fetch_all_rows(supabase: Any, *, page_size: int = PAGE_DEFAULT) -> list[dict]:
     """All active listings with fields needed for comp aggregates."""
     candidates = (
+        "make,model,asking_price,price_asking,deferred_total,location_raw,state,"
+        "engine_time_since_overhaul,time_since_overhaul,has_glass_cockpit,avionics_score,is_active",
         "make,model,asking_price,price_asking,deferred_total,"
         "engine_time_since_overhaul,time_since_overhaul,has_glass_cockpit,avionics_score,is_active",
         "make,model,asking_price,price_asking,deferred_total,engine_time_since_overhaul,time_since_overhaul,is_active",
     )
     select_cols = candidates[0]
+    candidate_idx = 0
     rows: list[dict] = []
     offset = 0
     while True:
@@ -105,8 +115,9 @@ def fetch_all_rows(supabase: Any, *, page_size: int = PAGE_DEFAULT) -> list[dict
                 or []
             )
         except Exception as exc:
-            if select_cols == candidates[0] and "column" in str(exc).lower():
-                select_cols = candidates[1]
+            if "column" in str(exc).lower() and candidate_idx + 1 < len(candidates):
+                candidate_idx += 1
+                select_cols = candidates[candidate_idx]
                 offset = 0
                 rows = []
                 continue
@@ -209,6 +220,69 @@ def build_comps_payload(
     return out
 
 
+def build_regional_comps_payload(
+    all_rows: list[dict],
+    *,
+    min_sample: int = 3,
+) -> list[dict]:
+    """
+    Median effective price per (make, model, US state) for regional_price_index.
+    State comes from `state` column or parsed `location_raw`; rows without a US state are skipped.
+    """
+    buckets: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in all_rows:
+        mk = str(row.get("make") or "").strip()
+        md = str(row.get("model") or "").strip()
+        if not mk or not md:
+            continue
+        st = parse_us_state_from_listing_fields(state=row.get("state"), location_raw=row.get("location_raw"))
+        if not st:
+            continue
+        eff = _effective_price(row)
+        if eff is None:
+            continue
+        key = (mk.casefold(), md.casefold(), st)
+        if key not in buckets:
+            buckets[key] = {
+                "make_keys": Counter(),
+                "model_keys": Counter(),
+                "prices": [],
+            }
+        b = buckets[key]
+        b["make_keys"][mk] += 1
+        b["model_keys"][md] += 1
+        b["prices"].append(eff)
+
+    out: list[dict] = []
+    for key, b in buckets.items():
+        n = len(b["prices"])
+        if n < min_sample:
+            continue
+        _, _, state_code = key
+        make_canon = b["make_keys"].most_common(1)[0][0]
+        model_canon = b["model_keys"].most_common(1)[0][0]
+        prices = sorted(b["prices"])
+        median_price = _median(list(prices))
+        out.append(
+            {
+                "make": make_canon,
+                "model": model_canon,
+                "state": state_code,
+                "sample_size": n,
+                "median_price": round(median_price, 2) if median_price is not None else None,
+            }
+        )
+    out.sort(
+        key=lambda r: (
+            -(r.get("sample_size") or 0),
+            r.get("make") or "",
+            r.get("model") or "",
+            r.get("state") or "",
+        )
+    )
+    return out
+
+
 def upsert_market_comps(supabase: Any, comps_rows: list[dict]) -> int:
     if not comps_rows:
         return 0
@@ -233,9 +307,38 @@ def upsert_market_comps(supabase: Any, comps_rows: list[dict]) -> int:
     return saved
 
 
+def upsert_market_comps_regional(supabase: Any, regional_rows: list[dict]) -> int:
+    if not regional_rows:
+        return 0
+    saved = 0
+    batch_size = 100
+    for i in range(0, len(regional_rows), batch_size):
+        chunk = regional_rows[i : i + batch_size]
+        try:
+            supabase.table("market_comps_regional").upsert(chunk, on_conflict="make,model,state").execute()
+            saved += len(chunk)
+        except Exception as exc:
+            if "conflict" in str(exc).lower() or "constraint" in str(exc).lower():
+                for row in chunk:
+                    try:
+                        supabase.table("market_comps_regional").upsert(row).execute()
+                        saved += 1
+                    except Exception:
+                        pass
+            else:
+                raise
+    return saved
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Recompute market_comps from aircraft_listings")
     parser.add_argument("--min-sample", type=int, default=5)
+    parser.add_argument(
+        "--min-sample-regional",
+        type=int,
+        default=3,
+        help="Minimum listings per make/model/state bucket for market_comps_regional",
+    )
     parser.add_argument("--page-size", type=int, default=PAGE_DEFAULT)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -245,12 +348,16 @@ def main() -> None:
     sold_rows = fetch_sold_rows(supabase)
     transfer_rows = fetch_transfer_rows(supabase)
     comps_rows = build_comps_payload(all_rows, sold_rows, transfer_rows, min_sample=args.min_sample)
-    print(f"computed_groups={len(comps_rows)} listings_scanned={len(all_rows)}")
+    regional_rows = build_regional_comps_payload(all_rows, min_sample=args.min_sample_regional)
+    print(
+        f"computed_groups={len(comps_rows)} regional_groups={len(regional_rows)} listings_scanned={len(all_rows)}"
+    )
     if args.dry_run:
         print("dry-run: no upsert")
         return
     upserted = upsert_market_comps(supabase, comps_rows)
-    print(f"upserted={upserted}")
+    upserted_regional = upsert_market_comps_regional(supabase, regional_rows)
+    print(f"upserted={upserted} regional_upserted={upserted_regional}")
 
 
 if __name__ == "__main__":

@@ -43,6 +43,14 @@ try:
         setup_logging,
         should_skip_detail,
     )
+    from scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
+    )
 except ImportError:  # pragma: no cover
     from .config import get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description
@@ -64,6 +72,14 @@ except ImportError:  # pragma: no cover
         safe_upsert_with_fallback,
         setup_logging,
         should_skip_detail,
+    )
+    from .scraper_health import (
+        ErrorType,
+        ScraperResult,
+        SelectorConfig,
+        detect_challenge_type,
+        log_scraper_error,
+        looks_like_challenge_html,
     )
 
 load_dotenv()
@@ -94,6 +110,12 @@ CATEGORIES = [
 ]
 
 LISTINGS_PER_PAGE = 20   # "Showing 1-20 of 218" confirmed
+
+AVB_DETAIL_PRICE_SEL = SelectorConfig(
+    name="avbuyer_detail_price",
+    primary=".dtl-price",
+    fallbacks=[".price", "[class*='dtl-price']", "[class*='listing-price']", "[data-price]"],
+)
 
 # Retry / rate config
 MAX_RETRIES = 5
@@ -165,7 +187,15 @@ session.headers.update(REQUEST_HEADERS)
 _playwright_fallback_active = False
 
 
-def fetch_html(url: str, rl: RateLimiter, pw_page=None, label: str = "") -> Optional[BeautifulSoup]:
+def fetch_html(
+    url: str,
+    rl: RateLimiter,
+    pw_page=None,
+    label: str = "",
+    *,
+    supabase: Any | None = None,
+    health: ScraperResult | None = None,
+) -> Optional[BeautifulSoup]:
     """
     Try plain requests first. If blocked (403/503/CAPTCHA text),
     fall back to Playwright if pw_page is provided.
@@ -181,6 +211,24 @@ def fetch_html(url: str, rl: RateLimiter, pw_page=None, label: str = "") -> Opti
             resp = session.get(url, timeout=20, allow_redirects=True)
             if resp.status_code == 200:
                 html = resp.text
+                if looks_like_challenge_html(html):
+                    ctype = detect_challenge_type(html) or "unknown"
+                    exc_msg = f"challenge:{ctype} at {url}"
+                    if health is not None:
+                        health.challenge_hits += 1
+                    if supabase is not None:
+                        log_scraper_error(
+                            supabase,
+                            source_site=SOURCE_SITE,
+                            error_type=ErrorType.CHALLENGE,
+                            url=url,
+                            raw_error=exc_msg,
+                        )
+                    log.warning("Challenge / bot wall [%s]: %s", label, exc_msg)
+                    _playwright_fallback_active = True
+                    if pw_page:
+                        return _fetch_playwright(pw_page, url, rl, label)
+                    return None
                 # Check for soft-block / CAPTCHA page
                 if _is_blocked(html):
                     log.warning(f"Soft block detected [{label}] — switching to Playwright")
@@ -263,7 +311,14 @@ def _create_playwright_browser(playwright, headless: bool = True):
 
 # ─── Step 1: Make Discovery ───────────────────────────────────────────────────
 
-def discover_makes_for_category(cat_path: str, rl: RateLimiter, pw_page=None) -> list[dict]:
+def discover_makes_for_category(
+    cat_path: str,
+    rl: RateLimiter,
+    pw_page=None,
+    *,
+    supabase: Any | None = None,
+    health: ScraperResult | None = None,
+) -> list[dict]:
     """
     Scrape "Browse by Model" page for a category.
     URL pattern: /aircraft/{category}/browse-by-model
@@ -272,7 +327,7 @@ def discover_makes_for_category(cat_path: str, rl: RateLimiter, pw_page=None) ->
     """
     # Try browse-by-model page first
     browse_url = f"{BASE_URL}{cat_path}/browse-by-model"
-    soup = fetch_html(browse_url, rl, pw_page, label=f"browse-{cat_path}")
+    soup = fetch_html(browse_url, rl, pw_page, label=f"browse-{cat_path}", supabase=supabase, health=health)
 
     makes = []
     if soup:
@@ -281,7 +336,7 @@ def discover_makes_for_category(cat_path: str, rl: RateLimiter, pw_page=None) ->
     # Fallback: parse left sidebar of main listing page
     if not makes:
         main_url = f"{BASE_URL}{cat_path}"
-        soup = fetch_html(main_url, rl, pw_page, label=f"main-{cat_path}")
+        soup = fetch_html(main_url, rl, pw_page, label=f"main-{cat_path}", supabase=supabase, health=health)
         if soup:
             makes = _parse_make_links(soup, cat_path)
 
@@ -1127,17 +1182,8 @@ def _map_spec(label: str, value: str, target: dict):
 
 
 def _extract_detail_price_text(soup: BeautifulSoup) -> str:
-    selectors = [
-        ".dtl-price",
-        ".price",
-        "[class*='dtl-price']",
-        "[class*='listing-price']",
-        "[data-price]",
-    ]
-    for selector in selectors:
-        node = soup.select_one(selector)
-        if not node:
-            continue
+    node = AVB_DETAIL_PRICE_SEL.find(soup)
+    if node:
         text = node.get_text(" ", strip=True)
         if text and re.search(r"(\$|US\$|USD|€|£|R)\s*\d", text, re.I):
             return text
@@ -1165,6 +1211,7 @@ def scrape_make(
     pw_page=None,
     new_only_mode: bool = False,
     run_seen_ids: set[str] | None = None,
+    health: ScraperResult | None = None,
 ) -> int:
     existing_ids = existing_ids or set()
     run_seen_ids = run_seen_ids or set()
@@ -1173,7 +1220,7 @@ def scrape_make(
 
     log.info(f"  Make: {name}  |  {url}")
 
-    soup = fetch_html(url, rl, pw_page, label=name)
+    soup = fetch_html(url, rl, pw_page, label=name, supabase=supabase, health=health)
     if not soup:
         log.warning(f"  Failed to load {url}")
         return 0
@@ -1189,7 +1236,9 @@ def scrape_make(
     while page_num <= total_pages:
         if page_num > 1:
             page_url = build_page_url(url, page_num)
-            soup     = fetch_html(page_url, rl, pw_page, label=f"{name}-p{page_num}")
+            soup     = fetch_html(
+                page_url, rl, pw_page, label=f"{name}-p{page_num}", supabase=supabase, health=health
+            )
             if not soup:
                 break
 
@@ -1237,7 +1286,9 @@ def scrape_make(
             if should_skip_detail(existing_map.get(str(lst.get("source_id") or "")), detail_stale_days):
                 continue
             log.debug(f"  Detail {i+1}/{len(all_listings)}: {lst['source_id']}")
-            dsoup = fetch_html(lst["url"], rl, pw_page, label=f"{name}-detail")
+            dsoup = fetch_html(
+                lst["url"], rl, pw_page, label=f"{name}-detail", supabase=supabase, health=health
+            )
             if dsoup:
                 detail = parse_detail(
                     dsoup,
@@ -1485,6 +1536,8 @@ def run(args):
             existing_ids = get_existing_ids(supabase)
             log.info(f"Resume: {len(existing_ids)} existing AvBuyer IDs")
 
+    health = ScraperResult(source_site=SOURCE_SITE)
+
     # Playwright only if --playwright or auto-triggered by block detection
     pw_browser = pw_context = pw_page_obj = None
     playwright_ctx = None
@@ -1526,7 +1579,9 @@ def run(args):
                 log.info("  Using direct target URL mode")
             else:
                 # Discover makes for this category
-                makes = discover_makes_for_category(cat["path"], rl, pw_page_obj)
+                makes = discover_makes_for_category(
+                    cat["path"], rl, pw_page_obj, supabase=supabase, health=health
+                )
                 if args.model:
                     log.info("  Applying model text filter '%s' to parsed cards", args.model)
 
@@ -1569,6 +1624,7 @@ def run(args):
                     pw_page=pw_page_obj,
                     new_only_mode=args.new_only,
                     run_seen_ids=run_seen_ids,
+                    health=health,
                 )
                 grand_total += count
 
@@ -1592,6 +1648,8 @@ def run(args):
         if playwright_manager:
             playwright_manager.__exit__(None, None, None)
 
+    log.info("%s", health.finish().summary())
+
     if args.dry_run:
         out = Path(args.output or "avbuyer_dry_run.json")
         with out.open("w", encoding="utf-8") as f:
@@ -1609,6 +1667,7 @@ def run_media_refresh_mode(args) -> None:
     rl = RateLimiter()
 
     supabase = get_supabase()
+    health = ScraperResult(source_site=SOURCE_SITE)
     source_ids = load_source_ids_file(args.source_ids_file)
     rows = fetch_refresh_rows(
         supabase,
@@ -1649,7 +1708,9 @@ def run_media_refresh_mode(args) -> None:
                 continue
 
             existing_count = gallery_count(row)
-            detail_soup = fetch_html(detail_url, rl, pw_page_obj, label=f"refresh-{source_id}")
+            detail_soup = fetch_html(
+                detail_url, rl, pw_page_obj, label=f"refresh-{source_id}", supabase=supabase, health=health
+            )
             if not detail_soup:
                 failed += 1
                 continue

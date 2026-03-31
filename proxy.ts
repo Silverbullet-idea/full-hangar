@@ -3,6 +3,8 @@ import { getInternalSessionSecret, INTERNAL_SESSION_COOKIE, isValidInternalSessi
 
 const BETA_SESSION_COOKIE = "beta_session";
 
+/** Public account routes (`/account/*`) are not matched here — no internal password gate. */
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const noIndexHeader = "noindex, nofollow";

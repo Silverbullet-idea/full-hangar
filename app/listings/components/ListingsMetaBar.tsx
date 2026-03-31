@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import SaveListingsSearchButton from './SaveListingsSearchButton'
 
 const TRACKED = new Set([
   'category',
@@ -143,6 +144,9 @@ export default function ListingsMetaBar({ totalFiltered }: { totalFiltered: numb
           Clear all
         </button>
       ) : null}
+      <div className="ml-auto shrink-0">
+        <SaveListingsSearchButton />
+      </div>
     </div>
   )
 }
