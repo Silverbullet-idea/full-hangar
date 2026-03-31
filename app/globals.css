@@ -517,31 +517,32 @@ a:hover {
 }
 
 /**
- * Solid orange primary actions: global `a { color: var(--brand-orange) }` wins over utilities,
- * and light-theme token swaps can make `text-black` / `!text-black` unusable on `bg-brand-orange`.
+ * Solid orange primary actions: global `a { color: var(--brand-orange) }` matches the fill and hides text;
+ * use this class so label stays near-black on #FF9900 in both themes.
  */
 a.fh-cta-on-orange-fill,
 button.fh-cta-on-orange-fill {
-  color: #101010 !important;
+  color: #0a0a0a !important;
 }
 
 a.fh-cta-on-orange-fill:hover,
 button.fh-cta-on-orange-fill:hover,
 a.fh-cta-on-orange-fill:focus-visible,
 button.fh-cta-on-orange-fill:focus-visible {
-  color: #fafafa !important;
+  /* Keep dark type on orange fill for contrast (global `a { color: brand-orange }` otherwise fights utilities). */
+  color: #0a0a0a !important;
 }
 
 html[data-theme="light"] a.fh-cta-on-orange-fill,
 html[data-theme="light"] button.fh-cta-on-orange-fill {
-  color: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
 html[data-theme="light"] a.fh-cta-on-orange-fill:hover,
 html[data-theme="light"] button.fh-cta-on-orange-fill:hover,
 html[data-theme="light"] a.fh-cta-on-orange-fill:focus-visible,
 html[data-theme="light"] button.fh-cta-on-orange-fill:focus-visible {
-  color: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
 /* Account auth segment: hide global header for a focused sign-in/up flow */

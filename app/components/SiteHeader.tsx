@@ -89,7 +89,7 @@ export default function SiteHeader() {
               </Link>
               <Link
                 href="/account/signup"
-                className="inline-flex h-9 min-w-[7.5rem] items-center justify-center rounded-lg border border-black/20 bg-[#FF9900] px-3.5 text-sm font-bold tracking-wide text-neutral-950 no-underline shadow-[0_1px_0_rgba(255,255,255,0.35)_inset] hover:brightness-105 active:brightness-95 [data-theme=light]:border-black/10 [data-theme=light]:shadow-sm"
+                className="fh-cta-on-orange-fill inline-flex h-9 min-w-[7.5rem] items-center justify-center rounded-lg border border-black/25 bg-[#FF9900] px-3.5 text-sm font-bold tracking-wide no-underline shadow-[0_1px_0_rgba(255,255,255,0.35)_inset] hover:brightness-105 active:brightness-95 [data-theme=light]:border-black/15 [data-theme=light]:shadow-sm"
               >
                 Create account
               </Link>
