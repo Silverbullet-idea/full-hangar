@@ -25,6 +25,7 @@ export default function HeaderNavBrand() {
     () =>
       [
         process.env.NEXT_PUBLIC_BRAND_LOGO_URL,
+        "/branding/FullHangar_DarkBackground.png",
         "/branding/FullHangar.png",
         "/branding/FullHangar.svg",
       ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
@@ -48,8 +49,8 @@ export default function HeaderNavBrand() {
         <img
           src={sources[sourceIndex]}
           alt="Full Hangar"
-          width={40}
-          height={40}
+          width={220}
+          height={36}
           className="h-9 w-auto object-contain"
           onError={() => setSourceIndex((idx) => idx + 1)}
         />

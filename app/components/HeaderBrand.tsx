@@ -29,6 +29,7 @@ export default function HeaderBrand({ className = "h-10 w-auto" }: HeaderBrandPr
     () =>
       [
         process.env.NEXT_PUBLIC_BRAND_LOGO_URL,
+        "/branding/FullHangar_DarkBackground.png",
         "/branding/FullHangar.png",
         "/branding/FullHangar.svg",
       ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
