@@ -1015,6 +1015,12 @@ export default function SellerIntakeClient() {
           <p className="mt-1 text-xs text-[var(--fh-text-dim)]">
             API wiring pending — extras live under <code className="font-[family-name:var(--font-dm-mono)]">description_intelligence.seller_form_extras</code>.
           </p>
+          <Link
+            href="/sell/dashboard"
+            className="mt-3 inline-block text-sm font-semibold text-[var(--fh-orange)] no-underline hover:underline"
+          >
+            View my listings →
+          </Link>
           <pre className="mt-3 max-h-[320px] overflow-auto rounded-lg bg-[var(--fh-bg)] p-3 text-[11px] font-[family-name:var(--font-dm-mono)] text-[var(--fh-text)]">
             {submittedJson}
           </pre>

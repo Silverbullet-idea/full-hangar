@@ -10,7 +10,7 @@ import HeaderSearchBar from "./HeaderSearchBar"
 import NotificationBell from "./NotificationBell"
 import ThemeToggle from "./ThemeToggle"
 
-export default function SiteHeader() {
+export default function SiteHeader({ hasSellListings = false }: { hasSellListings?: boolean }) {
   const { user, profile, isAdmin, isLoading } = useCurrentUser()
   const [menuOpen, setMenuOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -41,6 +41,12 @@ export default function SiteHeader() {
             </div>
           ) : user ? (
             <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href={hasSellListings ? "/sell/dashboard" : "/sell"}
+                className="hidden text-sm font-semibold text-[var(--fh-orange)] no-underline hover:underline sm:inline"
+              >
+                {hasSellListings ? "My listings" : "Sell your aircraft"}
+              </Link>
               <NotificationBell />
               <div className="relative flex items-center gap-2" ref={wrapRef}>
                 {isAdmin ? (

@@ -2,7 +2,7 @@ import "./globals.css"
 import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
 import { Barlow_Condensed, DM_Mono, DM_Sans } from "next/font/google"
-import SiteHeader from "./components/SiteHeader"
+import SiteHeaderShell from "./components/SiteHeaderShell"
 import { NavigationLoadingProvider } from "./components/NavigationLoadingProvider"
 import { ThemeProvider } from "./components/ThemeProvider"
 import { getThemeBootstrapScript } from "./components/themeBootstrap"
@@ -101,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Suspense fallback={null}>
             <NavigationLoadingProvider>
-              <SiteHeader />
+              <SiteHeaderShell />
               <main className="site-header-main relative z-[1] mx-auto max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
                 {children}
               </main>
