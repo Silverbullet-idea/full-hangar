@@ -23,5 +23,9 @@ type CompsChartPanelProps = {
 }
 
 export default function CompsChartPanel({ listingId, hideChrome = false }: CompsChartPanelProps) {
-  return <CompsChart listingId={listingId} hideChrome={hideChrome} />
+  return (
+    <div className="overflow-visible" style={{ position: "relative", overflow: "visible" }}>
+      <CompsChart listingId={listingId} hideChrome={hideChrome} />
+    </div>
+  )
 }

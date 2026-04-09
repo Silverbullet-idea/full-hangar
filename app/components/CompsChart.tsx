@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Scatter,
   ScatterChart,
+  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -449,7 +450,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
       left: clampedX,
       top: clampedY,
       transform: "translate(-50%, -100%)",
-      zIndex: 6,
+      zIndex: 9999,
       background: tooltipBackgroundColor,
       border: `1px solid ${tooltipBorderColor}`,
       borderRadius: 8,
@@ -515,8 +516,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
 
       <div
         ref={chartContainerRef}
-        className="w-full max-w-full overflow-x-hidden"
-        style={{ position: "relative", width: "100%", height: isMobile ? 260 : 300 }}
+        className="w-full max-w-full overflow-visible"
+        style={{ position: "relative", overflow: "visible", width: "100%", height: isMobile ? 260 : 300 }}
         onMouseEnter={() => setIsHoveringChart(true)}
         onMouseLeave={() => {
           setIsHoveringChart(false);
@@ -541,6 +542,7 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
                 }
               }}
             >
+              <Tooltip wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }} content={() => null} cursor={false} />
               <CartesianGrid stroke={gridColor} strokeOpacity={0.38} />
               <XAxis
                 type="number"
@@ -858,6 +860,8 @@ export default function CompsChart({ listingId, hideChrome = false }: Props) {
 
       <style jsx>{`
         .comps-card {
+          overflow: visible;
+          position: relative;
           ${hideChrome ? "background: transparent; border: none; border-radius: 0; padding: 0;" : "background: var(--card-bg); border: 1px solid var(--brand-dark); border-radius: 12px; padding: 1rem;"}
         }
         .comps-title {
