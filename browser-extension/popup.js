@@ -108,6 +108,32 @@ async function refresh() {
   document.getElementById('extracted').textContent = s.sessionExtracted ?? s.totalExtracted ?? 0;
   document.getElementById('upserted').textContent = s.sessionUpserted ?? s.totalUpserted ?? 0;
   document.getElementById('failed').textContent = (s.failedUrls || []).length;
+  const rawSession = Number(s.sessionExtracted ?? s.totalExtracted ?? 0);
+  const uniqSession = Number(s.sessionExtractedUnique ?? 0);
+  const uniqEl = document.getElementById('stats-unique');
+  if (uniqEl) {
+    const dup = Math.max(0, rawSession - uniqSession);
+    uniqEl.textContent =
+      dup > 0
+        ? `Unique listings (session): ${uniqSession} (${dup} duplicate passes — e.g. another manufacturer crawl)`
+        : `Unique listings (session): ${uniqSession}`;
+  }
+  const spEl = document.getElementById('stats-progress');
+  if (spEl) {
+    const src = String(s.currentSource || '');
+    const ss = (src && s.sourceStates && s.sourceStates[src]) ? s.sourceStates[src] : null;
+    const makeLabel = ss && ss.currentMake != null ? String(ss.currentMake) : '';
+    const total = Number(s.currentMakeTotalListings || 0);
+    const end = Number(s.currentMakeRangeEnd || 0);
+    const start = Number(s.currentMakeRangeStart || 0);
+    if (makeLabel && total > 0) {
+      spEl.textContent = `Active site slice: ${makeLabel} · rows ${start}–${end} of ${total} (this make & filter)`;
+    } else if (total > 0) {
+      spEl.textContent = `Active site slice: rows ${start}–${end} of ${total} (current page vs site total)`;
+    } else {
+      spEl.textContent = 'Active site slice: — (shown when the SERP reports totals)';
+    }
+  }
   document.getElementById('diag-challenge').textContent = s.challengeDetected ? 'yes' : 'no';
   document.getElementById('diag-details').textContent = `${Number(s.sessionDetailProcessed || 0)} / ${Number(s.lastParsedRows || 0)}`;
   document.getElementById('diag-reason').textContent = s.lastFailureReason
@@ -147,6 +173,28 @@ async function refresh() {
   } else {
     statusEl.textContent = `Status: ${runStatus}`;
   }
+
+  const banner = document.getElementById('challenge-banner');
+  const resumeBtn = document.getElementById('resume-btn');
+  const showBanner = !!s.challengeDetected && s.runStatus === 'paused';
+
+  if (banner) {
+    banner.style.display = showBanner ? 'flex' : 'none';
+  }
+  if (resumeBtn) {
+    // Re-enable button if we're back in paused+challenge state
+    // (handles case where resume failed and challenge recurred)
+    if (showBanner) {
+      resumeBtn.disabled = false;
+      resumeBtn.textContent = 'Resume Scraping';
+    }
+  }
+
+  // Also update the run-status text to be more helpful when challenged
+  if (showBanner) {
+    statusEl.textContent = 'Status: waiting for CAPTCHA solve';
+  }
+
   const isRunning = !!s.running && runStatus === 'running';
   startBtn.disabled = isRunning;
   stopBtn.disabled = !isRunning;
@@ -283,6 +331,19 @@ document.querySelectorAll('.tap-category').forEach((el) => {
 document.getElementById('stop').addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ action: 'STOP_HARVEST' });
   refresh();
+});
+
+document.getElementById('resume-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('resume-btn');
+  btn.disabled = true;
+  btn.textContent = 'Resuming...';
+  try {
+    await chrome.runtime.sendMessage({ action: 'RESUME_HARVEST' });
+  } catch (e) {
+    console.warn('[FullHangar] Resume failed:', e);
+  }
+  // Refresh will update the banner visibility on next tick
+  setTimeout(refresh, 500);
 });
 
 chrome.runtime.onMessage.addListener((msg) => {

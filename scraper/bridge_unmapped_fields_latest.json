@@ -1,8 +1,36 @@
 {
-  "generated_at": "2026-03-14T06:34:58.320495+00:00",
+  "generated_at": "2026-03-27T18:32:25.912421+00:00",
   "source_site_filter": "controller",
-  "rows_scanned": 2366,
-  "rows_with_unmapped": 0,
-  "distinct_unmapped_keys": 0,
-  "top_keys": []
+  "rows_scanned": 2928,
+  "rows_with_unmapped": 652,
+  "distinct_unmapped_keys": 1,
+  "top_keys": [
+    {
+      "key": "specs_text",
+      "rows": 652,
+      "source_breakdown": {
+        "controller": 652
+      },
+      "samples": [
+        {
+          "source_site": "controller",
+          "source_id": "248612315",
+          "title": "1957 BEECHCRAFT H35 BONANZA",
+          "value_preview": "\"Year: 1957 | Manufacturer: BEECHCRAFT | Model: H35 BONANZA | Serial Number: D5318 | Registration #: N643Q | Condition: Used | Based at: KFFZ | Description: AirplanesUSA Aircraft Sales proudly presents this exceptional example of a 1957 Bee..."
+        },
+        {
+          "source_site": "controller",
+          "source_id": "253936713",
+          "title": "1976 BEECHCRAFT V35B BONANZA",
+          "value_preview": "\"Year: 1976 | Manufacturer: BEECHCRAFT | Model: V35B BONANZA | Serial Number: D-9845 | Registration #: N6621S | Condition: Used | Description: 1976 Beechcraft V35B Bonanza Always hangered | Total Time: 4,560 | Airframe Notes: VGs Lg cargo d..."
+        },
+        {
+          "source_site": "controller",
+          "source_id": "246552117",
+          "title": "1978 BEECHCRAFT A36 BONANZA",
+          "value_preview": "\"Year: 1978 | Manufacturer: BEECHCRAFT | Model: A36 BONANZA | Serial Number: E1214 | Registration #: N60DR | Condition: Used | FlightRules: VFR | Total Time: 1,288.51 | Airframe Notes: Continental IO-550 engine producing 300 horsepower, a m..."
+        }
+      ]
+    }
+  ]
 }

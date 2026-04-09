@@ -48,11 +48,44 @@ function extractRegistrationToken(text) {
   return null;
 }
 
+function boundedWord(haystack, word) {
+  const h = String(haystack || '');
+  const w = String(word || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    return new RegExp(`\\b${w}\\b`, 'i').test(h);
+  } catch {
+    return h.toLowerCase().includes(String(word || '').toLowerCase());
+  }
+}
+
+function phraseHit(hay, token) {
+  const t = String(token || '').toLowerCase();
+  const h = String(hay || '').toLowerCase();
+  if (t.startsWith('/')) return h.includes(t);
+  // "captcha" must not match inside "recaptcha" (common in privacy/footer copy).
+  if (t === 'captcha' || t === 'cloudflare') return boundedWord(h, t);
+  return h.includes(t);
+}
+
 function challengeSignals() {
   const text = String((document.body && document.body.innerText) || '').toLowerCase();
   const title = String(document.title || '').toLowerCase();
   const url = String(window.location.href || '').toLowerCase();
-  const strongTokens = [
+
+  const listingLinkCount = document.querySelectorAll('a[href*="/listing/"], a[href*="/listings/"]').length;
+  // Real Controller SERPs expose listing hrefs. Prefer this over text/DOM heuristics: footers mention
+  // "reCAPTCHA", Distil may inject hidden iframes, and [class*="captcha"] matches unrelated UI classes.
+  if (/controller\.com/i.test(url) && listingLinkCount >= 1) {
+    return {
+      challengeDetected: false,
+      indicators: ['ok:listing_links_present'],
+      currentUrl: window.location.href,
+      pageTitle: document.title || '',
+    };
+  }
+
+  // Phrase / URL markers — use word boundaries where naive substring would false-positive (captcha/cloudflare).
+  const phraseStrong = [
     'captcha',
     'verify you are human',
     'checking your browser',
@@ -60,10 +93,10 @@ function challengeSignals() {
     'cloudflare',
     'pardon our interruption',
     'made us think you were a bot',
-    'distil',
-    'reese',
     '/cdn-cgi/challenge-platform',
   ];
+  // Short bot-vendor tokens: use word boundaries so "distillation" etc. do not trip the harvester.
+  const shortStrong = ['distil'];
   const weakTokens = [
     'security check',
     'unusual traffic',
@@ -71,29 +104,42 @@ function challengeSignals() {
     'request blocked',
     'enable javascript and cookies',
   ];
-  const matchedStrong = strongTokens.filter((token) => text.includes(token) || title.includes(token) || url.includes(token));
+  const matchedPhrase = phraseStrong.filter(
+    (token) => phraseHit(text, token) || phraseHit(title, token) || phraseHit(url, token),
+  );
+  const shortStrongHit = shortStrong.some((w) => boundedWord(text, w) || boundedWord(title, w) || boundedWord(url, w));
   const matchedWeak = weakTokens.filter((token) => text.includes(token) || title.includes(token) || url.includes(token));
-  const domChallengeSelectors = [
+  // Visible captcha iframes / CF beacons only — not generic *challenge* iframe src (Distil may use that on normal pages).
+  const domStrictSelectors = [
     'iframe[src*="captcha"]',
-    'iframe[src*="challenge"]',
     '[id*="captcha"]',
     '[class*="captcha"]',
-    '[id*="challenge"]',
-    '[class*="challenge"]',
     '#cf-challenge-running',
     '[data-cf-beacon]',
   ];
-  const domChallengeHits = domChallengeSelectors.filter((selector) => document.querySelector(selector));
+  const domLooseSelectors = ['[id*="challenge"]', '[class*="challenge"]'];
   const likelyListingsPage = /controller\.com\/listings\//i.test(url) || /for sale|listings/i.test(title);
   const hasExpectedListings = document.querySelectorAll('a[href*="/listing/"], a[href*="/listings/"], article, .listing-row').length > 0;
   const suspiciousMissingListings = likelyListingsPage && !hasExpectedListings;
+  const domStrictHits = domStrictSelectors.filter((selector) => document.querySelector(selector));
+  // Only treat generic "*challenge*" DOM hits as a wall when we do not already see real listing chrome.
+  const domLooseHits = !hasExpectedListings
+    ? domLooseSelectors.filter((selector) => document.querySelector(selector))
+    : [];
+  const domChallengeHits = [...domStrictHits, ...domLooseHits];
   const blockLike =
-    matchedStrong.length > 0
-    || domChallengeHits.length > 0
+    matchedPhrase.length > 0
+    || shortStrongHit
+    || domStrictHits.length > 0
+    || domLooseHits.length > 0
     || (matchedWeak.length > 0 && suspiciousMissingListings)
     || title.includes('pardon our interruption')
     || (text.includes('to regain access') && text.includes('cookies and javascript'))
     || text.includes('browser made us think you were a bot');
+  const matchedStrong = [
+    ...matchedPhrase,
+    ...(shortStrongHit ? shortStrong.filter((w) => boundedWord(text, w) || boundedWord(title, w) || boundedWord(url, w)) : []),
+  ];
   return {
     challengeDetected: blockLike,
     indicators: [...matchedStrong, ...matchedWeak, ...domChallengeHits.map((s) => `dom:${s}`)],
@@ -200,9 +246,12 @@ function parseListingsTotals() {
     textOrNull('.list-listings-count'),
     textOrNull('.listings-count'),
     textOrNull('[class*="listings-count"]'),
+    textOrNull('[class*="ListingsCount"]'),
+    textOrNull('[class*="listing-count"]'),
     textOrNull('[class*="results-count"]'),
+    textOrNull('[data-testid*="count"]'),
     textOrNull('h1'),
-    String((document.body && document.body.innerText) || '').slice(0, 8000),
+    String((document.body && document.body.innerText) || '').slice(0, 12000),
   ].filter(Boolean);
 
   let rangeStart = 0;
@@ -211,16 +260,24 @@ function parseListingsTotals() {
 
   for (const text of candidates) {
     const normalized = String(text).replace(/\s+/g, ' ').trim();
+    const combined = normalized.match(
+      /([\d,]+)\s*-\s*([\d,]+)\s+of\s+([\d,]+)\s+listings?/i,
+    );
+    if (combined) {
+      rangeStart = parseInt(combined[1].replace(/,/g, ''), 10) || rangeStart;
+      rangeEnd = parseInt(combined[2].replace(/,/g, ''), 10) || rangeEnd;
+      totalListings = parseInt(combined[3].replace(/,/g, ''), 10) || totalListings;
+    }
     const totalMatch = normalized.match(/of\s+([\d,]+)\s+listings?/i);
     if (totalMatch) {
       totalListings = parseInt(totalMatch[1].replace(/,/g, ''), 10) || totalListings;
     }
-    const rangeMatch = normalized.match(/([\d,]+)\s*-\s*([\d,]+)\s*of\s*[\d,]+\s*listings?/i);
+    const rangeMatch = normalized.match(/([\d,]+)\s*-\s*([\d,]+)\s+of\s+[\d,]+\s+listings?/i);
     if (rangeMatch) {
       rangeStart = parseInt(rangeMatch[1].replace(/,/g, ''), 10) || rangeStart;
       rangeEnd = parseInt(rangeMatch[2].replace(/,/g, ''), 10) || rangeEnd;
     }
-    if (totalListings > 0 && rangeEnd >= 0) break;
+    if (totalListings > 0 && rangeEnd > 0) break;
   }
 
   return { totalListings, rangeStart, rangeEnd };
@@ -488,7 +545,6 @@ function extractCards() {
   const anchorSelector = [
     "a[href*='/listing/']",
     "a[href*='/listings/']",
-    "a[href*='/for-sale/']",
     "a[title*='View Details' i]",
     "a[aria-label*='details' i]",
   ].join(', ');
@@ -554,6 +610,8 @@ function extractCards() {
     selectorUsed = 'anchors_no_valid_ids';
   }
 
+  const candidateAnchors = cards.length ? cards.length : anchors.length;
+
   const maybeBlocked = challengeSignals();
   if (!rows.length && maybeBlocked.challengeDetected) {
     return {
@@ -562,7 +620,7 @@ function extractCards() {
       meta: {
         pageTitle: maybeBlocked.pageTitle || '',
         selectorUsed,
-        candidateAnchors: anchors.length,
+        candidateAnchors,
         totalListings: totals.totalListings,
         rangeStart: totals.rangeStart,
         rangeEnd: totals.rangeEnd,
@@ -576,7 +634,7 @@ function extractCards() {
     meta: {
       pageTitle: document.title || '',
       selectorUsed,
-      candidateAnchors: anchors.length,
+      candidateAnchors,
       parsedRows: rows.length,
       wrapperCards: cards.length,
       totalListings: totals.totalListings,

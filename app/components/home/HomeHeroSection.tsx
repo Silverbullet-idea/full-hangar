@@ -1,4 +1,4 @@
-import { getFeaturedCessna172HeroCarousel } from "@/lib/home/featuredCessna172Hero"
+import { getFeaturedHomeHeroCarousel } from "@/lib/home/featuredHomeHero"
 import HeroExampleCarousel from "./HeroExampleCarousel"
 import HeroScoreCard from "./HeroScoreCard"
 import { HomeIntentPillRow } from "./HomeIntentPills"
@@ -7,11 +7,11 @@ import SmoothScrollAnchor from "./SmoothScrollAnchor"
 const barlow = { fontFamily: "var(--font-barlow-condensed), system-ui, sans-serif" } as const
 
 export default async function HomeHeroSection() {
-  const featured = await getFeaturedCessna172HeroCarousel()
+  const featured = await getFeaturedHomeHeroCarousel()
   const carouselAria =
     featured.mode === "live"
       ? `Photo gallery: ${featured.listingTitle}, ${featured.slides.length} marketplace photos`
-      : "Example Cessna-class aircraft photo gallery"
+      : "Example aircraft photo gallery"
 
   return (
     <section

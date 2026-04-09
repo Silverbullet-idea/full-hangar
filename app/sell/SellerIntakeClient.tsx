@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   buildSellerSubmissionPayload,
@@ -16,6 +17,7 @@ import {
   type SellerType,
   type UsefulLoadUnit,
 } from "@/lib/sell/sellerFormTypes"
+import { PLATFORM_LABELS, PLATFORMS } from "@/lib/sell/dashboardTypes"
 
 const INPUT =
   "h-11 w-full rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg2)] px-3 text-[var(--fh-text)] [data-theme=light]:bg-white [data-theme=light]:text-slate-900"
@@ -79,6 +81,7 @@ const STEPS = [
   { n: 4, label: "Contact" },
   { n: 5, label: "Photos & logs" },
   { n: 6, label: "Pricing" },
+  { n: 7, label: "Review" },
 ] as const
 
 const IMAGE_TYPE_OPTIONS = [
@@ -99,12 +102,16 @@ const LOG_TYPE_OPTIONS = [
 ] as const
 
 export default function SellerIntakeClient() {
+  const router = useRouter()
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<SellerFormData>(() => ({ ...initialSellerFormData }))
   const [photoFiles, setPhotoFiles] = useState<Record<string, File>>({})
   const [logFiles, setLogFiles] = useState<Record<string, File>>({})
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null)
-  const [submittedJson, setSubmittedJson] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [newListingId, setNewListingId] = useState<string | null>(null)
+  const [successMode, setSuccessMode] = useState(false)
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<Record<string, string>>({})
   const photoInputRef = useRef<HTMLInputElement>(null)
   const logInputRef = useRef<HTMLInputElement>(null)
@@ -189,11 +196,38 @@ export default function SellerIntakeClient() {
     })
   }
 
-  const submit = () => {
-    const json = JSON.stringify(buildSellerSubmissionPayload(form), null, 2)
-    setSubmittedJson(json)
-    if (typeof console !== "undefined" && console.log) {
-      console.log("[seller-intake] submission payload", buildSellerSubmissionPayload(form))
+  function goToSuccessStep() {
+    setSuccessMode(true)
+  }
+
+  async function handleSubmit() {
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const payload = buildSellerSubmissionPayload(form)
+
+      const res = await fetch("/api/sell/listings/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(err.error ?? `Server error ${res.status}`)
+      }
+
+      const data = (await res.json()) as { seller_listing_id?: string }
+      setNewListingId(typeof data.seller_listing_id === "string" ? data.seller_listing_id : null)
+
+      router.refresh()
+      goToSuccessStep()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong."
+      setSubmitError(message)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -222,6 +256,48 @@ export default function SellerIntakeClient() {
         One intake form — structured for Trade-A-Plane, Controller, ASO, and future cross-post.
       </p>
 
+      {successMode ? (
+        <div
+          className="mt-10 space-y-6 rounded-xl border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-6 [data-theme=light]:bg-white"
+          data-seller-listing-id={newListingId ?? undefined}
+        >
+          <h2 className={SECTION_TITLE} style={barlowClass()}>
+            Listing queued
+          </h2>
+          <p className="text-sm text-[var(--fh-text-dim)]">
+            Your aircraft intake was saved. We&apos;re syncing it to each marketplace next.
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {PLATFORMS.map((p) => (
+              <li
+                key={p}
+                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--fh-border)] bg-[var(--fh-bg)] px-3 py-2 [data-theme=light]:bg-slate-50"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-[var(--fh-text)]">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: "#854F0B" }}
+                    aria-hidden
+                  />
+                  {PLATFORM_LABELS[p]}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[#854F0B]">Queued</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-[var(--fh-text-dim)]">
+            Platform statuses update as your listing goes live. Check back in a few minutes or visit your dashboard.
+          </p>
+          <Link
+            href="/sell/dashboard"
+            onClick={() => router.refresh()}
+            className="inline-block text-sm font-semibold text-[var(--fh-orange)] no-underline hover:underline"
+          >
+            View my listings →
+          </Link>
+        </div>
+      ) : (
+        <>
       <div className="mt-8 flex flex-wrap gap-2">
         {STEPS.map((s) => (
           <button
@@ -990,6 +1066,21 @@ export default function SellerIntakeClient() {
             </div>
           </div>
         )}
+
+        {step === 7 && (
+          <div className="space-y-6">
+            <h2 className={SECTION_TITLE} style={barlowClass()}>
+              Review &amp; launch
+            </h2>
+            <div className={CARD}>
+              <p className="text-sm text-[var(--fh-text)]">
+                <span className="font-semibold">Ready to queue</span>{" "}
+                {[form.year, form.make, form.model].filter(Boolean).join(" ") || "your aircraft"} across Controller,
+                Trade-A-Plane, ASO, Barnstormers, and AvBuyer. You can track status from your dashboard.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
@@ -1000,31 +1091,28 @@ export default function SellerIntakeClient() {
           <button type="button" className={BTN_ORANGE} onClick={() => setStep((s) => Math.min(6, s + 1))}>
             Continue
           </button>
-        ) : (
-          <button type="button" className={BTN_ORANGE} onClick={submit}>
-            Review payload
+        ) : step === 6 ? (
+          <button type="button" className={BTN_ORANGE} onClick={() => setStep(7)}>
+            Continue to review
           </button>
+        ) : (
+          <div className="flex flex-col items-end">
+            {submitError ? (
+              <p style={{ color: "var(--color-text-danger)", fontSize: 13, marginBottom: 8 }}>{submitError}</p>
+            ) : null}
+            <button
+              type="button"
+              className={BTN_ORANGE}
+              disabled={isSubmitting}
+              style={isSubmitting ? { opacity: 0.6 } : undefined}
+              onClick={() => void handleSubmit()}
+            >
+              {isSubmitting ? "Posting your listing…" : "🚀 Launch listing to all platforms"}
+            </button>
+          </div>
         )}
       </div>
-
-      {submittedJson && (
-        <div className="mt-8 rounded-xl border border-[var(--fh-border)] bg-[var(--fh-bg2)] p-4 [data-theme=light]:bg-white">
-          <p className="text-sm font-semibold text-[var(--fh-text)]" style={barlowClass()}>
-            Submission payload (JSON)
-          </p>
-          <p className="mt-1 text-xs text-[var(--fh-text-dim)]">
-            API wiring pending — extras live under <code className="font-[family-name:var(--font-dm-mono)]">description_intelligence.seller_form_extras</code>.
-          </p>
-          <Link
-            href="/sell/dashboard"
-            className="mt-3 inline-block text-sm font-semibold text-[var(--fh-orange)] no-underline hover:underline"
-          >
-            View my listings →
-          </Link>
-          <pre className="mt-3 max-h-[320px] overflow-auto rounded-lg bg-[var(--fh-bg)] p-3 text-[11px] font-[family-name:var(--font-dm-mono)] text-[var(--fh-text)]">
-            {submittedJson}
-          </pre>
-        </div>
+        </>
       )}
 
       {/* Dev-only: live payload parity check */}

@@ -6,6 +6,14 @@
   <title>Full Hangar Harvester</title>
 </head>
 <body>
+  <div id="challenge-banner" class="challenge-banner" style="display:none;">
+    <div class="challenge-banner__icon">⚠️</div>
+    <div class="challenge-banner__text">
+      <strong>CAPTCHA Detected</strong>
+      <span>Solve the challenge in the Controller tab, then click Resume.</span>
+    </div>
+    <button id="resume-btn" class="challenge-banner__btn">Resume Scraping</button>
+  </div>
   <div class="topbar">
     <div class="brand-block">
       <div class="title">FullHangar</div>
@@ -24,10 +32,26 @@
       <span class="profile">Risk: <strong>safe</strong></span>
     </div>
     <div class="stats">
-      <div><strong id="extracted">0</strong><span>Extracted</span></div>
-      <div><strong id="upserted">0</strong><span>Saved</span></div>
-      <div><strong id="failed">0</strong><span>Failed</span></div>
+      <div>
+        <strong id="extracted">0</strong>
+        <span class="stat-title">Extracted</span>
+        <span class="stat-hint">session, all makes/pages</span>
+      </div>
+      <div>
+        <strong id="upserted">0</strong>
+        <span class="stat-title">Saved</span>
+        <span class="stat-hint">rows upserted to bridge</span>
+      </div>
+      <div>
+        <strong id="failed">0</strong>
+        <span class="stat-title">Failed</span>
+        <span class="stat-hint">URLs flagged</span>
+      </div>
     </div>
+    <div class="stats-unique" id="stats-unique" title="Distinct listing IDs seen this run (deduped). Session &quot;Extracted&quot; counts every card pass, including multiple manufacturers.">
+      Unique listings (session): —
+    </div>
+    <div class="stats-progress" id="stats-progress" title="Progress within the current manufacturer filter on the site (not the session total).">Active site slice: —</div>
   </div>
   <details class="compact-panel">
     <summary>Diagnostics</summary>

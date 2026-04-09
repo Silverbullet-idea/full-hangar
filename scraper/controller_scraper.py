@@ -17,9 +17,11 @@ import logging
 import random
 import re
 import hashlib
+import threading
 import time
 import uuid
 from datetime import date, datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Callable, Optional, TYPE_CHECKING
 from urllib.parse import urlencode, urljoin, urlparse
@@ -81,12 +83,73 @@ log = logging.getLogger(__name__)
 BASE_URL = "https://www.controller.com"
 SEARCH_PATH = "/listings/search"
 CAPTCHA_RESUME_FILE = Path("scraper/.captcha_resume")
+CONTROLLER_SESSION_FILE = Path("scraper/state/controller_chrome_session.json")
 DEFAULT_CHECKPOINT_FILE = Path("scraper/state/controller_checkpoint.json")
 FAILED_URLS_FILE = Path("scraper/failed_urls_controller.json")
 HUMAN_PAGE_RENDER_WAIT_MS = (3500, 7000)
 HUMAN_BETWEEN_MAKES_SECONDS = (20.0, 45.0)
 HUMAN_MICRO_PAUSE_SECONDS = (0.4, 1.4)
 HUMAN_OCCASIONAL_PAUSE_SECONDS = (4.0, 9.0)
+
+RESUME_SERVER_PORT = 9998
+RESUME_SERVER_HOST = "127.0.0.1"
+_active_resume_port: int = RESUME_SERVER_PORT
+
+
+class _ResumeHandler(BaseHTTPRequestHandler):
+    """Minimal HTTP handler — receives POST /resume from browser extension."""
+
+    _resume_event: threading.Event = threading.Event()
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.end_headers()
+
+    def do_POST(self) -> None:
+        if self.path == "/resume":
+            _ResumeHandler._resume_event.set()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(b'{"status":"resumed"}')
+            log.info("[controller] Resume signal received from browser extension.")
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_GET(self) -> None:
+        """Status endpoint — extension can poll this to confirm server is up."""
+        if self.path == "/status":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(b'{"status":"waiting"}')
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def log_message(self, format: str, *args) -> None:
+        pass  # suppress default request logging
+
+
+def start_resume_server(port: int = RESUME_SERVER_PORT) -> Optional[HTTPServer]:
+    """Start the resume signal server on a daemon thread. Returns the server instance."""
+    global _active_resume_port
+    _active_resume_port = port
+    try:
+        server = HTTPServer((RESUME_SERVER_HOST, port), _ResumeHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        log.info("[controller] Resume server listening on %s:%s", RESUME_SERVER_HOST, port)
+        return server
+    except OSError as exc:
+        log.warning("[controller] Could not start resume server: %s", exc)
+        return None
+
 
 _parse_price = parse_listing_price_text
 
@@ -113,7 +176,17 @@ CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {
 }
 
 
-async def _create_browser_context(playwright):
+async def save_session_state(context, session_file: Path) -> None:
+    try:
+        state = await context.storage_state()
+        session_file.parent.mkdir(parents=True, exist_ok=True)
+        session_file.write_text(json.dumps(state, indent=2, ensure_ascii=True), encoding="utf-8")
+        log.info("[controller] Session state saved (%d cookies)", len(state.get("cookies", [])))
+    except Exception as exc:
+        log.warning("[controller] Failed to save session state: %s", exc)
+
+
+async def _create_browser_context(playwright, session_file: Optional[Path] = None):
     """Create a visible browser context with anti-detection flags."""
     browser = await playwright.chromium.launch(
         headless=False,
@@ -123,15 +196,36 @@ async def _create_browser_context(playwright):
             "--disable-dev-shm-usage",
         ],
     )
-    context = await browser.new_context(
-        user_agent=(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/122.0.0.0 Safari/537.36"
-        ),
-        viewport={"width": 1280, "height": 800},
-        locale="en-US",
+    ua = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
     )
+    viewport = {"width": 1280, "height": 800}
+    locale = "en-US"
+    context = None
+    if session_file and session_file.exists():
+        try:
+            json.loads(session_file.read_text(encoding="utf-8"))
+            context = await browser.new_context(
+                storage_state=str(session_file),
+                user_agent=ua,
+                viewport=viewport,
+                locale=locale,
+            )
+            log.info("[controller] Loaded session state from %s", session_file)
+        except Exception as exc:
+            log.info(
+                "[controller] Could not load session state from %s, falling back to fresh context: %s",
+                session_file,
+                exc,
+            )
+    if context is None:
+        context = await browser.new_context(
+            user_agent=ua,
+            viewport=viewport,
+            locale=locale,
+        )
     await context.add_init_script(
         """
         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
@@ -916,7 +1010,9 @@ async def fetch_page_soup(page, url: str) -> Optional[BeautifulSoup]:
             return None
         # No content-based block check — Controller.com embeds "captcha" in normal JS bundles
         # Instead we validate by checking for actual listing cards after parsing
-        return BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "html.parser")
+        await save_session_state(page.context, CONTROLLER_SESSION_FILE)
+        return soup
     except Exception as exc:
         log.warning(f"Failed to fetch {url}: {exc}")
         return None
@@ -932,7 +1028,7 @@ def _get_listing_cards(soup: BeautifulSoup) -> list:
 async def wait_for_manual_captcha_resume(label: str, *, resume_mode: str = "file") -> None:
     """
     True pause mode: halt all requests until operator explicitly resumes.
-    Resume by creating scraper/.captcha_resume.
+    Resume by creating scraper/.captcha_resume and/or POST http://127.0.0.1:<port>/resume (see --resume-port).
     """
     if resume_mode == "prompt":
         log.warning(
@@ -941,19 +1037,32 @@ async def wait_for_manual_captcha_resume(label: str, *, resume_mode: str = "file
             label,
         )
         await asyncio.to_thread(input, f"[{label}] CAPTCHA solved? Press Enter to resume...")
+    elif resume_mode == "http":
+        log.warning(
+            "[%s] CAPTCHA/challenge detected. Scraper is paused. "
+            "After solving CAPTCHA, POST http://%s:%s/resume (browser extension) to continue.",
+            label,
+            RESUME_SERVER_HOST,
+            _active_resume_port,
+        )
+        while not _ResumeHandler._resume_event.is_set():
+            await asyncio.sleep(2)
+        _ResumeHandler._resume_event.clear()
     else:
         log.warning(
             "[%s] CAPTCHA/challenge detected. Scraper is paused. "
-            "After solving CAPTCHA, create %s to resume.",
+            "After solving CAPTCHA, create %s or POST http://%s:%s/resume to resume.",
             label,
             CAPTCHA_RESUME_FILE,
+            RESUME_SERVER_HOST,
+            _active_resume_port,
         )
-        while not CAPTCHA_RESUME_FILE.exists():
+        while not CAPTCHA_RESUME_FILE.exists() and not _ResumeHandler._resume_event.is_set():
             await asyncio.sleep(2)
-        try:
-            CAPTCHA_RESUME_FILE.unlink()
-        except OSError:
-            pass
+        if _ResumeHandler._resume_event.is_set():
+            _ResumeHandler._resume_event.clear()
+        if CAPTCHA_RESUME_FILE.exists():
+            CAPTCHA_RESUME_FILE.unlink(missing_ok=True)
     log.info("[%s] CAPTCHA resume signal received. Continuing scrape.", label)
 
 
@@ -971,6 +1080,10 @@ async def wait_for_search_ready(page, initial_url: str, label: str, *, resume_mo
         if cards:
             log.info("[%s] Initial page ready (%d cards). Continuing scrape.", label, len(cards))
             return
+
+        if soup is not None and not cards and CONTROLLER_SESSION_FILE.exists():
+            log.warning("[controller] Challenge detected with existing session — session likely expired")
+            CONTROLLER_SESSION_FILE.unlink(missing_ok=True)
 
         await wait_for_manual_captcha_resume(label, resume_mode=resume_mode)
 
@@ -1602,9 +1715,15 @@ async def main() -> None:
     parser.add_argument("--no-detail", action="store_true", help="Skip detail-page enrichment for fast smoke tests")
     parser.add_argument(
         "--captcha-resume",
-        choices=["file", "prompt"],
+        choices=["file", "prompt", "http"],
         default="file",
-        help="How to resume after CAPTCHA pause: create scraper/.captcha_resume (file) or press Enter in terminal (prompt).",
+        help="How to resume after CAPTCHA pause: scraper/.captcha_resume and/or POST /resume (file), POST /resume only (http), or Enter (prompt).",
+    )
+    parser.add_argument(
+        "--resume-port",
+        type=int,
+        default=RESUME_SERVER_PORT,
+        help="Port for the local resume HTTP server (default: %(default)s).",
     )
     parser.add_argument(
         "--cdp-url",
@@ -1705,287 +1824,292 @@ async def main() -> None:
     if args.session_budget_minutes and args.session_budget_minutes > 0:
         session_deadline_epoch = time.time() + args.session_budget_minutes * 60
 
-    from playwright.async_api import async_playwright
+    resume_server = start_resume_server(args.resume_port)
+    try:
+        from playwright.async_api import async_playwright
 
-    total_count = 0
-    per_make_counts: dict[str, int] = {}
-    collected: list[dict] = []
+        total_count = 0
+        per_make_counts: dict[str, int] = {}
+        collected: list[dict] = []
 
-    async with async_playwright() as playwright:
-        if args.cdp_url:
-            log.info("Connecting to existing browser via CDP: %s", args.cdp_url)
-            browser, context = await _connect_cdp_context(playwright, args.cdp_url)
-        else:
-            browser, context = await _create_browser_context(playwright)
-        page = await context.new_page()
-
-        try:
-            SelectorConfig.reset_find_counts()
-            if args.media_refresh_only:
-                if supabase is None:
-                    supabase = get_supabase()
-                await run_media_refresh_mode(
-                    page=page,
-                    supabase=supabase,
-                    source_ids_file=args.source_ids_file,
-                    limit=args.limit,
-                    dry_run=args.dry_run,
-                    ignore_detail_stale=args.ignore_detail_stale,
-                )
-                return
-
-            if args.retry_failed:
-                retry_items = load_failed_entries(failed_file)
-                if not retry_items:
-                    log.info("No failed entries found in %s", failed_file)
-                    return
-
-                retried_rows: list[dict[str, Any]] = []
-                still_failed: list[dict[str, Any]] = []
-                for item in retry_items:
-                    listing = item.get("listing") if isinstance(item.get("listing"), dict) else {}
-                    listing = dict(listing)
-                    source_id = item.get("source_id") or listing.get("source_id")
-                    detail_url = item.get("url") or listing.get("url")
-                    if source_id:
-                        listing.setdefault("source_id", source_id)
-                    if detail_url:
-                        listing.setdefault("url", detail_url)
-                    if not listing.get("source_site"):
-                        listing["source_site"] = "controller"
-                    if not listing.get("listing_source"):
-                        listing["listing_source"] = "controller"
-
-                    if not detail_url:
-                        item["error"] = "missing_url"
-                        item["at"] = datetime.now(timezone.utc).isoformat()
-                        still_failed.append(item)
-                        continue
-
-                    try:
-                        listing.update(await fetch_listing_detail(page, detail_url))
-                        retried_rows.append(listing)
-                    except Exception as exc:
-                        item["error"] = str(exc)
-                        item["at"] = datetime.now(timezone.utc).isoformat()
-                        still_failed.append(item)
-
-                if args.dry_run:
-                    _print_listings(retried_rows)
-                elif retried_rows and supabase is not None:
-                    saved = upsert_listings(supabase, retried_rows)
-                    log.info("Retried failed URLs: saved=%s attempted=%s", saved, len(retried_rows))
-
-                save_failed_entries(failed_file, still_failed)
-                log.info("Retry-failed complete: recovered=%s remaining_failed=%s", len(retried_rows), len(still_failed))
-                return
-
-            if category_mode:
-                first_category = categories[0]
-                first_category_id, _ = CONTROLLER_CATEGORIES[first_category]
-                initial_url = build_category_url(first_category_id, page=1, manufacturer=args.manufacturer)
-                log.info("Opening initial category page: %s", initial_url)
-                await wait_for_search_ready(
-                    page=page,
-                    initial_url=initial_url,
-                    label=f"category:{first_category}",
-                    resume_mode=args.captcha_resume,
-                )
-
-                for category_key in categories:
-                    if args.max_listings is not None:
-                        remaining_total = args.max_listings - total_count
-                        if remaining_total <= 0:
-                            break
-                        category_limit = remaining_total if args.limit is None else min(args.limit, remaining_total)
-                    else:
-                        category_limit = args.limit
-
-                    category_listings = await scrape_category(
-                        page=page,
-                        category_key=category_key,
-                        manufacturer=args.manufacturer,
-                        limit=category_limit,
-                        fetch_details=fetch_details,
-                        supabase=supabase,
-                        limiter=limiter,
-                        session_deadline_epoch=session_deadline_epoch,
-                        failed_entries=failed_entries,
-                        session_stats=session_stats,
-                        captcha_resume_mode=args.captcha_resume,
-                    )
-
-                    if args.dry_run:
-                        _print_listings(category_listings)
-                    elif category_listings and supabase is not None:
-                        saved = upsert_listings(supabase, category_listings)
-                        log.info("[%s] Upserted %s/%s listings.", category_key, saved, len(category_listings))
-
-                    count = len(category_listings)
-                    total_count += count
-                    per_make_counts[f"category:{category_key}"] = count
-                    collected.extend(category_listings)
-
-                    if session_deadline_epoch and time.time() >= session_deadline_epoch:
-                        break
-                    if args.max_listings is not None and total_count >= args.max_listings:
-                        break
+        async with async_playwright() as playwright:
+            if args.cdp_url:
+                log.info("Connecting to existing browser via CDP: %s", args.cdp_url)
+                browser, context = await _connect_cdp_context(playwright, args.cdp_url)
             else:
-                initial_url = build_make_url(makes[0], page=1)
-                log.info(f"Opening initial page for challenge detection: {initial_url}")
-                await wait_for_search_ready(
-                    page=page,
-                    initial_url=initial_url,
-                    label=makes[0],
-                    resume_mode=args.captcha_resume,
-                )
-
-                resume_idx = 0
-                resume_page = 1
-                if checkpoint_data:
-                    resume_idx = makes.index(checkpoint_data["make"])
-                    resume_page = max(1, int(checkpoint_data.get("next_page", 1)))
-
-                for idx, make in enumerate(makes):
-                    if idx < resume_idx:
-                        log.info("[%s] Skipping make due to resume checkpoint.", make)
-                        continue
-                    start_page = resume_page if idx == resume_idx else 1
-                    make_limit = args.limit
-                    if args.max_listings is not None:
-                        remaining_total = args.max_listings - total_count
-                        if remaining_total <= 0:
-                            log.info("Session max listings reached (%s). Stopping.", args.max_listings)
-                            break
-                        make_limit = remaining_total if make_limit is None else min(make_limit, remaining_total)
-
-                    def on_page_complete(page_num: int, page_listings: list[dict]) -> None:
-                        if args.dry_run:
-                            _print_listings(page_listings)
-                        else:
-                            saved = upsert_listings(supabase, page_listings)
-                            log.info(
-                                "[%s] Upserted %s/%s listings from page %s.",
-                                make,
-                                saved,
-                                len(page_listings),
-                                page_num,
-                            )
-                        save_checkpoint(
-                            checkpoint_file,
-                            {
-                                "source_site": "controller",
-                                "make": make,
-                                "make_index": idx,
-                                "next_page": page_num + 1,
-                            },
-                        )
-
-                    make_listings = await scrape_make(
+                browser, context = await _create_browser_context(playwright, session_file=CONTROLLER_SESSION_FILE)
+            page = await context.new_page()
+    
+            try:
+                SelectorConfig.reset_find_counts()
+                if args.media_refresh_only:
+                    if supabase is None:
+                        supabase = get_supabase()
+                    await run_media_refresh_mode(
                         page=page,
-                        make=make,
-                        limit=make_limit,
-                        fetch_details=fetch_details,
-                        start_page=start_page,
-                        on_page_complete=on_page_complete,
                         supabase=supabase,
-                        limiter=limiter,
-                        session_deadline_epoch=session_deadline_epoch,
-                        failed_entries=failed_entries,
-                        session_stats=session_stats,
-                        captcha_resume_mode=args.captcha_resume,
+                        source_ids_file=args.source_ids_file,
+                        limit=args.limit,
+                        dry_run=args.dry_run,
+                        ignore_detail_stale=args.ignore_detail_stale,
                     )
-                    count = len(make_listings)
-                    total_count += count
-                    per_make_counts[make] = count
-                    collected.extend(make_listings)
-                    if session_deadline_epoch and time.time() >= session_deadline_epoch:
-                        log.warning("Session budget exhausted after make=%s", make)
-                        break
-                    if args.max_listings is not None and total_count >= args.max_listings:
-                        log.info("Session max listings reached (%s).", args.max_listings)
-                        break
-
-                    # Make complete; checkpoint will continue from next make.
-                    if idx < len(makes) - 1:
-                        save_checkpoint(
-                            checkpoint_file,
-                            {
-                                "source_site": "controller",
-                                "make": makes[idx + 1],
-                                "make_index": idx + 1,
-                                "next_page": 1,
-                            },
-                        )
-
-                    if idx < len(makes) - 1:
-                        if limiter:
-                            between_delay = await asyncio.to_thread(limiter.wait)
-                            delay_samples = session_stats.setdefault("delay_samples", [])
-                            if isinstance(delay_samples, list):
-                                delay_samples.append(int(between_delay * 1000))
-                            extra_delay = random.uniform(*HUMAN_BETWEEN_MAKES_SECONDS)
-                            log.info(
-                                "Adaptive wait %.1fs + human dwell %.1fs before next make...",
-                                between_delay,
-                                extra_delay,
-                            )
-                            await asyncio.sleep(extra_delay)
+                    return
+    
+                if args.retry_failed:
+                    retry_items = load_failed_entries(failed_file)
+                    if not retry_items:
+                        log.info("No failed entries found in %s", failed_file)
+                        return
+    
+                    retried_rows: list[dict[str, Any]] = []
+                    still_failed: list[dict[str, Any]] = []
+                    for item in retry_items:
+                        listing = item.get("listing") if isinstance(item.get("listing"), dict) else {}
+                        listing = dict(listing)
+                        source_id = item.get("source_id") or listing.get("source_id")
+                        detail_url = item.get("url") or listing.get("url")
+                        if source_id:
+                            listing.setdefault("source_id", source_id)
+                        if detail_url:
+                            listing.setdefault("url", detail_url)
+                        if not listing.get("source_site"):
+                            listing["source_site"] = "controller"
+                        if not listing.get("listing_source"):
+                            listing["listing_source"] = "controller"
+    
+                        if not detail_url:
+                            item["error"] = "missing_url"
+                            item["at"] = datetime.now(timezone.utc).isoformat()
+                            still_failed.append(item)
+                            continue
+    
+                        try:
+                            listing.update(await fetch_listing_detail(page, detail_url))
+                            retried_rows.append(listing)
+                        except Exception as exc:
+                            item["error"] = str(exc)
+                            item["at"] = datetime.now(timezone.utc).isoformat()
+                            still_failed.append(item)
+    
+                    if args.dry_run:
+                        _print_listings(retried_rows)
+                    elif retried_rows and supabase is not None:
+                        saved = upsert_listings(supabase, retried_rows)
+                        log.info("Retried failed URLs: saved=%s attempted=%s", saved, len(retried_rows))
+    
+                    save_failed_entries(failed_file, still_failed)
+                    log.info("Retry-failed complete: recovered=%s remaining_failed=%s", len(retried_rows), len(still_failed))
+                    return
+    
+                if category_mode:
+                    first_category = categories[0]
+                    first_category_id, _ = CONTROLLER_CATEGORIES[first_category]
+                    initial_url = build_category_url(first_category_id, page=1, manufacturer=args.manufacturer)
+                    log.info("Opening initial category page: %s", initial_url)
+                    await wait_for_search_ready(
+                        page=page,
+                        initial_url=initial_url,
+                        label=f"category:{first_category}",
+                        resume_mode=args.captcha_resume,
+                    )
+    
+                    for category_key in categories:
+                        if args.max_listings is not None:
+                            remaining_total = args.max_listings - total_count
+                            if remaining_total <= 0:
+                                break
+                            category_limit = remaining_total if args.limit is None else min(args.limit, remaining_total)
                         else:
-                            between_delay = random.uniform(*HUMAN_BETWEEN_MAKES_SECONDS)
-                            log.info(f"Waiting {between_delay:.1f}s before next make...")
-                            await asyncio.sleep(between_delay)
-        finally:
-            snap = SelectorConfig.snapshot_find_counts()
-            if snap:
-                log.info("[controller] selector find_counts %s", snap)
-            await browser.close()
+                            category_limit = args.limit
+    
+                        category_listings = await scrape_category(
+                            page=page,
+                            category_key=category_key,
+                            manufacturer=args.manufacturer,
+                            limit=category_limit,
+                            fetch_details=fetch_details,
+                            supabase=supabase,
+                            limiter=limiter,
+                            session_deadline_epoch=session_deadline_epoch,
+                            failed_entries=failed_entries,
+                            session_stats=session_stats,
+                            captcha_resume_mode=args.captcha_resume,
+                        )
+    
+                        if args.dry_run:
+                            _print_listings(category_listings)
+                        elif category_listings and supabase is not None:
+                            saved = upsert_listings(supabase, category_listings)
+                            log.info("[%s] Upserted %s/%s listings.", category_key, saved, len(category_listings))
+    
+                        count = len(category_listings)
+                        total_count += count
+                        per_make_counts[f"category:{category_key}"] = count
+                        collected.extend(category_listings)
+    
+                        if session_deadline_epoch and time.time() >= session_deadline_epoch:
+                            break
+                        if args.max_listings is not None and total_count >= args.max_listings:
+                            break
+                else:
+                    initial_url = build_make_url(makes[0], page=1)
+                    log.info(f"Opening initial page for challenge detection: {initial_url}")
+                    await wait_for_search_ready(
+                        page=page,
+                        initial_url=initial_url,
+                        label=makes[0],
+                        resume_mode=args.captcha_resume,
+                    )
+    
+                    resume_idx = 0
+                    resume_page = 1
+                    if checkpoint_data:
+                        resume_idx = makes.index(checkpoint_data["make"])
+                        resume_page = max(1, int(checkpoint_data.get("next_page", 1)))
+    
+                    for idx, make in enumerate(makes):
+                        if idx < resume_idx:
+                            log.info("[%s] Skipping make due to resume checkpoint.", make)
+                            continue
+                        start_page = resume_page if idx == resume_idx else 1
+                        make_limit = args.limit
+                        if args.max_listings is not None:
+                            remaining_total = args.max_listings - total_count
+                            if remaining_total <= 0:
+                                log.info("Session max listings reached (%s). Stopping.", args.max_listings)
+                                break
+                            make_limit = remaining_total if make_limit is None else min(make_limit, remaining_total)
+    
+                        def on_page_complete(page_num: int, page_listings: list[dict]) -> None:
+                            if args.dry_run:
+                                _print_listings(page_listings)
+                            else:
+                                saved = upsert_listings(supabase, page_listings)
+                                log.info(
+                                    "[%s] Upserted %s/%s listings from page %s.",
+                                    make,
+                                    saved,
+                                    len(page_listings),
+                                    page_num,
+                                )
+                            save_checkpoint(
+                                checkpoint_file,
+                                {
+                                    "source_site": "controller",
+                                    "make": make,
+                                    "make_index": idx,
+                                    "next_page": page_num + 1,
+                                },
+                            )
+    
+                        make_listings = await scrape_make(
+                            page=page,
+                            make=make,
+                            limit=make_limit,
+                            fetch_details=fetch_details,
+                            start_page=start_page,
+                            on_page_complete=on_page_complete,
+                            supabase=supabase,
+                            limiter=limiter,
+                            session_deadline_epoch=session_deadline_epoch,
+                            failed_entries=failed_entries,
+                            session_stats=session_stats,
+                            captcha_resume_mode=args.captcha_resume,
+                        )
+                        count = len(make_listings)
+                        total_count += count
+                        per_make_counts[make] = count
+                        collected.extend(make_listings)
+                        if session_deadline_epoch and time.time() >= session_deadline_epoch:
+                            log.warning("Session budget exhausted after make=%s", make)
+                            break
+                        if args.max_listings is not None and total_count >= args.max_listings:
+                            log.info("Session max listings reached (%s).", args.max_listings)
+                            break
+    
+                        # Make complete; checkpoint will continue from next make.
+                        if idx < len(makes) - 1:
+                            save_checkpoint(
+                                checkpoint_file,
+                                {
+                                    "source_site": "controller",
+                                    "make": makes[idx + 1],
+                                    "make_index": idx + 1,
+                                    "next_page": 1,
+                                },
+                            )
+    
+                        if idx < len(makes) - 1:
+                            if limiter:
+                                between_delay = await asyncio.to_thread(limiter.wait)
+                                delay_samples = session_stats.setdefault("delay_samples", [])
+                                if isinstance(delay_samples, list):
+                                    delay_samples.append(int(between_delay * 1000))
+                                extra_delay = random.uniform(*HUMAN_BETWEEN_MAKES_SECONDS)
+                                log.info(
+                                    "Adaptive wait %.1fs + human dwell %.1fs before next make...",
+                                    between_delay,
+                                    extra_delay,
+                                )
+                                await asyncio.sleep(extra_delay)
+                            else:
+                                between_delay = random.uniform(*HUMAN_BETWEEN_MAKES_SECONDS)
+                                log.info(f"Waiting {between_delay:.1f}s before next make...")
+                                await asyncio.sleep(between_delay)
+            finally:
+                snap = SelectorConfig.snapshot_find_counts()
+                if snap:
+                    log.info("[controller] selector find_counts %s", snap)
+                await browser.close()
 
-    if args.output:
-        output_path = Path(args.output)
-        output_path.write_text(json.dumps(collected, indent=2, ensure_ascii=True), encoding="utf-8")
-        log.info(f"Wrote {len(collected)} listings to {output_path}")
+        if args.output:
+            output_path = Path(args.output)
+            output_path.write_text(json.dumps(collected, indent=2, ensure_ascii=True), encoding="utf-8")
+            log.info(f"Wrote {len(collected)} listings to {output_path}")
 
-    for make, count in per_make_counts.items():
-        log.info(f"Final count [{make}]: {count}")
-    log.info(f"Final total listings: {total_count}")
-    if failed_entries:
-        save_failed_entries(failed_file, failed_entries)
-        log.warning(
-            "Session finished: %s succeeded, %s failed (see %s)",
-            session_stats.get("succeeded", 0),
-            len(failed_entries),
-            failed_file,
-        )
-    elif failed_file.exists() and not args.retry_failed:
-        save_failed_entries(failed_file, [])
-    if supabase and not category_mode and not args.make:
-        mark_inactive_listings(supabase, "controller")
-    if supabase and not args.dry_run:
-        session_ended = datetime.now(timezone.utc)
-        delay_samples = session_stats.get("delay_samples", [])
-        avg_delay_ms = int(sum(delay_samples) / len(delay_samples)) if isinstance(delay_samples, list) and delay_samples else (
-            limiter.get_recommended_settings().get("safe_delay_ms", 2500) if limiter else 2500
-        )
-        batch_size = limiter.get_recommended_settings().get("safe_batch_size", 10) if limiter else 10
-        notes = (
-            f"max_listings={args.max_listings};budget_min={args.session_budget_minutes};"
-            f"retry_failed={args.retry_failed};failed_count={len(failed_entries)}"
-        )
-        log_scraper_session(
-            supabase,
-            site="controller",
-            started_at=session_started,
-            ended_at=session_ended,
-            listings_attempted=int(session_stats.get("attempted", 0)),
-            listings_succeeded=int(session_stats.get("succeeded", 0)),
-            first_error_at_listing=session_stats.get("first_error_at_listing"),
-            error_type=session_stats.get("error_type"),
-            avg_delay_ms=avg_delay_ms,
-            batch_size=batch_size,
-            session_notes=notes,
-        )
-    clear_checkpoint(checkpoint_file)
+        for make, count in per_make_counts.items():
+            log.info(f"Final count [{make}]: {count}")
+        log.info(f"Final total listings: {total_count}")
+        if failed_entries:
+            save_failed_entries(failed_file, failed_entries)
+            log.warning(
+                "Session finished: %s succeeded, %s failed (see %s)",
+                session_stats.get("succeeded", 0),
+                len(failed_entries),
+                failed_file,
+            )
+        elif failed_file.exists() and not args.retry_failed:
+            save_failed_entries(failed_file, [])
+        if supabase and not category_mode and not args.make:
+            mark_inactive_listings(supabase, "controller")
+        if supabase and not args.dry_run:
+            session_ended = datetime.now(timezone.utc)
+            delay_samples = session_stats.get("delay_samples", [])
+            avg_delay_ms = int(sum(delay_samples) / len(delay_samples)) if isinstance(delay_samples, list) and delay_samples else (
+                limiter.get_recommended_settings().get("safe_delay_ms", 2500) if limiter else 2500
+            )
+            batch_size = limiter.get_recommended_settings().get("safe_batch_size", 10) if limiter else 10
+            notes = (
+                f"max_listings={args.max_listings};budget_min={args.session_budget_minutes};"
+                f"retry_failed={args.retry_failed};failed_count={len(failed_entries)}"
+            )
+            log_scraper_session(
+                supabase,
+                site="controller",
+                started_at=session_started,
+                ended_at=session_ended,
+                listings_attempted=int(session_stats.get("attempted", 0)),
+                listings_succeeded=int(session_stats.get("succeeded", 0)),
+                first_error_at_listing=session_stats.get("first_error_at_listing"),
+                error_type=session_stats.get("error_type"),
+                avg_delay_ms=avg_delay_ms,
+                batch_size=batch_size,
+                session_notes=notes,
+            )
+        clear_checkpoint(checkpoint_file)
+    finally:
+        if resume_server:
+            resume_server.shutdown()
 
 
 if __name__ == "__main__":

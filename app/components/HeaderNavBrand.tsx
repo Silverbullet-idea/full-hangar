@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTheme } from "./ThemeProvider"
 
-export default function HeaderNavBrand() {
+type HeaderNavBrandProps = {
+  /** Default matches main header; use a larger class on auth/marketing shells. */
+  imgClassName?: string
+}
+
+export default function HeaderNavBrand({ imgClassName = "h-9 w-auto object-contain" }: HeaderNavBrandProps) {
   const { theme } = useTheme()
   const [ready, setReady] = useState(false)
 
@@ -51,7 +56,7 @@ export default function HeaderNavBrand() {
           alt="Full Hangar"
           width={220}
           height={36}
-          className="h-9 w-auto object-contain"
+          className={imgClassName}
           onError={() => setSourceIndex((idx) => idx + 1)}
         />
       ) : null}

@@ -35,6 +35,10 @@ body {
 .stats { display: flex; gap: 8px; margin: 0; }
 .stats div { text-align: right; font-size: 9px; color: #aaa; min-width: 56px; }
 .stats strong { display: block; font-size: 14px; line-height: 1; color: #ff9900; }
+.stats .stat-title { display: block; color: #ccc; }
+.stats .stat-hint { display: block; font-size: 8px; color: #777; max-width: 72px; margin-left: auto; line-height: 1.15; }
+.stats-unique { font-size: 9px; color: #9c9; margin-top: 6px; line-height: 1.25; max-width: 280px; text-align: right; }
+.stats-progress { font-size: 9px; color: #8ab; margin-top: 4px; line-height: 1.25; max-width: 280px; text-align: right; }
 .diag {
   background: #252525;
   border: 1px solid #3a3a3a;
@@ -156,4 +160,53 @@ button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   filter: grayscale(35%);
+}
+
+.challenge-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #7a1a00;
+  border-bottom: 2px solid #ff9900;
+  color: #fff;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+.challenge-banner__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.challenge-banner__text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.challenge-banner__text strong {
+  display: block;
+  color: #ff9900;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.challenge-banner .challenge-banner__btn {
+  flex: 0 0 auto;
+  background: #ff9900;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.challenge-banner__btn:hover {
+  background: #e68800;
+}
+.challenge-banner__btn:disabled {
+  background: #555;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 1;
+  filter: none;
 }

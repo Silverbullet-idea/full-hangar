@@ -130,6 +130,7 @@ function defaultSourceState(sourceKey, makes) {
     detailDisabled: false,
     lastResultFingerprint: null,
     stagnantResultRepeats: 0,
+    missingTotalsPages: 0,
     progressByMake: {},
     complete: false,
     blocked: false,
@@ -323,6 +324,7 @@ function defaultState() {
     totalExtracted: 0,
     totalUpserted: 0,
     sessionExtracted: 0,
+    sessionExtractedUnique: 0,
     sessionUpserted: 0,
     sessionDetailProcessed: 0,
     failedUrls: [],
@@ -343,6 +345,22 @@ function defaultState() {
 }
 
 let state = defaultState();
+
+/** Listing IDs seen this harvest session (not persisted — resets on each Start). */
+let harvestSessionIdSet = new Set();
+
+function registerSessionUniqueRows(rows) {
+  let newUnique = 0;
+  const list = Array.isArray(rows) ? rows : [];
+  for (const row of list) {
+    const id = rowIdentity(row);
+    if (!id) continue;
+    if (harvestSessionIdSet.has(id)) continue;
+    harvestSessionIdSet.add(id);
+    newUnique += 1;
+  }
+  return newUnique;
+}
 
 async function saveState() {
   await chrome.storage.local.set({ [STATE_KEY]: state });
@@ -671,6 +689,7 @@ function resetRunState({
     aerotrader: buildInitialSourceState('aerotrader'),
   };
   fresh.sourceDiagnostics = defaultSourceDiagnostics();
+  harvestSessionIdSet = new Set();
   state = fresh;
 }
 
@@ -1420,6 +1439,8 @@ async function processOneMakeForSource(sourceKey) {
   await saveState();
   notifyPopup('STATUS_UPDATE', { state });
 
+  let lastNonEmptyRowCount = 0;
+
   while (state.running) {
     ss.currentMake = make;
     ss.currentPage = page;
@@ -1525,8 +1546,10 @@ async function processOneMakeForSource(sourceKey) {
     ss.cooldownLevel = 0;
     state.lastFailureReason = null;
     state.challengeDetected = false;
+    const newUnique = registerSessionUniqueRows(rowsTagged);
     state.totalExtracted += rowsTagged.length;
     state.sessionExtracted += rowsTagged.length;
+    state.sessionExtractedUnique += newUnique;
     sd.extracted += rowsTagged.length;
     sd.status = 'running';
     sd.lastReason = null;
@@ -1536,7 +1559,15 @@ async function processOneMakeForSource(sourceKey) {
     await saveState();
     notifyPopup('STATUS_UPDATE', { state });
 
-    if (sourceKey === 'tap' && page > 1) {
+    lastNonEmptyRowCount = Math.max(lastNonEmptyRowCount, rowsTagged.length);
+
+    if (sourceKey === 'controller' && rowsTagged.length > 0 && pageTotal === 0 && pageRangeEnd === 0) {
+      ss.missingTotalsPages = Number(ss.missingTotalsPages || 0) + 1;
+    } else if (pageTotal > 0 || pageRangeEnd > 0) {
+      ss.missingTotalsPages = 0;
+    }
+
+    if ((sourceKey === 'tap' || sourceKey === 'controller') && page > 1) {
       const fingerprint = buildResultFingerprint(rowsTagged, res.meta || {});
       if (ss.lastResultFingerprint && ss.lastResultFingerprint === fingerprint) {
         ss.stagnantResultRepeats = Number(ss.stagnantResultRepeats || 0) + 1;
@@ -1545,14 +1576,21 @@ async function processOneMakeForSource(sourceKey) {
       }
       ss.lastResultFingerprint = fingerprint;
       if (ss.stagnantResultRepeats >= 2) {
-        state.lastFailureReason = 'tap_stagnant_results';
-        sd.lastReason = 'tap_stagnant_results';
-        sd.lastMessage = 'stagnant TAP results; advancing make';
+        state.lastFailureReason = sourceKey === 'controller' ? 'controller_stagnant_results' : 'tap_stagnant_results';
+        sd.lastReason = state.lastFailureReason;
+        sd.lastMessage = sourceKey === 'controller' ? 'stagnant Controller results; advancing make' : 'stagnant TAP results; advancing make';
         break;
       }
-    } else if (sourceKey === 'tap') {
+    } else if (sourceKey === 'tap' || sourceKey === 'controller') {
       ss.lastResultFingerprint = buildResultFingerprint(rowsTagged, res.meta || {});
       ss.stagnantResultRepeats = 0;
+    }
+
+    if (sourceKey === 'controller' && Number(ss.missingTotalsPages || 0) >= 3) {
+      state.lastFailureReason = 'controller_missing_totals_abort';
+      sd.lastReason = 'controller_missing_totals_abort';
+      sd.lastMessage = 'SERP totals missing; advancing make';
+      break;
     }
 
     let rowsToSave = rowsTagged;
@@ -1640,9 +1678,13 @@ async function processOneMakeForSource(sourceKey) {
     await saveState();
 
     if (cfg.singlePassPerMake) break;
+    let maxPageAllowed = cfg.maxPagesPerMake;
+    if (pageTotal > 0 && lastNonEmptyRowCount > 0) {
+      maxPageAllowed = Math.min(cfg.maxPagesPerMake, Math.ceil(pageTotal / lastNonEmptyRowCount) + 1);
+    }
     page += 1;
     ss.currentPage = page;
-    if ((pageTotal > 0 && pageRangeEnd >= pageTotal) || page > cfg.maxPagesPerMake) break;
+    if ((pageTotal > 0 && pageRangeEnd >= pageTotal) || page > maxPageAllowed) break;
     await humanPause('between_pages');
   }
 
@@ -1660,6 +1702,7 @@ async function processOneMakeForSource(sourceKey) {
   ss.currentPage = 1;
   ss.lastResultFingerprint = null;
   ss.stagnantResultRepeats = 0;
+  ss.missingTotalsPages = 0;
   if (ss.currentMakeIndex >= ss.makes.length) moveToNextCategory(sourceKey, ss);
   if (ss.complete && !ss.blocked) sd.status = 'complete';
   await saveState();
@@ -1713,6 +1756,7 @@ async function runHarvest() {
   state.runStatus = 'complete';
   state.pausedReason = null;
   state.currentSource = null;
+  state.lastFailureReason = null;
   state.lastMessage = `Run complete (${state.mode})`;
   for (const sourceKey of Object.keys(SOURCE_CONFIG)) {
     const sd = sourceDiag(sourceKey);
@@ -1775,8 +1819,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const rotateSources = message.rotateSources !== false;
 
       state.sessionExtracted = 0;
+      state.sessionExtractedUnique = 0;
       state.sessionUpserted = 0;
       state.sessionDetailProcessed = 0;
+      harvestSessionIdSet = new Set();
       state.lastMessage = '';
       state.challengeDetected = false;
       state.lastFailureReason = null;
@@ -1959,10 +2005,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       state.running = false;
       state.runStatus = 'paused';
       state.pausedReason = 'operator_stop';
+      state.challengeDetected = false;
       state.pausedAt = new Date().toISOString();
       await saveState();
       sendResponse({ ok: true });
       return;
+    }
+    if (message.action === 'RESUME_HARVEST') {
+      (async () => {
+        // Clear challenge state before resuming
+        state.challengeDetected = false;
+        state.pausedReason = null;
+        state.runStatus = 'resuming';
+        state.lastMessage = 'Resuming after challenge solve...';
+        await saveState();
+        notifyPopup('STATUS_UPDATE', { state });
+
+        // Give the browser a moment — the user just solved a CAPTCHA,
+        // the page may still be loading/redirecting.
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+
+        // Restart the harvest loop (it will read preserved source state)
+        runHarvest();
+        sendResponse({ ok: true });
+      })();
+      return true; // keep channel open for async sendResponse
     }
     sendResponse({ ok: false, error: 'Unknown action' });
   })();

@@ -1,72 +1,62 @@
 # Avionics Coverage Audit
 
 - Window: last `90` days
-- Cutoff date: `2025-12-12`
+- Cutoff date: `2025-12-27`
 - Segment filter: `all`
-- Listings scanned: `8319`
-- Listings with text: `6539`
-- Listings with avionics text: `3095`
-- Listings with observations: `2481`
-- Listings with observations (scoped to avionics-text listings): `2359`
-- Observation coverage over avionics-text listings: `76.22%`
-- Total observation rows: `8458`
-- Matched rows: `8434`
-- Unresolved rows: `24`
-- Match rate: `99.72%`
-- Unresolved rate: `0.28%`
+- Listings scanned: `10574`
+- Listings with text: `7739`
+- Listings with avionics text: `3994`
+- Listings with observations: `3981`
+- Listings with observations (scoped to avionics-text listings): `3155`
+- Observation coverage over avionics-text listings: `78.99%`
+- Total observation rows: `15499`
+- Matched rows: `15287`
+- Unresolved rows: `212`
+- Match rate: `98.63%`
+- Unresolved rate: `1.37%`
 - Avg match confidence: `0.95`
 
 ## Top Unresolved Tokens
 
-- `gdu25`: `2`
-- `gia275`: `2`
-- `kap100`: `2`
-- `kx64`: `1`
-- `ngt9000`: `1`
-- `kx170b`: `1`
-- `pma6000`: `1`
-- `gtx650xi`: `1`
-- `gtx245`: `1`
-- `pma150`: `1`
-- `gtx345rw`: `1`
-- `kx135`: `1`
-- `gtx750xi`: `1`
-- `gma20`: `1`
-- `gtx45r`: `1`
-- `gtn335`: `1`
-- `gtn625xi`: `1`
-- `gns355`: `1`
-- `gtx350`: `1`
-- `gdl90`: `1`
-- `pma4000`: `1`
+- `fms6100`: `17`
+- `primus660`: `16`
+- `primus870`: `12`
+- `fms5000`: `9`
+- `primus800`: `7`
+- `gdu105`: `5`
+- `kfc3100`: `5`
+- `gdu1043`: `4`
+- `gtx33h`: `4`
+- `primus400`: `4`
+- `gdl84`: `4`
+- `gps196`: `3`
+- `gtn625xi`: `3`
+- `gdu1055`: `3`
+- `primus450`: `3`
+- `gmc605`: `3`
+- `kx64`: `3`
+- `gps400`: `3`
+- `gns355`: `3`
+- `gfc710`: `3`
 
 ## Parser Version Breakdown
 
-- `2.1.3`: `6494`
-- `2.0.3`: `637`
-- `2.1.2`: `37`
-- `2.0.6`: `26`
-- `2.1.0`: `8`
-- `2.1.1`: `6`
-- `2.0.5`: `6`
-- `2.0.7`: `2`
-- `2.0.8`: `1`
+- `2.1.8`: `10334`
 
 ## Source Breakdown
 
-- `trade_a_plane`: scanned=3349, avionics_text=1495, observations=1231, coverage=79.06%, matched=4729, unresolved=18, match_rate=99.62%
-- `controller`: scanned=1701, avionics_text=651, observations=576, coverage=86.94%, matched=2457, unresolved=6, match_rate=99.76%
-- `globalair`: scanned=1727, avionics_text=416, observations=292, coverage=63.7%, matched=453, unresolved=0, match_rate=100.0%
-- `aerotrader`: scanned=280, avionics_text=148, observations=122, coverage=81.08%, matched=346, unresolved=0, match_rate=100.0%
-- `aso`: scanned=606, avionics_text=234, observations=166, coverage=64.1%, matched=327, unresolved=0, match_rate=100.0%
-- `avbuyer`: scanned=637, avionics_text=146, observations=89, coverage=48.63%, matched=113, unresolved=0, match_rate=100.0%
-- `barnstormers`: scanned=17, avionics_text=5, observations=5, coverage=100.0%, matched=9, unresolved=0, match_rate=100.0%
-- `unknown`: scanned=2, avionics_text=0, observations=0, coverage=0.0%, matched=0, unresolved=0, match_rate=0.0%
+- `trade_a_plane`: scanned=3442, avionics_text=1837, observations=1384, coverage=72.89%, matched=5570, unresolved=39, match_rate=99.3%
+- `controller`: scanned=2970, avionics_text=977, observations=987, coverage=93.04%, matched=4795, unresolved=33, match_rate=99.32%
+- `globalair`: scanned=1863, avionics_text=419, observations=950, coverage=94.51%, matched=3604, unresolved=129, match_rate=96.54%
+- `aso`: scanned=766, avionics_text=292, observations=257, coverage=65.75%, matched=590, unresolved=8, match_rate=98.66%
+- `aerotrader`: scanned=314, avionics_text=173, observations=142, coverage=79.77%, matched=385, unresolved=1, match_rate=99.74%
+- `avbuyer`: scanned=1205, avionics_text=292, observations=257, coverage=60.62%, matched=335, unresolved=2, match_rate=99.41%
+- `barnstormers`: scanned=14, avionics_text=4, observations=4, coverage=100.0%, matched=8, unresolved=0, match_rate=100.0%
 
 ## Segment Breakdown
 
-- `piston_single`: scanned=5564, avionics_text=2326, observations=1976, coverage=81.04%, matched=7447, unresolved=23, match_rate=99.69%
-- `piston_multi`: scanned=730, avionics_text=282, observations=209, coverage=69.86%, matched=540, unresolved=1, match_rate=99.82%
-- `jet`: scanned=1243, avionics_text=354, observations=207, coverage=55.65%, matched=265, unresolved=0, match_rate=100.0%
-- `turboprop`: scanned=419, avionics_text=92, observations=71, coverage=71.74%, matched=160, unresolved=0, match_rate=100.0%
-- `rotorcraft`: scanned=363, avionics_text=41, observations=18, coverage=34.15%, matched=22, unresolved=0, match_rate=100.0%
+- `piston_single`: scanned=7225, avionics_text=2876, observations=2627, coverage=79.42%, matched=11207, unresolved=65, match_rate=99.42%
+- `jet`: scanned=1660, avionics_text=507, observations=757, coverage=84.62%, matched=1783, unresolved=110, match_rate=94.19%
+- `piston_multi`: scanned=620, avionics_text=393, observations=347, coverage=77.35%, matched=1608, unresolved=11, match_rate=99.32%
+- `turboprop`: scanned=455, avionics_text=131, observations=145, coverage=81.68%, matched=508, unresolved=5, match_rate=99.03%
+- `rotorcraft`: scanned=614, avionics_text=87, observations=105, coverage=35.63%, matched=181, unresolved=21, match_rate=89.6%
