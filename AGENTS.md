@@ -1,6 +1,6 @@
 # AGENTS.md — FullHangar / AircraftFlip
 # Master context file. Load this into every Claude conversation and every Cursor session.
-# Last updated: March 2026
+# Last updated: April 2026
 
 ---
 
@@ -59,7 +59,7 @@ scraper/
   media_refresh_utils.py   — fetch_refresh_rows(), apply_media_update(), seen_within_hours()
 
   Scrapers (requests-based):
-    aso_scraper.py          — Aviation Shopper Online
+    aso_scraper.py          — ASO (newonly mode added — targets act_id filtered new-listings URLs)
     controller_scraper.py   — Controller.com
     tradaplane_scraper.py   — Trade-A-Plane
     avbuyer_scraper.py      — AvBuyer
@@ -77,6 +77,10 @@ scraper/
 
   Intelligence:
     compute_market_comps.py — aggregates market_comps table from active listings
+
+scripts/
+  run_aso_newonly.ps1       — Weekly scheduler wrapper for ASO new listings
+  setup_task_scheduler.ps1  — One-time Task Scheduler registration
 
 core/
   intelligence/
@@ -218,6 +222,18 @@ When a site is too aggressive for automated scraping:
 4. Bridge server normalizes and upserts to Supabase
 5. This pattern bypasses all bot detection because the browser session is human-driven
 Reference implementation: bridge_server_globalair.py + the GlobalAir Chrome extension
+
+**Unified Harvester (`browser-extension/`):** When Distil pauses Controller harvesting, the popup shows a challenge banner; after the user solves the CAPTCHA in the Controller tab, they click **Resume Scraping**, which sends `RESUME_HARVEST` to the service worker (clears `challengeDetected` / `pausedReason`, brief delay, then `runHarvest()` continues from saved state).
+
+---
+
+## CONTROLLER.COM — DEDICATED CHROME (CDP, ALWAYS-WARM SESSION)
+
+Controller scraping can use a **separate Chrome profile** with **Chrome DevTools Protocol** on port **9222** so one long-lived browser keeps the Distil session alive between runs. Scripts: `scripts/launch-chrome-controller.ps1` (start Chrome) and `scripts/run-controller-pipeline.ps1` (ensure CDP, then run `controller_scraper.py` with `--cdp-url` and `--captcha-resume file`). Extension install steps: `scripts/install-fullhangar-extension.md`.
+
+When **not** using CDP, Playwright persists cookies/localStorage to `scraper/state/controller_chrome_session.json` after each successful list-page load so the next run can reuse the Distil session. The scraper also listens on **127.0.0.1:9998** (override with `--resume-port`) for **POST /resume** from the browser extension after a CAPTCHA solve; **GET /status** returns `{"status":"waiting"}` for a quick health check.
+
+**npm:** `npm run chrome:controller` — launch dedicated Chrome; `npm run pipeline:controller` — pipeline runner (pass extra args after `--`, e.g. `npm run pipeline:controller -- --dry-run --limit 10`); `npm run pipeline:controller:dry` — same with baked-in `--dry-run --limit 10`.
 
 ---
 

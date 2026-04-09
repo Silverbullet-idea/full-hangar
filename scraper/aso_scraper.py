@@ -75,6 +75,29 @@ CATEGORIES = {
     },
 }
 
+# New-listings-only filtered index (weekly email equivalent).
+# URL pattern: ...?wll=true&newonly=true&act_id={act_id}&pl=2&mkt_list=1
+#
+# Verified 2026-04-09 via requests session warmup + BeautifulSoup on live ASO:
+#   act_id=1 — Single Engine Piston: non-zero "Aircraft Meet Your Criteria" count, listing grid present
+#   act_id=2 — Multi-Engine Piston: non-zero count, listing grid present
+#   act_id=3 — Turboprop: non-zero count, listing grid present
+#   act_id=4 — Jet: non-zero count, listing grid present
+#   act_id=5 — Helicopter: no asoAcSearchHeading / no searchResultsGrid (0 scrapeable rows; skip with warning)
+#   act_id=6 — Specialty: non-zero count, listing grid present
+NEWONLY_LISTINGS_URL = (
+    "https://www.aso.com/listings/AircraftListings.aspx"
+    "?wll=true&newonly=true&act_id={act_id}&pl=2&mkt_list=1"
+)
+ASO_NEWONLY_CATEGORIES = [
+    {"name": "Single Engine Piston", "act_id": 1, "priority": 1, "aircraft_type": "single_engine_piston"},
+    {"name": "Multi-Engine Piston", "act_id": 2, "priority": 2, "aircraft_type": "multi_engine_piston"},
+    {"name": "Turboprop", "act_id": 3, "priority": 3, "aircraft_type": "turboprop"},
+    {"name": "Jet", "act_id": 4, "priority": 4, "aircraft_type": "jet"},
+    {"name": "Helicopter", "act_id": 5, "priority": 5, "aircraft_type": "helicopter"},
+    {"name": "Specialty", "act_id": 6, "priority": 6, "aircraft_type": "single_engine_piston"},
+]
+
 REQUEST_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -787,6 +810,18 @@ def scrape_detail_page(
     return extra
 
 
+def _newonly_feed_has_listings(soup: BeautifulSoup, default_aircraft_type: str) -> tuple[bool, int]:
+    """Return (ok, count) for an ASO newonly index page."""
+    n = get_results_count(soup)
+    cards = _parse_cards_from_soup(soup, default_aircraft_type)
+    card_n = len(cards)
+    if n is not None and n > 0:
+        return True, n
+    if card_n > 0:
+        return True, card_n
+    return False, 0
+
+
 def _parse_cards_from_soup(soup: BeautifulSoup, default_aircraft_type: str) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     table = soup.find("table", class_="searchResultsGrid")
@@ -939,6 +974,12 @@ def _is_recent_seen(last_seen_value: Any, within_days: int) -> bool:
 
 def run(args: argparse.Namespace) -> None:
     log.info("=== ASO deep scraper starting ===")
+    newonly_mode = bool(getattr(args, "newonly", False))
+    effective_detail = bool(args.detail or newonly_mode)
+    effective_skip_recent_days = int(args.skip_recent_detail_days)
+    if newonly_mode and effective_skip_recent_days <= 0:
+        effective_skip_recent_days = 2
+
     session = requests.Session()
     try:
         session.get(BASE_URL, headers=REQUEST_HEADERS, timeout=15)
@@ -951,10 +992,39 @@ def run(args: argparse.Namespace) -> None:
     _aso_scrape_health_ctx["health"] = health
     limiter = AdaptiveRateLimiter(supabase, "aso", logger=log) if supabase else None
 
-    cats = {args.category: CATEGORIES[args.category]} if args.category else CATEGORIES
+    newonly_feeds: list[dict[str, Any]] = []
+    if newonly_mode:
+        for entry in sorted(ASO_NEWONLY_CATEGORIES, key=lambda e: e["priority"]):
+            url = NEWONLY_LISTINGS_URL.format(act_id=entry["act_id"])
+            soup = fetch_soup(
+                session,
+                url,
+                min_delay=args.delay_min,
+                max_delay=args.delay_max,
+            )
+            if not soup:
+                log.warning(
+                    "ASO newonly feed could not be loaded; skipping category %s (act_id=%s)",
+                    entry["name"],
+                    entry["act_id"],
+                )
+                continue
+            ok, verified_count = _newonly_feed_has_listings(soup, entry["aircraft_type"])
+            if not ok:
+                log.warning(
+                    "ASO newonly feed returned zero results; skipping category %s (act_id=%s)",
+                    entry["name"],
+                    entry["act_id"],
+                )
+                continue
+            newonly_feeds.append({**entry, "url": url, "verified_count": verified_count})
+    else:
+        cats = {args.category: CATEGORIES[args.category]} if args.category else CATEGORIES
+
     seen_run_ids: set[str] = set()
     existing_index: dict[str, dict[str, Any]] = {}
-    if supabase and (args.only_new or args.skip_recent_detail_days > 0):
+    load_index = supabase and (args.only_new or effective_skip_recent_days > 0)
+    if load_index:
         existing_index = _load_existing_index(supabase)
         log.info("Loaded %s existing ASO rows for restart-aware filtering", len(existing_index))
     total_saved = 0
@@ -962,18 +1032,43 @@ def run(args: argparse.Namespace) -> None:
     total_existing_skipped = 0
     total_detail_skipped_recent = 0
     dry_rows: list[dict[str, Any]] = []
+    newonly_global_limit = newonly_mode and args.limit_listings is not None
+    newonly_listings_done = 0
+    newonly_categories_started = 0
+    stop_newonly_run = False
 
-    for cat_name, cat in cats.items():
-        log.info("\n── Category: %s ──", cat_name)
-        groups = scrape_model_groups(
-            session,
-            cat["url"],
-            min_delay=args.delay_min,
-            max_delay=args.delay_max,
-        )
-        if args.limit_groups:
-            groups = groups[: args.limit_groups]
-        log.info("Discovered %s groups/feeds", len(groups))
+    if newonly_mode:
+        category_iter: list[tuple[str, dict[str, Any]]] = [
+            (
+                e["name"],
+                {
+                    "url": e["url"],
+                    "aircraft_type": e["aircraft_type"],
+                    "act_id": e["act_id"],
+                    "verified_count": e["verified_count"],
+                },
+            )
+            for e in newonly_feeds
+        ]
+    else:
+        category_iter = [(k, v) for k, v in cats.items()]
+
+    for cat_name, cat in category_iter:
+        if newonly_mode:
+            newonly_categories_started += 1
+            log.info("Processing new listings — %s (act_id=%s)", cat_name, cat["act_id"])
+            groups = [{"name": cat_name, "url": cat["url"], "count": cat.get("verified_count", 0)}]
+        else:
+            log.info("\n── Category: %s ──", cat_name)
+            groups = scrape_model_groups(
+                session,
+                cat["url"],
+                min_delay=args.delay_min,
+                max_delay=args.delay_max,
+            )
+            if args.limit_groups:
+                groups = groups[: args.limit_groups]
+            log.info("Discovered %s groups/feeds", len(groups))
 
         for idx, group in enumerate(groups, start=1):
             log.info("  [%s/%s] %s (%s listed) — %s", idx, len(groups), group["name"], group["count"], group["url"])
@@ -1005,7 +1100,7 @@ def run(args: argparse.Namespace) -> None:
             if not unique_rows:
                 continue
 
-            if args.limit_listings:
+            if args.limit_listings and not newonly_mode:
                 unique_rows = unique_rows[: args.limit_listings]
 
             for i, listing in enumerate(unique_rows, start=1):
@@ -1016,9 +1111,9 @@ def run(args: argparse.Namespace) -> None:
                     continue
 
                 adv_id = str(listing.get("aso_adv_id") or "").strip()
-                should_fetch_detail = bool(args.detail and adv_id)
-                if should_fetch_detail and args.skip_recent_detail_days > 0:
-                    if _is_recent_seen((existing_row or {}).get("last_seen_date"), args.skip_recent_detail_days):
+                should_fetch_detail = bool(effective_detail and adv_id)
+                if should_fetch_detail and effective_skip_recent_days > 0:
+                    if _is_recent_seen((existing_row or {}).get("last_seen_date"), effective_skip_recent_days):
                         should_fetch_detail = False
                         total_detail_skipped_recent += 1
                 if should_fetch_detail:
@@ -1048,6 +1143,18 @@ def run(args: argparse.Namespace) -> None:
                 if limiter:
                     limiter.wait()
 
+                if newonly_global_limit:
+                    newonly_listings_done += 1
+                    if newonly_listings_done >= args.limit_listings:
+                        stop_newonly_run = True
+                        break
+
+            if stop_newonly_run:
+                break
+
+        if stop_newonly_run:
+            break
+
     if args.dry_run:
         out_file = args.output_json or "aso_dry_run.json"
         with open(out_file, "w", encoding="utf-8") as fh:
@@ -1056,19 +1163,38 @@ def run(args: argparse.Namespace) -> None:
     else:
         log.info("✓ Done. Saved: %s | Skipped: %s", total_saved, total_skipped)
     log.info("%s", health.finish().summary())
+    if newonly_mode:
+        upserted_n = len(dry_rows) if args.dry_run else total_saved
+        log.info(
+            "New listings run complete: %s categories scraped, %s new listings upserted, %s already in DB (skipped)",
+            newonly_categories_started,
+            upserted_n,
+            total_detail_skipped_recent,
+        )
     if total_existing_skipped:
         log.info("↺ Existing rows skipped by --only-new: %s", total_existing_skipped)
-    if total_detail_skipped_recent:
+    if total_detail_skipped_recent and not newonly_mode:
         log.info("↺ Detail fetch skipped by recency window: %s", total_detail_skipped_recent)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASO deep listing scraper")
+    parser.add_argument(
+        "--newonly",
+        action="store_true",
+        help="Scrape ASO new-listings-only feeds (wll=true&newonly=true&act_id=…&pl=2&mkt_list=1).",
+    )
     parser.add_argument("--category", choices=list(CATEGORIES.keys()), help="Scrape one category only.")
     parser.add_argument("--dry-run", action="store_true", help="Do not write DB rows.")
     parser.add_argument("--detail", action="store_true", help="Fetch detail pages for deep extraction.")
     parser.add_argument("--limit-groups", type=int, default=None, help="Limit model groups/feeds per category.")
     parser.add_argument("--limit-listings", type=int, default=None, help="Limit listings per feed (smoke testing).")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Alias for --limit-listings; with --newonly, caps total listings across all categories.",
+    )
     parser.add_argument("--max-pages", type=int, default=80, help="Maximum pages per feed.")
     parser.add_argument("--delay-min", type=float, default=2.5, help="Per-request minimum delay (seconds).")
     parser.add_argument("--delay-max", type=float, default=5.0, help="Per-request maximum delay (seconds).")
@@ -1096,6 +1222,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    if args.limit is not None:
+        args.limit_listings = args.limit
     global log
     log = setup_logging(args.verbose)
     run(args)
