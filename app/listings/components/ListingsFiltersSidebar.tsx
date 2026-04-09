@@ -158,7 +158,7 @@ type ListingsFiltersSidebarProps = {
   setRiskFilter: (value: string) => void
   makeOptions: string[]
   modelOptions: string[]
-  subModelOptions: string[]
+  subModelOptions: Array<{ value: string; label: string }>
   onResetFilters: () => void
   onApplyFilters: () => void
   riskTooltip: ReactNode
@@ -612,9 +612,9 @@ export default function ListingsFiltersSidebar({
                 className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
               >
                 <option value="">Any sub model…</option>
-                {subModelOptions.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                {subModelOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
                   </option>
                 ))}
               </select>

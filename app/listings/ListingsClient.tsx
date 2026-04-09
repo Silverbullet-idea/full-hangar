@@ -78,6 +78,8 @@ type FilterOptions = {
   models: string[]
   states: string[]
   modelPairs: Array<{ make: string; model: string }>
+  /** Beechcraft sub-model display names keyed by `make|||model` (from `/api/listings/options`). */
+  modelPairLabels?: Record<string, string>
   makeCounts: Record<string, number>
   modelCounts: Record<string, number>
   modelPairCounts: Record<string, number>
@@ -767,6 +769,8 @@ export default function ListingsClient({
           models: Array.isArray(data.models) ? data.models : [],
           states: Array.isArray(data.states) ? data.states : [],
           modelPairs: Array.isArray(data.modelPairs) ? data.modelPairs : [],
+          modelPairLabels:
+            data.modelPairLabels && typeof data.modelPairLabels === 'object' ? (data.modelPairLabels as Record<string, string>) : {},
           makeCounts: data.makeCounts && typeof data.makeCounts === 'object' ? data.makeCounts : {},
           modelCounts: data.modelCounts && typeof data.modelCounts === 'object' ? data.modelCounts : {},
           modelPairCounts: data.modelPairCounts && typeof data.modelPairCounts === 'object' ? data.modelPairCounts : {},
@@ -825,18 +829,27 @@ export default function ListingsClient({
   }, [filterOptions.modelPairs, makeFilter])
 
   const subModelOptions = useMemo(() => {
-    if (!modelFilter) return []
+    if (!modelFilter) return [] as Array<{ value: string; label: string }>
+    const labels = filterOptions.modelPairLabels ?? {}
     const pairs = makeFilter === 'all'
       ? filterOptions.modelPairs
       : filterOptions.modelPairs.filter((pair) => pair.make.toLowerCase() === makeFilter.toLowerCase())
-    return Array.from(
-      new Set(
-        pairs
-          .filter((pair) => deriveModelFamily(String(pair.model ?? '')) === modelFilter)
-          .map((pair) => pair.model)
-      )
-    ).sort((a, b) => a.localeCompare(b))
-  }, [filterOptions.modelPairs, makeFilter, modelFilter])
+    const byValue = new Map<string, string>()
+    for (const pair of pairs) {
+      if (deriveModelFamily(String(pair.model ?? '')) !== modelFilter) continue
+      const value = String(pair.model ?? '').trim()
+      if (!value) continue
+      const key = `${pair.make}|||${value}`
+      const label = labels[key] ?? value
+      const prev = byValue.get(value)
+      if (prev === undefined || label.length > prev.length) {
+        byValue.set(value, label)
+      }
+    }
+    return Array.from(byValue.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+  }, [filterOptions.modelPairLabels, filterOptions.modelPairs, makeFilter, modelFilter])
 
 
   const categoryMenuData = useMemo(() => {
