@@ -139,6 +139,8 @@ Context to load: This file only
 
 ## CURRENT TASK QUEUE (Phase 1 completion)
 
+- [x] BACKEND — Comp family grouping, Beechcraft display names, model case deduplication (`scraper/model_normalizer.py`). **`resolve_comp_family()` / `resolve_comp_family_key()`** are the canonical comp lookup path — all future market comps queries (live pools, `market_comps`, `compute_market_comps` buckets) must go through them.
+
 Priority 1 — AGENT 1 — Self-healing scraper pipeline
   [ ] Centralized error log table in Supabase: scraper_errors(source_site, error_type, url, timestamp, raw_error)
   [ ] Challenge detection in ALL scrapers (not just AeroTrader) using shared looks_like_challenge_html()

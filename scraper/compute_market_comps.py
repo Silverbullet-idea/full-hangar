@@ -27,6 +27,7 @@ if _ROOT.name == "scraper":
     sys.path.insert(0, str(_ROOT.parent))
 
 from core.intelligence.us_location import parse_us_state_from_listing_fields
+from scraper.model_normalizer import normalize_model_case, resolve_comp_family_key
 
 PAGE_DEFAULT = 1000
 
@@ -163,13 +164,18 @@ def build_comps_payload(
     min_sample: int = 5,
 ) -> list[dict]:
     _ = (sold_rows, transfer_rows)
-    buckets: dict[tuple[str, str], dict[str, Any]] = {}
+    buckets: dict[tuple[str, ...], dict[str, Any]] = {}
     for row in all_rows:
         mk = str(row.get("make") or "").strip()
         md = str(row.get("model") or "").strip()
         if not mk or not md:
             continue
-        key = (mk.casefold(), md.casefold())
+        fam = resolve_comp_family_key(mk, md)
+        if fam:
+            key = ("fam", fam[0], fam[1])
+        else:
+            mn = normalize_model_case(mk, md).lower()
+            key = ("ex", mk.casefold(), mn)
         eff = _effective_price(row)
         if eff is None:
             continue
@@ -229,7 +235,7 @@ def build_regional_comps_payload(
     Median effective price per (make, model, US state) for regional_price_index.
     State comes from `state` column or parsed `location_raw`; rows without a US state are skipped.
     """
-    buckets: dict[tuple[str, str, str], dict[str, Any]] = {}
+    buckets: dict[tuple[str, ...], dict[str, Any]] = {}
     for row in all_rows:
         mk = str(row.get("make") or "").strip()
         md = str(row.get("model") or "").strip()
@@ -241,7 +247,12 @@ def build_regional_comps_payload(
         eff = _effective_price(row)
         if eff is None:
             continue
-        key = (mk.casefold(), md.casefold(), st)
+        fam = resolve_comp_family_key(mk, md)
+        if fam:
+            key = ("fam", fam[0], fam[1], st)
+        else:
+            mn = normalize_model_case(mk, md).lower()
+            key = ("ex", mk.casefold(), mn, st)
         if key not in buckets:
             buckets[key] = {
                 "make_keys": Counter(),
@@ -258,7 +269,7 @@ def build_regional_comps_payload(
         n = len(b["prices"])
         if n < min_sample:
             continue
-        _, _, state_code = key
+        state_code = key[-1]
         make_canon = b["make_keys"].most_common(1)[0][0]
         model_canon = b["model_keys"].most_common(1)[0][0]
         prices = sorted(b["prices"])

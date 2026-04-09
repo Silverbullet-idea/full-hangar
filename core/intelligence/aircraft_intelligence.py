@@ -9,7 +9,9 @@ Uses reference_service for TBO/LLP (Supabase-backed with fallback).
 from __future__ import annotations
 
 from datetime import date, datetime
+import logging
 import os
+import sys
 import re
 import statistics
 
@@ -21,8 +23,22 @@ from .engine_manufacturer_canon import normalize_engine_manufacturer_display
 from .reference_service import get_engine_reference, get_prop_reference, get_llp_rules, lookup_engine_tbo_from_model
 from .us_location import parse_us_state_from_listing_fields
 
+try:
+    from scraper.model_normalizer import resolve_comp_family_key
+except ImportError:
+    import sys
+    from pathlib import Path
+
+    _repo_root = Path(__file__).resolve().parents[2]
+    if str(_repo_root) not in sys.path:
+        sys.path.insert(0, str(_repo_root))
+    from scraper.model_normalizer import resolve_comp_family_key
+
+logger = logging.getLogger(__name__)
+
+# v2.1.2 - comp family grouping for live/precomputed market comps; comp pool outlier filter (price vs median, TTAF cap).
 # v2.1.1 - description text damage/accident mention soft penalty when NTSB severity absent and parser did not assert clean history.
-INTELLIGENCE_VERSION = "2.1.1"
+INTELLIGENCE_VERSION = "2.1.2"
 
 
 # ─── Engine Life Remaining ───────────────────────────────────────────────────
@@ -456,6 +472,7 @@ _regional_comps_cache: dict[tuple[str, str, str], dict | None] = {}
 _baseline_values_cache: dict[tuple[str, str, int | None], dict | None] = {}
 _component_sales_cache: dict[tuple[str, str], dict | None] = {}
 _exact_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
+_family_slug_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
 _family_comp_pool_cache: dict[tuple[str, str], list[dict]] = {}
 _make_comp_pool_cache: dict[str, list[dict]] = {}
 
@@ -922,6 +939,112 @@ def _pick_effective_price(row: dict) -> float | None:
     return float(price + deferred)
 
 
+def _filter_comp_pool_raw_rows(raw_rows: list[dict]) -> list[dict]:
+    if not raw_rows:
+        return raw_rows
+    prices: list[float] = []
+    for row in raw_rows:
+        p = _pick_effective_price(row)
+        if p is not None:
+            prices.append(float(p))
+    if not prices:
+        return raw_rows
+    med = float(statistics.median(prices))
+    out: list[dict] = []
+    for row in raw_rows:
+        p = _pick_effective_price(row)
+        tt = _safe_float(row.get("total_time_airframe"))
+        if tt is not None and tt > 80000.0:
+            logger.debug(
+                "comp pool exclude: total_time_airframe=%s model=%s",
+                tt,
+                row.get("model"),
+            )
+            continue
+        if p is not None and med > 0 and float(p) > 3.0 * med:
+            logger.debug(
+                "comp pool exclude: price outlier p=%s median=%s model=%s",
+                p,
+                med,
+                row.get("model"),
+            )
+            continue
+        out.append(row)
+    return out
+
+
+def _comp_pool_select_columns() -> str:
+    return (
+        "asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,"
+        "avionics_score,total_time_airframe"
+    )
+
+
+def _query_comp_pool_by_family_key(make_name: str, family_key: tuple[str, str]) -> list[dict]:
+    cache_k = (make_name.lower(), family_key[1])
+    if cache_k in _family_slug_comp_pool_cache:
+        return _family_slug_comp_pool_cache[cache_k]
+
+    client = _get_market_comps_client()
+    if client is None:
+        _family_slug_comp_pool_cache[cache_k] = []
+        return []
+
+    select_primary = _comp_pool_select_columns()
+    select_fallback = (
+        "asking_price,price_asking,deferred_total,year,time_since_overhaul,"
+        "engine_time_since_overhaul,avionics_score"
+    )
+    select_cols = select_primary
+    matched: list[dict] = []
+    offset = 0
+    max_offset = 120000
+    while len(matched) < 4000 and offset < max_offset:
+        batch: list[dict] = []
+        try:
+            batch = (
+                client.table("aircraft_listings")
+                .select(select_cols)
+                .eq("make", make_name)
+                .eq("is_active", True)
+                .order("id")
+                .range(offset, offset + 999)
+                .execute()
+                .data
+                or []
+            )
+        except Exception as exc:
+            if "column" in str(exc).lower() and "total_time" in str(exc).lower() and select_cols != select_fallback:
+                select_cols = select_fallback
+                try:
+                    batch = (
+                        client.table("aircraft_listings")
+                        .select(select_cols)
+                        .eq("make", make_name)
+                        .eq("is_active", True)
+                        .order("id")
+                        .range(offset, offset + 999)
+                        .execute()
+                        .data
+                        or []
+                    )
+                except Exception:
+                    batch = []
+            else:
+                batch = []
+        for row in batch:
+            if resolve_comp_family_key(make_name, row.get("model") or "") == family_key:
+                matched.append(row)
+        if len(batch) < 1000:
+            break
+        offset += 1000
+
+    matched = _filter_comp_pool_raw_rows(matched)
+    normalized = _build_normalized_comp_rows(matched)
+    _family_slug_comp_pool_cache[cache_k] = normalized
+    return normalized
+
+
 def _build_normalized_comp_rows(raw_rows: list[dict]) -> list[dict]:
     normalized: list[dict] = []
     for row in raw_rows:
@@ -952,10 +1075,12 @@ def _query_comp_pool_exact(make_name: str, model_name: str) -> list[dict]:
         _exact_comp_pool_cache[key] = []
         return []
 
+    select_cols = _comp_pool_select_columns()
+    rows: list[dict] = []
     try:
         response = (
             client.table("aircraft_listings")
-            .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
+            .select(select_cols)
             .eq("make", make_name)
             .eq("model", model_name)
             .eq("is_active", True)
@@ -963,8 +1088,27 @@ def _query_comp_pool_exact(make_name: str, model_name: str) -> list[dict]:
             .execute()
         )
         rows = response.data or []
-    except Exception:
-        rows = []
+    except Exception as exc:
+        if "column" in str(exc).lower() and "total_time" in str(exc).lower():
+            try:
+                response = (
+                    client.table("aircraft_listings")
+                    .select(
+                        "asking_price,price_asking,deferred_total,year,time_since_overhaul,"
+                        "engine_time_since_overhaul,avionics_score"
+                    )
+                    .eq("make", make_name)
+                    .eq("model", model_name)
+                    .eq("is_active", True)
+                    .limit(2000)
+                    .execute()
+                )
+                rows = response.data or []
+            except Exception:
+                rows = []
+        else:
+            rows = []
+    rows = _filter_comp_pool_raw_rows(rows)
     normalized = _build_normalized_comp_rows(rows)
     _exact_comp_pool_cache[key] = normalized
     return normalized
@@ -984,10 +1128,12 @@ def _query_comp_pool_family(make_name: str, model_family: str) -> list[dict]:
         _family_comp_pool_cache[key] = []
         return []
 
+    select_cols = _comp_pool_select_columns()
+    rows: list[dict] = []
     try:
         response = (
             client.table("aircraft_listings")
-            .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
+            .select(select_cols)
             .eq("make", make_name)
             .ilike("model", f"{model_family}%")
             .eq("is_active", True)
@@ -995,8 +1141,27 @@ def _query_comp_pool_family(make_name: str, model_family: str) -> list[dict]:
             .execute()
         )
         rows = response.data or []
-    except Exception:
-        rows = []
+    except Exception as exc:
+        if "column" in str(exc).lower() and "total_time" in str(exc).lower():
+            try:
+                response = (
+                    client.table("aircraft_listings")
+                    .select(
+                        "asking_price,price_asking,deferred_total,year,time_since_overhaul,"
+                        "engine_time_since_overhaul,avionics_score"
+                    )
+                    .eq("make", make_name)
+                    .ilike("model", f"{model_family}%")
+                    .eq("is_active", True)
+                    .limit(3000)
+                    .execute()
+                )
+                rows = response.data or []
+            except Exception:
+                rows = []
+        else:
+            rows = []
+    rows = _filter_comp_pool_raw_rows(rows)
     normalized = _build_normalized_comp_rows(rows)
     _family_comp_pool_cache[key] = normalized
     return normalized
@@ -1012,18 +1177,38 @@ def _query_comp_pool_make(make_name: str) -> list[dict]:
         _make_comp_pool_cache[key] = []
         return []
 
+    select_cols = _comp_pool_select_columns()
+    rows: list[dict] = []
     try:
         response = (
             client.table("aircraft_listings")
-            .select("asking_price,price_asking,deferred_total,year,time_since_overhaul,engine_time_since_overhaul,avionics_score")
+            .select(select_cols)
             .eq("make", make_name)
             .eq("is_active", True)
             .limit(4000)
             .execute()
         )
         rows = response.data or []
-    except Exception:
-        rows = []
+    except Exception as exc:
+        if "column" in str(exc).lower() and "total_time" in str(exc).lower():
+            try:
+                response = (
+                    client.table("aircraft_listings")
+                    .select(
+                        "asking_price,price_asking,deferred_total,year,time_since_overhaul,"
+                        "engine_time_since_overhaul,avionics_score"
+                    )
+                    .eq("make", make_name)
+                    .eq("is_active", True)
+                    .limit(4000)
+                    .execute()
+                )
+                rows = response.data or []
+            except Exception:
+                rows = []
+        else:
+            rows = []
+    rows = _filter_comp_pool_raw_rows(rows)
     normalized = _build_normalized_comp_rows(rows)
     _make_comp_pool_cache[key] = normalized
     return normalized
@@ -1085,14 +1270,19 @@ def _get_pricing_snapshot(listing: dict) -> dict:
             "make_count": 0,
         }
 
+    resolved_key = resolve_comp_family_key(make_name, model_name)
     if _live_comp_pool_disabled():
         exact_pool = []
         family_pool = []
         make_pool = []
     else:
-        exact_pool = _query_comp_pool_exact(make_name, model_name)
-        model_family = _derive_model_family(model_name)
-        family_pool = _query_comp_pool_family(make_name, model_family) if model_family else []
+        if resolved_key:
+            exact_pool = _query_comp_pool_by_family_key(make_name, resolved_key)
+            family_pool = []
+        else:
+            exact_pool = _query_comp_pool_exact(make_name, model_name)
+            model_family = _derive_model_family(model_name)
+            family_pool = _query_comp_pool_family(make_name, model_family) if model_family else []
         make_pool = _query_comp_pool_make(make_name)
 
     exact_stats = _robust_comp_stats(exact_pool, target_year=target_year)
@@ -1323,26 +1513,52 @@ def _get_market_comps(make: str | None, model: str | None) -> dict | None:
         _market_comps_cache[key] = None
         return None
 
+    fk = resolve_comp_family_key(make_name, model_name)
+    comps_row: dict | None = None
     try:
-        response = (
-            client.table("market_comps")
-            .select("sample_size,median_price,median_smoh,pct_with_glass")
-            .eq("make", make_name)
-            .eq("model", model_name)
-            .limit(1)
-            .execute()
-        )
-        comps_row = (response.data or [None])[0]
-        if comps_row is None:
-            fallback = (
+        if fk:
+            response = (
+                client.table("market_comps")
+                .select("sample_size,median_price,median_smoh,pct_with_glass,make,model")
+                .eq("make", make_name)
+                .execute()
+            )
+            rows = response.data or []
+            best: dict | None = None
+            for row in rows:
+                rmake = str(row.get("make") or "")
+                rmod = str(row.get("model") or "")
+                if resolve_comp_family_key(rmake, rmod) != fk:
+                    continue
+                cand = {
+                    "sample_size": row.get("sample_size"),
+                    "median_price": row.get("median_price"),
+                    "median_smoh": row.get("median_smoh"),
+                    "pct_with_glass": row.get("pct_with_glass"),
+                }
+                if best is None or int(row.get("sample_size") or 0) > int(best.get("sample_size") or 0):
+                    best = cand
+            comps_row = best
+        else:
+            response = (
                 client.table("market_comps")
                 .select("sample_size,median_price,median_smoh,pct_with_glass")
-                .ilike("make", make_name)
-                .ilike("model", model_name)
+                .eq("make", make_name)
+                .eq("model", model_name)
                 .limit(1)
                 .execute()
             )
-            comps_row = (fallback.data or [None])[0]
+            comps_row = (response.data or [None])[0]
+            if comps_row is None:
+                fallback = (
+                    client.table("market_comps")
+                    .select("sample_size,median_price,median_smoh,pct_with_glass")
+                    .ilike("make", make_name)
+                    .ilike("model", model_name)
+                    .limit(1)
+                    .execute()
+                )
+                comps_row = (fallback.data or [None])[0]
     except Exception:
         comps_row = None
 
@@ -1367,29 +1583,50 @@ def _get_regional_market_comp(make: str | None, model: str | None, state: str | 
         _regional_comps_cache[cache_key] = None
         return None
 
+    fk = resolve_comp_family_key(make_name, model_name)
     comps_row = None
     try:
-        response = (
-            client.table("market_comps_regional")
-            .select("sample_size,median_price")
-            .eq("make", make_name)
-            .eq("model", model_name)
-            .eq("state", st)
-            .limit(1)
-            .execute()
-        )
-        comps_row = (response.data or [None])[0]
-        if comps_row is None:
-            fallback = (
+        if fk:
+            response = (
+                client.table("market_comps_regional")
+                .select("sample_size,median_price,make,model")
+                .eq("make", make_name)
+                .eq("state", st)
+                .execute()
+            )
+            rows = response.data or []
+            best: dict | None = None
+            for row in rows:
+                rmake = str(row.get("make") or "")
+                rmod = str(row.get("model") or "")
+                if resolve_comp_family_key(rmake, rmod) != fk:
+                    continue
+                cand = {"sample_size": row.get("sample_size"), "median_price": row.get("median_price")}
+                if best is None or int(row.get("sample_size") or 0) > int(best.get("sample_size") or 0):
+                    best = cand
+            comps_row = best
+        else:
+            response = (
                 client.table("market_comps_regional")
                 .select("sample_size,median_price")
-                .ilike("make", make_name)
-                .ilike("model", model_name)
+                .eq("make", make_name)
+                .eq("model", model_name)
                 .eq("state", st)
                 .limit(1)
                 .execute()
             )
-            comps_row = (fallback.data or [None])[0]
+            comps_row = (response.data or [None])[0]
+            if comps_row is None:
+                fallback = (
+                    client.table("market_comps_regional")
+                    .select("sample_size,median_price")
+                    .ilike("make", make_name)
+                    .ilike("model", model_name)
+                    .eq("state", st)
+                    .limit(1)
+                    .execute()
+                )
+                comps_row = (fallback.data or [None])[0]
     except Exception:
         comps_row = None
 
