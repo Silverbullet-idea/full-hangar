@@ -30,6 +30,7 @@ export default function HeaderNavBrand({ imgClassName = "h-9 w-auto object-conta
     () =>
       [
         process.env.NEXT_PUBLIC_BRAND_LOGO_URL,
+        "/branding/FullHangarDark.png",
         "/branding/FullHangar_DarkBackground.png",
         "/branding/FullHangar.png",
         "/branding/FullHangar.svg",
