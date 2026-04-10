@@ -66,6 +66,24 @@ export function formatHours(value: number | null | undefined): string {
   return `${Math.round(value).toLocaleString("en-US")} hrs`
 }
 
+/** Human-readable marketplace name for `aircraft_listings.source` (browse cards, detail). */
+export function formatListingSourceLabel(raw: string): string {
+  const k = raw.trim().toLowerCase().replace(/_/g, "-")
+  const m: Record<string, string> = {
+    "trade-a-plane": "Trade-A-Plane",
+    controller: "Controller",
+    aerotrader: "AeroTrader",
+    aircraftforsale: "Aircraft For Sale",
+    aso: "ASO",
+    globalair: "GlobalAir",
+    barnstormers: "Barnstormers",
+    avbuyer: "AvBuyer",
+    controller_cdp: "Controller",
+    unknown: "Listing",
+  }
+  return m[k] ?? raw
+}
+
 export function formatIsoDate(value: string | null | undefined): string {
   if (!value) return "—"
   const timestamp = Date.parse(value)
