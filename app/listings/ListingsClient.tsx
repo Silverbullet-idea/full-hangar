@@ -11,7 +11,13 @@ import ListingsGridAndPagination from './components/ListingsGridAndPagination'
 import ListingsMetaBar from './components/ListingsMetaBar'
 import ListingsResultsToolbar from './components/ListingsResultsToolbar'
 import PillarLegendBar from './components/PillarLegendBar'
-import { formatHours, formatListingSourceLabel, formatPriceOrCall, formatScore } from '../../lib/listings/format'
+import {
+  formatHours,
+  formatListingSourceLabel,
+  formatPriceOrCall,
+  formatScore,
+  formatVsMedianDeltaShort,
+} from '../../lib/listings/format'
 import { parseListingFacetTokens } from '../../lib/listings/listingsQueryFromSearchParams'
 import { mergeListingsQueryParams } from './components/listingsCategoryNav'
 import {
@@ -1422,6 +1428,9 @@ export default function ListingsClient({
         : '—'
     const sourceDisplay = formatListingSourceLabel(String(l.source ?? 'unknown'))
     const ttafDisplay = formatHours(typeof l.total_time_airframe === 'number' ? l.total_time_airframe : null)
+    const vsMedRaw =
+      typeof l.vs_median_price === 'number' && Number.isFinite(l.vs_median_price) ? l.vs_median_price : null
+    const marketVsDisplay = formatVsMedianDeltaShort(vsMedRaw)
 
     const specRows: Array<[string, string]> =
       mode === 'compact'
@@ -1432,6 +1441,7 @@ export default function ListingsClient({
               ['Share Price', sharePriceText],
               ['TTAF', ttafDisplay],
               ['DOM', domDisplay],
+              ['Market', marketVsDisplay],
               ['Flip score', flipScoreText],
               ['Source', sourceDisplay],
             ]
@@ -1440,6 +1450,7 @@ export default function ListingsClient({
               ['Price', priceText],
               ['TTAF', ttafDisplay],
               ['DOM', domDisplay],
+              ['Market', marketVsDisplay],
               ['Flip score', flipScoreText],
               ['Source', sourceDisplay],
             ]
@@ -1447,15 +1458,17 @@ export default function ListingsClient({
             ['N-Number', tailText],
             ['Price', priceText],
             ...(isFractional ? [['Share Price', sharePriceText] as [string, string]] : []),
+            ['DOM', domDisplay],
+            ['Market', marketVsDisplay],
             ['Flip score', flipScoreText],
           ]
 
     const askingNum = typeof l.asking_price === 'number' ? l.asking_price : null
     const hasDisclosedPrice = askingNum != null && askingNum > 0
     const imagePriority =
-      (mode === 'tiles' && listingIndex < 12) ||
+      (mode === 'tiles' && listingIndex < 4) ||
       (mode === 'rows' && listingIndex < 4) ||
-      (mode === 'compact' && listingIndex < 10)
+      (mode === 'compact' && listingIndex < 4)
 
     const tileMeta = {
       hasDisclosedPrice,
@@ -1464,6 +1477,7 @@ export default function ListingsClient({
       priceReductionAmount: typeof l.price_reduction_amount === 'number' ? l.price_reduction_amount : null,
       trueCost: typeof l.true_cost === 'number' ? l.true_cost : null,
       askingPrice: hasDisclosedPrice ? askingNum : null,
+      vsMedianPrice: vsMedRaw,
       flipScore: typeof l.flip_score === 'number' ? l.flip_score : null,
       engineScore: typeof l.engine_score === 'number' ? l.engine_score : null,
       avionicsScore: typeof l.avionics_score === 'number' ? l.avionics_score : null,
@@ -1499,6 +1513,7 @@ export default function ListingsClient({
         tileStaggerIndex={listingIndex}
         tileMeta={tileMeta}
         imagePriority={imagePriority}
+        listIndex={listingIndex}
         onImageError={() => {
           setImageCursor((prev) => ({ ...prev, [listingKey]: currentImageIndex + 1 }))
         }}

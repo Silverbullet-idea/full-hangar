@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="No photo">
+  <rect width="640" height="480" fill="#0d1117"/>
+  <rect x="24" y="24" width="592" height="432" rx="8" fill="#1c2128" stroke="#AF4D27" stroke-width="2"/>
+  <path fill="#AF4D27" d="M320 140c-40 0-72 32-72 72v40l-88 48v36l108-20 20 100h64l20-100 108 20v-36l-88-48v-40c0-40-32-72-72-72zm0 32c22 0 40 18 40 40v36l-40-22-40 22v-36c0-22 18-40 40-40z"/>
+</svg>

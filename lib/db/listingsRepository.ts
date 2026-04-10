@@ -83,13 +83,23 @@ function isTransientSupabaseUpstreamFailure(rawMessage: unknown): boolean {
   );
 }
 
+const getAircraftListingsCountCached = unstable_cache(
+  async () => {
+    const supabase = createPrivilegedServerClient();
+    const result = await supabase
+      .from("aircraft_listings")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true);
+    if (result.error) throw new Error(result.error.message);
+    return typeof result.count === "number" ? result.count : 0;
+  },
+  ["aircraft-listings-active-count"],
+  { revalidate: 3600 }
+);
+
+/** Active listing count for headers/metrics; cached 1h (matches browse `is_active`). */
 export async function getAircraftListingsCount() {
-  const supabase = createPrivilegedServerClient();
-  const result = await supabase
-    .from("aircraft_listings")
-    .select("id", { count: "exact", head: true });
-  if (result.error) throw new Error(result.error.message);
-  return typeof result.count === "number" ? result.count : 0;
+  return getAircraftListingsCountCached();
 }
 
 export type ListingFilterOption = {
@@ -188,13 +198,88 @@ export async function getListings(filters: ListingFilters = {}) {
   return result.data ?? [];
 }
 
+/**
+ * Browse grid payload for `public_listings` — no description / JSONB blobs / long explanations.
+ * Detail pages and `getListingById` still use full `select('*')`.
+ */
 const LISTINGS_PAGE_COLUMNS_PUBLIC =
-  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,flip_score,flip_tier,flip_explanation,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_exchange_price,ev_engine_remaining_value,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_score_contribution,ev_data_quality,ev_explanation,days_on_market,price_reduced,price_reduction_amount,first_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort";
+  "id,source,source_id,url,listing_url:url,make,model,year,asking_price,value_score,flip_score,flip_tier,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label,location_state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,ev_hours_smoh,ev_tbo_hours,ev_hours_remaining,ev_pct_life_remaining,ev_exchange_price,ev_engine_remaining_value,ev_engine_overrun_liability,ev_engine_reserve_per_hour,ev_score_contribution,ev_data_quality,days_on_market,price_reduced,price_reduction_amount,first_seen_date,last_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort,manufacturer_tier,aircraft_type";
 const LISTINGS_PAGE_COLUMNS_AIRCRAFT =
-  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,undisclosed_price_sort";
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,avionics_score,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,undisclosed_price_sort,manufacturer_tier";
 /** Base-table columns only (`ev_*` are view-only; `normalizeEngineValueRows` derives them from `engine_*`). */
 const LISTINGS_PAGE_COLUMNS_AIRCRAFT_PUBLIC_FALLBACK =
-  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,days_on_market,price_reduced,price_reduction_amount,first_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort,aircraft_type";
+  "id,source,source_id,url,listing_url:source_url,make,model,year,asking_price,value_score,flip_score,flip_tier,engine_score,avionics_score,condition_score,market_opportunity_score,execution_score,stc_market_value_premium_total,avionics_installed_value,risk_level,total_time_airframe,location_label:location_raw,location_state:state,deferred_total,true_cost,primary_image_url,image_urls,time_since_overhaul,deal_rating,deal_tier,vs_median_price,n_number,is_active,engine_hours_smoh,engine_tbo_hours,engine_remaining_value,engine_overrun_liability,engine_reserve_per_hour,days_on_market,price_reduced,price_reduction_amount,first_seen_date,last_seen_date,has_glass_cockpit,is_steam_gauge,faa_matched,undisclosed_price_sort,aircraft_type,manufacturer_tier";
+
+/** Row shape returned by browse `getListingsPage` (public_listings / aircraft_listings card grid). */
+export type ListingCard = {
+  id: string;
+  source?: string | null;
+  source_id?: string | null;
+  url?: string | null;
+  listing_url?: string | null;
+  make?: string | null;
+  model?: string | null;
+  year?: number | null;
+  asking_price?: number | null;
+  value_score?: number | null;
+  flip_score?: number | null;
+  flip_tier?: string | null;
+  engine_score?: number | null;
+  avionics_score?: number | null;
+  condition_score?: number | null;
+  market_opportunity_score?: number | null;
+  execution_score?: number | null;
+  stc_market_value_premium_total?: number | null;
+  avionics_installed_value?: number | null;
+  risk_level?: string | null;
+  total_time_airframe?: number | null;
+  location_label?: string | null;
+  location_state?: string | null;
+  location_raw?: string | null;
+  deferred_total?: number | null;
+  true_cost?: number | null;
+  primary_image_url?: string | null;
+  image_urls?: unknown;
+  time_since_overhaul?: number | null;
+  deal_rating?: number | null;
+  deal_tier?: string | null;
+  vs_median_price?: number | null;
+  n_number?: string | null;
+  is_active?: boolean | null;
+  engine_hours_smoh?: number | null;
+  engine_tbo_hours?: number | null;
+  engine_remaining_value?: number | null;
+  engine_overrun_liability?: number | null;
+  engine_reserve_per_hour?: number | null;
+  ev_hours_smoh?: number | null;
+  ev_tbo_hours?: number | null;
+  ev_hours_remaining?: number | null;
+  ev_pct_life_remaining?: number | null;
+  ev_exchange_price?: number | null;
+  ev_engine_remaining_value?: number | null;
+  ev_engine_overrun_liability?: number | null;
+  ev_engine_reserve_per_hour?: number | null;
+  ev_score_contribution?: number | null;
+  ev_data_quality?: string | null;
+  days_on_market?: number | null;
+  price_reduced?: boolean | null;
+  price_reduction_amount?: number | null;
+  first_seen_date?: string | null;
+  last_seen_date?: string | null;
+  has_glass_cockpit?: boolean | null;
+  is_steam_gauge?: boolean | null;
+  faa_matched?: boolean | null;
+  undisclosed_price_sort?: number | null;
+  manufacturer_tier?: string | null;
+  aircraft_type?: string | null;
+  is_fractional_ownership?: boolean | null;
+  fractional_share_numerator?: number | null;
+  fractional_share_denominator?: number | null;
+  fractional_share_percent?: number | null;
+  fractional_share_price?: number | null;
+  fractional_full_price_estimate?: number | null;
+  fractional_review_needed?: boolean | null;
+};
 
 function columnsForListingsTable(table: string): string {
   return table === "aircraft_listings"
@@ -997,7 +1082,7 @@ async function runSimpleSearchListingsPage(
   const orderedRows = applyDealTierPreference(filteredRows, preferDealTier);
 
   return {
-    rows: orderedRows,
+    rows: orderedRows as ListingCard[],
     total: orderedRows.length,
     page,
     pageSize,
@@ -1197,14 +1282,19 @@ async function runDefaultCuratedListingsPage(
   const pagedRows = curatedRows.slice(from, to + 1);
 
   return {
-    rows: pagedRows,
+    rows: pagedRows as ListingCard[],
     total: curatedRows.length,
     page,
     pageSize,
   };
 }
 
-export async function getListingsPage(query: ListingsPageQuery = {}) {
+export async function getListingsPage(query: ListingsPageQuery = {}): Promise<{
+  rows: ListingCard[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
   const page = Math.max(1, Number(query.page ?? 1));
   const pageSize = Math.max(1, Math.min(100, Number(query.pageSize ?? 24)));
   const from = (page - 1) * pageSize;
@@ -1416,7 +1506,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
           const filteredTableRows = applyOwnershipFilterToRows(enrichedTableRows, ownershipType);
           const orderedTableRows = applyDealTierPreference(filteredTableRows, preferDealTier);
           return {
-            rows: orderedTableRows,
+            rows: orderedTableRows as ListingCard[],
             total: orderedTableRows.length,
             page,
             pageSize,
@@ -1445,7 +1535,7 @@ export async function getListingsPage(query: ListingsPageQuery = {}) {
     total = orderedRows.length;
   }
   return {
-    rows: orderedRows,
+    rows: orderedRows as ListingCard[],
     total,
     page,
     pageSize,
@@ -1561,7 +1651,7 @@ async function fetchListingFilterOptionsRowsChunked(): Promise<ListingFilterOpti
 }
 
 async function fetchDefaultListingsHomeUncached(): Promise<{
-  rows: Record<string, unknown>[];
+  rows: ListingCard[];
   total: number;
   filterOptions: ListingsFilterOptionsClientShape;
 }> {
@@ -1611,7 +1701,7 @@ const getCachedDefaultListingsHome = unstable_cache(fetchDefaultListingsHomeUnca
 export async function loadCachedDefaultListingsHomeIfEligible(
   query: ListingsPageQuery,
   resolved: { page: number; pageSize: number; sortBy: string }
-): Promise<{ rows: Record<string, unknown>[]; total: number; filterOptions: ListingsFilterOptionsClientShape } | null> {
+): Promise<{ rows: ListingCard[]; total: number; filterOptions: ListingsFilterOptionsClientShape } | null> {
   if (!isDefaultListingsLandingQuery(query)) return null;
   if (
     resolved.page !== 1 ||

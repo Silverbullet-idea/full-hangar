@@ -1,6 +1,6 @@
 # AGENTS.md — FullHangar / AircraftFlip
 # Master context file. Load this into every Claude conversation and every Cursor session.
-# Last updated: April 2026
+# Last updated: April 10, 2026
 
 ---
 
@@ -27,8 +27,8 @@ Repo root: project root contains /scraper, /core, /frontend directories
      b) Playwright stealth mode with human-like delays
      c) Residential proxy rotation (when implemented)
      d) Graceful degradation: detect challenge page, log it, skip row, alert
-   The function looks_like_challenge_html() in refresh_aerotrader_listing_media.py
-   is the canonical challenge detector. Extend it, do not replace it.
+   Canonical challenge markers live in scraper_health.py (`looks_like_challenge_html`, `CHALLENGE_MARKERS`).
+   `refresh_aerotrader_listing_media.py` imports from there — extend markers in scraper_health only, do not fork duplicate lists.
    Sites with known anti-bot: AeroTrader (DataDome), AvBuyer, Controller (intermittent)
 
 2. DATABASE WRITES
@@ -52,21 +52,28 @@ Repo root: project root contains /scraper, /core, /frontend directories
 ## CODEBASE MAP
 
 scraper/
+  scraper_health.py        — looks_like_challenge_html, log_scraper_error → scraper_errors, retry_with_backoff,
+                             SelectorConfig (primary + fallbacks), run_health_check (UTC vs prior day via RPC)
   scraper_base.py          — get_supabase(), shared DB helpers
   env_check.py             — validates environment on startup
   description_parser.py    — NLP extraction from listing text (parse_description)
   registration_parser.py   — N-number / registration normalization
   media_refresh_utils.py   — fetch_refresh_rows(), apply_media_update(), seen_within_hours()
 
-  Scrapers (requests-based):
-    aso_scraper.py          — ASO (newonly mode added — targets act_id filtered new-listings URLs)
-    controller_scraper.py   — Controller.com
+  Scrapers (requests-based — aircraft marketplaces):
+    aso_scraper.py          — ASO
+    afs_scraper.py          — AircraftForSale
+    barnstormers_scraper.py — Barnstormers
     tradaplane_scraper.py   — Trade-A-Plane
     avbuyer_scraper.py      — AvBuyer
     globalair_scraper.py    — GlobalAir (hybrid: scraper + bridge server)
 
-  Scrapers (Playwright-based):
-    aerotrader_scraper.py   — AeroTrader (DataDome evasion, fragile)
+  Scrapers (Playwright — aircraft marketplaces):
+    controller_scraper.py   — Controller.com
+    aerotrader_scraper.py   — AeroTrader (DataDome; fragile)
+
+  Other scrapers (non-marketplace / catalog — different threat model):
+    airpower_engine_scraper.py, avionics_*.py — vendor/catalog ingestion; not wired to shared challenge detection by default
 
   Bridge servers (browser extension ingestion):
     bridge_server_globalair.py — HTTP server receiving POST /ingest from extension
@@ -145,19 +152,22 @@ Context to load: This file only
 
 - [x] BACKEND — Comp family grouping, Beechcraft display names, model case deduplication (`scraper/model_normalizer.py`). **`resolve_comp_family()` / `resolve_comp_family_key()`** are the canonical comp lookup path — all future market comps queries (live pools, `market_comps`, `compute_market_comps` buckets) must go through them.
 
-Priority 1 — AGENT 1 — Self-healing scraper pipeline
-  [ ] Centralized error log table in Supabase: scraper_errors(source_site, error_type, url, timestamp, raw_error)
-  [ ] Challenge detection in ALL scrapers (not just AeroTrader) using shared looks_like_challenge_html()
-  [ ] Retry decorator with exponential backoff (max 3 attempts, 2x delay each retry)
-  [ ] Daily health check: count active listings per source_site, alert if any drops >20% vs prior day
-  [ ] Selector versioning: store CSS selectors in config dict, log when fallback selector is used
+Priority 1 — AGENT 1 — Self-healing scraper pipeline (see scraper_health.py)
+  [x] Centralized errors: table `scraper_errors` (migration `20260329120000_scraper_errors_and_price_alert_grants.sql`); Python `log_scraper_error()`; optional CLI `python scraper/scraper_health.py --summary`
+  [x] Challenge detection: shared `looks_like_challenge_html` / `detect_challenge_type` in scraper_health.py; wired on marketplace scrapers that fetch listing HTML (ASO, TAP, AFS, Barnstormers, AvBuyer, GlobalAir, AeroTrader). Controller does not run the generic HTML string matcher on every page (Distil/embeds false positives); it uses listing-card presence + CAPTCHA pause + `log_scraper_error` when session looks expired (see controller `wait_for_search_ready`).
+  [x] Retry: `retry_with_backoff` decorator in scraper_health.py (used by TAP, Barnstormers, AFS; others keep inline backoff where appropriate)
+  [x] Daily health: RPC `scraper_health_active_counts(p_day)` (migration `20260409143000_scraper_health_active_counts_rpc.sql`); `run_health_check` compares UTC today vs yesterday; `npm run pipeline:scraper:health`; Vercel cron `GET /api/cron/scraper-health` (Bearer `CRON_SECRET`, schedule in vercel.json)
+  [x] Selector versioning: `SelectorConfig` primary + fallbacks + usage counts (Controller detail price, TAP/AvBuyer/AFS/Barnstormers, etc.)
+  [x] Controller: at most one `scraper_errors` row per `wait_for_search_ready` for session-expired challenge (resume loop no longer spams DB)
+  [x] Non-marketplace scrapers: no blanket challenge wiring — vendor/catalog scripts are mostly one-offs; add `looks_like_challenge_html` + `log_scraper_error` at a single fetch entrypoint only if a run shows blocks or repeated failures.
 
-Priority 2 — AGENT 2 — Scoring model v2.0
-  [ ] Add total_time_airframe dimension to comp buckets
-  [ ] Regional pricing variance: group by state/region, compute regional_price_index
-  [ ] Damage history penalty: parse description_intelligence for accident/damage mentions
-  [ ] Avionics stack value: map known avionics to dollar values, sum as avionics_value_estimate
-  [ ] Backtest: compare score vs eventual sale price for listings marked inactive
+
+Priority 2 — AGENT 2 — Scoring model v2.0 (`INTELLIGENCE_VERSION` **2.2.0** — bump + full `backfill_scores.py --all` after deploy)
+  [x] Total time airframe in comp buckets: live comp pools expose `median_ttaf`; precomputed `market_comps.median_ttaf` from `compute_market_comps.py`; listing field `comp_median_ttaf` (migration `20260409220000_scoring_v220_columns_and_public_listings.sql`)
+  [x] Regional pricing: `market_comps_regional` + `_build_regional_pricing_for_flip` → `regional_price_index` (now persisted on `aircraft_listings` / `public_listings`)
+  [x] Damage history: text needles + NTSB/registry guards (v2.1.1+); v2.2.0 persists `description_damage_penalty` and applies up to 5 pts to `flip_score` when prose mentions damage
+  [x] Avionics stack value: `avionics_installed_value` / alias `avionics_value_estimate` (catalog dollar sum from `avionics_intelligence.avionics_score`)
+  [x] Backtest (phase 1): `scraper/backtest_flip_calibration.py` + `npm run pipeline:score:backtest-flip` — cohort stats on inactive listings; **phase 2** when realized `sold_price` exists: extend script for score vs sale error
 
 Priority 3 — AGENT 3 — Buyer MVP
   [ ] Deal alert subscription page ($49/$99/month tiers)
@@ -168,6 +178,8 @@ Priority 4 — AGENT 3 + 4 — Seller intake (Phase 2 unlock)
   [ ] Seller submission form: make/model/year, asking price, total time, engine time, location, photos
   [ ] Cross-posting queue: submitted listing triggers posting workflow to each platform
   [ ] Seller dashboard: status of each platform posting
+
+**PERF (April 10, 2026)** — Listings browse/detail: ISR `revalidate` on `/listings` and `/listings/[id]`, slim `public_listings` card `select()` (no description / `flip_explanation` / `ev_explanation`), `ListingCard` row type + cached active listing count (`getAircraftListingsCount`), long-cache `Cache-Control` + `revalidate` on `/api/listings/options`, Next `images.remotePatterns` + card `next/image`, `app/listings/loading.tsx` skeleton, hover `router.prefetch` on cards, migration `20260410120000_add_performance_indexes.sql` (run `npx supabase db push` when ready).
 
 ---
 
@@ -188,8 +200,18 @@ market_comps:
   make, model (unique together)
   sample_size, median_price, median_smoh, pct_with_glass
 
-scraper_errors: (TO BE CREATED)
-  id, source_site, error_type, url, timestamp, raw_error, resolved
+scraper_errors: (migration `20260329120000_scraper_errors_and_price_alert_grants.sql`)
+  id, source_site, error_type, url, raw_error, extra (jsonb), resolved, created_at
+
+### Performance indexes (added April 10, 2026 — migration `20260410120000_add_performance_indexes.sql`)
+
+- `idx_listings_is_active` — partial index on `is_active = true`
+- `idx_listings_deal_tier` — partial on `is_active = true` (`deal_tier`)
+- `idx_listings_flip_score` — partial, `flip_score DESC NULLS LAST`, `is_active = true`
+- `idx_listings_make` — partial on `is_active = true`
+- `idx_listings_asking_price` — partial, `asking_price IS NOT NULL`, `is_active = true`
+- `idx_listings_active_tier_score` — composite `(is_active, deal_tier, flip_score DESC)` for browse-style filters
+- `idx_listings_source` — `(source_site, source_listing_id)` for upserts / dedupe
 
 ---
 
@@ -291,7 +313,7 @@ Phase 2 requires: seller intake form + cross-posting automation + Philippine tea
 
 - Stripe buyer subscriptions (March 2026): migration `20260401000000_add_subscription_fields.sql` — `user_profiles` columns `stripe_customer_id`, `subscription_tier` (`scout`|`pro`), `subscription_status`, `subscription_period_end`. Routes `POST /api/stripe/create-checkout`, `POST /api/stripe/portal`, `POST /api/stripe/webhook` (raw body). `/account/alerts` Checkout + Customer Portal; `runPriceAlertCron` sends digests only when `subscription_status = active`. Env: see `.env.local.example` (Stripe price IDs + secrets).
 
-- Scraper Priority 1 (partial): migration `20260329120000_scraper_errors_and_price_alert_grants.sql` — `scraper_errors` table + service_role grants + `price_alert_log` INSERT for cron; `globalair_scraper` delegates to shared `looks_like_challenge_html`; AeroTrader uses shared detector for DataDome markers.
+- Scraper self-healing: `scraper_errors` + `scraper_health.py` utilities; marketplace scrapers use shared challenge detection where applicable; `scraper_health_active_counts` RPC + `/api/cron/scraper-health` + `npm run pipeline:scraper:health` (see Priority 1 queue for details).
 
 - Scoring Priority 2 (partial): `INTELLIGENCE_VERSION` **2.1.1** — `_description_damage_mention_adjustment` (text needles, skips when NTSB `most_severe_damage` set or `no_damage_history` true). **Run** `backfill_scores.py --all` after deploy.
 

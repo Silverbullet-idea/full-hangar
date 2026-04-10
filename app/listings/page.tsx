@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { connection } from "next/server"
 import ListingsBrowseDataFootnote from "./components/ListingsBrowseDataFootnote"
 import ListingsClient from "./ListingsClient"
 import { aggregateListingFilterOptionsFromRows } from '../../lib/listings/filterOptionsAggregate'
@@ -22,9 +21,10 @@ import {
   isListingsCuratedIndexable,
   toAbsoluteUrl,
 } from "../../lib/seo/site"
+import type { ListingCard } from "../../lib/db/listingsRepository"
 
-/** Fresh searchParams + DB filters per request (avoids ISR/cache collisions on filtered URLs). */
-export const dynamic = "force-dynamic"
+/** CDN ISR — listings change on scraper cadence, not per visitor. */
+export const revalidate = 86400
 
 type SearchParams = Record<string, string | string[] | undefined>
 type CategoryValue =
@@ -167,7 +167,6 @@ export default async function ListingsPage({
 }: {
   searchParams?: Promise<SearchParams>
 }) {
-  await connection()
   const resolvedSearchParams = (await searchParams) ?? {}
   const flat = toFlatSearchParamsRecord(resolvedSearchParams)
   const initialDealFilter: DealTierValue =
@@ -213,7 +212,7 @@ export default async function ListingsPage({
   const initialPriceReducedOnly = listingsQuery.priceReducedOnly === true
   const initialAddedToday = listingsQuery.addedToday === true
 
-  let initialPageData: { rows: any[]; total: number } = { rows: [], total: 0 }
+  let initialPageData: { rows: ListingCard[]; total: number } = { rows: [], total: 0 }
   let initialFilterOptions = aggregateListingFilterOptionsFromRows([])
 
   const cachedHome = await loadCachedDefaultListingsHomeIfEligible(listingsQuery, {
@@ -223,12 +222,12 @@ export default async function ListingsPage({
   })
 
   if (cachedHome) {
-    initialPageData = { rows: cachedHome.rows as any[], total: cachedHome.total }
+    initialPageData = { rows: cachedHome.rows, total: cachedHome.total }
     initialFilterOptions = cachedHome.filterOptions
   } else {
     const listingsPagePromise = getListingsPage(listingsQuery).catch((error) => {
       console.error("[listings/page] failed to load initial listings", error)
-      return { rows: [] as any[], total: 0 }
+      return { rows: [] as ListingCard[], total: 0 }
     })
     const filterOptionsPromise = getListingFilterOptionsClientPayload().catch((error) => {
       console.error("[listings/page] failed to load filter options", error)

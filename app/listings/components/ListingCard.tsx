@@ -3,8 +3,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { FLIP_TIER_CONFIG } from '../../../lib/scoring/flipTierConfig'
-import { formatMoney } from '../../../lib/listings/format'
+import { formatListingSourceLabel, formatMoney, formatVsMedianDeltaShort } from '../../../lib/listings/format'
 
 type LayoutMode = 'tiles' | 'rows' | 'compact'
 
@@ -24,6 +25,8 @@ type ListingCardProps = {
   onImageError: () => void
   /** Next/Image LCP hint for first screen of results (parent sets by index + layout). */
   imagePriority?: boolean
+  /** Position in the current page of results (0-based); used for priority loading and prefetch. */
+  listIndex?: number
   /** Staggered entrance (tiles grid); capped in CSS. */
   tileStaggerIndex?: number
   /** Extended fields for Phase 2 tiles layout */
@@ -34,6 +37,8 @@ type ListingCardProps = {
     priceReductionAmount: number | null
     trueCost: number | null
     askingPrice: number | null
+    /** asking_price − comp median (from `vs_median_price`); negative = below market. */
+    vsMedianPrice: number | null
     flipScore: number | null
     engineScore: number | null
     avionicsScore: number | null
@@ -47,23 +52,6 @@ type ListingCardProps = {
     sourceKey: string
     faaMatched: boolean
   }
-}
-
-function formatSourceLabel(raw: string): string {
-  const k = raw.trim().toLowerCase().replace(/_/g, '-')
-  const m: Record<string, string> = {
-    'trade-a-plane': 'Trade-A-Plane',
-    controller: 'Controller',
-    aerotrader: 'AeroTrader',
-    aircraftforsale: 'Aircraft For Sale',
-    aso: 'ASO',
-    globalair: 'GlobalAir',
-    barnstormers: 'Barnstormers',
-    avbuyer: 'AvBuyer',
-    'controller_cdp': 'Controller',
-    unknown: 'Listing',
-  }
-  return m[k] ?? raw
 }
 
 /** Match legacy bar fill: numeric scores clamp to [2,100] so tiny values stay visible. */
@@ -278,7 +266,11 @@ function renderSpecTable(listingKey: string, rows: Array<[string, string]>, comp
         {rows.map(([label, value]) => (
           <tr key={`${listingKey}-${label}`} className="border-b border-[#2d394a] last:border-b-0">
             <th className="w-[42%] px-2 py-1.5 text-left font-medium text-[#9CA3AF]">{label}</th>
-            <td className={`px-2 py-1.5 text-right font-semibold ${label === 'Price' ? 'text-[#22c55e]' : 'text-white'}`}>{value}</td>
+            <td
+              className={`px-2 py-1.5 text-right font-semibold ${label === 'Price' || label === 'Share Price' ? 'text-[#22c55e]' : 'text-white'}`}
+            >
+              {value}
+            </td>
           </tr>
         ))}
       </tbody>
@@ -286,46 +278,63 @@ function renderSpecTable(listingKey: string, rows: Array<[string, string]>, comp
   )
 }
 
-function renderImageNode(props: {
+function compactSpecValueClass(label: string): string {
+  if (label === 'Price' || label === 'Share Price') return 'text-[#22c55e]'
+  return 'text-white'
+}
+
+/** Two columns per band so extra fields fit without extra vertical bands vs. the old single-column table. */
+const PLACEHOLDER = '/images/aircraft-placeholder.svg'
+
+function ListingCardMedia(props: {
   mode: LayoutMode
   imageUrl: string
   titleText: string
   onImageError: () => void
   tileCover?: boolean
   priority?: boolean
+  /** 0-based index in the current results list — first four may use priority loading. */
+  listIndex?: number
 }) {
-  const { mode, imageUrl, titleText, onImageError, tileCover, priority = false } = props
-  const shouldShowImage = Boolean(imageUrl)
-  const lazyOrPriority = priority ? { priority: true as const } : { loading: 'lazy' as const }
+  const { mode, imageUrl, titleText, onImageError, tileCover, priority = false, listIndex = 0 } = props
+  const [usePlaceholder, setUsePlaceholder] = useState(false)
+  const trimmed = imageUrl.trim()
+  const src = usePlaceholder || !trimmed ? PLACEHOLDER : trimmed
+  const eager = priority && listIndex < 4
+  const lazyOrPriority = eager ? { priority: true as const } : { loading: 'lazy' as const }
 
-  if (tileCover && shouldShowImage) {
+  const handleError = () => {
+    if (!usePlaceholder) setUsePlaceholder(true)
+    onImageError()
+  }
+
+  if (tileCover && (trimmed || usePlaceholder)) {
     return (
-      <Image
-        src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
-        alt={`${titleText} listing photo`.trim()}
-        width={640}
-        height={360}
-        sizes="(max-width: 768px) 100vw, 400px"
-        unoptimized
-        className="h-full w-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.04]"
-        {...lazyOrPriority}
-        onError={onImageError}
-      />
+      <div className="relative h-full w-full">
+        <Image
+          src={src}
+          alt={`${titleText} listing photo`.trim()}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-transform duration-[400ms] group-hover:scale-[1.04]"
+          {...lazyOrPriority}
+          onError={handleError}
+        />
+      </div>
     )
   }
 
   if (mode === 'compact') {
-    return shouldShowImage ? (
+    return trimmed || usePlaceholder ? (
       <Image
-        src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+        src={src}
         alt={`${titleText} listing photo`.trim()}
         width={112}
         height={84}
         sizes="112px"
-        unoptimized
         className="h-[84px] w-28 shrink-0 rounded bg-[#0f141d] object-contain"
         {...lazyOrPriority}
-        onError={onImageError}
+        onError={handleError}
       />
     ) : (
       <div className="flex h-[84px] w-28 shrink-0 items-center justify-center rounded border border-[#3A4454] bg-[#141922] text-[11px] text-[#B2B2B2]">
@@ -334,19 +343,18 @@ function renderImageNode(props: {
     )
   }
 
-  if (shouldShowImage) {
+  if (trimmed || usePlaceholder) {
     if (mode === 'rows') {
       return (
         <Image
-          src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+          src={src}
           alt={`${titleText} listing photo`.trim()}
           width={288}
           height={216}
           sizes="(max-width: 1024px) 100vw, 288px"
-          unoptimized
           className="h-[216px] w-full rounded bg-[#0f141d] object-contain lg:w-72"
           {...lazyOrPriority}
-          onError={onImageError}
+          onError={handleError}
         />
       )
     }
@@ -354,24 +362,61 @@ function renderImageNode(props: {
     return (
       <div className="relative mb-3 aspect-[4/3] w-full overflow-hidden rounded bg-[#0f141d]">
         <Image
-          src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+          src={src}
           alt={`${titleText} listing photo`.trim()}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          unoptimized
           className="object-contain"
           {...lazyOrPriority}
-          onError={onImageError}
+          onError={handleError}
         />
       </div>
     )
   }
 
   return (
-    <div className={mode === 'rows'
-      ? 'flex h-[216px] w-full items-center justify-center rounded border border-[#3A4454] bg-[#141922] text-[#B2B2B2] lg:w-72'
-      : 'mb-3 flex aspect-[4/3] w-full items-center justify-center rounded border border-[#3A4454] bg-[#141922] text-[#B2B2B2]'}>
+    <div
+      className={
+        mode === 'rows'
+          ? 'flex h-[216px] w-full items-center justify-center rounded border border-[#3A4454] bg-[#141922] text-[#B2B2B2] lg:w-72'
+          : 'mb-3 flex aspect-[4/3] w-full items-center justify-center rounded border border-[#3A4454] bg-[#141922] text-[#B2B2B2]'
+      }
+    >
       Photo unavailable
+    </div>
+  )
+}
+
+function renderCompactSpecGrid(listingKey: string, rows: Array<[string, string]>) {
+  const bands: Array<Array<[string, string]>> = []
+  for (let i = 0; i < rows.length; i += 2) {
+    const left = rows[i]
+    const right = rows[i + 1]
+    if (left) bands.push(right ? [left, right] : [left])
+  }
+  return (
+    <div className="mt-2 w-full overflow-hidden rounded-md border border-[#3A4454] bg-[#141922] text-[10px] leading-tight">
+      {bands.map((cells, idx) => (
+        <div
+          key={`${listingKey}-band-${idx}`}
+          className={`grid border-b border-[#2d394a] last:border-b-0 ${cells.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
+        >
+          {cells.map(([label, value], j) => (
+            <div
+              key={`${listingKey}-${label}-${idx}-${j}`}
+              className={`flex min-h-0 min-w-0 items-baseline justify-between gap-1.5 px-2 py-1.5 ${j === 1 ? 'border-l border-[#2d394a]' : ''}`}
+            >
+              <span className="shrink-0 font-medium text-[#9CA3AF]">{label}</span>
+              <span
+                className={`min-w-0 flex-1 truncate text-right font-semibold ${compactSpecValueClass(label)}`}
+                title={value}
+              >
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -391,9 +436,12 @@ export default function ListingCard({
   specRows,
   onImageError,
   imagePriority = false,
+  listIndex = 0,
   tileStaggerIndex = 0,
   tileMeta,
 }: ListingCardProps) {
+  const router = useRouter()
+  const prefetchDetail = () => router.prefetch(detailHref)
   const suppressTierForNoPrice = tileMeta != null && !tileMeta.hasDisclosedPrice
   const flipKey = String(flipTier ?? '').trim().toUpperCase()
   const flipCfg = FLIP_TIER_CONFIG[flipKey]
@@ -452,7 +500,7 @@ export default function ListingCard({
         ? flipCfg.label.toUpperCase()
         : ''
 
-    const locLine = `${locationText} — ${formatSourceLabel(m.sourceKey)}`
+    const locLine = `${locationText} — ${formatListingSourceLabel(m.sourceKey)}`
     const delayMs = Math.min(tileStaggerIndex, 6) * 50
     const pillarIdBase = listingKey.replace(/[^a-zA-Z0-9_-]/g, '_')
 
@@ -461,17 +509,22 @@ export default function ListingCard({
         className={`fh-listing-card-enter group overflow-hidden rounded-xl border bg-[var(--fh-bg2)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[2px] hover:border-[var(--fh-border-orange)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${exceptional ? 'border-[rgba(249,115,22,0.35)] hover:border-[rgba(249,115,22,0.55)]' : 'border-[var(--fh-border)]'}`}
         style={{ animationDelay: `${delayMs}ms` }}
       >
-        <Link href={detailHref} className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]">
+        <Link
+          href={detailHref}
+          onMouseEnter={prefetchDetail}
+          className="block text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fh-orange)]"
+        >
           <div className="relative h-[180px] overflow-hidden bg-[var(--fh-bg3)]">
             {imageUrl ? (
-              renderImageNode({
-                mode,
-                imageUrl,
-                titleText,
-                onImageError,
-                tileCover: true,
-                priority: imagePriority,
-              })
+              <ListingCardMedia
+                mode={mode}
+                imageUrl={imageUrl}
+                titleText={titleText}
+                onImageError={onImageError}
+                tileCover
+                priority={imagePriority}
+                listIndex={listIndex}
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--fh-bg4)] to-[var(--fh-bg)] text-4xl text-[var(--fh-text-muted)]">
                 ✈
@@ -589,6 +642,21 @@ export default function ListingCard({
                     True cost est. ~{formatMoney(m.trueCost)}…
                   </p>
                 ) : null}
+                {typeof m.vsMedianPrice === 'number' && Number.isFinite(m.vsMedianPrice) ? (
+                  <p className="mt-1.5 text-[11px] leading-snug" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    <span
+                      className={
+                        m.vsMedianPrice < 0
+                          ? 'text-emerald-500'
+                          : m.vsMedianPrice > 0
+                            ? 'text-amber-500 [data-theme=light]:text-amber-600'
+                            : 'text-[var(--fh-text-muted)]'
+                      }
+                    >
+                      {formatVsMedianDeltaShort(m.vsMedianPrice)}
+                    </span>
+                  </p>
+                ) : null}
               </>
             ) : (
               <div className="mt-2 space-y-2">
@@ -677,7 +745,7 @@ export default function ListingCard({
             className="rounded border border-[var(--fh-border)] bg-[var(--fh-bg)] px-2 py-0.5 text-[10px] text-[var(--fh-text-dim)]"
             style={{ fontFamily: 'var(--font-dm-sans), monospace' }}
           >
-            {formatSourceLabel(m.sourceKey)}
+            {formatListingSourceLabel(m.sourceKey)}
           </span>
           {m.faaMatched ? (
             <span
@@ -707,13 +775,23 @@ export default function ListingCard({
     )
   }
 
-  const imageNode = renderImageNode({ mode, imageUrl, titleText, onImageError, priority: imagePriority })
+  const imageNode = (
+    <ListingCardMedia
+      mode={mode}
+      imageUrl={imageUrl}
+      titleText={titleText}
+      onImageError={onImageError}
+      priority={imagePriority}
+      listIndex={listIndex}
+    />
+  )
   const pillarIdBaseRows = listingKey.replace(/[^a-zA-Z0-9_-]/g, '_')
 
   if (mode === 'rows') {
     return (
       <a
         href={detailHref}
+        onMouseEnter={prefetchDetail}
         className="block rounded-lg border border-[#3A4454] bg-[#1a1a1a] p-3 transition-colors hover:border-brand-burn"
       >
         <div className="flex flex-col gap-3 lg:flex-row">
@@ -736,6 +814,14 @@ export default function ListingCard({
                   aria-label={`Flip opportunity score: ${Math.round(tileMeta!.flipScore!)} out of 100, tier: ${flipKey}`}
                 >
                   {flipCfg!.label}
+                </span>
+              ) : null}
+              {showFlipScore && typeof tileMeta?.flipScore === 'number' && Number.isFinite(tileMeta.flipScore) ? (
+                <span
+                  className="shrink-0 rounded border border-[#3A4454] bg-[#0f141d] px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums text-white"
+                  title="Flip opportunity score (0–100)"
+                >
+                  {Math.round(tileMeta.flipScore)}
                 </span>
               ) : null}
               {engineBadgeText ? (
@@ -776,6 +862,7 @@ export default function ListingCard({
     return (
       <a
         href={detailHref}
+        onMouseEnter={prefetchDetail}
         className="block rounded-md border border-[#3A4454] bg-[#1a1a1a] p-2 transition-colors hover:border-brand-burn"
       >
         <div className="flex items-start gap-2">
@@ -801,6 +888,14 @@ export default function ListingCard({
                     {flipCfg!.label}
                   </span>
                 ) : null}
+                {showFlipScore && typeof tileMeta?.flipScore === 'number' && Number.isFinite(tileMeta.flipScore) ? (
+                  <span
+                    className="shrink-0 rounded border border-[#3A4454] bg-[#0f141d] px-1 py-0.5 font-mono text-[9px] font-bold tabular-nums text-white"
+                    title="Flip opportunity score (0–100)"
+                  >
+                    {Math.round(tileMeta.flipScore)}
+                  </span>
+                ) : null}
                 {engineBadgeText ? (
                   <span
                     className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-semibold ${engineBadgeClass ?? 'border-[#3A4454] bg-[#141922] text-[#B2B2B2]'}`}
@@ -814,7 +909,7 @@ export default function ListingCard({
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            {renderSpecTable(listingKey, specRows, true)}
+            {renderCompactSpecGrid(listingKey, specRows)}
           </div>
         </div>
       </a>
@@ -824,6 +919,7 @@ export default function ListingCard({
   return (
     <a
       href={detailHref}
+      onMouseEnter={prefetchDetail}
       className="block rounded-lg border border-brand-dark bg-[#1a1a1a] p-4 transition-colors hover:border-brand-burn"
     >
       {imageNode}
@@ -844,6 +940,14 @@ export default function ListingCard({
             aria-label={`Flip opportunity score: ${Math.round(tileMeta!.flipScore!)} out of 100, tier: ${flipKey}`}
           >
             {flipCfg!.label}
+          </span>
+        ) : null}
+        {showFlipScore && typeof tileMeta?.flipScore === 'number' && Number.isFinite(tileMeta.flipScore) ? (
+          <span
+            className="shrink-0 rounded border border-[#3A4454] bg-[#0f141d] px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums text-white"
+            title="Flip opportunity score (0–100)"
+          >
+            {Math.round(tileMeta.flipScore)}
           </span>
         ) : null}
         {engineBadgeText ? (

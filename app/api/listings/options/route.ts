@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getListingFilterOptionsClientPayload } from "../../../../lib/db/listingsRepository";
+
+export const revalidate = 86400;
 import type { ListingsFilterOptionsClientShape } from "../../../../lib/listings/filterOptionsAggregate";
 import {
   beechcraftPairModelLabel,
@@ -85,7 +87,7 @@ export async function GET() {
       { data, error: null },
       {
         headers: {
-          "Cache-Control": "s-maxage=300, stale-while-revalidate=900",
+          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=3600",
           "X-Response-Time-Ms": String(elapsedMs),
         },
       }
