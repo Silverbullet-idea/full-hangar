@@ -11,7 +11,7 @@ import ListingsGridAndPagination from './components/ListingsGridAndPagination'
 import ListingsMetaBar from './components/ListingsMetaBar'
 import ListingsResultsToolbar from './components/ListingsResultsToolbar'
 import PillarLegendBar from './components/PillarLegendBar'
-import { formatPriceOrCall, formatScore } from '../../lib/listings/format'
+import { formatHours, formatListingSourceLabel, formatPriceOrCall, formatScore } from '../../lib/listings/format'
 import { parseListingFacetTokens } from '../../lib/listings/listingsQueryFromSearchParams'
 import { mergeListingsQueryParams } from './components/listingsCategoryNav'
 import {
@@ -25,6 +25,7 @@ import {
   type CategoryValue,
   type ListingSourceKey,
 } from './components/listingsClientUtils'
+import { beechcraftFamilyTokenLabel } from '../../lib/listings/beechcraftDisplayNames'
 
 function mergeListingsUrlSnapshot(params: URLSearchParams, searchParams: ReadonlyURLSearchParams) {
   const keys = [
@@ -824,8 +825,15 @@ export default function ListingsClient({
     const pairs = makeFilter === 'all'
       ? filterOptions.modelPairs
       : filterOptions.modelPairs.filter((pair) => pair.make.toLowerCase() === makeFilter.toLowerCase())
-    return Array.from(new Set(pairs.map((pair) => deriveModelFamily(String(pair.model ?? ''))).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b))
+    const families = Array.from(
+      new Set(pairs.map((pair) => deriveModelFamily(String(pair.model ?? ''))).filter(Boolean))
+    )
+    const isBeech = makeFilter.toLowerCase() === 'beechcraft'
+    const rows = families.map((token) => ({
+      value: token,
+      label: isBeech ? beechcraftFamilyTokenLabel(token) : token,
+    }))
+    return rows.sort((a, b) => a.label.localeCompare(b.label))
   }, [filterOptions.modelPairs, makeFilter])
 
   const subModelOptions = useMemo(() => {
@@ -1408,12 +1416,39 @@ export default function ListingsClient({
             ? `~${hoursRemainingRounded?.toLocaleString('en-US') ?? '0'}hrs`
             : 'Low'
 
-    const specRows: Array<[string, string]> = [
-      ['N-Number', tailText],
-      ['Price', priceText],
-      ...(isFractional ? [['Share Price', sharePriceText] as [string, string]] : []),
-      ['Flip score', flipScoreText],
-    ]
+    const domDisplay =
+      typeof l.days_on_market === 'number' && Number.isFinite(l.days_on_market) && l.days_on_market >= 0
+        ? `${Math.round(l.days_on_market)}d`
+        : '—'
+    const sourceDisplay = formatListingSourceLabel(String(l.source ?? 'unknown'))
+    const ttafDisplay = formatHours(typeof l.total_time_airframe === 'number' ? l.total_time_airframe : null)
+
+    const specRows: Array<[string, string]> =
+      mode === 'compact'
+        ? isFractional
+          ? [
+              ['N-Number', tailText],
+              ['Price', priceText],
+              ['Share Price', sharePriceText],
+              ['TTAF', ttafDisplay],
+              ['DOM', domDisplay],
+              ['Flip score', flipScoreText],
+              ['Source', sourceDisplay],
+            ]
+          : [
+              ['N-Number', tailText],
+              ['Price', priceText],
+              ['TTAF', ttafDisplay],
+              ['DOM', domDisplay],
+              ['Flip score', flipScoreText],
+              ['Source', sourceDisplay],
+            ]
+        : [
+            ['N-Number', tailText],
+            ['Price', priceText],
+            ...(isFractional ? [['Share Price', sharePriceText] as [string, string]] : []),
+            ['Flip score', flipScoreText],
+          ]
 
     const askingNum = typeof l.asking_price === 'number' ? l.asking_price : null
     const hasDisclosedPrice = askingNum != null && askingNum > 0
