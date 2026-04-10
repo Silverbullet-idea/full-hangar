@@ -111,3 +111,21 @@ export function formatSeatsEngines(seats: number | null, engines: number | null)
   if (!seatText && !engineText) return null
   return `${seatText ?? "—"} / ${engineText ?? "—"}`
 }
+
+/**
+ * `vs_median_price` from `public_listings`: asking − comp median (dollars).
+ * Negative = listed below the cohort median.
+ */
+export function formatVsMedianDeltaShort(vs: number | null | undefined): string {
+  if (typeof vs !== "number" || !Number.isFinite(vs)) return "—"
+  const r = Math.round(vs)
+  if (r === 0) return "At median"
+  const abs = Math.abs(r)
+  const money = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(abs)
+  if (r < 0) return `${money} below median`
+  return `${money} above median`
+}
