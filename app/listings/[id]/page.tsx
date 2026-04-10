@@ -40,6 +40,11 @@ import {
   type ParsedSellerDescription,
 } from "./components/detailParsingUtils"
 import {
+  formatFaaEngineTypeWithCode,
+  formatFaaRegistrationStatusWithCode,
+  formatFaaTypeAircraftWithCode,
+} from "../../../lib/listings/faaRegistryDisplay"
+import {
   formatCompTier,
   formatHours,
   formatIsoDate,
@@ -303,7 +308,9 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   const engineManufacturerText =
     normalizeEngineManufacturerDisplay(engineManufacturerMerged) || engineManufacturerMerged
   const faaTypeEngine = pickText(raw, ["faa_type_engine_detail"])
-  const normalizedEngineType = normalizeEngineTypeLabel(faaTypeEngine, engineModelText, engineManufacturerText)
+  const faaTypeAircraftRaw = pickText(raw, ["faa_type_aircraft_detail", "faa_type_aircraft"])
+  const normalizedEngineType = formatFaaEngineTypeWithCode(faaTypeEngine, engineModelText, engineManufacturerText)
+  const faaTypeAircraftDisplay = formatFaaTypeAircraftWithCode(faaTypeAircraftRaw)
   const faaAirworthinessCategory = pickText(raw, ["faa_airworthiness_category_detail"])
   const faaAirworthinessClassification = pickText(raw, ["faa_airworthiness_classification_detail"])
   const faaAirworthinessDate = pickText(raw, ["faa_aw_date_detail"])
@@ -457,6 +464,7 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
       faaModeSBase16 ||
       faaEngineManufacturer ||
       faaTypeEngine ||
+      faaTypeAircraftRaw ||
       faaAirworthinessCategory ||
       faaAirworthinessClassification ||
       faaAirworthinessDate ||
@@ -568,10 +576,16 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
   if (hasDisplayValue(airworthyText) && airworthyText !== "Unknown") {
     engineRows.push(["Airworthy", safeDisplay(airworthyText, { unknownAsDash: true })])
   }
+  const faaStatusDisplay = formatFaaRegistrationStatusWithCode(faaStatusCodeDetail || faaStatus)
+  const faaEngineCategoryCompact =
+    normalizedEngineType ?? (faaTypeEngine || engineModelText)
   const faaRows: Array<[string, ReactNode]> = [
     ["N-Number", safeDisplay(nNumber)],
     ["FAA Match", faaMatched ? "Matched" : hasFaaSnapshot ? "Partial" : "Pending enrich"],
-    ["FAA Status", safeDisplay(faaStatusCodeDetail || faaStatus)],
+    ["FAA Status", safeDisplay(faaStatusDisplay)],
+    ...(faaTypeAircraftDisplay
+      ? ([["Type Aircraft", safeDisplay(faaTypeAircraftDisplay)]] as Array<[string, ReactNode]>)
+      : []),
     ["Registration Alert", safeDisplay(registrationAlert)],
     ["Registered Owner", safeDisplay(faaRegisteredOwnerName || faaOwner)],
     ["Owner Street", safeDisplay(faaRegisteredOwnerStreet)],
@@ -665,11 +679,11 @@ export default async function ListingDetailPage({ params, searchParams }: Listin
     pickText(raw, ["faa_aircraft_mfr_mdl_code", "faa_mfr_mdl_code", "mfr_mdl_code", "faa_model_code"]) || null
   const faaCompactRows: Array<[string, ReactNode]> = [
     ["N-Number", safeDisplay(nNumber)],
-    ["FAA Status", safeDisplay(faaStatusCodeDetail || faaStatus)],
+    ["FAA Status", safeDisplay(faaStatusDisplay)],
     ["Year Manufactured", safeDisplay(listingRow.year)],
     ["Cert Issued", safeDisplay(formatIsoDate(faaCertIssueDateDetail || faaCertDate))],
     ["Registered Owner", safeDisplay(faaRegisteredOwnerName || faaOwner)],
-    ["FAA Engine Type", safeDisplay(faaTypeEngine || engineModelText)],
+    ["FAA Engine Type", safeDisplay(faaEngineCategoryCompact)],
     ["MFR Model Code", safeDisplay(faaModelCode)],
   ]
   const faaFullTable = (
@@ -1272,52 +1286,6 @@ function normalizeTboReferenceLine(value: string | null): string | null {
   if (!compact) return null
   const firstSentence = compact.split(".")[0]?.trim() ?? compact
   return firstSentence.length > 160 ? `${firstSentence.slice(0, 157)}...` : firstSentence
-}
-
-function normalizeEngineTypeLabel(
-  faaTypeEngine: string | null,
-  engineModel: string | null,
-  engineManufacturer: string | null
-): string | null {
-  const model = (engineModel || "").toLowerCase()
-  const manufacturer = (engineManufacturer || "").toLowerCase()
-  const faaRaw = (faaTypeEngine || "").trim()
-  const faa = faaRaw.toLowerCase()
-
-  if (model.includes("rotax") || manufacturer.includes("rotax")) return "Rotax"
-  if (faa.includes("rotax")) return "Rotax"
-
-  const numericType = /^\d+$/.test(faaRaw) ? Number(faaRaw) : null
-  if (numericType !== null) {
-    if ([1, 7, 8].includes(numericType)) return "Piston"
-    if ([2, 3, 4, 5, 6].includes(numericType)) return "Turbine"
-  }
-
-  if (
-    faa.includes("recip") ||
-    faa.includes("piston") ||
-    faa.includes("4 cycle") ||
-    faa.includes("4-cycle") ||
-    faa.includes("2 cycle") ||
-    faa.includes("2-cycle")
-  ) {
-    return "Piston"
-  }
-
-  if (
-    faa.includes("turb") ||
-    faa.includes("jet") ||
-    faa.includes("shaft") ||
-    faa.includes("fan") ||
-    model.includes("pt6") ||
-    model.includes("tpe") ||
-    model.includes("m601")
-  ) {
-    return "Turbine"
-  }
-
-  if (faaRaw) return "?"
-  return null
 }
 
 function hasDisplayValue(value: unknown): boolean {
