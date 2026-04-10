@@ -36,6 +36,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "hourly",
       priority: 0.95,
     },
+    {
+      url: toAbsoluteUrl("/privacy"),
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.25,
+    },
+    {
+      url: toAbsoluteUrl("/terms"),
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.25,
+    },
   ]
 
   const curatedEntries = [...CATEGORY_LANDING_PATHS, ...CURATED_MAKE_LANDING_PATHS].map((path) => ({

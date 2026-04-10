@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from supabase import Client
 
 try:
+    from listing_category_infer import CONTROLLER_SCRAPER_CATEGORY_ROWS
     from adaptive_rate import AdaptiveRateLimiter
     from config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
     from description_parser import parse_description, sanitize_engine_model
@@ -54,6 +55,7 @@ try:
     )
     from scraper_health import SelectorConfig
 except ImportError:  # pragma: no cover
+    from .listing_category_infer import CONTROLLER_SCRAPER_CATEGORY_ROWS
     from .adaptive_rate import AdaptiveRateLimiter
     from .config import get_makes_for_tiers, get_manufacturer_tier, normalize_manufacturer
     from .description_parser import parse_description, sanitize_engine_model
@@ -153,27 +155,10 @@ def start_resume_server(port: int = RESUME_SERVER_PORT) -> Optional[HTTPServer]:
 
 _parse_price = parse_listing_price_text
 
-# Confirmed from Controller search URL patterns in DevTools and external task notes.
-CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {
-    "single_piston": (6, "single_engine_piston"),
-    "single_engine_piston": (6, "single_engine_piston"),
-    "twin_piston": (8, "multi_engine_piston"),
-    "twin_engine_piston": (8, "multi_engine_piston"),
-    "multi_engine_piston": (8, "multi_engine_piston"),
-    "jet": (3, "jet"),
-    "jets": (3, "jet"),
-    "turboprop": (8, "turboprop"),
-    "turbine_helicopter": (7, "helicopter"),
-    "piston_helicopter": (5, "helicopter"),
-    "light_sport": (433, "light_sport"),
-    "light_sport_aircraft": (433, "light_sport"),
-    "experimental": (2, "experimental"),
-    "experimental_homebuilt": (2, "experimental"),
-    "piston_float": (1, "amphibious_float"),
-    "piston_amphibious_floatplanes": (1, "amphibious_float"),
-    "turbine_float": (71, "amphibious_float"),
-    "turbine_amphibious_floatplanes": (71, "amphibious_float"),
-}
+# Category IDs align with browser-extension CONTROLLER_CATEGORY_ROUTES (twin=9, turboprop=8).
+CONTROLLER_CATEGORIES: dict[str, tuple[int, str]] = {}
+for _key, _cid, _atype in CONTROLLER_SCRAPER_CATEGORY_ROWS:
+    CONTROLLER_CATEGORIES[_key] = (_cid, _atype)
 
 
 async def save_session_state(context, session_file: Path) -> None:
@@ -1710,6 +1695,12 @@ async def main() -> None:
         help="Optional category-mode scrape (uses Controller Category IDs).",
     )
     parser.add_argument("--manufacturer", default="", help="Optional make/manufacturer filter for category mode.")
+    parser.add_argument(
+        "--default-aircraft-type",
+        default="single_engine_piston",
+        help="aircraft_type stored on each card in keyword search mode (category unknown). "
+        "Category mode (--category) sets this per Controller category automatically.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print listings and do not save to DB")
     parser.add_argument("--limit", type=int, default=None, help="Max listings per make (default: no limit)")
     parser.add_argument("--no-detail", action="store_true", help="Skip detail-page enrichment for fast smoke tests")
@@ -1789,6 +1780,10 @@ async def main() -> None:
             makes = list(makes)
             random.shuffle(makes)
         log.info(f"Makes to scrape: {makes}")
+        log.info(
+            "Keyword-search mode: using default aircraft_type=%s on listing cards (set --default-aircraft-type to override).",
+            args.default_aircraft_type,
+        )
     checkpoint_file = Path(args.checkpoint_file)
     failed_file = Path(args.failed_file)
     checkpoint_data = load_checkpoint(checkpoint_file) if args.resume and not category_mode else None
@@ -2007,6 +2002,7 @@ async def main() -> None:
                             make=make,
                             limit=make_limit,
                             fetch_details=fetch_details,
+                            default_aircraft_type=str(args.default_aircraft_type or "single_engine_piston"),
                             start_page=start_page,
                             on_page_complete=on_page_complete,
                             supabase=supabase,

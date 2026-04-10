@@ -357,6 +357,93 @@ export default function ListingsFiltersSidebar({
         </FilterAccordion>
 
         <FilterAccordion
+          title="Aircraft"
+          open={accOpen.aircraft}
+          onToggle={() => setAccOpen((p) => ({ ...p, aircraft: !p.aircraft }))}
+        >
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Make
+            <select
+              value={makeFilter}
+              onChange={(e) => {
+                setMakeFilter(e.target.value)
+                setModelFilter('')
+                setSubModelFilter('')
+              }}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All makes</option>
+              {makeOptions.map((make) => (
+                <option key={make} value={make}>
+                  {make}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Model
+            <select
+              value={modelFilter}
+              onChange={(e) => {
+                setModelFilter(e.target.value)
+                setSubModelFilter('')
+              }}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="">{makeFilter === 'all' ? 'Any model family…' : 'Model family…'}</option>
+              {modelOptions.map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+          </label>
+          {modelFilter ? (
+            <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+              Sub model
+              <select
+                value={subModelFilter}
+                onChange={(e) => setSubModelFilter(e.target.value)}
+                className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+              >
+                <option value="">Any sub model…</option>
+                {subModelOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Deal type
+            <select
+              value={dealFilter}
+              onChange={(e) => setDealFilter(e.target.value as DealTierFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All listings</option>
+              <option value="TOP_DEALS">HOT + GOOD (top flips)</option>
+              <option value="HOT">HOT — top flip opportunities</option>
+              <option value="GOOD">GOOD — solid deals</option>
+              <option value="FAIR">FAIR — worth a look</option>
+              <option value="PASS">PASS — not competitive</option>
+            </select>
+          </label>
+          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
+            Price status
+            <select
+              value={priceStatus}
+              onChange={(e) => setPriceStatus(e.target.value as PriceStatusFilter)}
+              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
+            >
+              <option value="all">All listings</option>
+              <option value="priced">Priced only</option>
+            </select>
+          </label>
+        </FilterAccordion>
+
+        <FilterAccordion
           title="Score pillars"
           badge="MIN"
           open={accOpen.scorePillars}
@@ -559,93 +646,6 @@ export default function ListingsFiltersSidebar({
               </label>
             ))}
           </div>
-        </FilterAccordion>
-
-        <FilterAccordion
-          title="Aircraft"
-          open={accOpen.aircraft}
-          onToggle={() => setAccOpen((p) => ({ ...p, aircraft: !p.aircraft }))}
-        >
-          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-            Make
-            <select
-              value={makeFilter}
-              onChange={(e) => {
-                setMakeFilter(e.target.value)
-                setModelFilter('')
-                setSubModelFilter('')
-              }}
-              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-            >
-              <option value="all">All makes</option>
-              {makeOptions.map((make) => (
-                <option key={make} value={make}>
-                  {make}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-            Model
-            <select
-              value={modelFilter}
-              onChange={(e) => {
-                setModelFilter(e.target.value)
-                setSubModelFilter('')
-              }}
-              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-            >
-              <option value="">{makeFilter === 'all' ? 'Any model family…' : 'Model family…'}</option>
-              {modelOptions.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
-          </label>
-          {modelFilter ? (
-            <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-              Sub model
-              <select
-                value={subModelFilter}
-                onChange={(e) => setSubModelFilter(e.target.value)}
-                className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-              >
-                <option value="">Any sub model…</option>
-                {subModelOptions.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-            Deal type
-            <select
-              value={dealFilter}
-              onChange={(e) => setDealFilter(e.target.value as DealTierFilter)}
-              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-            >
-              <option value="all">All listings</option>
-              <option value="TOP_DEALS">HOT + GOOD (top flips)</option>
-              <option value="HOT">HOT — top flip opportunities</option>
-              <option value="GOOD">GOOD — solid deals</option>
-              <option value="FAIR">FAIR — worth a look</option>
-              <option value="PASS">PASS — not competitive</option>
-            </select>
-          </label>
-          <label className="mb-2 block text-xs text-[var(--fh-text-dim)]">
-            Price status
-            <select
-              value={priceStatus}
-              onChange={(e) => setPriceStatus(e.target.value as PriceStatusFilter)}
-              className="mt-1 block w-full rounded border border-[var(--fh-border)] bg-[var(--fh-bg3)] px-2 py-2 text-sm text-[var(--fh-text)]"
-            >
-              <option value="all">All listings</option>
-              <option value="priced">Priced only</option>
-            </select>
-          </label>
         </FilterAccordion>
 
         <FilterAccordion

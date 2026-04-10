@@ -99,14 +99,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <Suspense fallback={null}>
-            <NavigationLoadingProvider>
+          <NavigationLoadingProvider>
+            {/*
+              Do not wrap {children} in the same Suspense as SiteHeaderShell: async header + null
+              fallback would hide the whole page until Supabase resolves. Overlay uses its own Suspense.
+            */}
+            <Suspense fallback={null}>
               <SiteHeaderShell />
-              <main className="site-header-main relative z-[1] mx-auto max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
-                {children}
-              </main>
-            </NavigationLoadingProvider>
-          </Suspense>
+            </Suspense>
+            <main className="site-header-main relative z-[1] mx-auto max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
+              {children}
+            </main>
+          </NavigationLoadingProvider>
         </ThemeProvider>
       </body>
     </html>

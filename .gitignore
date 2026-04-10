@@ -31,3 +31,6 @@ tsconfig.tsbuildinfo
 
 # Supabase CLI local cache
 supabase/.temp/
+
+# Local scraper dry-run outputs (do not commit)
+aso_dry_run.json

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useState } from "react"
 import { setAuthReturnCookie } from "@/lib/account/authReturnCookie"
+import { supabaseOAuthErrorMessage } from "@/lib/account/supabaseOAuthErrorMessage"
 import { createBrowserSupabase } from "@/lib/supabase/browser"
 import AppleSignInButton from "../AppleSignInButton"
 
@@ -66,7 +67,7 @@ export default function SignupClient() {
       provider: "google",
       options: { redirectTo: oauthRedirect() },
     })
-    if (err) setError(err.message)
+    if (err) setError(supabaseOAuthErrorMessage(err))
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -185,7 +186,15 @@ export default function SignupClient() {
       </p>
 
       <p className="mt-4 text-center text-[11px] text-[#6e7681] [data-theme=light]:text-slate-500">
-        By creating an account you agree to our Terms of Service.
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="text-[#FF9900] underline-offset-2 hover:underline">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-[#FF9900] underline-offset-2 hover:underline">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </div>
   )

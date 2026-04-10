@@ -48,6 +48,73 @@ const TAP_CATEGORY_QUERY_MAP = {
   'experimental-homebuilt': { label: 'Experimental/Homebuilt', extraParams: { homebuilt: 't' } },
 };
 
+/** Aligns with lib/listings/categoryMap.ts — values stored on aircraft_listings.aircraft_type for browse/filters. */
+const CONTROLLER_SLUG_TO_AIRCRAFT_TYPE = {
+  'piston-single-aircraft': 'single_engine_piston',
+  'piston-twin-aircraft': 'multi_engine_piston',
+  'jet-aircraft': 'jet',
+  'turboprop-aircraft': 'turboprop',
+  'light-sport-aircraft': 'light_sport',
+  'experimental-homebuilt-aircraft': 'single_engine_piston',
+  'piston-agricultural-aircraft': 'single_engine_piston',
+  'turbine-agricultural-aircraft': 'turboprop',
+  'piston-military-aircraft': 'single_engine_piston',
+  'turbine-military-aircraft': 'jet',
+  'piston-amphibious-floatplanes': 'amphibian',
+  'turbine-amphibious-floatplanes': 'amphibian',
+  'piston-helicopters': 'helicopter',
+  'turbine-helicopters': 'helicopter',
+};
+
+const GLOBALAIR_SLUG_TO_AIRCRAFT_TYPE = {
+  'single-engine-piston': 'single_engine_piston',
+  'twin-engine-piston': 'multi_engine_piston',
+  'single-engine-turbine': 'turboprop',
+  'twin-engine-turbine': 'turboprop',
+  'private-jet': 'jet',
+  helicopters: 'helicopter',
+  amphibian: 'amphibian',
+  commercial: 'single_engine_piston',
+  'experimental-kit': 'single_engine_piston',
+  'light-sport': 'light_sport',
+  vintage: 'single_engine_piston',
+  warbird: 'single_engine_piston',
+};
+
+const TAP_SLUG_TO_AIRCRAFT_TYPE = {
+  'single-engine-piston': 'piston_single',
+  'multi-engine-piston': 'piston_multi',
+  turboprop: 'turboprop',
+  jets: 'jet',
+  helicopters: 'rotorcraft',
+  gyroplane: 'rotorcraft',
+  'light-sport': 'light_sport',
+  warbird: 'single_engine_piston',
+  'amphibious-float': 'amphibian',
+  'experimental-homebuilt': 'single_engine_piston',
+};
+
+/**
+ * Active Unified Harvester marketplace slice → DB aircraft_type (see categoryMap.ts).
+ */
+function harvestMarketplaceSlugToAircraftType(sourceKey, slug) {
+  const raw = String(slug || '').trim();
+  if (!raw) return null;
+  if (sourceKey === 'controller') {
+    const c = sanitizeControllerCategory(raw);
+    return CONTROLLER_SLUG_TO_AIRCRAFT_TYPE[c] || null;
+  }
+  if (sourceKey === 'globalair') {
+    const c = sanitizeGlobalAirCategory(raw);
+    return GLOBALAIR_SLUG_TO_AIRCRAFT_TYPE[c] || null;
+  }
+  if (sourceKey === 'tap') {
+    const c = sanitizeTapCategory(raw);
+    return TAP_SLUG_TO_AIRCRAFT_TYPE[c] || null;
+  }
+  return null;
+}
+
 const SOURCE_CONFIG = {
   controller: {
     key: 'controller',
@@ -264,6 +331,159 @@ function sanitizeCategoryList(values, sanitizer, fallbackValue) {
   }
   if (!cleaned.length && fallbackValue) cleaned.push(fallbackValue);
   return cleaned;
+}
+
+/**
+ * Single checkbox in the popup maps to one or more marketplace slugs per site.
+ * Omitted site keys mean "any" for inference; expansion skips empty site sets when possible.
+ */
+const UNIFIED_CATEGORY_DEFS = {
+  'single-piston': {
+    tap: 'single-engine-piston',
+    globalair: 'single-engine-piston',
+    controller: 'piston-single-aircraft',
+  },
+  'twin-piston': {
+    tap: 'multi-engine-piston',
+    globalair: 'twin-engine-piston',
+    controller: 'piston-twin-aircraft',
+  },
+  'turbine-fixed': {
+    tap: 'turboprop',
+    globalair: ['single-engine-turbine', 'twin-engine-turbine'],
+    controller: 'turboprop-aircraft',
+  },
+  jets: {
+    tap: 'jets',
+    globalair: 'private-jet',
+    controller: 'jet-aircraft',
+  },
+  helicopters: {
+    tap: 'helicopters',
+    globalair: 'helicopters',
+    controller: ['piston-helicopters', 'turbine-helicopters'],
+  },
+  'light-sport': {
+    tap: 'light-sport',
+    globalair: 'light-sport',
+    controller: 'light-sport-aircraft',
+  },
+  amphibious: {
+    tap: 'amphibious-float',
+    globalair: 'amphibian',
+    controller: ['piston-amphibious-floatplanes', 'turbine-amphibious-floatplanes'],
+  },
+  experimental: {
+    tap: 'experimental-homebuilt',
+    globalair: 'experimental-kit',
+    controller: 'experimental-homebuilt-aircraft',
+  },
+  warbird: {
+    tap: 'warbird',
+    globalair: 'warbird',
+    controller: ['piston-military-aircraft', 'turbine-military-aircraft'],
+  },
+  gyroplane: {
+    tap: 'gyroplane',
+  },
+  commercial: {
+    globalair: 'commercial',
+  },
+  vintage: {
+    globalair: 'vintage',
+  },
+  agricultural: {
+    controller: ['piston-agricultural-aircraft', 'turbine-agricultural-aircraft'],
+  },
+};
+
+function addUnifiedSlugsToSet(targetSet, part) {
+  if (part === undefined) return;
+  const arr = Array.isArray(part) ? part : [part];
+  for (const x of arr) targetSet.add(x);
+}
+
+function expandUnifiedCategoryKeys(keys) {
+  const raw = Array.isArray(keys) && keys.length ? keys : ['single-piston'];
+  const c = new Set();
+  const g = new Set();
+  const t = new Set();
+  let anyC = false;
+  let anyG = false;
+  let anyT = false;
+  for (const k of raw) {
+    const d = UNIFIED_CATEGORY_DEFS[k];
+    if (!d) continue;
+    if (d.controller !== undefined) {
+      anyC = true;
+      addUnifiedSlugsToSet(c, d.controller);
+    }
+    if (d.globalair !== undefined) {
+      anyG = true;
+      addUnifiedSlugsToSet(g, d.globalair);
+    }
+    if (d.tap !== undefined) {
+      anyT = true;
+      addUnifiedSlugsToSet(t, d.tap);
+    }
+  }
+  const ctlArr = anyC ? [...c] : [];
+  const gaArr = anyG ? [...g] : [];
+  const tapArr = anyT ? [...t] : [];
+  return {
+    controllerCategories: sanitizeCategoryList(
+      ctlArr.length ? ctlArr : ['piston-single-aircraft'],
+      sanitizeControllerCategory,
+      'piston-single-aircraft',
+    ),
+    globalAirCategories: sanitizeCategoryList(
+      gaArr.length ? gaArr : ['single-engine-piston'],
+      sanitizeGlobalAirCategory,
+      'single-engine-piston',
+    ),
+    tapCategories: sanitizeCategoryList(
+      tapArr.length ? tapArr : ['single-engine-piston'],
+      sanitizeTapCategory,
+      'single-engine-piston',
+    ),
+  };
+}
+
+function unifiedSiteSliceMatches(selectionSet, part) {
+  if (part === undefined) return true;
+  const need = Array.isArray(part) ? part : [part];
+  return need.every((slug) => selectionSet.has(slug));
+}
+
+function inferUnifiedCategoryKeysFromState() {
+  const sc = new Set(state.controllerCategories || []);
+  const sg = new Set(state.globalAirCategories || []);
+  const st = new Set(state.tapCategories || []);
+  const out = [];
+  for (const [key, def] of Object.entries(UNIFIED_CATEGORY_DEFS)) {
+    if (
+      unifiedSiteSliceMatches(st, def.tap)
+      && unifiedSiteSliceMatches(sg, def.globalair)
+      && unifiedSiteSliceMatches(sc, def.controller)
+    ) {
+      out.push(key);
+    }
+  }
+  return out;
+}
+
+function applyExpandedCategoriesToSourceStates(controllerCategories, globalAirCategories, tapCategories) {
+  const map = {
+    controller: controllerCategories,
+    globalair: globalAirCategories,
+    tap: tapCategories,
+  };
+  for (const sourceKey of ['controller', 'globalair', 'tap']) {
+    const ss = sourceState(sourceKey);
+    ss.categories = [...(map[sourceKey] || [])];
+    ss.currentCategoryIndex = 0;
+    ss.currentCategory = ss.categories[0] || null;
+  }
 }
 
 function slugify(value) {
@@ -1501,7 +1721,27 @@ async function processOneMakeForSource(sourceKey) {
     }
 
     const rows = Array.isArray(res.listings) ? res.listings : [];
-    const rowsTagged = rows.map((r) => ({ ...r, source_site: r.source_site || (sourceKey === 'tap' ? 'trade_a_plane' : sourceKey) }));
+    const harvestSlug =
+      sourceKey === 'controller'
+        ? state.controllerCategory
+        : sourceKey === 'globalair'
+          ? state.globalAirCategory
+          : sourceKey === 'tap'
+            ? state.tapCategory
+            : null;
+    const harvestAircraftType = harvestMarketplaceSlugToAircraftType(sourceKey, harvestSlug);
+    const rowsTagged = rows.map((r) => {
+      const source_site = r.source_site || (sourceKey === 'tap' ? 'trade_a_plane' : sourceKey);
+      const row = { ...r, source_site };
+      if (harvestAircraftType) {
+        if (sourceKey === 'controller' || sourceKey === 'globalair') {
+          row.aircraft_type = harvestAircraftType;
+        } else if (sourceKey === 'tap' && !row.aircraft_type) {
+          row.aircraft_type = harvestAircraftType;
+        }
+      }
+      return row;
+    });
     const pageTotal = Number((res.meta && res.meta.totalListings) || 0);
     const pageRangeEnd = Number((res.meta && res.meta.rangeEnd) || 0);
     const candidateAnchors = Number((res.meta && res.meta.candidateAnchors) || 0);
@@ -1773,7 +2013,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     if (message.action === 'GET_STATE') {
       await loadState();
-      sendResponse({ state });
+      sendResponse({ state, unifiedCategoryKeys: inferUnifiedCategoryKeysFromState() });
       return;
     }
     if (message.action === 'GET_BRIDGE_STATUS') {
@@ -1787,30 +2027,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const sourceMakes = normalizedSourceMakes(message.sourceMakes);
       const mode = message.mode === 'detailed' ? 'detailed' : 'card_only';
       const detailNewOnly = !!message.detailNewOnly;
-      const incomingController = message.controllerCategories && message.controllerCategories.length
-        ? message.controllerCategories
-        : (message.controllerCategory || state.controllerCategories);
-      const incomingGlobal = message.globalAirCategories && message.globalAirCategories.length
-        ? message.globalAirCategories
-        : (message.globalAirCategory || state.globalAirCategories);
-      const incomingTap = message.tapCategories && message.tapCategories.length
-        ? message.tapCategories
-        : (message.tapCategory || state.tapCategories);
-      const controllerCategories = sanitizeCategoryList(
-        incomingController,
-        sanitizeControllerCategory,
-        'piston-single-aircraft'
-      );
-      const globalAirCategories = sanitizeCategoryList(
-        incomingGlobal,
-        sanitizeGlobalAirCategory,
-        'single-engine-piston'
-      );
-      const tapCategories = sanitizeCategoryList(
-        incomingTap,
-        sanitizeTapCategory,
-        'single-engine-piston'
-      );
+      let controllerCategories;
+      let globalAirCategories;
+      let tapCategories;
+      if (Array.isArray(message.unifiedCategoryKeys) && message.unifiedCategoryKeys.length) {
+        const ex = expandUnifiedCategoryKeys(message.unifiedCategoryKeys);
+        controllerCategories = ex.controllerCategories;
+        globalAirCategories = ex.globalAirCategories;
+        tapCategories = ex.tapCategories;
+      } else {
+        const incomingController = message.controllerCategories && message.controllerCategories.length
+          ? message.controllerCategories
+          : (message.controllerCategory || state.controllerCategories);
+        const incomingGlobal = message.globalAirCategories && message.globalAirCategories.length
+          ? message.globalAirCategories
+          : (message.globalAirCategory || state.globalAirCategories);
+        const incomingTap = message.tapCategories && message.tapCategories.length
+          ? message.tapCategories
+          : (message.tapCategory || state.tapCategories);
+        controllerCategories = sanitizeCategoryList(
+          incomingController,
+          sanitizeControllerCategory,
+          'piston-single-aircraft',
+        );
+        globalAirCategories = sanitizeCategoryList(
+          incomingGlobal,
+          sanitizeGlobalAirCategory,
+          'single-engine-piston',
+        );
+        tapCategories = sanitizeCategoryList(
+          incomingTap,
+          sanitizeTapCategory,
+          'single-engine-piston',
+        );
+      }
       const aerotraderSearchZip = sanitizeAeroTraderSearchZip(message.aerotraderSearchZip || state.aerotraderSearchZip);
       const aerotraderSearchRadius = sanitizeAeroTraderSearchRadius(message.aerotraderSearchRadius || state.aerotraderSearchRadius);
       const aerotraderStartFromCurrentTab = !!message.aerotraderStartFromCurrentTab;
@@ -1982,6 +2232,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: true, categories: state.tapCategories });
       return;
     }
+    if (message.action === 'SET_UNIFIED_CATEGORIES') {
+      await loadState();
+      if (!state.running) {
+        const keys = Array.isArray(message.keys) ? message.keys : [];
+        const ex = expandUnifiedCategoryKeys(keys.length ? keys : ['single-piston']);
+        state.controllerCategories = ex.controllerCategories;
+        state.globalAirCategories = ex.globalAirCategories;
+        state.tapCategories = ex.tapCategories;
+        state.controllerCategory = state.controllerCategories[0];
+        state.globalAirCategory = state.globalAirCategories[0];
+        state.tapCategory = state.tapCategories[0];
+        applyExpandedCategoriesToSourceStates(
+          state.controllerCategories,
+          state.globalAirCategories,
+          state.tapCategories,
+        );
+        await saveState();
+      }
+      sendResponse({
+        ok: true,
+        unifiedCategoryKeys: inferUnifiedCategoryKeysFromState(),
+        controllerCategories: state.controllerCategories,
+        globalAirCategories: state.globalAirCategories,
+        tapCategories: state.tapCategories,
+      });
+      return;
+    }
     if (message.action === 'SET_AEROTRADER_SEARCH') {
       await loadState();
       if (!state.running) {
@@ -2010,6 +2287,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       await saveState();
       sendResponse({ ok: true });
       return;
+    }
+    if (message.action === 'RESUME_BLOCKED_SOURCE') {
+      (async () => {
+        await loadState();
+        const sourceKey = message.sourceKey;
+        if (!sourceKey || !SOURCE_CONFIG[sourceKey]) {
+          sendResponse({ ok: false, error: 'invalid_source' });
+          return;
+        }
+        const ss = sourceState(sourceKey);
+        const sd = sourceDiag(sourceKey);
+        const looksBlocked =
+          !!ss.blocked ||
+          String(sd.status || '') === 'blocked' ||
+          !!sd.blockedReason;
+        if (!looksBlocked) {
+          sendResponse({ ok: true, noop: true });
+          return;
+        }
+        ss.blocked = false;
+        ss.blockedReason = null;
+        ss.blockedUntilMs = null;
+        ss.cooldownLevel = 0;
+        sd.blockedReason = null;
+        sd.lastReason = null;
+        sd.lastMessage = 'manual resume after CAPTCHA';
+        sd.status = state.running ? 'running' : 'idle';
+        state.challengeDetected = false;
+        await saveState();
+        notifyPopup('STATUS_UPDATE', { state });
+        if (!state.running && !allSourcesComplete()) {
+          runHarvest().catch((err) => console.error('[FullHangar] runHarvest after resume source', err));
+        }
+        sendResponse({ ok: true });
+      })();
+      return true;
     }
     if (message.action === 'RESUME_HARVEST') {
       (async () => {

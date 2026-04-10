@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useSearchParams } from "next/navigation"
-import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react"
+import { Suspense, type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react"
 
 const FAILSAFE_HIDE_MS = 15000
 const NAV_LOADING_START_EVENT = "fullhangar:navigation-loading-start"
@@ -27,7 +27,11 @@ function shouldTrackAnchorClick(anchor: HTMLAnchorElement) {
   return true
 }
 
-export function NavigationLoadingProvider({ children }: { children: React.ReactNode }) {
+/**
+ * Holds useSearchParams — must not wrap {children} or the whole page suspends to the root
+ * Suspense fallback (often null) and appears blank. Rendered only as a sibling via Suspense.
+ */
+function NavigationLoadingOverlay() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isNavigating, setIsNavigating] = useState(false)
@@ -139,16 +143,22 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
     []
   )
 
+  return isNavigating ? (
+    <div className="nav-loading-overlay" role="status" aria-live="polite" aria-label="Loading next page">
+      <div className="nav-loading-spinner-shell">
+        <img src="/branding/nav-loading-spinner.png" alt="Loading" className="nav-loading-spinner-image" />
+      </div>
+    </div>
+  ) : null
+}
+
+export function NavigationLoadingProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      {isNavigating ? (
-        <div className="nav-loading-overlay" role="status" aria-live="polite" aria-label="Loading next page">
-          <div className="nav-loading-spinner-shell">
-            <img src="/branding/nav-loading-spinner.png" alt="Loading" className="nav-loading-spinner-image" />
-          </div>
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        <NavigationLoadingOverlay />
+      </Suspense>
     </>
   )
 }

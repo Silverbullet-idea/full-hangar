@@ -2,6 +2,9 @@
  * Maps `/listings?category=` URL params to `aircraft_type` values stored on `aircraft_listings`
  * (exposed on `public_listings` after migration). Scrapers use a mix of canonical and legacy
  * tokens (e.g. TAP `piston_single` vs Barnstormers `single_engine_piston`).
+ *
+ * Unified Harvester: `browser-extension/background.js` maps active marketplace slugs to these
+ * tokens when posting to the bridge so Controller/GlobalAir rows are categorized at ingest.
  */
 export const CATEGORY_PARAM_TO_DB: Record<
   "single" | "multi" | "jet" | "helicopter" | "lsp" | "sea",

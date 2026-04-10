@@ -1,5 +1,7 @@
-let hydratedMakeEditors = false;
 let hydratedSourceControls = false;
+
+/** Always auto-discover makes per site from the selected category (no manual make list in UI). */
+const EMPTY_SOURCE_MAKES = { controller: [], globalair: [], tap: [], aerotrader: [] };
 
 function readCheckedValues(selector) {
   return Array.from(document.querySelectorAll(selector))
@@ -20,61 +22,19 @@ function setCheckedValues(selector, values, fallback) {
   }
 }
 
-function normalizeTapCategoryForSelect(value) {
-  const raw = String(value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\-\s]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  if (!raw) return 'single-engine-piston';
-  const aliases = {
-    'piston-single': 'single-engine-piston',
-    'piston-twin': 'multi-engine-piston',
-    turbine: 'turboprop',
-    'turbine-aircraft': 'turboprop',
-    helicopter: 'helicopters',
-    helicopters: 'helicopters',
-    rotorcraft: 'helicopters',
-    'piston-helicopters': 'helicopters',
-    'turbine-helicopters': 'helicopters',
-    experimental: 'experimental-homebuilt',
-    homebuilt: 'experimental-homebuilt',
-    'experimental-kit': 'experimental-homebuilt',
-    amphibian: 'amphibious-float',
-    amphibious: 'amphibious-float',
-    float: 'amphibious-float',
-    'light-sport-aircraft': 'light-sport',
-  };
-  const normalized = aliases[raw] || raw;
-  const allowed = new Set([
-    'single-engine-piston',
-    'multi-engine-piston',
-    'turboprop',
-    'jets',
-    'helicopters',
-    'light-sport',
-    'warbird',
-    'amphibious-float',
-    'experimental-homebuilt',
-    'gyroplane',
-  ]);
-  return allowed.has(normalized) ? normalized : 'single-engine-piston';
-}
-
-function normalizeTapCategoriesForSelect(values) {
-  const list = Array.isArray(values) ? values : [values];
-  const normalized = list.map((v) => normalizeTapCategoryForSelect(v)).filter(Boolean);
-  return Array.from(new Set(normalized));
-}
-
-function parseMakeLines(id) {
-  return document
-    .getElementById(id)
-    .value.split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean);
+function updateSourceResumeButtons(s) {
+  const keys = ['controller', 'globalair', 'tap', 'aerotrader'];
+  for (const key of keys) {
+    const btn = document.querySelector(`#sources-diag .btn-resume-src[data-source="${key}"]`);
+    if (!btn) continue;
+    const ss = s.sourceStates?.[key];
+    const sd = s.sourceDiagnostics?.[key];
+    const blocked =
+      !!(ss && ss.blocked) ||
+      String(sd?.status || '') === 'blocked' ||
+      !!(sd && sd.blockedReason);
+    btn.hidden = !blocked;
+  }
 }
 
 function renderSourceDiag(labelId, sourceDiag, sourceState) {
@@ -103,6 +63,9 @@ async function refresh() {
   const stateResp = await chrome.runtime.sendMessage({ action: 'GET_STATE' });
   const bridgeResp = await chrome.runtime.sendMessage({ action: 'GET_BRIDGE_STATUS' });
   const s = (stateResp && stateResp.state) || {};
+  const unifiedCategoryKeysFromBg = Array.isArray(stateResp?.unifiedCategoryKeys)
+    ? stateResp.unifiedCategoryKeys
+    : [];
   const startBtn = document.getElementById('start');
   const stopBtn = document.getElementById('stop');
   document.getElementById('extracted').textContent = s.sessionExtracted ?? s.totalExtracted ?? 0;
@@ -149,21 +112,9 @@ async function refresh() {
   renderSourceDiag('srcdiag-globalair', s.sourceDiagnostics?.globalair, s.sourceStates?.globalair);
   renderSourceDiag('srcdiag-tap', s.sourceDiagnostics?.tap, s.sourceStates?.tap);
   renderSourceDiag('srcdiag-aerotrader', s.sourceDiagnostics?.aerotrader, s.sourceStates?.aerotrader);
+  updateSourceResumeButtons(s);
   document.getElementById('mode').value = s.mode || 'card_only';
   const selectedSources = Array.isArray(s.sources) && s.sources.length ? s.sources : ['controller', 'globalair', 'tap', 'aerotrader'];
-  if (!hydratedMakeEditors) {
-    const ss = s.sourceStates || {};
-    const ctlMakes = Array.isArray(ss.controller && ss.controller.makes) ? ss.controller.makes : [];
-    const gaMakes = Array.isArray(ss.globalair && ss.globalair.makes) ? ss.globalair.makes : [];
-    const atMakes = Array.isArray(ss.aerotrader && ss.aerotrader.makes) ? ss.aerotrader.makes : [];
-    document.getElementById('makes-controller').value = ctlMakes.join('\n');
-    document.getElementById('makes-globalair').value = gaMakes.join('\n');
-    // Keep TAP input blank by default so auto-discovered run state
-    // does not repopulate manual filter input on popup open.
-    document.getElementById('makes-tap').value = '';
-    document.getElementById('makes-aerotrader').value = atMakes.join('\n');
-    hydratedMakeEditors = true;
-  }
 
   const statusEl = document.getElementById('run-status');
   const runStatus = s.runStatus || (s.running ? 'running' : 'idle');
@@ -211,18 +162,11 @@ async function refresh() {
     document.getElementById('aerotrader-use-current-tab').checked = !!s.aerotraderStartFromCurrentTab;
     document.getElementById('detail-new-only').checked = !!s.detailNewOnly;
     document.getElementById('rotate-sources').checked = s.rotateSources !== false;
-    const controllerCategories = Array.isArray(s.controllerCategories)
-      ? s.controllerCategories
-      : (s.controllerCategory ? [s.controllerCategory] : []);
-    const globalAirCategories = Array.isArray(s.globalAirCategories)
-      ? s.globalAirCategories
-      : (s.globalAirCategory ? [s.globalAirCategory] : []);
-    const tapCategories = Array.isArray(s.tapCategories)
-      ? s.tapCategories
-      : normalizeTapCategoriesForSelect(s.tapCategory);
-    setCheckedValues('.controller-category', controllerCategories, 'piston-single-aircraft');
-    setCheckedValues('.globalair-category', globalAirCategories, 'single-engine-piston');
-    setCheckedValues('.tap-category', tapCategories, 'single-engine-piston');
+    if (unifiedCategoryKeysFromBg.length) {
+      setCheckedValues('.unified-category', unifiedCategoryKeysFromBg, 'single-piston');
+    } else {
+      setCheckedValues('.unified-category', ['single-piston'], 'single-piston');
+    }
     hydratedSourceControls = true;
   }
 
@@ -236,24 +180,9 @@ async function refresh() {
 document.getElementById('start').addEventListener('click', async () => {
   const startBtn = document.getElementById('start');
   startBtn.disabled = true;
-  const sourceMakes = {
-    controller: parseMakeLines('makes-controller'),
-    globalair: parseMakeLines('makes-globalair'),
-    tap: parseMakeLines('makes-tap'),
-    aerotrader: parseMakeLines('makes-aerotrader'),
-  };
-  const sharedMakes = [
-    ...new Set([
-      ...sourceMakes.controller,
-      ...sourceMakes.globalair,
-      ...sourceMakes.tap,
-      ...sourceMakes.aerotrader,
-    ]),
-  ];
   const mode = document.getElementById('mode').value || 'card_only';
-  const controllerCategories = readCheckedValues('.controller-category');
-  const globalAirCategories = readCheckedValues('.globalair-category');
-  const tapCategories = readCheckedValues('.tap-category');
+  let unifiedCategoryKeys = readCheckedValues('.unified-category');
+  if (!unifiedCategoryKeys.length) unifiedCategoryKeys = ['single-piston'];
   const startFresh = document.getElementById('start-fresh').checked;
   const detailNewOnly = !!document.getElementById('detail-new-only').checked;
   const sources = [
@@ -268,11 +197,9 @@ document.getElementById('start').addEventListener('click', async () => {
   const aerotraderStartFromCurrentTab = !!document.getElementById('aerotrader-use-current-tab').checked;
   const resp = await chrome.runtime.sendMessage({
     action: 'START_HARVEST',
-    makes: sharedMakes,
-    sourceMakes,
-    controllerCategories,
-    globalAirCategories,
-    tapCategories,
+    makes: [],
+    sourceMakes: { ...EMPTY_SOURCE_MAKES },
+    unifiedCategoryKeys,
     aerotraderSearchZip,
     aerotraderSearchRadius,
     aerotraderStartFromCurrentTab,
@@ -294,26 +221,11 @@ document.getElementById('mode').addEventListener('change', async (event) => {
   }
 });
 
-document.querySelectorAll('.globalair-category').forEach((el) => {
+document.querySelectorAll('.unified-category').forEach((el) => {
   el.addEventListener('change', async () => {
-    const categories = readCheckedValues('.globalair-category');
-    const resp = await chrome.runtime.sendMessage({ action: 'SET_GLOBALAIR_CATEGORIES', categories });
-    if (!resp || !resp.ok) refresh();
-  });
-});
-
-document.querySelectorAll('.controller-category').forEach((el) => {
-  el.addEventListener('change', async () => {
-    const categories = readCheckedValues('.controller-category');
-    const resp = await chrome.runtime.sendMessage({ action: 'SET_CONTROLLER_CATEGORIES', categories });
-    if (!resp || !resp.ok) refresh();
-  });
-});
-
-document.querySelectorAll('.tap-category').forEach((el) => {
-  el.addEventListener('change', async () => {
-    const categories = readCheckedValues('.tap-category');
-    const resp = await chrome.runtime.sendMessage({ action: 'SET_TAP_CATEGORIES', categories });
+    let keys = readCheckedValues('.unified-category');
+    if (!keys.length) keys = ['single-piston'];
+    const resp = await chrome.runtime.sendMessage({ action: 'SET_UNIFIED_CATEGORIES', keys });
     if (!resp || !resp.ok) refresh();
   });
 });
@@ -331,6 +243,20 @@ document.querySelectorAll('.tap-category').forEach((el) => {
 document.getElementById('stop').addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ action: 'STOP_HARVEST' });
   refresh();
+});
+
+document.getElementById('sources-diag')?.addEventListener('click', async (ev) => {
+  const t = ev.target;
+  if (!t || !t.classList || !t.classList.contains('btn-resume-src')) return;
+  const sourceKey = t.getAttribute('data-source');
+  if (!sourceKey) return;
+  t.disabled = true;
+  try {
+    await chrome.runtime.sendMessage({ action: 'RESUME_BLOCKED_SOURCE', sourceKey });
+  } catch (e) {
+    console.warn('[FullHangar] Resume source failed:', e);
+  }
+  setTimeout(refresh, 200);
 });
 
 document.getElementById('resume-btn').addEventListener('click', async () => {

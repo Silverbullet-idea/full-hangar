@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useState } from "react"
 import { setAuthReturnCookie } from "@/lib/account/authReturnCookie"
+import { supabaseOAuthErrorMessage } from "@/lib/account/supabaseOAuthErrorMessage"
 import { createBrowserSupabase } from "@/lib/supabase/browser"
 import AppleSignInButton from "../AppleSignInButton"
 
@@ -66,7 +67,7 @@ export default function LoginClient() {
       provider: "google",
       options: { redirectTo: oauthRedirect() },
     })
-    if (err) setError(err.message)
+    if (err) setError(supabaseOAuthErrorMessage(err))
   }
 
   const onSubmit = async (e: React.FormEvent) => {
