@@ -1,6 +1,6 @@
 # AGENTS.md — FullHangar / AircraftFlip
 # Master context file. Load this into every Claude conversation and every Cursor session.
-# Last updated: April 10, 2026
+# Last updated: April 13, 2026
 
 ---
 
@@ -51,6 +51,10 @@ Repo root: project root contains /scraper, /core, /frontend directories
 
 ## CODEBASE MAP
 
+proxy.ts — waitlist + access gate (Next.js 16 **proxy** convention): session refresh via `@supabase/ssr`, `user_profiles.access_status` / `is_admin`, public allowlist includes `/api/image-proxy`, `/api/waitlist`, `/api/cron`, `/api/stripe/webhook`, account auth routes, `/internal/login`, `/beta/join`.
+app/api/waitlist/join — public POST waitlist signup (service role upsert to `waitlist_requests`).
+app/api/admin/waitlist/ — admin GET list; POST approve; POST approve-all (requires `user_profiles.is_admin`).
+
 scraper/
   scraper_health.py        — looks_like_challenge_html, log_scraper_error → scraper_errors, retry_with_backoff,
                              SelectorConfig (primary + fallbacks), run_health_check (UTC vs prior day via RPC)
@@ -92,6 +96,13 @@ scripts/
 core/
   intelligence/
     aircraft_intelligence.py — scoring model v1.8, _get_market_comps()
+
+app/
+  (site)/page.tsx              — Public waitlist landing page (replaces prior marketing homepage)
+  internal/waitlist/page.tsx   — Admin waitlist management (pairs with /api/admin/waitlist APIs)
+  components/WaitlistForm.tsx  — Client waitlist join form → POST /api/waitlist/join
+  components/admin/WaitlistManager.tsx — Client table for approve / bulk-approve
+  components/internal/InternalAccessRequestsNav.tsx — Internal hub link + amber pending badge
 
 ---
 
@@ -175,6 +186,7 @@ Priority 3 — AGENT 3 — Buyer MVP
   [ ] Listing card component with score badge, price vs market comp, days on market
 
 Priority 4 — AGENT 3 + 4 — Seller intake (Phase 2 unlock)
+  [x] BACKEND — Waitlist gating: migration `20260413120000_add_waitlist_system.sql` (`waitlist_requests`; `user_profiles` extended with `access_status`, `is_admin`, `email`, `access_granted_at`; trigger + `auth_user_id_by_email` RPC). `proxy.ts` gate; `POST /api/waitlist/join`; `GET/POST /api/admin/waitlist/*`; `lib/email/sendApprovalEmail.ts`. **Staff admin:** set `user_profiles.is_admin = true` (and `access_status = approved`) for admin emails in Supabase.
   [ ] Seller submission form: make/model/year, asking price, total time, engine time, location, photos
   [ ] Cross-posting queue: submitted listing triggers posting workflow to each platform
   [ ] Seller dashboard: status of each platform posting
@@ -202,6 +214,12 @@ market_comps:
 
 scraper_errors: (migration `20260329120000_scraper_errors_and_price_alert_grants.sql`)
   id, source_site, error_type, url, raw_error, extra (jsonb), resolved, created_at
+
+waitlist_requests: (migration `20260413120000_add_waitlist_system.sql`)
+  id, name, email (unique), role (`buyer`|`seller`|`broker`), status (`pending`|`approved`|`rejected`),
+  requested_at, approved_at, approved_by, notes
+
+user_profiles (waitlist columns): `access_status` (`pending`|`approved`|`rejected`), `is_admin`, `access_granted_at`, `email` (lookup / approval flows; canonical profile table remains `user_profiles`, not a separate `profiles` table)
 
 ### Performance indexes (added April 10, 2026 — migration `20260410120000_add_performance_indexes.sql`)
 
