@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import WaitlistForm from "../components/WaitlistForm";
 
@@ -24,13 +23,15 @@ export default async function HomePage({ searchParams }: PageProps) {
     <div className="-mx-4 -mt-6 min-h-[calc(100vh-5rem)] bg-[#0d1117] pb-24 pt-2 sm:-mx-6">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-1 py-4">
         <Link href="/" className="block shrink-0" aria-label="Full Hangar home">
-          <Image
-            src="/branding/FullHangar_DarkBackground.png"
+          {/* Plain img: avoids /_next/image optimizer issues in some deploys; same asset as HeaderNavBrand dark fallback */}
+          <img
+            src="/branding/FullHangarDark.png"
             alt="Full Hangar"
             width={220}
             height={52}
             className="h-auto w-[220px] max-w-[min(220px,70vw)]"
-            priority
+            loading="eager"
+            decoding="async"
           />
         </Link>
         <span
