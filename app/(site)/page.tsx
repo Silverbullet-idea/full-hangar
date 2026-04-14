@@ -90,7 +90,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         className={`mx-auto max-w-[700px] border-t border-[#30363d] px-2 pt-10 ${isPending ? "mt-4 border-t-0 pt-6" : "mt-4"}`}
       >
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-4">
-          <StatBlock num="8,400+" label="Listings tracked" />
+          <StatBlock num="13,000+" label="Active listings" />
           <StatBlock num="310K" label="FAA records" />
           <StatBlock num="110+" label="Engine TBO refs" />
         </div>
