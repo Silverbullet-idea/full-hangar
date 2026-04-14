@@ -1,5 +1,6 @@
 "use client";
 
+import InternalAccessRequestsNav from "@/app/components/internal/InternalAccessRequestsNav";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
@@ -322,6 +323,7 @@ export default function MarketIntelPage() {
             <p className="text-sm text-brand-muted">Model-level research to understand true market structure and flip opportunities.</p>
           </div>
           <div className="flex items-center gap-2 text-xs">
+            <InternalAccessRequestsNav />
             <Link href="/internal/deals" className="rounded border border-brand-dark px-2 py-1 text-brand-muted hover:border-brand-orange hover:text-brand-orange">
               Deal Radar
             </Link>

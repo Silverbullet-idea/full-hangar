@@ -1,3 +1,4 @@
+import InternalAccessRequestsNav from '@/app/components/internal/InternalAccessRequestsNav'
 import type { PresetKey, SortKey } from '../types'
 
 type DealsControlsBarProps = {
@@ -87,6 +88,7 @@ export default function DealsControlsBar({
       >
         Reset Preset
       </button>
+      <InternalAccessRequestsNav />
       <a
         href="/internal/deal-desk"
         className="rounded border border-brand-dark px-2 py-1 text-xs text-brand-muted hover:border-brand-orange hover:text-brand-orange"

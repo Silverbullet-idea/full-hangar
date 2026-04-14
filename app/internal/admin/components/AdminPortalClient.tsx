@@ -1,5 +1,6 @@
 "use client";
 
+import InternalAccessRequestsNav from "@/app/components/internal/InternalAccessRequestsNav";
 import Link from "next/link";
 import { useState } from "react";
 import { SourceQualitySection } from "./SourceQualitySection";
@@ -166,6 +167,8 @@ type AdminPortalClientProps = {
   freshnessBySource: SourceFreshnessRow[];
   /** Approximate share of active rows with flip_score ≥ 75 (high-opportunity lane). */
   avgHighFlipInventoryPct: number;
+  /** Pending waitlist rows — drives Access Requests nav badge when &gt; 0. */
+  waitlistPendingCount?: number;
 };
 
 function statValue(value: number | string) {
@@ -275,7 +278,8 @@ export default function AdminPortalClient(props: AdminPortalClientProps) {
               Operational command center for platform health, data quality, and buyer intelligence.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <InternalAccessRequestsNav pendingCount={props.waitlistPendingCount} />
             <Link
               href="/internal/market-intel"
               className="rounded border border-brand-dark px-3 py-2 text-sm text-brand-muted hover:border-brand-orange hover:text-brand-orange"

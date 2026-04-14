@@ -1,5 +1,6 @@
 "use client";
 
+import InternalAccessRequestsNav from "@/app/components/internal/InternalAccessRequestsNav";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -106,6 +107,7 @@ export default function DealDeskIndexPage() {
             <p className="text-sm text-brand-muted">Saved deal scenarios sorted by most recent activity.</p>
           </div>
           <div className="flex items-center gap-2">
+            <InternalAccessRequestsNav />
             <Link
               href="/internal/market-intel"
               className="rounded border border-brand-dark px-3 py-2 text-sm text-brand-muted hover:border-brand-orange hover:text-brand-orange"

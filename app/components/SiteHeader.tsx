@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useRef, useState } from "react"
 import { useCurrentUser } from "@/lib/account/useCurrentUser"
 import { setAuthReturnCookie } from "@/lib/account/authReturnCookie"
@@ -11,9 +12,14 @@ import NotificationBell from "./NotificationBell"
 import ThemeToggle from "./ThemeToggle"
 
 export default function SiteHeader({ hasSellListings = false }: { hasSellListings?: boolean }) {
+  const pathname = usePathname()
   const { user, profile, isAdmin, isLoading } = useCurrentUser()
   const [menuOpen, setMenuOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
+
+  if (pathname === "/") {
+    return null
+  }
 
   const displayName = profile?.display_name?.trim() || user?.email?.split("@")[0] || ""
   const shortName =

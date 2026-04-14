@@ -8,6 +8,7 @@ import {
   getActiveListings,
   listInvitesWithSessions,
 } from "@/lib/admin/analytics";
+import { fetchWaitlistPendingCountOnly } from "@/lib/waitlist/adminWaitlistServer";
 import AdminPortalClient from "./components/AdminPortalClient";
 
 export const dynamic = "force-dynamic";
@@ -291,6 +292,8 @@ export default async function InternalAdminPage() {
     (row) => !hiddenSources.has(String(row.source).toLowerCase())
   );
 
+  const waitlistPendingCount = await fetchWaitlistPendingCountOnly();
+
   return (
     <main className="p-4 md:p-6">
       <AdminPortalClient
@@ -305,6 +308,7 @@ export default async function InternalAdminPage() {
         sourceCounts={sourceCounts}
         freshnessBySource={freshnessBySource}
         avgHighFlipInventoryPct={avgHighFlipInventoryPct}
+        waitlistPendingCount={waitlistPendingCount}
       />
     </main>
   );
